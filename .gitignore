@@ -1,0 +1,13 @@
+# Input source archive contains user-owned/private code. Never commit by default.
+input_sources_private/
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+venv/
+*.blend1
+*.blend2
+reports/latest/
+reports/initial_scan/
+build/
+dist/
