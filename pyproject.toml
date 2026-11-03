@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chappy-blender-devkit"
+version = "0.1.0"
+description = "Static code inventory and duplicate candidates for Blender addon development"
+requires-python = ">=3.11"
+license = { text = "Proprietary / license to be selected by repository owner" }
+
+[project.scripts]
+cbdk = "cbdk.__main__:main"
+
+[tool.setuptools]
+packages = ["cbdk", "parts", "parts.common"]
