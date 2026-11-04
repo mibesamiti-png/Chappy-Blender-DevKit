@@ -42,3 +42,20 @@
 - 真の承認済（`approved`）部品の生成、独立したライセンス検証
 - Blender実機テスト、アドオンビルド・ZIP配布
 - GitHub CIの結果はプルリクエストで別途確認
+
+
+## v0.3 — 2026-11-04
+
+### 実装・Python単体テスト済
+- cbdk/isolation.py: ソースSHAと候補IDの整合確認、外部参照とASTリスクの抽出、静的に単独化できるトップレベル関数の別ファイル出力、出典JSON出力、元ファイル保護
+- python -m cbdk isolate: 診断／抽出をCLIから指定
+- cbdk/blender_test.py・scripts/blender_smoke.py: 明示的な手動起動によりBlenderを背景実行する検査ツール（Blender実機未確認）
+- Python 3.13: 既存16件＋新規11件＝27件成功
+- 実データ8ファイル652シンボル、トップレベル関数374件中21件が厳格な静的条件で切り出し候補。Relief Pattern Toolの _smoothstep01 を原本を変更せず別ファイル出力して確認
+
+### 未実装・未検証
+- Blender実機のテスト実行、個々の抽出コードの実機検証
+- 複数関数の依存グラフ解決と一括抽出、同等性・性能比較
+- 権利の法的確認・部品の正式承認・Extension ZIP生成
+
+eligible_for_review_extraction=true は静的条件を満たすだけであり、verification=static_only、approved=false のまま管理する。
