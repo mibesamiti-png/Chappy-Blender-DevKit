@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chappy-blender-devkit"
-version = "0.5.0"
+version = "0.6.0"
 description = "Static Blender addon inventory, API auditing and review-only dependency bundling"
 requires-python = ">=3.11"
 license = { text = "Proprietary / license to be selected by repository owner" }
@@ -13,4 +13,4 @@ license = { text = "Proprietary / license to be selected by repository owner" }
 cbdk = "cbdk.__main__:main"
 
 [tool.setuptools]
-packages = ["cbdk", "parts", "parts.common"]
+packages = ["cbdk", "parts", "parts.common", "parts.blender"]
