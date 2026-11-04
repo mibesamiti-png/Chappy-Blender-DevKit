@@ -113,3 +113,18 @@
 - Blender実行ファイルが現在の開発実行環境にないため、Blender本体での個別テストは未実行
 - `blender_smoke_passed` は包括的な動作保証、全Blenderバージョン互換、ライセンス確認済み・正式採用を意味しない
 - 外部アドオンから抽出した関数の実機テストと正式採用、配布用Extension ZIP生成
+
+
+## v0.8 — 2026-11-04
+
+### 実装
+- `run_blender_tests_windows.bat` + `scripts/windows_run_blender_tests.ps1`: Windows用ワンクリック実機テスト。自動Blender/Python検出（Python>=3.11）、ユニットテスト・実機スモーク・証拠の整合性検査・ログ保存
+- `.github/workflows/blender-smoke.yml`: 公式Blender 4.5.15 LTS（Linux x64）をSHA-256照合して背景起動。3部品の検査、成功/失敗ログ・JSONをActions Artifactとして保存
+- `docs/TEST_ENVIRONMENT.md`: Windows/クラウド利用手順・失敗時ログ共有
+- `tests/test_environment_setup.py`: 実行キット構造・CIチェックサム・プライバシー維持のユニットテストを追加
+
+### 検証
+- Python: 79/79件成功（既存76件+新規3件、Python 3.13）
+- GitHub ActionsのBlender 4.5.15 LTS実機テスト: 3/3部品成功、`evidence-status` fresh=true をログで確認（PR #7 run 41800757530）
+- Windows BAT：Windows実機未検証。ユーザーPCでワンクリック実行して確認する段階
+- 未検証：他のBlenderバージョン・他のOS・ユーザー既存アドオンから抽出したコード・Blender Extensionの配布パッケージ
