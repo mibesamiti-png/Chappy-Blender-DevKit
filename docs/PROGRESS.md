@@ -151,3 +151,9 @@
 - インストール済みBlenderを全件検出し、バージョン別に個別テスト・証拠保存。4.4.3と5.2.1のテストに対応。
 - Windows GitHub ActionsでPowerShell5.1の実行回帰テスト、LinuxのクラウドBlender実機テストを4.4.3/4.5.15/5.2.1のマトリクスに変更。
 - **Windows PCでの実機検証はCIと別に必要**。3部品のスモーク成功は全アドオン・全バージョンの動作保証ではない。
+
+### Windows CIで追加発見したバグ
+
+- CIのソースチェックアウトと一時フォルダが異なるドライブだった場合、`os.path.relpath` が `ValueError` を返していた。
+- `cbdk/scanner.py` を修正し、異なるドライブ間では絶対パスにフォールバック。Pythonテスト `test_cross_volume_path_does_not_abort_scan` を追加。
+- スキルZIP生成時の初期パッケージングは、公開ドキュメント `reports/README.md` を過剰に拒否していたため、ZIPから除外したうえで他の `reports/` は引き続き拒否する。
