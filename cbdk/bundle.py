@@ -315,9 +315,7 @@ def extract_bundle(catalog: dict, candidate_id: str, source: str | Path, output:
         sections += [ast.unparse(constants[entry['name']][0]), '']
     for entry in manifest['functions']:
         sections += [ast.unparse(defs[entry['name']]), '']
-    generated = '
-'.join(sections).rstrip() + '
-'
+    generated = '\n'.join(sections).rstrip() + '\n'
     ast.parse(generated)
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open('x', encoding='utf-8') as stream:
@@ -325,8 +323,7 @@ def extract_bundle(catalog: dict, candidate_id: str, source: str | Path, output:
     try:
         with provenance.open('x', encoding='utf-8') as stream:
             json.dump(manifest, stream, ensure_ascii=False, indent=2)
-            stream.write('
-')
+            stream.write('\n')
     except BaseException:
         target.unlink(missing_ok=True)
         raise
