@@ -58,3 +58,22 @@ Git管理から `input_sources_private/` を除外しています。外部OSSは
 - v0.4: Codex用レシピ検索とアドオンビルダー
 
 詳しくは `docs/PROGRESS.md` と `docs/SPEC.md` を参照。
+
+
+## v0.2: 重複レビューと永続ID（手動）
+
+新しいコマンド `triage` は、AST一致・構造一致・近似候補をレビュー用に可視化します。ソースコードの実行・自動合体は行いません。
+
+```bash
+python -m cbdk scan input_sources_private --output reports/latest
+python -m cbdk triage --catalog reports/latest/catalog.json --duplicates reports/latest/duplicates.json --output reports/latest/review_queue.json
+python -m cbdk search "法線 中心"
+# CND-... は検索結果から取得して置き換えてください
+python -m cbdk register --catalog reports/latest/catalog.json --registry reports/latest/registry.json --candidate CND-REPLACE_ME --part-id GEO-001 --name "法線計算" --purpose "面法線の取得" --origin self_owned --license-id LicenseRef-Proprietary --license-evidence "権利者の確認記録" --reviewer "開発担当者"
+python -m cbdk decide --registry reports/latest/registry.json --part-id GEO-001 --decision selected --reviewer "開発担当者" --reason "採用候補としてレビュー済み。実機検証は別途必要"
+python -m cbdk parts --registry reports/latest/registry.json
+```
+
+判定は `selected / rejected / blocked / hold` の4種類。**selectedは実機動作確認済み、ライセンス適合性確認済み、再配布承認済みを意味しません。** 権利情報はレビュー担当者の申告・証跡を記録するだけです。実際のライセンス適合・Blenderテストは別工程となります。
+
+`reports/latest/` と `input_sources_private/` はGit管理から除外済みです。レビューキューに含まれる元ファイル名などの情報は不用意に公開しないでください。
