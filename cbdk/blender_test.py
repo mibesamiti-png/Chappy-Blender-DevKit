@@ -9,10 +9,13 @@ from pathlib import Path
 PASS_MARKER = 'CBDK_BLENDER_SMOKE_PASS '
 
 
-def run_smoke(blender: str, *, timeout: int = 90) -> dict:
+def run_smoke(blender: str, *, timeout: int = 90, suite: str = 'basic') -> dict:
     if timeout < 1 or timeout > 600:
         raise ValueError('timeout must be in 1..600 seconds')
-    script = Path(__file__).resolve().parent.parent / 'scripts' / 'blender_smoke.py'
+    scripts = {'basic': 'blender_smoke.py', 'parts': 'blender_parts_smoke.py'}
+    if suite not in scripts:
+        raise ValueError('Unknown smoke suite; expected basic or parts')
+    script = Path(__file__).resolve().parent.parent / 'scripts' / scripts[suite]
     if not script.is_file():
         raise FileNotFoundError('Trusted Blender smoke script missing')
     cmd = [blender, '--background', '--factory-startup', '--python-exit-code', '7', '--python', str(script)]
@@ -32,9 +35,10 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description='Opt-in Blender smoke test (not addon verification)')
     parser.add_argument('blender', help='Path to blender executable, or blender if in PATH')
     parser.add_argument('--timeout', type=int, default=90)
+    parser.add_argument('--suite', choices=['basic', 'parts'], default='basic')
     parser.add_argument('--output', default='reports/latest/blender_smoke.json')
     args = parser.parse_args(argv)
-    report = run_smoke(args.blender, timeout=args.timeout)
+    report = run_smoke(args.blender, timeout=args.timeout, suite=args.suite)
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

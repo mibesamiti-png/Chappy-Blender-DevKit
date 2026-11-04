@@ -11,6 +11,7 @@ from .isolation import inspect_candidate, extract_candidate
 from .bundle import inspect_bundle, extract_bundle
 from .crossfile import inspect_crossfile, extract_crossfile
 from .blender_audit import audit_blender_dependencies
+from .contracts import make_blender_contracts, write_contracts
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -78,6 +79,10 @@ def main(argv=None) -> int:
     audit_cmd = sub.add_parser("audit-blender", help="Static report of bpy/bmesh/mathutils and context dependencies")
     audit_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
     audit_cmd.add_argument("--output", default="reports/latest/blender_audit.json")
+
+    contracts_cmd = sub.add_parser('contracts', help='Create human-review Blender runtime test contracts from an API audit')
+    contracts_cmd.add_argument('--audit', default='reports/latest/blender_audit.json')
+    contracts_cmd.add_argument('--output', default='reports/latest/blender_contracts.json')
 
     args = parser.parse_args(argv)
     try:
@@ -164,6 +169,11 @@ def main(argv=None) -> int:
             print(f"Blender API symbols: {report['blender_related_symbols']} / "
                   f"context sensitive: {report['context_sensitive_symbols']} / "
                   f"output: {args.output}")
+            return 0
+        if args.command == 'contracts':
+            contracts = make_blender_contracts(_json(args.audit))
+            write_contracts(args.output, contracts)
+            print(f"Blender test contracts: {contracts['contracts_count']} / output: {args.output}")
             return 0
         if args.command == "parts":
             parts = read_registry(args.registry)["parts"]
