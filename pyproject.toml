@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chappy-blender-devkit"
-version = "0.2.0"
+version = "0.3.0"
 description = "Static addon code inventory, duplicate review and manual part ID curation"
 requires-python = ">=3.11"
 license = { text = "Proprietary / license to be selected by repository owner" }
