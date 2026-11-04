@@ -5,14 +5,20 @@ import argparse
 import json
 from pathlib import Path
 
+from .curation import (build_review_queue, decide, read_registry, register_candidate,
+                       render_review_markdown, write_queue, write_registry)
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
 from .search import search
 
 
+def _json(path: str) -> dict:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(prog="cbdk", description="Blender addon static code inventory and similarity inspection")
+    parser = argparse.ArgumentParser(prog="cbdk", description="Blender addon static inventory and manual curation")
     sub = parser.add_subparsers(dest="command", required=True)
     scan_cmd = sub.add_parser("scan", help="Analyze source tree without running code")
     scan_cmd.add_argument("sources", nargs="+", help="Files or directories")
@@ -26,38 +32,86 @@ def main(argv=None) -> int:
     compare_cmd = sub.add_parser("compare", help="Re-run duplicate inspection on a catalog")
     compare_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
     compare_cmd.add_argument("--threshold", type=float, default=.82)
+    triage_cmd = sub.add_parser("triage", help="Create an evidence-based manual duplicate review queue")
+    triage_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
+    triage_cmd.add_argument("--duplicates", default="reports/latest/duplicates.json")
+    triage_cmd.add_argument("--output", default="reports/latest/review_queue.json")
+    register_cmd = sub.add_parser("register", help="Assign a durable part ID to a manually reviewed candidate")
+    register_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
+    register_cmd.add_argument("--registry", default="reports/latest/registry.json")
+    for opt in ("candidate", "part-id", "name", "purpose", "origin", "license-id", "license-evidence", "reviewer"):
+        register_cmd.add_argument("--" + opt, required=True)
+    register_cmd.add_argument("--variant-of")
+    decide_cmd = sub.add_parser("decide", help="Record a human decision; never auto-approve")
+    decide_cmd.add_argument("--registry", default="reports/latest/registry.json")
+    for opt in ("part-id", "decision", "reviewer", "reason"):
+        decide_cmd.add_argument("--" + opt, required=True)
+    list_cmd = sub.add_parser("parts", help="List registered, NOT YET VERIFIED parts")
+    list_cmd.add_argument("--registry", default="reports/latest/registry.json")
+
     args = parser.parse_args(argv)
-    if args.command == "scan":
-        if not 0 <= args.threshold <= 1:
-            parser.error("--threshold must be 0..1")
-        cat = scan(args.sources)
-        if not cat["files"]:
-            print("No Python files found. Check sources.")
-            return 2
-        dup = duplicates(cat, threshold=args.threshold, limit=args.limit)
-        folder = Path(args.output)
-        write_json(folder / "catalog.json", cat)
-        write_json(folder / "duplicates.json", dup)
-        summary = write_report(folder / "report.md", cat, dup)
-        write_json(folder / "metrics.json", summary)
-        print(json.dumps(summary, ensure_ascii=False, indent=2))
-        print(f"Reports: {folder.resolve()}")
-        return 0 if not summary["parse_errors"] else 1
-    if args.command == "search":
-        cat = json.loads(Path(args.catalog).read_text(encoding="utf-8"))
-        results = search(cat, args.query, limit=args.limit)
-        if not results:
-            print("No matching symbols.")
-        for item in results:
-            print(f"{item['score']:>2}  {item['id']}  {item['source']}:{item['line']}  {item['name']} [{item['category']}]")
-        return 0
-    if args.command == "compare":
-        cat = json.loads(Path(args.catalog).read_text(encoding="utf-8"))
-        dup = duplicates(cat, threshold=args.threshold)
-        print(json.dumps({"exact_groups": len(dup["exact_groups"]), "shape_groups": len(dup["shape_groups"]),
-                          "near_candidate_pairs": dup["near_total"], "near_candidates": dup["near_candidates"][:15]},
-                         ensure_ascii=False, indent=2))
-        return 0
+    try:
+        if args.command == "scan":
+            if not 0 <= args.threshold <= 1 or args.limit < 0:
+                parser.error("--threshold must be 0..1 and --limit >= 0")
+            cat = scan(args.sources)
+            if not cat["files"]:
+                print("No Python files found. Check sources.")
+                return 2
+            dup = duplicates(cat, threshold=args.threshold, limit=args.limit)
+            folder = Path(args.output)
+            write_json(folder / "catalog.json", cat)
+            write_json(folder / "duplicates.json", dup)
+            summary = write_report(folder / "report.md", cat, dup)
+            write_json(folder / "metrics.json", summary)
+            print(json.dumps(summary, ensure_ascii=False, indent=2))
+            print(f"Reports: {folder.resolve()}")
+            return 0 if not summary["parse_errors"] else 1
+        if args.command == "search":
+            results = search(_json(args.catalog), args.query, limit=args.limit)
+            if not results:
+                print("No matching symbols.")
+            for item in results:
+                print(f"{item['score']:>2}  {item['id']}  {item['source']}:{item['line']}  {item['name']} [{item['category']}]")
+            return 0
+        if args.command == "compare":
+            dup = duplicates(_json(args.catalog), threshold=args.threshold)
+            print(json.dumps({"exact_groups": len(dup["exact_groups"]), "shape_groups": len(dup["shape_groups"]),
+                              "near_candidate_pairs": dup["near_total"], "near_candidates": dup["near_candidates"][:15]},
+                             ensure_ascii=False, indent=2))
+            return 0
+        if args.command == "triage":
+            queue = build_review_queue(_json(args.catalog), _json(args.duplicates))
+            write_queue(args.output, queue)
+            out_md = Path(args.output).with_suffix(".md")
+            out_md.write_text(render_review_markdown(queue), encoding="utf-8")
+            print(f"Review findings: {queue['finding_count']} / {args.output} / {out_md}")
+            return 0
+        if args.command == "register":
+            registry = read_registry(args.registry)
+            entry = register_candidate(_json(args.catalog), registry, candidate_id=args.candidate,
+                                       part_id=args.part_id, name=args.name, purpose=args.purpose,
+                                       origin=args.origin, license_id=args.license_id,
+                                       license_evidence=args.license_evidence,
+                                       reviewer=args.reviewer, variant_of=args.variant_of)
+            write_registry(args.registry, registry)
+            print(f"Registered {entry['part_id']} ({entry['status']}; NOT approved/verified)")
+            return 0
+        if args.command == "decide":
+            registry = read_registry(args.registry)
+            entry = decide(registry, part_id=args.part_id, decision=args.decision,
+                           reviewer=args.reviewer, reason=args.reason)
+            write_registry(args.registry, registry)
+            print(f"{entry['part_id']}: {entry['status']} (NOT verified)")
+            return 0
+        if args.command == "parts":
+            parts = read_registry(args.registry)["parts"]
+            for item in sorted(parts, key=lambda x: x["part_id"]):
+                print(f"{item['part_id']}  {item['status']:8}  {item['name']}  [{item['license_id']}]")
+            print(f"Parts: {len(parts)}. No entries are automatically approved or runtime tested.")
+            return 0
+    except (ValueError, OSError, KeyError, json.JSONDecodeError) as exc:
+        parser.exit(2, f"CBDK error: {exc}\n")
     return 2
 
 
