@@ -77,3 +77,27 @@ python -m cbdk parts --registry reports/latest/registry.json
 判定は `selected / rejected / blocked / hold` の4種類。**selectedは実機動作確認済み、ライセンス適合性確認済み、再配布承認済みを意味しません。** 権利情報はレビュー担当者の申告・証跡を記録するだけです。実際のライセンス適合・Blenderテストは別工程となります。
 
 `reports/latest/` と `input_sources_private/` はGit管理から除外済みです。レビューキューに含まれる元ファイル名などの情報は不用意に公開しないでください。
+
+
+## v0.3 — 静的依存チェック・候補関数の切り出し
+
+元のアドオンを実行せず、単独化できそうなトップレベル関数を解析します。グローバル変数・非許可関数呼び出し・属性アクセス・複雑な代入・デコレータなどの候補は保留します。
+
+```bash
+python -m cbdk scan input_sources_private --output reports/latest
+python -m cbdk search "補間"
+# 次の候補IDと原本ファイル名は検索結果から指定してください
+python -m cbdk isolate --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/example.py
+python -m cbdk isolate --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/example.py --output reports/latest/extracted/helper.py
+```
+
+output未指定では検査のみ。指定すると新しいPython関数ファイルと出典JSONを生成し、既存のファイルは上書きしません。これはあくまで未承認のレビュー候補であり、権利・動作・Blender互換性を証明しません。
+
+Blenderインストール済みのPCでは、基礎的なBlender API動作を次のコマンドで任意に検証できます。第三者アドオンや抽出したコードは実行しません。
+
+```bash
+python -m cbdk.blender_test blender
+# Windowsでは blender を blender.exe のフルパスに置き換えてください
+```
+
+レポートは reports/latest/blender_smoke.json へ保存。これは抽出した関数の検証ではなく、Blender環境のスモークテストです。
