@@ -1,0 +1,4 @@
+interface:
+  display_name: "Chappy Blender DevKit"
+  short_description: "Blenderアドオン開発・再利用・実機検証"
+  default_prompt: "Chappy Blender DevKitの既存部品を確認してから、今回のBlenderアドオン開発を進めて。安全性、テスト結果、GitHubの変更履歴も報告して。"
