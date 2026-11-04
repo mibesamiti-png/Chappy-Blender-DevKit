@@ -43,3 +43,19 @@ GitHub経由でテストを実行・結果を確認できますが、**ChatGPT�
 Windowsの `reports/latest/blender_parts.log` と `parts_evidence.json` を共有してください。Pythonテスト失敗時は `python_unit_tests.log` も必要です。
 
 クラウドの場合はGitHub Actionsの失敗したRun URLとArtifactsの結果を調べます。
+
+## v0.8.1: Windows Pythonテストの誤検知とBlender複数版テスト
+
+Windows PowerShell 5.1では、正常に成功した `unittest -v` の出力でも、標準エラー出力を `$ErrorActionPreference = 'Stop'` と組み合わせると、終了コードを確認する前に停止する場合があります。v0.8.1では `Start-Process -RedirectStandardOutput/-RedirectStandardError` に変更し、**プロセス終了コード**で成功・失敗を判定します。Pythonテストログには両方の出力が残ります。
+
+**通常のダブルクリック：** 標準インストール先で見つけたBlenderを全バージョン順番に検証します。Blender 4.4.3 と5.2.1が存在すれば、双方を別々にチェックします。Python単体テストは最初の1回だけで、証拠JSONとスモークログは各バージョンの別ファイルです。
+
+**特定の1バージョンのみ：** BAT起動引数に `-BlenderPath "C:\Program Files\Blender Foundation\Blender 4.4\blender.exe"` を与えます（インストール先に合わせて変更）。またはPowerShellから `scripts/windows_run_blender_tests.ps1 -BlenderPath "C:\...\blender.exe"`。
+
+**Windows PowerShell自身の回帰テスト：** `scripts/windows_run_blender_tests.ps1 -UnitOnly` はBlenderを必要とせず、PowerShell5.1上で Python の verbose テストを起動します。GitHub Actions `windows-launcher.yml` でも自動検査します。
+
+**クラウド実機テスト：** GitHub Actions `blender-smoke.yml` は公式配布アーカイブをSHA-256で照合し、Blender 4.4.3・4.5.15・5.2.1を個別に実行します。Linuxの結果はWindowsの実機成功と同一ではありません。
+
+### Python実行環境の選び方
+
+Windows版はテスト済みのPython 3.11、3.12、3.13を優先します。単純な `py -3` はPython 3.15など未検証版を勝手に選んでしまう場合があるため、`python.exe` の対応バージョンを確認してから、なければ `py -3.13` / `py -3.12` / `py -3.11` を順に試します。

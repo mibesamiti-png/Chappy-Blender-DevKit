@@ -65,11 +65,12 @@ class SkillPackageTests(unittest.TestCase):
 
     def test_standalone_and_plugin_archives(self):
         with tempfile.TemporaryDirectory() as folder:
-            subprocess.run(
+            proc = subprocess.run(
                 [sys.executable, str(ROOT / "scripts" / "package_skill.py"),
                  "--output-dir", folder],
-                check=True, capture_output=True, text=True, cwd=ROOT,
+                check=False, capture_output=True, text=True, cwd=ROOT,
             )
+            self.assertEqual(proc.returncode, 0, proc.stdout + "\n" + proc.stderr)
             source = Path(folder) / "CBDK_Skill_v1.0.0.zip"
             plugin = Path(folder) / "CBDK_Skill_Plugin_v1.0.0.zip"
             self.assertTrue(source.exists())
@@ -77,6 +78,7 @@ class SkillPackageTests(unittest.TestCase):
             with ZipFile(source) as archive:
                 self.assertIn("chappy-blender-devkit/SKILL.md", archive.namelist())
                 self.assertEqual(len(archive.namelist()), 5)
+                self.assertNotIn(b"\r\n", archive.read("chappy-blender-devkit/SKILL.md"))
             with ZipFile(plugin) as archive:
                 info = json.loads(archive.read("plugin.json").decode("utf-8"))
                 self.assertEqual(info["name"], "chappy-blender-devkit")

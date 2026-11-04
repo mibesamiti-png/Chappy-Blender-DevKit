@@ -15,20 +15,35 @@ class EnvironmentSetupTests(unittest.TestCase):
         self.assertIn('windows_run_blender_tests.ps1', bat)
         self.assertIn('verify-parts', ps)
         self.assertIn('evidence-status', ps)
-        self.assertIn('Resolve-Blender', ps)
+        self.assertIn('Resolve-Blenders', ps)
+        self.assertIn('Start-Process -FilePath', ps)
+        self.assertIn('RedirectStandardError', ps)
+        self.assertIn('UnitOnly', ps)
+        self.assertIn('python_version_probe.log', ps)
+        self.assertIn("@('3.13','3.12','3.11')", ps)
+        self.assertNotIn('py -3 ', ps)
+        self.assertIn('parts_evidence_', ps)
+        self.assertNotIn('*> $unitLog', ps)
         self.assertNotIn('Invoke-WebRequest', ps)
         self.assertNotIn('winget install', ps.lower())
 
     def test_github_workflow_checks_download_checksum_and_runs_blender(self):
         job = (ROOT / '.github/workflows/blender-smoke.yml').read_text(encoding='utf-8')
         self.assertIn('workflow_dispatch:', job)
-        self.assertIn("BLENDER_VERSION: '4.5.15'", job)
+        self.assertIn("blender-version: ['4.4.3', '4.5.15', '5.2.1']", job)
         self.assertIn('blender-${BLENDER_VERSION}.sha256', job)
         self.assertIn('sha256sum --check --status', job)
         self.assertIn('verify-parts', job)
         self.assertIn('evidence-status', job)
         self.assertIn('upload-artifact@v4', job)
         self.assertIn('contents: read', job)
+
+    def test_windows_ci_reproduces_stderr_handling(self):
+        job = (ROOT / '.github/workflows/windows-launcher.yml').read_text(encoding='utf-8')
+        self.assertIn('windows-2022', job)
+        self.assertIn('powershell.exe -NoProfile', job)
+        self.assertIn('-UnitOnly', job)
+        self.assertIn("python-version: ['3.11', '3.13']", job)
 
     def test_local_and_ci_evidence_stays_out_of_git(self):
         ignored = (ROOT / '.gitignore').read_text(encoding='utf-8')

@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from cbdk.dedup import duplicates
 from cbdk.report import write_json, write_report
@@ -21,6 +22,14 @@ class ScannerTests(unittest.TestCase):
         path = self.root / name
         path.write_text(code, encoding='utf-8')
         return path
+
+    def test_cross_volume_path_does_not_abort_scan(self):
+        path = self.put('cross_drive.py', 'def helper(x):\n    return x + 1\n')
+        with patch('cbdk.scanner.os.path.relpath', side_effect=ValueError("path is on another drive")):
+            result = scan([path])
+        self.assertEqual(result['files'][0]['path'], str(path.resolve()))
+        self.assertEqual(result['symbols'][0]['source'], str(path.resolve()))
+        self.assertEqual(len(result['symbols']), 1)
 
     def test_ast_exact_duplicate_despite_docstring(self):
         self.put('a.py', 'def get_middle(x):\n    """A."""\n    return x + 1\n')

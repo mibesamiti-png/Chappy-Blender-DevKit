@@ -151,7 +151,12 @@ def scan(paths: Iterable[str | Path]) -> dict:
     symbols = []
     for path in iter_python_files(paths):
         raw = path.read_bytes()
-        display_path = os.path.relpath(path, Path.cwd())
+        try:
+            # Windows: sources in %TEMP% may be on C: while the checkout is D:.
+            # ntpath.relpath raises ValueError across different drive letters.
+            display_path = os.path.relpath(path, Path.cwd())
+        except ValueError:
+            display_path = str(path)
         file_record = {"path": display_path, "name": path.name, "sha256": sha256(raw), "bytes": len(raw), "status": "parsed", "bl_info": {}}
         files.append(file_record)
         try:

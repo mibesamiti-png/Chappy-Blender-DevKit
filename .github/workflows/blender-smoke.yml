@@ -1,4 +1,4 @@
-name: CBDK Blender 4.5 LTS runtime smoke
+name: CBDK Blender multi-version runtime smoke
 
 on:
   workflow_dispatch:
@@ -17,9 +17,13 @@ permissions:
 jobs:
   blender-parts:
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        blender-version: ['4.4.3', '4.5.15', '5.2.1']
     timeout-minutes: 25
     env:
-      BLENDER_VERSION: '4.5.15'
+      BLENDER_VERSION: ${{ matrix.blender-version }}
       LIBGL_ALWAYS_SOFTWARE: '1'
     steps:
       - name: Checkout (no private input sources)
@@ -34,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base="https://download.blender.org/release/Blender4.5"
+          base="https://download.blender.org/release/Blender${BLENDER_VERSION%.*}"
           archive="blender-${BLENDER_VERSION}-linux-x64.tar.xz"
           curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30 \
             "${base}/blender-${BLENDER_VERSION}.sha256" -o blender.sha256
@@ -74,7 +78,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cbdk-blender-4.5-smoke-${{ github.run_id }}
+          name: cbdk-blender-${{ matrix.blender-version }}-smoke-${{ github.run_id }}
           path: reports/ci/
           retention-days: 14
           if-no-files-found: warn

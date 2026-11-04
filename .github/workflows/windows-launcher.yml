@@ -1,0 +1,42 @@
+name: CBDK Windows PowerShell launcher regression
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/windows_run_blender_tests.ps1'
+      - 'run_blender_tests_windows.bat'
+      - 'tests/**'
+      - '.github/workflows/windows-launcher.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  powershell-unittest:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Reproduce Python unittest -v stderr on Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows_run_blender_tests.ps1 -UnitOnly
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload Windows Python test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-windows-unittest-py${{ matrix.python-version }}-${{ github.run_id }}
+          path: reports/latest/python_unit_tests.log
+          if-no-files-found: warn
+          retention-days: 14
