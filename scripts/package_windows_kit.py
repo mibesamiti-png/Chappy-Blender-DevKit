@@ -25,6 +25,9 @@ def build(output: Path) -> int:
             absolute = ROOT / relative
             if absolute.is_symlink() or not absolute.is_file():
                 raise ValueError(f"Unexpected tracked file: {relative}")
+            if relative.as_posix() == "reports/README.md":
+                # Only a public explanatory stub is tracked in this folder.
+                continue
             if relative.parts[0] in {"input_sources_private", "reports"}:
                 raise ValueError("Refusing to package private or generated sources")
             archive.write(absolute, (Path(PREFIX) / relative).as_posix())
