@@ -18,7 +18,7 @@ Use this as a **workflow**, not as proof that any source code is safe, equivalen
 
 1. Look for existing helpers in `parts/`, `catalog/` and the locally generated `reports/latest/catalog.json`.
 2. If an authorized, local private source directory exists, run an **AST-only** scan. If it is absent, continue using available repo code; never invent access to personal source files.
-3. Search with the user's Japanese or English task description. Use `triage`, `isolate`, `bundle`, `crossfile` and `audit-blender` only as needed; see [CLI runbook](references/WORKFLOW.md).
+3. Search with `python -m cbdk search "<task>"` using the user's Japanese or English task description. Use `triage`, `isolate`, `bundle`, `crossfile` and `audit-blender` only as needed; see [CLI runbook](references/WORKFLOW.md).
 4. Compare behavior, input/output, selection/mode requirements, state changes, external names, Blender compatibility and license before adapting any candidate. Similarity and matching AST never imply equivalent runtime behavior.
 5. Mark extracted code as **review candidate** until its rights, dependencies and runtime tests are checked. Do not automatically approve, publish, execute or import scanned code.
 
