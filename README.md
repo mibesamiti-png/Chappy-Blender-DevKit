@@ -146,3 +146,24 @@ python -m unittest discover -s tests -v
 ```
 
 **重要：** 合成したテストデータでは動作を確認していますが、Blender本体上での抽出結果の動作検証、複雑なアドオンの互換性・意味同等性の確認はまだ未実施です。
+
+
+## v0.6 — Blender helper candidates and test contracts
+
+**New original helper modules (not yet Blender-verified):**
+- `parts.blender.context`: explicit context and mesh-selection helpers; no implicit mode changes.
+- `parts.blender.edit_mesh`: read-only BMesh selection counters in `EDIT_MESH`.
+- `cbdk.contracts`: derives per-candidate *review-only* test requirements from the existing Blender API audit. Mode hints are not proven preconditions.
+
+```bash
+python -m cbdk scan input_sources_private --output reports/latest
+python -m cbdk audit-blender --catalog reports/latest/catalog.json --output reports/latest/blender_audit.json
+python -m cbdk contracts --audit reports/latest/blender_audit.json --output reports/latest/blender_contracts.json
+python -m unittest discover -s tests -v
+# Only on a PC where a trusted Blender executable is installed:
+python -m cbdk.blender_test blender --suite parts
+```
+
+The optional `parts` Blender smoke suite uses only **CBDK-authored code**, runs with a factory-startup scene, tests object vs. edit mode and selected vertices/edges/faces, and saves its JSON result under `reports/latest/blender_smoke.json`. It does not automatically certify extracted candidate code. The default `basic` smoke suite remains unchanged.
+
+The contracts report contains **metadata only** (`verification=static_only`, `approved=false`). Do not commit private, source-derived reports without checking provenance and rights. See `parts/blender/README.md` for candidate IDs, prerequisites, and verification distinctions.
