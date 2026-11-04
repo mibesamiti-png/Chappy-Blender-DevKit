@@ -9,6 +9,8 @@ from .curation import (build_review_queue, decide, read_registry, register_candi
                        render_review_markdown, write_queue, write_registry)
 from .isolation import inspect_candidate, extract_candidate
 from .bundle import inspect_bundle, extract_bundle
+from .crossfile import inspect_crossfile, extract_crossfile
+from .blender_audit import audit_blender_dependencies
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -57,12 +59,25 @@ def main(argv=None) -> int:
     isolate_cmd.add_argument("--source", required=True, help="Original Python file to verify by SHA-256")
     isolate_cmd.add_argument("--output", help="New .py file path; omit to inspect only")
 
-    bundle_cmd = sub.add_parser("bundle", help="Inspect/extract same-file dependency closure")
+    bundle_cmd = sub.add_parser("bundle", help="Inspect/extract reviewed candidate plus same-file helper DAG")
     bundle_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
     bundle_cmd.add_argument("--candidate", required=True, help="Root CND-* ID")
-    bundle_cmd.add_argument("--source", required=True, help="Original .py file")
-    bundle_cmd.add_argument("--output", help="New .py path; omit to inspect only")
+    bundle_cmd.add_argument("--source", required=True, help="Original .py file (SHA-verified)")
+    bundle_cmd.add_argument("--output", help="New output .py; omit to inspect graph only")
     bundle_cmd.add_argument("--max-functions", type=int, default=64)
+
+    cross_cmd = sub.add_parser("crossfile", help="Inspect/extract a review-only DAG across explicit relative Python imports")
+    cross_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
+    cross_cmd.add_argument("--candidate", required=True)
+    cross_cmd.add_argument("--source", required=True)
+    cross_cmd.add_argument("--sources-root", required=True)
+    cross_cmd.add_argument("--output", help="New .py to write; omit for inspection")
+    cross_cmd.add_argument("--max-functions", type=int, default=64)
+    cross_cmd.add_argument("--max-files", type=int, default=12)
+
+    audit_cmd = sub.add_parser("audit-blender", help="Static report of bpy/bmesh/mathutils and context dependencies")
+    audit_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
+    audit_cmd.add_argument("--output", default="reports/latest/blender_audit.json")
 
     args = parser.parse_args(argv)
     try:
@@ -132,13 +147,31 @@ def main(argv=None) -> int:
                       inspect_bundle(catalog, args.candidate, args.source, max_functions=args.max_functions))
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0 if report["eligible_for_review_extraction"] else 1
+        if args.command == "crossfile":
+            catalog = _json(args.catalog)
+            report = (extract_crossfile(catalog, args.candidate, args.source, args.output,
+                                        sources_root=args.sources_root,
+                                        max_functions=args.max_functions, max_files=args.max_files)
+                      if args.output else
+                      inspect_crossfile(catalog, args.candidate, args.source,
+                                        sources_root=args.sources_root,
+                                        max_functions=args.max_functions, max_files=args.max_files))
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report["eligible_for_review_extraction"] else 1
+        if args.command == "audit-blender":
+            report = audit_blender_dependencies(_json(args.catalog))
+            write_json(Path(args.output), report)
+            print(f"Blender API symbols: {report['blender_related_symbols']} / "
+                  f"context sensitive: {report['context_sensitive_symbols']} / "
+                  f"output: {args.output}")
+            return 0
         if args.command == "parts":
             parts = read_registry(args.registry)["parts"]
             for item in sorted(parts, key=lambda x: x["part_id"]):
                 print(f"{item['part_id']}  {item['status']:8}  {item['name']}  [{item['license_id']}]")
             print(f"Parts: {len(parts)}. No entries are automatically approved or runtime tested.")
             return 0
-    except (ValueError, OSError, KeyError, json.JSONDecodeError) as exc:
+    except (ValueError, OSError, KeyError, json.JSONDecodeError, FileExistsError) as exc:
         parser.exit(2, f"CBDK error: {exc}\n")
     return 2
 
