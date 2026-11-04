@@ -167,3 +167,25 @@ python -m cbdk.blender_test blender --suite parts
 The optional `parts` Blender smoke suite uses only **CBDK-authored code**, runs with a factory-startup scene, tests object vs. edit mode and selected vertices/edges/faces, and saves its JSON result under `reports/latest/blender_smoke.json`. It does not automatically certify extracted candidate code. The default `basic` smoke suite remains unchanged.
 
 The contracts report contains **metadata only** (`verification=static_only`, `approved=false`). Do not commit private, source-derived reports without checking provenance and rights. See `parts/blender/README.md` for candidate IDs, prerequisites, and verification distinctions.
+
+
+## v0.7 — Blender部品のテスト証拠を安全に管理
+
+v0.6で作成した3つの読み取り専用ヘルパー部品に対し、**Blender本体を使った個別チェックと、その実行環境の記録**を追加しました。元アドオンを自動実行する仕組みではありません。
+
+```bash
+# Python単体テスト（Blender不要）
+python -m unittest discover -s tests -v
+
+# BlenderがインストールされているPCのみ
+python -m cbdk verify-parts --blender blender --output reports/latest/parts_evidence.json
+
+# テスト記録が現在のコードに対応しているか確認
+python -m cbdk evidence-status --evidence reports/latest/parts_evidence.json
+```
+
+`verify-parts` は信頼済みの `scripts/blender_parts_smoke.py` のみ実行します。BLCTX-001、BLCTX-002、BME-001 の所定のチェックが揃い、Blenderが正常終了した場合に限り `blender_smoke_passed` を記録します。部品・テストスクリプトのSHA-256、Blenderバージョン、実行日時、各テスト結果を保存します。失敗時は検証済部品を0件として扱います。
+
+`evidence-status` は現行コードのハッシュとの整合性チェックです。**署名・証拠の真正性を保証するものではありません。** 外部から受け取ったJSONを実機検証済みの証明として信頼しないでください。 `catalog/authored_parts.json` は初期台帳で、実機テストを実行するまでは `not_recorded` のままです。テスト成功後も使用許可・ライセンス確認・正式採用は別途必要です。
+
+この開発環境にはBlender実行ファイルがないため、v0.7ではPythonモックテストのみ確認しています。Blender本体の実機成功はまだ確認していません。

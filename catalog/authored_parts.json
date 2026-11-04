@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "parts": [
+    {
+      "part_id": "BLCTX-001",
+      "name": "require_active_mesh",
+      "module": "parts.blender.context",
+      "source": "parts/blender/context.py",
+      "status": "unit_tested",
+      "blender_runtime": "not_recorded",
+      "approved": false,
+      "license_review": "pending"
+    },
+    {
+      "part_id": "BLCTX-002",
+      "name": "selected_mesh_objects",
+      "module": "parts.blender.context",
+      "source": "parts/blender/context.py",
+      "status": "unit_tested",
+      "blender_runtime": "not_recorded",
+      "approved": false,
+      "license_review": "pending"
+    },
+    {
+      "part_id": "BME-001",
+      "name": "count_edit_selection",
+      "module": "parts.blender.edit_mesh",
+      "source": "parts/blender/edit_mesh.py",
+      "status": "unit_tested",
+      "blender_runtime": "not_recorded",
+      "approved": false,
+      "license_review": "pending"
+    }
+  ],
+  "note": "Runtime smoke test evidence is stored separately under ignored reports/. Do not infer approval or import results automatically."
+}

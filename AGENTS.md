@@ -24,3 +24,8 @@
 16. v0.6: Treat `parts/blender/*` as authored, unit-tested candidates, **not Blender-verified/approved**. Validate via explicit `context` and reject unsafe mode/selection states.
 17. Generate `blender_contracts.json` using `python -m cbdk contracts` only from a local audit report. Mode hints are advisory; operator poll and context requirements need separate runtime tests.
 18. `python -m cbdk.blender_test blender --suite parts` runs a trusted factory-startup check only. Do not use arbitrary scanned source as a smoke script, and don't mark a specific extracted function verified based on this suite.
+
+
+19. v0.7: `python -m cbdk verify-parts --blender <trusted-executable>` may record local Blender smoke results for CBDK-authored parts only; never execute scanned/third-party code as a smoke test.
+20. Require the expected part IDs, all expected test cases, normal Blender process exit and source/test script SHA-256 before marking `blender_smoke_passed`. If any checks fail, record zero passing parts.
+21. `evidence-status` checks staleness, not authenticity. Generated evidence is environment-specific and stored under ignored `reports/latest`; never interpret it as license clearance, full regression coverage, or `approved=true`.

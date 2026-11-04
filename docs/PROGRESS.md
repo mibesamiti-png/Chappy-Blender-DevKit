@@ -97,3 +97,19 @@
 - 拡張機能ZIPのビルド、部品の自動採用、ライセンス確認済み判定
 
 **区別：** `Python tests passed` != `Blender runtime verified` != `approved component`。
+
+
+## v0.7 — 2026-11-04
+
+### 実装済・Python単体テスト済
+- `cbdk/evidence.py`: Blenderの信頼済みスモーク実行結果に対し、部品ID・全チェック項目を検証し、ソースとテストコードのSHA-256、Blenderバージョンを含む証拠JSONを生成
+- `scripts/blender_parts_smoke.py`: 3部品の正常系・不正モード・選択メッシュ・編集メッシュを個別に記録するスモークテスト
+- `python -m cbdk verify-parts`: 指定Blenderでスモークテストし、結果を保存（失敗時は検証済み0件）
+- `python -m cbdk evidence-status`: 保存記録のコード／テストスクリプトのハッシュ整合性チェック（真正性は保証しない）
+- `catalog/authored_parts.json`: 自作ヘルパー3部品の初期台帳（全件 `not_recorded`・`approved=false`）
+- Pythonユニットテスト76件成功（v0.6の64件＋新規12件）
+
+### 未実装・未検証
+- Blender実行ファイルが現在の開発実行環境にないため、Blender本体での個別テストは未実行
+- `blender_smoke_passed` は包括的な動作保証、全Blenderバージョン互換、ライセンス確認済み・正式採用を意味しない
+- 外部アドオンから抽出した関数の実機テストと正式採用、配布用Extension ZIP生成

@@ -12,6 +12,7 @@ from .bundle import inspect_bundle, extract_bundle
 from .crossfile import inspect_crossfile, extract_crossfile
 from .blender_audit import audit_blender_dependencies
 from .contracts import make_blender_contracts, write_contracts
+from .evidence import verify_authored_parts, save_evidence, check_evidence_freshness
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -83,6 +84,14 @@ def main(argv=None) -> int:
     contracts_cmd = sub.add_parser('contracts', help='Create human-review Blender runtime test contracts from an API audit')
     contracts_cmd.add_argument('--audit', default='reports/latest/blender_audit.json')
     contracts_cmd.add_argument('--output', default='reports/latest/blender_contracts.json')
+
+    verify_cmd = sub.add_parser('verify-parts', help='Run trusted Blender parts tests and save environment-specific evidence')
+    verify_cmd.add_argument('--blender', required=True, help='Trusted Blender executable path')
+    verify_cmd.add_argument('--timeout', type=int, default=90)
+    verify_cmd.add_argument('--output', default='reports/latest/parts_evidence.json')
+
+    status_cmd = sub.add_parser('evidence-status', help='Check the current hashes against a parts smoke report (not authentication)')
+    status_cmd.add_argument('--evidence', default='reports/latest/parts_evidence.json')
 
     args = parser.parse_args(argv)
     try:
@@ -175,6 +184,16 @@ def main(argv=None) -> int:
             write_contracts(args.output, contracts)
             print(f"Blender test contracts: {contracts['contracts_count']} / output: {args.output}")
             return 0
+        if args.command == 'verify-parts':
+            result = verify_authored_parts(args.blender, timeout=args.timeout)
+            save_evidence(args.output, result)
+            print(f"Blender parts: {result['run_status']}; evidence: {args.output}; "
+                  f"parts passed: {len(result['parts'])}; approved: no")
+            return 0 if result['run_status'] == 'passed' else 1
+        if args.command == 'evidence-status':
+            result = check_evidence_freshness(_json(args.evidence))
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0 if result['fresh'] else 1
         if args.command == "parts":
             parts = read_registry(args.registry)["parts"]
             for item in sorted(parts, key=lambda x: x["part_id"]):
