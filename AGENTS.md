@@ -34,3 +34,8 @@
 22. v0.8: Before reporting a Blender runtime pass, inspect the actual GitHub Actions result of `.github/workflows/blender-smoke.yml` or local Windows `run_blender_tests_windows.bat` evidence. Prefer the pinned official Blender 4.5.15 archive and SHA-256 verification.
 23. A green runtime smoke job is environment-specific, not general Blender-version support, licensing clearance or approval. Check the part-level JSON and source hashes.
 24. Reports under `reports/latest/` or `reports/ci/` are private/generated; never commit user-provided addon originals, user .blend files, secrets or derived private reports.
+
+
+## CBDK repository skill
+
+For Blender addon/CBDK development workflows, agents may use `.agents/skills/chappy-blender-devkit/SKILL.md` and its scoped references. This skill **does not override** these repository safety rules or prove tests succeeded. Keep it aligned with current CLI, tests, privacy exclusions and `docs/PROGRESS.md`. Run `python scripts/package_skill.py` to build user-installable archives; never bundle private source inputs or reports.
