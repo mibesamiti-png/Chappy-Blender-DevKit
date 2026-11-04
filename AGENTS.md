@@ -10,3 +10,6 @@
 8. No dynamic `exec`, eval of project source, or blindly running unknown scripts. Use AST-only static inspection first.
 9. Tests: `python -m unittest discover -s tests -v`. Blender integration tests, UI tests and packaging are separate future milestones; do not mark them completed.
 10. Update `docs/PROGRESS.md` for each implementation change with completed/incomplete/testing status and evidence.
+
+11. v0.2: run `python -m cbdk triage` before assigning a stable part ID; `selected` is human choice and never implies runtime verification or redistribution clearance.
+12. Keep generated `reports/latest/registry.json` and all source-derived review reports private by default; do not publish provenance without explicit review.
