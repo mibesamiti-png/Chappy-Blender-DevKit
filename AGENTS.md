@@ -29,3 +29,8 @@
 19. v0.7: `python -m cbdk verify-parts --blender <trusted-executable>` may record local Blender smoke results for CBDK-authored parts only; never execute scanned/third-party code as a smoke test.
 20. Require the expected part IDs, all expected test cases, normal Blender process exit and source/test script SHA-256 before marking `blender_smoke_passed`. If any checks fail, record zero passing parts.
 21. `evidence-status` checks staleness, not authenticity. Generated evidence is environment-specific and stored under ignored `reports/latest`; never interpret it as license clearance, full regression coverage, or `approved=true`.
+
+
+22. v0.8: Before reporting a Blender runtime pass, inspect the actual GitHub Actions result of `.github/workflows/blender-smoke.yml` or local Windows `run_blender_tests_windows.bat` evidence. Prefer the pinned official Blender 4.5.15 archive and SHA-256 verification.
+23. A green runtime smoke job is environment-specific, not general Blender-version support, licensing clearance or approval. Check the part-level JSON and source hashes.
+24. Reports under `reports/latest/` or `reports/ci/` are private/generated; never commit user-provided addon originals, user .blend files, secrets or derived private reports.
