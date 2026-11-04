@@ -128,3 +128,19 @@
 - GitHub ActionsのBlender 4.5.15 LTS実機テスト: 3/3部品成功、`evidence-status` fresh=true をログで確認（PR #7 run 41800757530）
 - Windows BAT：Windows実機未検証。ユーザーPCでワンクリック実行して確認する段階
 - 未検証：他のBlenderバージョン・他のOS・ユーザー既存アドオンから抽出したコード・Blender Extensionの配布パッケージ
+
+
+## AI Agent Skill v1.0 — 2026-11-05
+
+### 実装
+- Codexリポジトリスキル: `.agents/skills/chappy-blender-devkit/SKILL.md`
+- 補助資料: `references/WORKFLOW.md`, `references/QUALITY_GATES.md`, `references/EXAMPLES.md`, `agents/openai.yaml`
+- 手順: 重複/既存部品検索、AST解析、Blender context管理、Python/Blender CI、原本・ライセンス保護、GitHub PRと進捗の記録
+- `scripts/package_skill.py`: 同一ソースからスタンドアロンZIPとスキル専用プラグインZIPを生成
+- `tests/test_skill_package.py` と `.github/workflows/skill-package.yml`: frontmatter、参照資料、実在CLI、生成ZIPの構造を検査
+- `docs/SKILL_SETUP.md`: Codex/ChatGPT向けの導入説明
+
+### 未検証・注意
+- 実際のChatGPT/Codex環境へのインストール、スキルの自動選択・呼び出しは未検証
+- スキルだけでコードを自動実行する機能はなく、利用可能なツール・認可が必要
+- CBDK v0.8.0とスキル v1.0.0は別々にバージョン管理

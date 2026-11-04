@@ -199,3 +199,13 @@ python -m cbdk evidence-status --evidence reports/latest/parts_evidence.json
 - 証拠やログはGitの対象外。外部アドオンの原本をアップロード・実行しない。正式承認（`approved=false`）は別の手続き。
 
 詳細は [docs/TEST_ENVIRONMENT.md](docs/TEST_ENVIRONMENT.md) を参照。
+
+
+## AI開発スキル：Chappy Blender DevKit v1.0
+
+`.agents/skills/chappy-blender-devkit/SKILL.md` を追加。ChatGPT/Codex向けに「再利用候補の確認 → 安全な実装 → Python・Blender検証 → GitHub PR → 進捗記録」の手順を標準化します。
+
+導入・使用方法: [docs/SKILL_SETUP.md](docs/SKILL_SETUP.md)  
+スキルZIP生成: `python scripts/package_skill.py`（`dist/` にスタンドアロン／プラグインの2形式を生成）
+
+**注意:** スキルが存在してもChatGPTへの自動インストールはされません。既存のBlender実機テストは指定の3つの自作部品に限定されています。
