@@ -11,3 +11,4 @@ reports/latest/
 reports/initial_scan/
 build/
 dist/
+reports/ci/
