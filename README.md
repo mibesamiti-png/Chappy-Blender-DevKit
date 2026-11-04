@@ -59,65 +59,90 @@ Git管理から `input_sources_private/` を除外しています。外部OSSは
 
 詳しくは `docs/PROGRESS.md` と `docs/SPEC.md` を参照。
 
+## v0.2: 手動重複レビューと永続部品ID
 
-## v0.2: 重複レビューと永続ID（手動）
-
-新しいコマンド `triage` は、AST一致・構造一致・近似候補をレビュー用に可視化します。ソースコードの実行・自動合体は行いません。
+v0.2は「同じ処理の候補を見つける」だけでなく、**候補の根拠を可視化し、人間が採用判断を記録する**機能を追加します。元コードは実行・変更しません。
 
 ```bash
+# 1. 手持ちのアドオンを非公開ディレクトリで解析
 python -m cbdk scan input_sources_private --output reports/latest
-python -m cbdk triage --catalog reports/latest/catalog.json --duplicates reports/latest/duplicates.json --output reports/latest/review_queue.json
+# 2. AST一致・形状一致・近似一致をレビュー用に一覧化
+python -m cbdk triage --catalog reports/latest/catalog.json \
+  --duplicates reports/latest/duplicates.json --output reports/latest/review_queue.json
+# 3. 検証用の候補IDを検索
 python -m cbdk search "法線 中心"
-# CND-... は検索結果から取得して置き換えてください
-python -m cbdk register --catalog reports/latest/catalog.json --registry reports/latest/registry.json --candidate CND-REPLACE_ME --part-id GEO-001 --name "法線計算" --purpose "面法線の取得" --origin self_owned --license-id LicenseRef-Proprietary --license-evidence "権利者の確認記録" --reviewer "開発担当者"
-python -m cbdk decide --registry reports/latest/registry.json --part-id GEO-001 --decision selected --reviewer "開発担当者" --reason "採用候補としてレビュー済み。実機検証は別途必要"
+# 4. その候補に永続IDと出典・権利確認の記録を付ける（例のIDは置換）
+python -m cbdk register --catalog reports/latest/catalog.json \
+  --registry reports/latest/registry.json --candidate CND-REPLACE_ME \
+  --part-id GEO-001 --name "法線計算" --purpose "面法線の取得" \
+  --origin self_owned --license-id LicenseRef-Proprietary \
+  --license-evidence "権利者が確認した記録" --reviewer "開発担当者"
+# 5. 手動判定（自動承認ではない）
+python -m cbdk decide --registry reports/latest/registry.json \
+  --part-id GEO-001 --decision selected \
+  --reviewer "開発担当者" --reason "動作要件を確認。実機検証は別途必要"
 python -m cbdk parts --registry reports/latest/registry.json
 ```
 
-判定は `selected / rejected / blocked / hold` の4種類。**selectedは実機動作確認済み、ライセンス適合性確認済み、再配布承認済みを意味しません。** 権利情報はレビュー担当者の申告・証跡を記録するだけです。実際のライセンス適合・Blenderテストは別工程となります。
+`decide` は `selected / rejected / blocked / hold` の4段階。**selectedはBlenderで動作確認済み・配布承認済みを意味しません。** 権利情報はユーザーの申告・証跡を記録するだけで、システムが正当性を認定するものではありません。
 
-`reports/latest/` と `input_sources_private/` はGit管理から除外済みです。レビューキューに含まれる元ファイル名などの情報は不用意に公開しないでください。
+`reports/latest/` と `input_sources_private/` はGitから除外しています。個人用レジストリを共有する場合は、元ソース名や出典の扱いを事前に見直してください。自動合体・承認・ZIPビルド・Blender実機テストは今後の段階です。
 
+## v0.4 — 同一ファイル内の依存関係をまとめて切り出し
 
-## v0.3 — 静的依存チェック・候補関数の切り出し
-
-元のアドオンを実行せず、単独化できそうなトップレベル関数を解析します。グローバル変数・非許可関数呼び出し・属性アクセス・複雑な代入・デコレータなどの候補は保留します。
-
-```bash
-python -m cbdk scan input_sources_private --output reports/latest
-python -m cbdk search "補間"
-# 次の候補IDと原本ファイル名は検索結果から指定してください
-python -m cbdk isolate --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/example.py
-python -m cbdk isolate --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/example.py --output reports/latest/extracted/helper.py
-```
-
-output未指定では検査のみ。指定すると新しいPython関数ファイルと出典JSONを生成し、既存のファイルは上書きしません。これはあくまで未承認のレビュー候補であり、権利・動作・Blender互換性を証明しません。
-
-Blenderインストール済みのPCでは、基礎的なBlender API動作を次のコマンドで任意に検証できます。第三者アドオンや抽出したコードは実行しません。
-
-```bash
-python -m cbdk.blender_test blender
-# Windowsでは blender を blender.exe のフルパスに置き換えてください
-```
-
-レポートは reports/latest/blender_smoke.json へ保存。これは抽出した関数の検証ではなく、Blender環境のスモークテストです。
-
-
-
-## v0.4 — Dependency bundles
-
-同じソース内で関数同士が依存している場合、呼び出し元のCND-IDを指定すると依存関係を静的に解析し、必要な関数と定数をまとめてレビュー用ファイルとして出力します。
+複数の関数が互いに呼び出し合う場合、依存するトップレベル関数と単純な不変リテラル定数を解析し、単一のレビュー用Pythonファイルにまとめられます。
 
 ```bash
 python -m cbdk scan input_sources_private --output reports/latest
-python -m cbdk search "法線"
-# CND-IDと元ファイルは実際の検索結果に置き換えてください
-python -m cbdk bundle --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/example.py
-python -m cbdk bundle --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/example.py --output reports/latest/extracted/group.py
+python -m cbdk search "球のクリアランス"
+# CND-... と元ファイル名は検索結果に合わせて差し替える
+python -m cbdk bundle --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/addon.py
+python -m cbdk bundle --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/addon.py --output reports/latest/extracted/group.py
 ```
 
-出力なしなら診断だけ。出力ありなら新しいPythonファイルと出典JSONを生成します。元ファイル・既存出力は変更しません。循環依存、実行時評価が必要な注釈式、危険な属性や関数呼び出し、未解決グローバル、同名衝突を拒否します。ソースのSHA-256を照合します。
+- `--output` を省略すると依存グラフとブロック理由のみ表示します。
+- 生成される `.py` と同名の `.json` はレビュー用の**未承認候補**です。実機確認なしにアドオンに組み込まないでください。
+- `max_functions=64`、深さ24、各関数最大5000 ASTノードで制限します。
+- 循環参照・外部グローバル・デコレータ・動的デフォルト引数・属性操作・危険な関数呼び出し・組み込み関数名の上書き・実行時注釈式は拒否します。
+- 元ソースのSHA-256を確認し、元ファイルも既存出力ファイルも上書きしません。
+- 同一ソースファイル内だけを対象とします。`bpy` に依存する一般的なBlender関数や別ファイルのモジュール依存はまだ未対応です。
+- **静的条件に合格しても、動作同等性・安全性・ライセンス・Blender互換性を保証しません。**
 
-実データ8ファイル652要素で検証：374トップレベル関数中、31件が静的抽出の候補になり、6件は2関数の組み合わせです。Surface Stampの `_orient2d` と `_point_in_triangle_strict_2d` を元ソース不変のまま抽出できました。
+実データ例：Surface Stamp v2.5.2の `_point_in_triangle_strict_2d` と `_orient2d` は、元ソースを変更せず一組として抽出できました。
 
-**静的条件を通過しても、Blenderでの動作・コードの安全性・ライセンス適合は保証しません。** 生成物の実行・配布前に人間のレビューが必要です。
+## v0.5 — Blender API監査とファイル間の依存関係
+
+**原本を実行せず、ASTだけを解析する**方式を維持しながら、次の2つを追加しました。
+
+### 1. Blender API使用状況の監査
+
+```bash
+python -m cbdk scan input_sources_private --output reports/latest
+python -m cbdk audit-blender --catalog reports/latest/catalog.json --output reports/latest/blender_audit.json
+```
+
+`bpy`、`bmesh`、`mathutils` の参照と呼び出し、および `bpy.ops`、`bpy.context`、編集メッシュAPIなどの**実機検証が必要そうな箇所**を抽出します。`import bpy as blender` や `from bpy import ops` の静的な別名も検出します。
+
+レポートは**参考情報**です。`context` を引数から渡すなどのパターンは推測を含み、動的ディスパッチ・インポートでは検出漏れがあります。API互換性・安全性・Blender実行成功を保証しません。
+
+### 2. 複数ファイルにまたがる関数抽出（未承認のレビュー候補）
+
+```bash
+python -m cbdk crossfile --catalog reports/latest/catalog.json \
+  --candidate CND-REPLACE_ME \
+  --source input_sources_private/myaddon/main.py \
+  --sources-root input_sources_private/myaddon
+# 検査でブロッカーがない場合に限り、 --output reports/latest/review_bundle.py で出力
+```
+
+対象は**明示的な相対インポート**（例：`from .helpers import helper`）でつながる、同一の検索ルート内・スキャン済み・SHA-256一致のトップレベル関数のみです。関数名の衝突、循環参照、任意の属性操作、外部依存、変化したソース、動的処理は拒否します。ASTで認めた数値定数と`math`依存だけを展開できます。別名インポート・ワイルドカード・Blender固有APIは現時点で自動抽出しません。
+
+出力物は新しい`.py`と同名の`.json`（出典、依存関係、元ソースのSHAなど）です。原本・既存の出力ファイルを上書きせず、採用を自動承認しません。生成物は必ず人がレビュー・テスト・権利確認を済ませてから利用してください。
+
+テスト：
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+**重要：** 合成したテストデータでは動作を確認していますが、Blender本体上での抽出結果の動作検証、複雑なアドオンの互換性・意味同等性の確認はまだ未実施です。
