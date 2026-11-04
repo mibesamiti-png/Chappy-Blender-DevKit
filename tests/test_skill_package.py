@@ -78,6 +78,7 @@ class SkillPackageTests(unittest.TestCase):
             with ZipFile(source) as archive:
                 self.assertIn("chappy-blender-devkit/SKILL.md", archive.namelist())
                 self.assertEqual(len(archive.namelist()), 5)
+                self.assertNotIn(b"\r\n", archive.read("chappy-blender-devkit/SKILL.md"))
             with ZipFile(plugin) as archive:
                 info = json.loads(archive.read("plugin.json").decode("utf-8"))
                 self.assertEqual(info["name"], "chappy-blender-devkit")
