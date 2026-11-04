@@ -77,3 +77,23 @@
 - 同等性証明、速度比較、法的なライセンス確認、正式部品承認、Extension ZIP自動生成
 
 **検証状態の区別:** Python単体テスト成功・自作コードの静的解析成功。Blender実機未検証。`approved=false` のまま。
+
+
+## v0.6 — 2026-11-04
+
+### 実装・Python単体テスト済
+- `parts/blender/context.py`: 明示的コンテキストを受け取り、アクティブメッシュと選択メッシュの読み取り専用取得（BLCTX-001/002）
+- `parts/blender/edit_mesh.py`: 編集モードと単一メッシュ条件を確認するBMeshの選択要素数取得（BME-001）
+- `cbdk/contracts.py`: v0.5のBlender API監査結果から、編集モード候補・Operator・実機テスト条件を含むレビュー用契約JSON生成
+- `python -m cbdk contracts`: CLI。レポートは承認済みコードではなくメタデータ
+- `scripts/blender_parts_smoke.py` と `python -m cbdk.blender_test blender --suite parts`: Blender実機用の信頼済み読み取り専用部品スモークテスト
+- Pythonユニットテスト64件成功（v0.5の56件 + 新規8件）。bmeshはテストでは模擬化
+- 原本8ファイルの再監査：407 API関連シンボル、169コンテキスト依存候補、407テスト契約、うち編集メッシュ候補10、Operator候補37
+
+### 未実装・未検証
+- Blender本体がこの環境にないため、`--suite parts` の実機検証は未実施
+- 既存アドオンからのbpy/bmesh依存関数の自動切り出し・実機認証
+- 複数Blenderバージョン実機互換・テストログの部品レジストリ紐付け
+- 拡張機能ZIPのビルド、部品の自動採用、ライセンス確認済み判定
+
+**区別：** `Python tests passed` != `Blender runtime verified` != `approved component`。
