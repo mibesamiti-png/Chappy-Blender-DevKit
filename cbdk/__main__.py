@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .curation import (build_review_queue, decide, read_registry, register_candidate,
                        render_review_markdown, write_queue, write_registry)
+from .isolation import inspect_candidate, extract_candidate
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -48,6 +49,12 @@ def main(argv=None) -> int:
         decide_cmd.add_argument("--" + opt, required=True)
     list_cmd = sub.add_parser("parts", help="List registered, NOT YET VERIFIED parts")
     list_cmd.add_argument("--registry", default="reports/latest/registry.json")
+
+    isolate_cmd = sub.add_parser("isolate", help="Inspect/extract one conservative top-level function (never execute it)")
+    isolate_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
+    isolate_cmd.add_argument("--candidate", required=True, help="CND-* ID from static catalog")
+    isolate_cmd.add_argument("--source", required=True, help="Original Python file to verify by SHA-256")
+    isolate_cmd.add_argument("--output", help="New .py file path; omit to inspect only")
 
     args = parser.parse_args(argv)
     try:
@@ -104,6 +111,12 @@ def main(argv=None) -> int:
             write_registry(args.registry, registry)
             print(f"{entry['part_id']}: {entry['status']} (NOT verified)")
             return 0
+        if args.command == "isolate":
+            catalog = _json(args.catalog)
+            result = (extract_candidate(catalog, args.candidate, args.source, args.output)
+                      if args.output else inspect_candidate(catalog, args.candidate, args.source))
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0 if result["eligible_for_review_extraction"] else 1
         if args.command == "parts":
             parts = read_registry(args.registry)["parts"]
             for item in sorted(parts, key=lambda x: x["part_id"]):
