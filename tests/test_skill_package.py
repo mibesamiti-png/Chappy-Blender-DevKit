@@ -33,7 +33,7 @@ class SkillPackageTests(unittest.TestCase):
 
     def test_all_local_reference_links_resolve(self):
         refs = re.findall(r"\]\((references/[^)]+\.md)\)", self.main)
-        self.assertEqual(len(refs), 3)
+        self.assertEqual(len(set(refs)), 3)
         for ref in refs:
             with self.subTest(ref=ref):
                 path = (SKILL / ref).resolve()
