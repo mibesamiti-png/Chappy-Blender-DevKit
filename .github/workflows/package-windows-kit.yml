@@ -1,0 +1,46 @@
+name: CBDK Windows kit package
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/windows_run_blender_tests.ps1'
+      - 'scripts/package_windows_kit.py'
+      - 'run_blender_tests_windows.bat'
+      - 'docs/TEST_ENVIRONMENT.md'
+      - '.github/workflows/package-windows-kit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build clean Windows kit
+        run: python scripts/package_windows_kit.py
+      - name: Verify ZIP excludes personal sources
+        run: |
+          python - <<'PY'
+          from zipfile import ZipFile
+          p = 'dist/CBDK_v0.8.1_Windows_Blender_Test_Kit.zip'
+          with ZipFile(p) as z:
+              names = z.namelist()
+              assert 'Chappy-Blender-DevKit/run_blender_tests_windows.bat' in names
+              assert 'Chappy-Blender-DevKit/scripts/windows_run_blender_tests.ps1' in names
+              assert not any('/input_sources_private/' in s or '/reports/latest/' in s or '/reports/ci/' in s for s in names)
+              print('Verified Windows kit, files:', len(names))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-windows-hotfix-kit
+          path: dist/CBDK_v0.8.1_Windows_Blender_Test_Kit.zip
+          retention-days: 14
+          if-no-files-found: error
