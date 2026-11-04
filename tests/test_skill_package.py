@@ -2,7 +2,12 @@
 from __future__ import annotations
 
 import re
+import json
+import subprocess
+import sys
+import tempfile
 import unittest
+from zipfile import ZipFile
 from pathlib import Path
 
 
@@ -57,6 +62,27 @@ class SkillPackageTests(unittest.TestCase):
         ):
             with self.subTest(command=command):
                 self.assertIn(f'"{command}"', code) if f'"{command}"' in code else self.assertIn(f"'{command}'", code)
+
+    def test_standalone_and_plugin_archives(self):
+        with tempfile.TemporaryDirectory() as folder:
+            subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "package_skill.py"),
+                 "--output-dir", folder],
+                check=True, capture_output=True, text=True, cwd=ROOT,
+            )
+            source = Path(folder) / "CBDK_Skill_v1.0.0.zip"
+            plugin = Path(folder) / "CBDK_Skill_Plugin_v1.0.0.zip"
+            self.assertTrue(source.exists())
+            self.assertTrue(plugin.exists())
+            with ZipFile(source) as archive:
+                self.assertIn("chappy-blender-devkit/SKILL.md", archive.namelist())
+                self.assertEqual(len(archive.namelist()), 5)
+            with ZipFile(plugin) as archive:
+                info = json.loads(archive.read("plugin.json").decode("utf-8"))
+                self.assertEqual(info["name"], "chappy-blender-devkit")
+                self.assertEqual(info["version"], "1.0.0")
+                self.assertIn("skills/chappy-blender-devkit/SKILL.md", archive.namelist())
+                self.assertEqual(len(archive.namelist()), 6)
 
     def test_metadata_is_nonexecuting_and_skill_only(self):
         metadata = (SKILL / "agents" / "openai.yaml").read_text(encoding="utf-8")
