@@ -43,17 +43,23 @@ function Resolve-Blenders {
 }
 
 function Resolve-Python {
-    $launcher = Get-Command py.exe -ErrorAction SilentlyContinue
-    if ($launcher) {
-        & $launcher.Source -3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" *> $null
-        if ($LASTEXITCODE -eq 0) { return @{ Cmd = $launcher.Source; Args = @('-3') } }
-    }
+    # Only 3.11 - 3.13 have passed CBDK's current full test suite.
+    # 'py -3' can select a newer Python (3.15 on GitHub Windows runners).
+    $probe = 'import sys; sys.exit(0 if (3,11) <= sys.version_info[:2] <= (3,13) else 1)'
     $python = Get-Command python.exe -ErrorAction SilentlyContinue
     if ($python) {
-        & $python.Source -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" *> $null
-        if ($LASTEXITCODE -eq 0) { return @{ Cmd = $python.Source; Args = @() } }
+        $check = Invoke-Logged -Executable $python.Source -CommandArgs @('-c', $probe) -LogPath (Join-Path $reportDir 'python_version_probe.log')
+        if ($check -eq 0) { return @{ Cmd = $python.Source; Args = @() } }
     }
-    throw 'Python 3.11+ not found'
+    $launcher = Get-Command py.exe -ErrorAction SilentlyContinue
+    if ($launcher) {
+        foreach ($version in @('3.13','3.12','3.11')) {
+            $selector = '-' + $version
+            $check = Invoke-Logged -Executable $launcher.Source -CommandArgs @($selector, '-c', $probe) -LogPath (Join-Path $reportDir 'python_version_probe.log')
+            if ($check -eq 0) { return @{ Cmd = $launcher.Source; Args = @($selector) } }
+        }
+    }
+    throw 'CBDK needs Python 3.11, 3.12 or 3.13. Newer versions are not validated by the current suite.'
 }
 
 function Invoke-Logged {
