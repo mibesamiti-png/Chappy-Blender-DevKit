@@ -30,7 +30,9 @@ def source_files() -> dict[str, bytes]:
         path = SKILL_ROOT / rel
         if not path.is_file() or path.is_symlink():
             raise ValueError(f"Missing or linked canonical skill file: {rel}")
-        files[rel] = path.read_bytes()
+        # Git on Windows may checkout CRLF; normalize to portable LF so the
+        # frontmatter regex and ZIP contents are identical across operating systems.
+        files[rel] = path.read_text(encoding="utf-8").encode("utf-8")
     front = files["SKILL.md"].decode("utf-8")
     if not re.search(r"(?m)^name: chappy-blender-devkit$", front):
         raise ValueError("Skill metadata must have its stable name")
