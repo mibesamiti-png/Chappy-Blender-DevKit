@@ -19,3 +19,8 @@
 16. v0.5: Run `python -m cbdk audit-blender` to identify bpy/bmesh/mathutils and context-sensitive code paths. Treat its report as static hints, not runtime proof.
 17. v0.5: Use `python -m cbdk crossfile` only for explicit relative-import helper graphs. Never execute user/third-party source modules when scanning; cross-file bundles are review-only and never automatically approved.
 18. v0.5: Do not commit private source originals, derived review bundles, or provenance manifests. Fail closed for missing catalog entries, changed SHA-256, cycles, import aliases, unsupported operations, and name conflicts.
+
+
+16. v0.6: Treat `parts/blender/*` as authored, unit-tested candidates, **not Blender-verified/approved**. Validate via explicit `context` and reject unsafe mode/selection states.
+17. Generate `blender_contracts.json` using `python -m cbdk contracts` only from a local audit report. Mode hints are advisory; operator poll and context requirements need separate runtime tests.
+18. `python -m cbdk.blender_test blender --suite parts` runs a trusted factory-startup check only. Do not use arbitrary scanned source as a smoke script, and don't mark a specific extracted function verified based on this suite.
