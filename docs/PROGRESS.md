@@ -59,3 +59,22 @@
 - 権利の法的確認・部品の正式承認・Extension ZIP生成
 
 eligible_for_review_extraction=true は静的条件を満たすだけであり、verification=static_only、approved=false のまま管理する。
+
+
+## v0.4 — 2026-11-04
+
+### 実装済（Python静的検査＋単体テスト）
+- `cbdk/bundle.py`: 同一ファイルの関数依存グラフ、循環参照検出、単純な定数・math、依存順のまとめ出力
+- `python -m cbdk bundle`：診断だけ／原本不変の出力
+- 重複名、外部API、デコレータ、動的引数・実行時注釈、組み込み関数名のシャドウを拒否
+- 既存27件＋新規11件のPythonテストを追加
+- 実データ8ファイル652シンボル、トップレベル関数374個のうち31個が静的条件通過、複数関数セットは6個（各2関数）
+- Surface Stampから2関数をまとめて抽出（元ソースハッシュ不変）
+
+### 未検証・次の課題
+- Blender実機での抽出関数動作・Blender複数バージョン互換性
+- bpy/bmeshを使う部品、ファイルをまたぐ依存関係
+- 同等性・速度比較、ライセンス確認・正式部品の承認
+- Extension ZIP生成
+
+抽出判定は `verification=static_only` と `approved=false` のまま。実機検証済みとは見なさない。
