@@ -13,3 +13,7 @@
 
 11. v0.2: run `python -m cbdk triage` before assigning a stable part ID; `selected` is human choice and never implies runtime verification or redistribution clearance.
 12. Keep generated `reports/latest/registry.json` and all source-derived review reports private by default; do not publish provenance without explicit review.
+
+13. v0.3: Run `python -m cbdk isolate ...` before proposing a helper, and inspect all blockers and global references. Eligible does not mean safe or approved.
+14. Generated .py/.json files are private review material; never commit them without manual behavior, context, version and license review.
+15. Optional `python -m cbdk.blender_test blender` uses only the trusted smoke script. It does not validate any collected code.
