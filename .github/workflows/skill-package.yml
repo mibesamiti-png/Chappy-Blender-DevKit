@@ -1,0 +1,55 @@
+name: CBDK Agent Skill package
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.agents/skills/chappy-blender-devkit/**'
+      - 'scripts/package_skill.py'
+      - 'tests/test_skill_package.py'
+      - '.github/workflows/skill-package.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package-skill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate skill schema, links and CLI references
+        run: python -m unittest discover -s tests -p 'test_skill_package.py' -v
+      - name: Build both skill archives
+        run: python scripts/package_skill.py --output-dir dist
+      - name: Audit package entries and plugin manifest
+        shell: bash
+        run: |
+          python - <<'PY'
+          from zipfile import ZipFile
+          import json
+          with ZipFile('dist/CBDK_Skill_v1.0.0.zip') as a:
+              assert 'chappy-blender-devkit/SKILL.md' in a.namelist()
+              assert len(a.namelist()) == 5
+          with ZipFile('dist/CBDK_Skill_Plugin_v1.0.0.zip') as a:
+              manifest = json.loads(a.read('plugin.json'))
+              assert manifest['name'] == 'chappy-blender-devkit'
+              assert manifest['version'] == '1.0.0'
+              assert 'skills/chappy-blender-devkit/SKILL.md' in a.namelist()
+              assert len(a.namelist()) == 6
+          print('CBDK skill package checks passed')
+          PY
+      - name: Upload installable packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-skill-v1
+          path: dist/CBDK_Skill*.zip
+          retention-days: 30
+          if-no-files-found: error
