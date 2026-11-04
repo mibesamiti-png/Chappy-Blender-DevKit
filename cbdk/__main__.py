@@ -8,6 +8,7 @@ from pathlib import Path
 from .curation import (build_review_queue, decide, read_registry, register_candidate,
                        render_review_markdown, write_queue, write_registry)
 from .isolation import inspect_candidate, extract_candidate
+from .bundle import inspect_bundle, extract_bundle
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -55,6 +56,13 @@ def main(argv=None) -> int:
     isolate_cmd.add_argument("--candidate", required=True, help="CND-* ID from static catalog")
     isolate_cmd.add_argument("--source", required=True, help="Original Python file to verify by SHA-256")
     isolate_cmd.add_argument("--output", help="New .py file path; omit to inspect only")
+
+    bundle_cmd = sub.add_parser("bundle", help="Inspect/extract same-file dependency closure")
+    bundle_cmd.add_argument("--catalog", default="reports/latest/catalog.json")
+    bundle_cmd.add_argument("--candidate", required=True, help="Root CND-* ID")
+    bundle_cmd.add_argument("--source", required=True, help="Original .py file")
+    bundle_cmd.add_argument("--output", help="New .py path; omit to inspect only")
+    bundle_cmd.add_argument("--max-functions", type=int, default=64)
 
     args = parser.parse_args(argv)
     try:
@@ -117,6 +125,13 @@ def main(argv=None) -> int:
                       if args.output else inspect_candidate(catalog, args.candidate, args.source))
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if result["eligible_for_review_extraction"] else 1
+        if args.command == "bundle":
+            catalog = _json(args.catalog)
+            report = (extract_bundle(catalog, args.candidate, args.source, args.output,
+                                     max_functions=args.max_functions) if args.output else
+                      inspect_bundle(catalog, args.candidate, args.source, max_functions=args.max_functions))
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report["eligible_for_review_extraction"] else 1
         if args.command == "parts":
             parts = read_registry(args.registry)["parts"]
             for item in sorted(parts, key=lambda x: x["part_id"]):

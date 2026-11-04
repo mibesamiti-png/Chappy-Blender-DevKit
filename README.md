@@ -101,3 +101,23 @@ python -m cbdk.blender_test blender
 ```
 
 レポートは reports/latest/blender_smoke.json へ保存。これは抽出した関数の検証ではなく、Blender環境のスモークテストです。
+
+
+
+## v0.4 — Dependency bundles
+
+同じソース内で関数同士が依存している場合、呼び出し元のCND-IDを指定すると依存関係を静的に解析し、必要な関数と定数をまとめてレビュー用ファイルとして出力します。
+
+```bash
+python -m cbdk scan input_sources_private --output reports/latest
+python -m cbdk search "法線"
+# CND-IDと元ファイルは実際の検索結果に置き換えてください
+python -m cbdk bundle --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/example.py
+python -m cbdk bundle --catalog reports/latest/catalog.json --candidate CND-EXAMPLE --source input_sources_private/example.py --output reports/latest/extracted/group.py
+```
+
+出力なしなら診断だけ。出力ありなら新しいPythonファイルと出典JSONを生成します。元ファイル・既存出力は変更しません。循環依存、実行時評価が必要な注釈式、危険な属性や関数呼び出し、未解決グローバル、同名衝突を拒否します。ソースのSHA-256を照合します。
+
+実データ8ファイル652要素で検証：374トップレベル関数中、31件が静的抽出の候補になり、6件は2関数の組み合わせです。Surface Stampの `_orient2d` と `_point_in_triangle_strict_2d` を元ソース不変のまま抽出できました。
+
+**静的条件を通過しても、Blenderでの動作・コードの安全性・ライセンス適合は保証しません。** 生成物の実行・配布前に人間のレビューが必要です。

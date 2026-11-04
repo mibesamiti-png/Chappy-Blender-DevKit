@@ -17,3 +17,8 @@
 13. v0.3: Run `python -m cbdk isolate ...` before proposing a helper, and inspect all blockers and global references. Eligible does not mean safe or approved.
 14. Generated .py/.json files are private review material; never commit them without manual behavior, context, version and license review.
 15. Optional `python -m cbdk.blender_test blender` uses only the trusted smoke script. It does not validate any collected code.
+
+
+16. v0.4: Run `python -m cbdk bundle` to inspect same-file function dependencies before creating a reusable helper group.
+17. Reject cycles, unknown globals, name shadowing, unsafe AST shapes, and any unverified imported dependency. Do not import or run collected code during analysis.
+18. Bundle output and provenance JSON are private, **not approved**, and **not Blender-runtime verified**.
