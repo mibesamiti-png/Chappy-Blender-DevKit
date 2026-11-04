@@ -189,3 +189,13 @@ python -m cbdk evidence-status --evidence reports/latest/parts_evidence.json
 `evidence-status` は現行コードのハッシュとの整合性チェックです。**署名・証拠の真正性を保証するものではありません。** 外部から受け取ったJSONを実機検証済みの証明として信頼しないでください。 `catalog/authored_parts.json` は初期台帳で、実機テストを実行するまでは `not_recorded` のままです。テスト成功後も使用許可・ライセンス確認・正式採用は別途必要です。
 
 この開発環境にはBlender実行ファイルがないため、v0.7ではPythonモックテストのみ確認しています。Blender本体の実機成功はまだ確認していません。
+
+
+## v0.8 — Windowsワンクリック＆クラウドBlender実機テスト
+
+- Windows：`run_blender_tests_windows.bat` をダブルクリック。Blender・Pythonを自動検出し、Pythonテスト → Blender実機テスト → 証拠の整合チェックを実行する。
+- GitHub：`.github/workflows/blender-smoke.yml` が公式Blender 4.5.15 LTSをSHA-256検証後に起動し、3部品を検証。PRで自動実行、Actionsから手動実行も可能。JSON/ログをArtifactsに14日保持。
+- Blenderは別プロセスの `--background --factory-startup` で実行し、既存の.blendやユーザー設定は変更しない。
+- 証拠やログはGitの対象外。外部アドオンの原本をアップロード・実行しない。正式承認（`approved=false`）は別の手続き。
+
+詳細は [docs/TEST_ENVIRONMENT.md](docs/TEST_ENVIRONMENT.md) を参照。

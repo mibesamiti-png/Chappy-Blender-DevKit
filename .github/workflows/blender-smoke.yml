@@ -1,0 +1,80 @@
+name: CBDK Blender 4.5 LTS runtime smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'parts/blender/**'
+      - 'cbdk/blender_test.py'
+      - 'cbdk/evidence.py'
+      - 'cbdk/__main__.py'
+      - 'scripts/blender_parts_smoke.py'
+      - '.github/workflows/blender-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  blender-parts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      BLENDER_VERSION: '4.5.15'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    steps:
+      - name: Checkout (no private input sources)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Python for CBDK CLI
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download official Blender Linux binary and verify checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://download.blender.org/release/Blender4.5"
+          archive="blender-${BLENDER_VERSION}-linux-x64.tar.xz"
+          curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30 \
+            "${base}/blender-${BLENDER_VERSION}.sha256" -o blender.sha256
+          curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30 \
+            "${base}/${archive}" -o "${archive}"
+          grep -F "${archive}" blender.sha256 | sha256sum --check --status
+          tar -xJf "${archive}"
+          echo "BLENDER_PATH=$PWD/blender-${BLENDER_VERSION}-linux-x64/blender" >> "$GITHUB_ENV"
+      - name: Check Blender is executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$BLENDER_PATH" --version | head -n 3
+      - name: Run real Blender parts checks and save evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci
+          python -m cbdk verify-parts --blender "$BLENDER_PATH" --timeout 180 \
+            --output reports/ci/parts_evidence.json 2>&1 | tee reports/ci/blender.log
+          python -m cbdk evidence-status --evidence reports/ci/parts_evidence.json \
+            2>&1 | tee reports/ci/evidence_status.log
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('reports/ci/parts_evidence.json').read_text())
+          assert p['run_status'] == 'passed', p
+          assert set(p['parts']) == {'BLCTX-001', 'BLCTX-002', 'BME-001'}, p
+          assert all(x['status'] == 'blender_smoke_passed' for x in p['parts'].values()), p
+          with Path('reports/ci/summary.md').open('w', encoding='utf-8') as f:
+              f.write('# CBDK Blender runtime test\n\n')
+              f.write(f"Blender: **{p['blender_version']}**  \n")
+              f.write('Parts passed: **3/3** (smoke only; not approved)\n')
+          PY
+          cat reports/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload evidence and log even when Blender fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-blender-4.5-smoke-${{ github.run_id }}
+          path: reports/ci/
+          retention-days: 14
+          if-no-files-found: warn
