@@ -49,12 +49,12 @@ function Resolve-Blender {
 function Resolve-Python {
     $launcher = Get-Command 'py.exe' -ErrorAction SilentlyContinue
     if ($launcher) {
-        & $launcher.Source -3 -V *> $null
+        & $launcher.Source -3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" *> $null
         if ($LASTEXITCODE -eq 0) { return @{ Cmd = $launcher.Source; Args = @('-3') } }
     }
     $python = Get-Command 'python.exe' -ErrorAction SilentlyContinue
     if ($python) {
-        & $python.Source -V *> $null
+        & $python.Source -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" *> $null
         if ($LASTEXITCODE -eq 0) { return @{ Cmd = $python.Source; Args = @() } }
     }
     throw 'Python 3.11+ not found. Install Python 3, then launch this BAT again.'
