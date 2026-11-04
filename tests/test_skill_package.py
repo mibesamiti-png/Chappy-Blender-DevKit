@@ -65,11 +65,12 @@ class SkillPackageTests(unittest.TestCase):
 
     def test_standalone_and_plugin_archives(self):
         with tempfile.TemporaryDirectory() as folder:
-            subprocess.run(
+            proc = subprocess.run(
                 [sys.executable, str(ROOT / "scripts" / "package_skill.py"),
                  "--output-dir", folder],
-                check=True, capture_output=True, text=True, cwd=ROOT,
+                check=False, capture_output=True, text=True, cwd=ROOT,
             )
+            self.assertEqual(proc.returncode, 0, proc.stdout + "\n" + proc.stderr)
             source = Path(folder) / "CBDK_Skill_v1.0.0.zip"
             plugin = Path(folder) / "CBDK_Skill_Plugin_v1.0.0.zip"
             self.assertTrue(source.exists())
