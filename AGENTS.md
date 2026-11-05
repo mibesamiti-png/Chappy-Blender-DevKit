@@ -89,3 +89,9 @@ Preflight the BMesh element count (limit: 200,000) BEFORE copying any coordinate
 ## GitHub Actions CI cost and blocked runners
 
 Private-repository runner usage has limits and costs. Suppress duplicate PR push/test triggers, cancel superseded PR runs with workflow-scoped concurrency, and run only genuine required validation. The durable-handoff workflow should not rerun the full Python suite on PR; normal Python CI covers it, and durable-handoff still records actually passed Python tests on main. Never bypass or invent Windows/Blender evidence if runner allocation fails. Check GitHub Actions owner usage/budgets and Issue #19 before retrying large CI matrices or merging v0.16.
+
+
+
+## v0.16 guarded recovery after nonfinite edits
+
+The rollback function must be capable of restoring a mesh whose *current* vertex coordinates are NaN/Inf or otherwise unreadable; do not call the finite-coordinate capture function before restoring. Verify vertex counts/connectivity independently of coordinates, then restore the saved coordinate and selection values, and **verify the result**. Fail closed on topology corruption, silent setter failure or incomplete rollback. This is a best-effort repair and must not be presented as crash-safe. The new four regression cases pass locally (229 total Python tests); GitHub Actions remains blocked at runner allocation (Issue #19), so do not merge PR #18 or claim latest CI success.
