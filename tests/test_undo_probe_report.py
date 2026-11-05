@@ -47,6 +47,21 @@ class UndoProbeReportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_report("", "passed", "passed")
 
+    def test_malformed_types_do_not_escape_validation(self):
+        for bad in ([], {}, None, 1, True):
+            with self.subTest(bad=repr(bad)):
+                with self.assertRaises(ValueError):
+                    build_report("4.5.15", bad, "not_attempted")
+                with self.assertRaises(ValueError):
+                    build_report("4.5.15", "passed", bad)
+        valid = build_report("4.5.15", "passed", "passed")
+        with self.assertRaises(ValueError):
+            validate_report(dict(valid, schema_version=True))
+        for bad_version in ("", "4.5.15\\nmalformed", "\\x00", "x" * 101):
+            with self.subTest(bad_version=repr(bad_version)):
+                with self.assertRaises(ValueError):
+                    build_report(bad_version, "passed", "passed")
+
     def test_exactly_one_structured_log_record(self):
         record = build_report("4.5.15", "passed", "passed")
         line = PREFIX + json.dumps(record)
