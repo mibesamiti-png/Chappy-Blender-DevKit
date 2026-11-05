@@ -39,3 +39,8 @@
 ## CBDK repository skill
 
 For Blender addon/CBDK development workflows, agents may use `.agents/skills/chappy-blender-devkit/SKILL.md` and its scoped references. This skill **does not override** these repository safety rules or prove tests succeeded. Keep it aligned with current CLI, tests, privacy exclusions and `docs/PROGRESS.md`. Run `python scripts/package_skill.py` to build user-installable archives; never bundle private source inputs or reports.
+
+
+## v0.10 — generated add-on preview
+
+When building Blender add-ons, use `python -m cbdk build-addon --recipe recipes/mesh_inspector.json --preview-unapproved` only for the **trusted CBDK-authored, local development preview**. Never adopt extracted or third-party functions through this pathway. Do not remove the explicit opt-in, replace source mappings with arbitrary files, or claim the resulting legacy ZIP is an approved Blender Extension. Validate with the actual `scripts/blender_generated_addon_smoke.py` run on Blender, not just unit tests; test ZIP enable/disable, UI class registration and operator behavior. Preserve `approved=false` and `license_review=pending` in the part catalog.
