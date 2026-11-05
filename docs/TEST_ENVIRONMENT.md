@@ -59,3 +59,14 @@ Windows PowerShell 5.1では、正常に成功した `unittest -v` の出力で�
 ### Python実行環境の選び方
 
 Windows版はテスト済みのPython 3.11、3.12、3.13を優先します。単純な `py -3` はPython 3.15など未検証版を勝手に選んでしまう場合があるため、`python.exe` の対応バージョンを確認してから、なければ `py -3.13` / `py -3.12` / `py -3.11` を順に試します。
+
+
+## v0.9: 複数バージョンの結果一覧
+
+Windowsで複数のBlenderをテストすると、`reports/latest/parts_matrix.json` と `parts_matrix.md` が自動作成されます。過去に作成したテスト結果をまとめ直したい場合は以下を使ってください。
+
+```bash
+python -m cbdk part-matrix --evidence-dir reports/latest
+```
+
+古いコードの証拠、欠けたテスト項目、破損したJSONは検証済みとして数えず、`rejected_evidence` に理由を記録します。古い証拠がある場合はコマンドが非0の終了コードを返しますが、Windowsスモークテストの成功/失敗と混同しません。結果は未署名のローカルJSONなので、真正性が保証された認証記録ではありません。
