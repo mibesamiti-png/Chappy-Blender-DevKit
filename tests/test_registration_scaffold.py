@@ -6,6 +6,9 @@ import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+from cbdk.__main__ import main
 
 from cbdk.addon_builder import ROOT
 from cbdk.registration_draft import propose_registration
@@ -151,6 +154,32 @@ class RegistrationScaffoldTests(unittest.TestCase):
         dest.write_text("x" * 40_000, encoding="utf-8")
         with self.assertRaises(ValueError):
             read_saved_draft(self.draft_path, root=self.root)
+
+    def test_duplicate_json_keys_refused(self):
+        destination = self.save_draft()
+        raw = json.dumps(self.draft)
+        destination.write_text(raw[:-1] + ', "approved": false}', encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Duplicate key"):
+            read_saved_draft(self.draft_path, root=self.root)
+
+    def test_numeric_new_part_approval_is_rejected(self):
+        modified = copy.deepcopy(self.draft)
+        modified["new_part"]["approved"] = 0
+        with self.assertRaises(ValueError):
+            validate_saved_draft(modified, root=self.root)
+
+    def test_cli_is_wired_to_review_only_scaffold_command(self):
+        fake_output = Path("reports/latest/scaffolds/test_demo_review.py")
+        with patch("cbdk.__main__.scaffold_from_saved_draft", return_value=fake_output) as action:
+            from contextlib import redirect_stdout
+            from io import StringIO
+            output = StringIO()
+            with redirect_stdout(output):
+                status = main(["registration-tests", "--draft",
+                               "reports/latest/registration_draft.json"])
+        self.assertEqual(status, 0)
+        action.assert_called_once_with("reports/latest/registration_draft.json")
+        self.assertIn("intentionally fail", output.getvalue())
 
     def test_read_draft_path_escape_refused(self):
         for name in ("../anything.json", "/tmp/a.json", "catalog/anything.json",
