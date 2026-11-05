@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "project": "Chappy Blender DevKit (CBDK)",
+  "repository": "mibesamiti-png/Chappy-Blender-DevKit",
+  "updated_on": "2026-11-05",
+  "release": {
+    "current": "0.15.0",
+    "stage": "private_development_preview",
+    "next_planned": "0.16.0",
+    "milestone": "Edit Modeでのメッシュ移動に差分監査・異常検出・復元を導入"
+  },
+  "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
+  "entry_points": [
+    "docs/PROJECT_HANDOFF.md",
+    "docs/project/STATE.json",
+    "docs/PROJECT_SPEC.md",
+    "docs/PROGRESS.md",
+    "AGENTS.md"
+  ],
+  "requirements": [
+    {
+      "id": "SRC-001",
+      "title": "PythonアドオンのASTスキャン・関数台帳",
+      "status": "implemented",
+      "verification": "python",
+      "source": "cbdk/scanner.py",
+      "note": "元コードを実行せず解析"
+    },
+    {
+      "id": "DUP-001",
+      "title": "AST・構造重複候補と検索",
+      "status": "implemented",
+      "verification": "python",
+      "source": "cbdk/dedup.py",
+      "note": "同等性は保証しない"
+    },
+    {
+      "id": "REV-001",
+      "title": "候補の手動選択・来歴記録",
+      "status": "implemented",
+      "verification": "python",
+      "source": "cbdk/curation.py",
+      "note": "選択は採用/ライセンス承認ではない"
+    },
+    {
+      "id": "ISO-001",
+      "title": "ソース内/複数ファイルの依存静的検査",
+      "status": "partial",
+      "verification": "python",
+      "source": "cbdk/crossfile.py",
+      "note": "条件に合う安全側パターンのみ"
+    },
+    {
+      "id": "AUD-001",
+      "title": "Blender API静的監査・契約",
+      "status": "implemented",
+      "verification": "python",
+      "source": "cbdk/blender_audit.py",
+      "note": "実機検査とは分離"
+    },
+    {
+      "id": "PART-001",
+      "title": "再利用自作部品の台帳と実機スモーク",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "catalog/authored_parts.json",
+      "note": "7部品。実行証拠はPR #16のCI。台帳は承認を与えない"
+    },
+    {
+      "id": "PLAN-001",
+      "title": "機能依存閉包・Blender互換性チェック",
+      "status": "implemented",
+      "verification": "python",
+      "source": "cbdk/feature_catalog.py",
+      "note": "5機能。許可リストにないコードは実行しない"
+    },
+    {
+      "id": "BUILD-001",
+      "title": "レシピからのBlenderアドオン生成",
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "cbdk/modular_builder.py",
+      "note": "レガシー形式・固定の自作プレビューのみ"
+    },
+    {
+      "id": "EDIT-001",
+      "title": "Edit Mode選択頂点の安全な移動",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "parts/blender/edit_transform.py",
+      "note": "単一メッシュ/有限オフセット/Blender UNDOフラグ"
+    },
+    {
+      "id": "EDIT-002",
+      "title": "編集差分の監査とベストエフォート復元",
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "parts/blender/edit_audit.py",
+      "note": "座標/選択/接続関係の検査、完全なトランザクションではない"
+    },
+    {
+      "id": "TEST-001",
+      "title": "Python/Windows/Blender 3バージョンCI",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": ".github/workflows/blender-smoke.yml",
+      "note": "4.4.3、4.5.15、5.2.1で最新の確認済み"
+    },
+    {
+      "id": "UI-001",
+      "title": "汎用アドオンUI組み立て",
+      "status": "not_implemented",
+      "verification": "not_tested",
+      "source": "",
+      "note": "任意レイアウトの生成は未対応"
+    },
+    {
+      "id": "EXT-001",
+      "title": "正式Blender Extensions形式と公開パッケージ",
+      "status": "not_implemented",
+      "verification": "not_tested",
+      "source": "",
+      "note": "法的/ライセンス確認を先に行う"
+    },
+    {
+      "id": "INST-001",
+      "title": "GitHubからBlenderへの直接インストール・更新",
+      "status": "deferred",
+      "verification": "not_tested",
+      "source": "",
+      "note": "ユーザー希望で保留。UI確認段階まで実装しない"
+    },
+    {
+      "id": "PERF-001",
+      "title": "巨大メッシュ向け監査・効率化",
+      "status": "not_implemented",
+      "verification": "not_tested",
+      "source": "",
+      "note": "監査は現在20万要素で上限制御"
+    },
+    {
+      "id": "GUI-001",
+      "title": "実際のGUI Undo・操作感の自動検証",
+      "status": "not_implemented",
+      "verification": "not_tested",
+      "source": "",
+      "note": "ヘッドレスではUndoフラグと編集結果まで確認"
+    }
+  ],
+  "known_issues": [
+    {
+      "id": "LIM-001",
+      "status": "open",
+      "severity": "medium",
+      "title": "監査後のトポロジー破損は座標復元だけでは修復不可",
+      "workaround": "作業ファイルのバックアップとBlender標準Undoを使い、危険な加工は正式採用しない",
+      "related_requirement": "EDIT-002"
+    },
+    {
+      "id": "LIM-002",
+      "status": "open",
+      "severity": "low",
+      "title": "GUIのCtrl+Zと操作感はヘッドレスCIでは未検証",
+      "workaround": "UIのある開発段階でWindows上で確認する",
+      "related_requirement": "GUI-001"
+    },
+    {
+      "id": "LIM-003",
+      "status": "open",
+      "severity": "low",
+      "title": "Blender公式アーカイブ取得で稀にHTTP 403",
+      "workaround": "ダウンロード失敗とコード失敗を区別し、CIの失敗ジョブのみ再実行する",
+      "related_requirement": "TEST-001"
+    },
+    {
+      "id": "LIM-004",
+      "status": "open",
+      "severity": "medium",
+      "title": "自作部品の採用・ライセンス/再配布確認は未完了",
+      "workaround": "開発用プレビューのみで、approved=falseを維持する",
+      "related_requirement": "BUILD-001"
+    }
+  ],
+  "next_actions": [
+    {
+      "id": "NEXT-001",
+      "priority": 1,
+      "status": "todo",
+      "title": "v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断",
+      "acceptance": "メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない"
+    },
+    {
+      "id": "NEXT-002",
+      "priority": 2,
+      "status": "todo",
+      "title": "Blender Undo・Redoの実機検証を拡充",
+      "acceptance": "自動化可能なUndo/Redoの機械的チェックと、GUI操作未検証部分を切り分けて記録する"
+    },
+    {
+      "id": "NEXT-003",
+      "priority": 3,
+      "status": "todo",
+      "title": "機能登録と新レシピ構築の自動化を改善",
+      "acceptance": "新規許可部品で台帳・依存・CIの不一致を検出する"
+    },
+    {
+      "id": "NEXT-004",
+      "priority": 4,
+      "status": "deferred",
+      "title": "GitHubからBlenderへ直接インストール・更新",
+      "acceptance": "ユーザーがUI確認の必要性を示すまで作らない"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "decision": "GitHubが開発状況・仕様・検証の引き継ぎ元",
+      "note": "チャット履歴に依存しない。新チャットはGitHubの引き継ぎ文書から開始"
+    },
+    {
+      "id": "DEC-002",
+      "decision": "Blender実機CI優先、Windows GUI確認は必要時のみ",
+      "note": "ヘッドレスCIを操作感のテストと偽らない"
+    },
+    {
+      "id": "DEC-003",
+      "decision": "未確認コードや私有元アドオンは自動実行・公開しない",
+      "note": "各部品の正式採用、ライセンス、実機検査を分離"
+    },
+    {
+      "id": "DEC-004",
+      "decision": "GitHubから直接インストールする管理機能は当面保留",
+      "note": "UI確認が必要になる段階で検討"
+    }
+  ],
+  "last_verified": {
+    "release": "0.15.0",
+    "observed_on": "2026-11-05",
+    "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/16",
+    "checked_head_sha": "cf02f66ff3ef83901cc80084862d1ec1f48ee0bb",
+    "result": "success",
+    "python": {
+      "count": 196,
+      "versions": [
+        "3.11",
+        "3.12",
+        "3.13"
+      ],
+      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366371"
+    },
+    "windows": {
+      "versions": [
+        "3.11",
+        "3.13"
+      ],
+      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366384"
+    },
+    "blender": {
+      "versions": [
+        "4.4.3",
+        "4.5.15",
+        "5.2.1"
+      ],
+      "part_count": 7,
+      "recipe_count": 6,
+      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366369"
+    },
+    "package": {
+      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366315"
+    },
+    "limitations": "CIは環境別・変更コミット別の検証記録。以後の変更やGUIの操作感まで保証しない。"
+  },
+  "security": {
+    "private_source_paths": [
+      "input_sources_private/",
+      "reports/latest/",
+      "reports/ci/"
+    ],
+    "explicit_preview_opt_in": "--preview-unapproved",
+    "allow_publishing_without_license_review": false,
+    "automatic_approval": false
+  },
+  "maintenance_policy": {
+    "on_every_milestone": "STATE.jsonの仕様・進捗・課題・次の一手・CI実測を更新し、PROJECT_HANDOFF.mdを再生成",
+    "on_ci_failure": "検証結果を成功と書かず、原因・失敗ジョブのURLをknown_issuesまたは作業メモに記録",
+    "source_of_truth": "docs/project/STATE.json",
+    "generated_handoff": "docs/PROJECT_HANDOFF.md"
+  }
+}
