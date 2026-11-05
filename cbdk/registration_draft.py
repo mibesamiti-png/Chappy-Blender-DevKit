@@ -19,6 +19,8 @@ FEATURE_ID = re.compile(r"[a-z][a-z0-9_]{2,39}\Z")
 PART_ID = re.compile(r"[A-Z]{2,8}-[0-9]{3}\Z")
 MODULE_NAME = re.compile(r"[a-z][a-z0-9_]{1,39}\Z")
 MAX_PARTS = 8
+# Declared by the developer, never inferred from arbitrary addon source or ID.
+BEHAVIORS = frozenset({"unspecified", "read_only", "mesh_edit"})
 REPORT_DIR = Path("reports/latest")
 
 
@@ -34,11 +36,14 @@ def propose_registration(
     *,
     new_part_id: str | None = None,
     new_part_module: str | None = None,
+    behavior: str = "unspecified",
     root: Path = ROOT,
 ) -> dict:
     """Plan a manually reviewed *proposal*, never an executable registration."""
     project = Path(root).resolve()
     feature = _checked_text(feature_id, FEATURE_ID, "feature ID")
+    if not isinstance(behavior, str) or behavior not in BEHAVIORS:
+        raise ValueError("Behavior must be unspecified, read_only, or mesh_edit")
     if (new_part_id is None) != (new_part_module is None):
         raise ValueError("New part ID and module must be supplied together")
 
@@ -85,7 +90,7 @@ def propose_registration(
     if not set(required_parts) <= possible:
         raise ValueError("Unregistered required part ID")
 
-    return {
+    report = {
         "schema_version": 1,
         "kind": "cbdk_registration_draft",
         "status": "proposal_only",
@@ -113,6 +118,11 @@ def propose_registration(
         "source_executed": False,
         "catalog_modified": False,
     }
+    # Preserve all previously saved schema-1 drafts when behavior was omitted.
+    # An explicit behavior is a *claim for test-planning*, not verified behavior.
+    if behavior != "unspecified":
+        report["behavior"] = behavior
+    return report
 
 
 def write_draft(report: dict, *, root: Path = ROOT,
