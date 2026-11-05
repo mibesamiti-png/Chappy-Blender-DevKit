@@ -14,7 +14,7 @@ import bpy
 
 
 PACKAGE = "cbdk_modular_preview"
-KNOWN = {"object_selection", "edit_selection"}
+KNOWN = {"object_selection", "edit_selection", "mesh_bounds", "modifier_summary"}
 
 
 def verify_zip(path):
@@ -33,6 +33,10 @@ def verify_zip(path):
             expected.add(f"{PACKAGE}/features/{feature}.py")
         if "edit_selection" in features:
             expected.add(f"{PACKAGE}/helpers/edit_mesh.py")
+        if "mesh_bounds" in features:
+            expected.add(f"{PACKAGE}/helpers/measure.py")
+        if "modifier_summary" in features:
+            expected.add(f"{PACKAGE}/helpers/modifiers.py")
         assert set(members) == expected, (set(members), expected)
         for info in archive.infolist():
             assert not any(part in ("", ".", "..") for part in info.filename.split("/"))
@@ -65,6 +69,10 @@ def run(path):
                 expected_ops.add("cbdk.modular_selected_meshes")
             if "edit_selection" in features:
                 expected_ops.add("cbdk.modular_edit_selection")
+            if "mesh_bounds" in features:
+                expected_ops.add("cbdk.modular_mesh_bounds")
+            if "modifier_summary" in features:
+                expected_ops.add("cbdk.modular_modifier_summary")
             assert operator_ids == expected_ops, (operator_ids, expected_ops)
             checks.append("only_selected_operators_registered")
 
@@ -91,6 +99,30 @@ def run(path):
                 assert bpy.ops.cbdk.modular_edit_selection() == {"CANCELLED"}
                 checks.append("edit_requires_edit_mode")
 
+            if "mesh_bounds" in features:
+                obj.scale = (2.0, 3.0, 1.0)
+                obj.location = (5.0, -3.0, 2.0)
+                bpy.context.view_layer.update()
+                old_vertices = len(mesh.vertices)
+                assert bpy.ops.cbdk.modular_mesh_bounds() == {"FINISHED"}
+                status = bpy.context.scene.cbdk_modular_result
+                assert "2.000 x 3.000 x 0.000" in status, status
+                assert len(mesh.vertices) == old_vertices and bpy.context.mode == "OBJECT"
+                checks.append("mesh_world_bounds_non_destructive")
+
+            if "modifier_summary" in features:
+                modifier = obj.modifiers.new(name="CBDK_Subdivision", type="SUBSURF")
+                modifier.show_viewport = False
+                before = [(m.name, m.type, m.show_viewport, m.show_render)
+                          for m in obj.modifiers]
+                assert bpy.ops.cbdk.modular_modifier_summary() == {"FINISHED"}
+                status = bpy.context.scene.cbdk_modular_result
+                assert "Modifiers: 1 (SUBSURF:1)" in status, status
+                after = [(m.name, m.type, m.show_viewport, m.show_render)
+                         for m in obj.modifiers]
+                assert before == after
+                checks.append("modifier_stack_read_only")
+
             light.select_set(False)
             bpy.ops.object.mode_set(mode="EDIT")
             bpy.ops.mesh.select_all(action="SELECT")
@@ -103,6 +135,12 @@ def run(path):
             if "object_selection" in features:
                 assert bpy.ops.cbdk.modular_selected_meshes() == {"CANCELLED"}
                 checks.append("object_requires_object_mode")
+            if "mesh_bounds" in features:
+                assert bpy.ops.cbdk.modular_mesh_bounds() == {"CANCELLED"}
+                checks.append("bounds_reject_edit_mode")
+            if "modifier_summary" in features:
+                assert bpy.ops.cbdk.modular_modifier_summary() == {"CANCELLED"}
+                checks.append("modifiers_reject_edit_mode")
 
             bpy.ops.object.mode_set(mode="OBJECT")
             bpy.context.view_layer.objects.active = None
