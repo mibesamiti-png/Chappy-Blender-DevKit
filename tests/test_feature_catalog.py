@@ -31,9 +31,9 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
     def feature(self, feature_id):
         return next(item for item in self.doc['features'] if item['id'] == feature_id)
 
-    def test_current_allowlist_has_four_known_features(self):
+    def test_current_allowlist_has_five_known_features(self):
         catalog = load_feature_catalog(root=self.root)
-        self.assertEqual(set(catalog), {'edit_selection', 'object_selection', 'mesh_bounds', 'modifier_summary'})
+        self.assertEqual(set(catalog), {'edit_selection', 'object_selection', 'mesh_bounds', 'modifier_summary', 'vertex_nudge'})
         self.assertTrue(all(x['min_blender'] == '4.4.0' for x in catalog.values()))
 
     def test_object_only_plans_exact_two_parts(self):
@@ -165,7 +165,7 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
             f = json.loads(features.read_text(encoding='utf-8'))
             p = json.loads(planned.read_text(encoding='utf-8'))
             self.assertFalse(f['approved'])
-            self.assertEqual(len(f['features']), 4)
+            self.assertEqual(len(f['features']), 5)
             self.assertEqual(p['part_ids'], ['BLCTX-001', 'BLCTX-002', 'BME-001'])
             self.assertEqual(p['target_blender'], '4.4.3')
 
