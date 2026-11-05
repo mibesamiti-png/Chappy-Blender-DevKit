@@ -126,3 +126,9 @@ An offline `static_checks_passed` report explicitly means **not** Blender runtim
 Before manually adding a CBDK-authored feature or part, use `python -m cbdk registration-draft` for a proposal and inspect `docs/REGISTRATION_DRAFT.md`. This command may only print JSON or write an exclusive private report under `reports/latest/`; it must never execute untrusted source, change `catalog/`, populate trusted allowlists, approve licensing, publish, or claim CI/runtime success. Unknown IDs, stale catalog mappings and colliding paths must fail closed.
 
 Implementation of a proposed feature remains a separate reviewed change that updates trusted source mappings, recipes, tests and CI. Keep `approved=false`, `license_review=pending`, and the explicit preview-only gate. PR #20 remains a draft until all upstream v0.16 and v0.17 checks actually pass.
+
+## v0.17 draft — registration test scaffold safety
+
+`python -m cbdk registration-tests --draft reports/latest/registration_draft.json` is a review-only, local scaffold workflow. Never trust a saved JSON plan without recomputing it from the present trusted allowlists and catalogs. Reject duplicate JSON keys, inconsistent safety flags, unknown parts, source collisions and path escapes before rendering.
+
+Output Python must remain under ignored `reports/latest/scaffolds/`, never auto-added to tracked `tests/`, runtime scripts, catalogs or Blender. Use exclusive file creation (no overwrite). All generated TODO assertions must deliberately fail until human review and actual implementation. Generating a scaffold, parsing its syntax or passing static validation proves neither runtime correctness nor license clearance. Keep v0.17 PR #20 in draft until proper Python, Windows and Blender CI are actually observed.
