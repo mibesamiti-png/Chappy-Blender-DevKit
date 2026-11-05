@@ -237,3 +237,20 @@
 - 完全に自由なBlender UI生成、正式なExtensionsパッケージ作成と一般配布
 - 実際のBlender GUIレイアウト、マウス操作の自動検証
 - GitHubからBlenderへの直接インストール・更新（希望により保留中）
+
+
+## v0.13.0 — 2026-11-05
+
+### 実装
+- `parts/blender/measure.py` / `BLGEO-001`：Object Modeメッシュの未適用形状に対するワールドAABBと寸法、頂点数。空メッシュ・編集中の状態・異常座標を拒否し、ユーザーシーンは変更しない。
+- `parts/blender/modifiers.py` / `BLMOD-001`：モディファイア名・種類・表示/レンダーフラグの不変スナップショット。変更や適用はしない。
+- 新規 `mesh_bounds` と `modifier_summary` オペレーターを `templates/modular_preview/features` に追加し、`catalog/addon_features.json` とコード許可リスト・依存マッピングに登録。
+- 新規2レシピ `modular_geometry` / `modular_all`。既存の3レシピと旧v1を維持し、必要部品だけZIPに封入。
+- `cbdk/evidence.py` と実機スモークスクリプトを5部品に拡張、各部品の異常系と読み取り検証を実施。
+- GitHub Actionsで従来3バージョンのBlenderそれぞれで部品5件および生成アドオン5構成の有効化・モード別機能・登録解除を検査するよう変更。
+- Pythonテストでスケール・オフセット座標、モディファイア結果が不変であること、未登録/空データの拒否、新レシピの依存閉包を検査。
+
+### 検証・注意
+- 本記録のCIの合否は各Pull Requestの実際のチェックを優先し、確認前に成功とは扱わない。
+- GitHubからBlenderへの直接インストール・更新機能は、希望により保留中。
+- **未実装**：汎用的なメッシュ加工オペレーター（形状変更）、高度なUIビルダー、Blender Extensions正式パッケージ、ライセンス/正式採用、Windows GUI手動操作の自動評価。
