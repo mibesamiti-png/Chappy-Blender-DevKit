@@ -10,9 +10,12 @@ on:
       - 'cbdk/__main__.py'
       - 'scripts/blender_parts_smoke.py'
       - 'cbdk/addon_builder.py'
+      - 'cbdk/modular_builder.py'
       - 'recipes/**'
       - 'templates/mesh_inspector/**'
+      - 'templates/modular_preview/**'
       - 'scripts/blender_generated_addon_smoke.py'
+      - 'scripts/blender_modular_addon_smoke.py'
       - '.github/workflows/blender-smoke.yml'
 
 permissions:
@@ -99,6 +102,22 @@ jobs:
             2>&1 | tee reports/ci/generated_addon_smoke.log
           grep -F 'CBDK_GENERATED_ADDON_PASS ' reports/ci/generated_addon_smoke.log
           echo "Generated preview add-on: enable, Object/Edit operators, negative case and disable PASSED." >> "$GITHUB_STEP_SUMMARY"
+      - name: Build and test three modular recipe combinations in real Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          for recipe in modular_objects modular_edit modular_combined; do
+            output="reports/ci/CBDK_${recipe}_Preview.zip"
+            python -m cbdk build-addon \
+              --recipe "recipes/${recipe}.json" \
+              --preview-unapproved \
+              --output "$output" 2>&1 | tee "reports/ci/${recipe}_build.log"
+            "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+              --python scripts/blender_modular_addon_smoke.py \
+              -- "$output" 2>&1 | tee "reports/ci/${recipe}_smoke.log"
+            grep -F 'CBDK_MODULAR_ADDON_PASS ' "reports/ci/${recipe}_smoke.log"
+          done
+          echo 'Modular preview variants: objects-only, edit-only and combined PASSED.' >> "$GITHUB_STEP_SUMMARY"
       - name: Upload evidence and log even when Blender fails
         if: always()
         uses: actions/upload-artifact@v4
