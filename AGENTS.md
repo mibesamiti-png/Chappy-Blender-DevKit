@@ -79,3 +79,8 @@ The new BME-002 helper `parts/blender/edit_transform.py` is the first intentiona
 ## v0.15 strict edit auditing
 
 `BME-003` provides immutable bounded BMesh snapshots and checks expected deltas after mutating edit operations. `BME-002` nudge must not report success unless the post-edit audit passes. Do not replace Blender's native Undo with snapshots. Audit checks vertices' coordinates/selection and edge/face connectivity. Restoration is best-effort and cannot rebuild changed topology; errors must say when original geometry cannot be verified. Keep a size cap to limit CPU/memory on larger meshes. Run both adversarial Python unit tests and actual Blender version-matrix tests before merging. No third-party source code ingestion, publishing or auto-install.
+
+
+## v0.16 audit performance and resource guards
+
+Preflight the BMesh element count (limit: 200,000) BEFORE copying any coordinates. The new audit_live_vertex_translation streams live coordinates and selection data and still compares exact edge/face topology, preserving existing capture_edit_snapshot and audit_vertex_translation APIs. Compare requested movement rather than huge absolute world coordinates when computing tolerance. Refuse a size-limit operation before any edit. Validate adversarial Python tests and the real Blender 70x70 grid metric/size-limit smoke on 4.4.3/4.5.15/5.2.1. Update STATE.json and regenerate the handoff; claim verified CI only after actual successful runs. Keep user data private and GitHub direct installation deferred.
