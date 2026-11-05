@@ -49,3 +49,8 @@ When building Blender add-ons, use `python -m cbdk build-addon --recipe recipes/
 ## v0.11 modular preview recipes
 
 The v2 `modular_preview` recipe schema is a **strict declarative allowlist**. Only two CBDK-authored features (`object_selection`, `edit_selection`) may be composed until their tests and review are extended. Resolve exact part dependencies from IDs, never from arbitrary Python paths or user-defined executable snippets. Preserve v1 compatibility, ZIP determinism, source provenance, the `--preview-unapproved` opt-in, and the rule that this is a single-package preview (do not concurrently install multiple variants). Confirm actual Blender CI for each generated recipe; neither CI nor hashes can grant license approval.
+
+
+## v0.12 trusted authored feature metadata
+
+For v2 modular previews, inspect `catalog/addon_features.json` and `cbdk/feature_catalog.py` before adding new features. Catalog metadata is not executable authorization. New features require code-level allowlist entries, authored feature modules, preserved source-to-part mappings, correct dependencies, and actual Blender integration checks. Reject graph cycles, duplicate or unknown features, changed code paths, missing source registrations and incompatible target Blender versions. Use `python -m cbdk feature-list` and `python -m cbdk addon-plan --recipe ... --target-blender 4.4.3` to review before a preview-only `build-addon`. Do not treat a plan or source hash as licensing, approval or runtime proof. Keep GitHub auto-install postponed unless the user asks again.

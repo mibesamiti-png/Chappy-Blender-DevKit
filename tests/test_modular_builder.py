@@ -19,7 +19,7 @@ class ModularBuilderTests(unittest.TestCase):
         self.addCleanup(self.work.cleanup)
         self.root = Path(self.work.name)
         sources = [
-            'catalog/authored_parts.json', 'parts/blender/context.py',
+            'catalog/authored_parts.json', 'catalog/addon_features.json', 'parts/blender/context.py',
             'parts/blender/edit_mesh.py', 'templates/modular_preview/__init__.py',
             'templates/modular_preview/features/object_selection.py',
             'templates/modular_preview/features/edit_selection.py',

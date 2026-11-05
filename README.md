@@ -251,3 +251,18 @@ python -m cbdk build-addon --recipe recipes/modular_combined.json --preview-unap
 有効な機能は `object_selection`（選択メッシュ数）と `edit_selection`（編集中メッシュの頂点・辺・面の選択数）。レシピが指定したものだけZIPに封入します。実装はCBDKが作成した固定の安全側モジュールを再利用します。**任意の外部アドオンを自動実行・自動組み込みする機能ではありません。**
 
 3つとも同じ開発用アドオン識別子 `cbdk_modular_preview` を使うので、**同時インストールせず、前のプレビューを無効化してから差し替える**想定です。正式な配布用Blender Extensionは未対応。詳細は [docs/ADDON_BUILDER.md](docs/ADDON_BUILDER.md)。
+
+
+## CBDK v0.12 — 許可済み機能カタログ・依存関係検査
+
+`catalog/addon_features.json` に、既存の自作機能2種類の部品依存・機能依存・Blenderの最低対応バージョンを記録。**レシピの入力だけで、必要部品を解決し、互換性を確認**できるようになりました。
+
+```bash
+python -m cbdk feature-list
+python -m cbdk addon-plan --recipe recipes/modular_combined.json --target-blender 4.4.3
+python -m cbdk build-addon --recipe recipes/modular_combined.json --target-blender 4.4.3 --preview-unapproved --output dist/CBDK_Combined_Preview.zip
+```
+
+`feature-list` は機能の一覧、`addon-plan` は機能・部品の依存閉包と最低対応バージョンを表示し、ZIPは生成しません。`--output reports/latest/addon_plan.json` でJSON保存可能。
+
+カタログは宣言的データです。JSONだけを編集して任意のPython実装や外部アドオンを取り込むことはできません。新しい機能は**安全なコード側の許可リスト・出典・専用テストを追加してから**登録する設計。循環依存や存在しない部品、Blender互換性の不整合は拒否します。正式承認・再配布ライセンス認定は行いません。

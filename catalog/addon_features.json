@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "trusted_authored_feature_catalog",
+  "preview_only": true,
+  "features": [
+    {
+      "id": "edit_selection",
+      "name": "Count Edit Selection",
+      "source": "templates/modular_preview/features/edit_selection.py",
+      "required_parts": [
+        "BLCTX-001",
+        "BME-001"
+      ],
+      "requires_features": [],
+      "min_blender": "4.4.0",
+      "max_blender": null
+    },
+    {
+      "id": "object_selection",
+      "name": "Count Selected Meshes",
+      "source": "templates/modular_preview/features/object_selection.py",
+      "required_parts": [
+        "BLCTX-001",
+        "BLCTX-002"
+      ],
+      "requires_features": [],
+      "min_blender": "4.4.0",
+      "max_blender": null
+    }
+  ]
+}

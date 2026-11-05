@@ -11,29 +11,20 @@ import json
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
-from .addon_builder import _read_catalog, _sha, _trusted_read
+from .addon_builder import _sha, _trusted_read
+from .feature_catalog import TRUSTED_FEATURES, TRUSTED_PART_SOURCES, plan_features
 
 PACKAGE_ID = "cbdk_modular_preview"
 TEMPLATE = "modular_preview"
-FEATURES = {
-    "object_selection": {
-        "parts": frozenset({"BLCTX-001", "BLCTX-002"}),
-        "source": "templates/modular_preview/features/object_selection.py",
-    },
-    "edit_selection": {
-        "parts": frozenset({"BLCTX-001", "BME-001"}),
-        "source": "templates/modular_preview/features/edit_selection.py",
-    },
-}
-PART_SOURCES = {
-    "BLCTX-001": "parts/blender/context.py",
-    "BLCTX-002": "parts/blender/context.py",
-    "BME-001": "parts/blender/edit_mesh.py",
-}
+# Retain the old public mapping name; the security-sensitive allowlist now has
+# a single source of truth in feature_catalog.py.
+FEATURES = TRUSTED_FEATURES
+PART_SOURCES = TRUSTED_PART_SOURCES
 HELPERS = {
     "parts/blender/context.py": "helpers/context.py",
     "parts/blender/edit_mesh.py": "helpers/edit_mesh.py",
 }
+
 MAX_DISPLAY_NAME = 72
 
 
@@ -65,18 +56,18 @@ def build_modular(
     *,
     preview_unapproved: bool,
     root: Path,
+    target_blender: str | None = None,
 ) -> dict:
     """Compose only exact CBDK-owned feature templates, no arbitrary imports."""
     name, feature_ids = validate_modular_recipe(recipe)
     if not preview_unapproved:
         raise ValueError("Not approved for release: --preview-unapproved is required for LOCAL builds")
+    plan = plan_features(feature_ids, root=root, target_blender=target_blender)
+    resolved_features = tuple(plan["ordered_features"])
+    part_ids = plan["part_ids"]
+    # Keep authored-part metadata separate from proof of approval.
+    from .addon_builder import _read_catalog
     catalog = _read_catalog(root=root)
-    part_ids = sorted(set().union(*(FEATURES[f]["parts"] for f in feature_ids)))
-    for part_id in part_ids:
-        entry = catalog.get(part_id)
-        if not isinstance(entry, dict) or entry.get("source") != PART_SOURCES[part_id]:
-            raise ValueError("Authored part/source missing or mismatched: " + part_id)
-        # This does not approve catalog entries; license and review still apply.
 
     init_template = _trusted_read("templates/modular_preview/__init__.py", root=root).decode("utf-8")
     for marker in ("__CBDK_DISPLAY_NAME__", "__CBDK_FEATURE_IDS__"):
@@ -84,7 +75,7 @@ def build_modular(
             raise ValueError("Modular template placeholder must occur exactly once: " + marker)
     init_code = (init_template
                  .replace("__CBDK_DISPLAY_NAME__", repr(name))
-                 .replace("__CBDK_FEATURE_IDS__", repr(feature_ids)))
+                 .replace("__CBDK_FEATURE_IDS__", repr(resolved_features)))
     # Python repr is an escaped Python *literal*, not code supplied by recipes.
     sources = sorted({PART_SOURCES[part_id] for part_id in part_ids})
     assets: dict[str, bytes] = {
@@ -93,7 +84,7 @@ def build_modular(
         "features/__init__.py": b'"""Allowlisted feature modules selected by a v2 recipe."""\n',
         "README.txt": (
             f"{name}\nPRIVATE DEVELOPMENT PREVIEW ONLY\n\n"
-            f"Included feature IDs: {', '.join(feature_ids)}\n"
+            f"Included feature IDs: {', '.join(resolved_features)}\n"
             "Blender 4.4+ > Preferences > Add-ons > Install Legacy Add-on.\n"
             "3D View > Sidebar > CBDK. Use the shown inspection buttons.\n"
             "Do not install multiple modular-preview variants simultaneously.\n"
@@ -102,14 +93,17 @@ def build_modular(
     }
     for source in sources:
         assets[HELPERS[source]] = _trusted_read(source, root=root)
-    for feature_id in feature_ids:
+    for feature_id in resolved_features:
         assets["features/" + feature_id + ".py"] = _trusted_read(
             FEATURES[feature_id]["source"], root=root
         )
 
     provenance = {
         "schema_version": 2, "template": TEMPLATE, "package_id": PACKAGE_ID,
-        "display_name": name, "features": list(feature_ids), "part_ids": part_ids,
+        "display_name": name, "features": list(resolved_features),
+        "requested_features": list(feature_ids), "part_ids": part_ids,
+        "minimum_blender": plan["minimum_blender"], "maximum_blender": plan["maximum_blender"],
+        "target_blender": target_blender,
         "preview_only": True, "redistribution_cleared": False, "approved": False,
         "blender_runtime_verified_for_this_build": False,
         "parts": [
@@ -137,6 +131,8 @@ def build_modular(
             info.compress_type = ZIP_DEFLATED
             info.external_attr = 0o644 << 16
             archive.writestr(info, blob)
-    return {"output": str(target), "package_id": PACKAGE_ID, "features": list(feature_ids),
-            "part_ids": part_ids, "files": len(assets), "preview_only": True,
+    return {"output": str(target), "package_id": PACKAGE_ID,
+            "features": list(resolved_features), "part_ids": part_ids,
+            "minimum_blender": plan["minimum_blender"], "target_blender": target_blender,
+            "files": len(assets), "preview_only": True,
             "approved": False}

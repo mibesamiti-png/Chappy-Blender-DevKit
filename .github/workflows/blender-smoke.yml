@@ -11,6 +11,8 @@ on:
       - 'scripts/blender_parts_smoke.py'
       - 'cbdk/addon_builder.py'
       - 'cbdk/modular_builder.py'
+      - 'cbdk/feature_catalog.py'
+      - 'catalog/addon_features.json'
       - 'recipes/**'
       - 'templates/mesh_inspector/**'
       - 'templates/modular_preview/**'
@@ -83,12 +85,19 @@ jobs:
               f.write('Parts passed: **3/3** (smoke only; not approved)\n')
           PY
           cat reports/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify authored feature catalog and preview plan for target Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cbdk feature-list --output reports/ci/feature_catalog.json             2>&1 | tee reports/ci/feature_catalog.log
+          python -m cbdk addon-plan --recipe recipes/modular_combined.json             --target-blender "$BLENDER_VERSION" --output reports/ci/addon_plan.json             2>&1 | tee reports/ci/addon_plan.log
       - name: Build private development-preview addon ZIP
         shell: bash
         run: |
           set -euo pipefail
           python -m cbdk build-addon \
             --recipe recipes/mesh_inspector.json \
+            --target-blender "$BLENDER_VERSION" \
             --preview-unapproved \
             --output reports/ci/CBDK_Mesh_Inspector_Preview.zip \
             2>&1 | tee reports/ci/addon_build.log
@@ -110,6 +119,7 @@ jobs:
             output="reports/ci/CBDK_${recipe}_Preview.zip"
             python -m cbdk build-addon \
               --recipe "recipes/${recipe}.json" \
+              --target-blender "$BLENDER_VERSION" \
               --preview-unapproved \
               --output "$output" 2>&1 | tee "reports/ci/${recipe}_build.log"
             "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
