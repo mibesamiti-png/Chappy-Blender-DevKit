@@ -22,6 +22,26 @@
       "license_review": "pending"
     },
     {
+      "part_id": "BLGEO-001",
+      "name": "mesh_world_bounds",
+      "module": "parts.blender.measure",
+      "source": "parts/blender/measure.py",
+      "status": "unit_tested",
+      "blender_runtime": "not_recorded",
+      "approved": false,
+      "license_review": "pending"
+    },
+    {
+      "part_id": "BLMOD-001",
+      "name": "modifier_snapshot",
+      "module": "parts.blender.modifiers",
+      "source": "parts/blender/modifiers.py",
+      "status": "unit_tested",
+      "blender_runtime": "not_recorded",
+      "approved": false,
+      "license_review": "pending"
+    },
+    {
       "part_id": "BME-001",
       "name": "count_edit_selection",
       "module": "parts.blender.edit_mesh",
