@@ -61,6 +61,8 @@ jobs:
             --output reports/ci/parts_evidence.json 2>&1 | tee reports/ci/blender.log
           python -m cbdk evidence-status --evidence reports/ci/parts_evidence.json \
             2>&1 | tee reports/ci/evidence_status.log
+          python -m cbdk part-matrix --evidence reports/ci/parts_evidence.json \
+            --output reports/ci/parts_matrix.json 2>&1 | tee reports/ci/part_matrix.log
           python - <<'PY'
           import json
           from pathlib import Path
