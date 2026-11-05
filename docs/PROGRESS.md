@@ -424,3 +424,13 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - `docs/REGISTRATION_DRAFT.md` を更新。要件 `REG-002` と決定 `DEC-010` をGitHub引き継ぎ台帳に追加。
 
 **検証状況：** この変更の19回帰テストとBlender/Windows実機CIの成功はまだ実測していない。GitHub ActionsはIssue #19で実行開始前に失敗しており、主張できる直近の全CI成功はv0.15.0のまま。ドラフトPR #20で保留。
+
+## v0.17 開発中 — 2026-11-05（動作種別によるテストひな形の切替）
+
+- `cbdk/registration_draft.py` に、開発者申告の `unspecified`, `read_only`, `mesh_edit` を追加。未指定の従来JSONには新しいキーを出さず、後方互換性を維持。
+- CLI `python -m cbdk registration-draft --behavior read_only|mesh_edit` を追加。テスト項目を切り替える申告値であり、元の未確認ソースの自動解釈・実行ではない。
+- `cbdk/registration_scaffold.py` のレビュー用未完成テストひな形を分岐。従来の共通5件に加え、read_onlyでは不変性と不要なUndo変更、mesh_editでは選択範囲変更・ロールバック・Undo/Redoの3件を追加（どちらも合計8件）。全項目は `self.fail(TODO)` で初期状態不合格。
+- `tests/test_registration_behavior.py` に回帰テスト13件を追加。既存ドラフト互換性、明示値の検証、生成されたソースの構文、未完了テストのカウント、CLI経由の申告、新規ソース無改変等をテストするコードを登録。
+- `docs/REGISTRATION_DRAFT.md`、仕様書、進捗台帳、引き継ぎ、AGENTSを更新。要件ID `REG-003` / 設計判断ID `DEC-011`。
+
+**確認状況：** 上記13件はテストを追加しただけで、GitHub ActionsやBlender/Windows実機では成功を確認していない。PR #18/20はCIの実行前障害（Issue #19）で未マージ。検証済みの最新バージョンはv0.15.0。
