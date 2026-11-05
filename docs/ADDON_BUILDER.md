@@ -131,3 +131,12 @@ python -m cbdk build-addon --recipe recipes/modular_nudge.json --target-blender 
 ```
 
 個人用の開発プレビューのみ。元の外部アドオンは取り込まず、カタログ承認やライセンス確認を自動変更しません。
+
+
+## v0.15 — 差分検証・復元ガード
+
+新規部品 `BME-003` は `capture_edit_snapshot`、`audit_vertex_translation`、`restore_edit_snapshot` を提供。PythonだけでBMesh型への依存なしに差分を比較できるよう、内部記録を不変データ構造にしています。
+
+`BME-002` の編集は **スナップショット → 全入力の事前検証 → 頂点移動 → Blenderへ更新 → 差分監査** の順に進みます。無関係な頂点やトポロジーの変更、予定と違う座標差がある場合は復元を試み、成功と宣言しません。
+
+メッシュの頂点＋辺＋面が20万を超える場合はメモリ使用量を抑えるため事前に拒否します。これは暫定的な開発用の上限であり、BMeshのすべての内部データを永続的に保存するものではありません。UndoはBlenderの `REGISTER/UNDO` Operatorに委ねます。GUIでのCtrl+ZそのものはヘッドレスCIでは保証しません。
