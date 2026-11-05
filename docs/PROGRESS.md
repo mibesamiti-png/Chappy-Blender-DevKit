@@ -370,3 +370,19 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - 非ゼロ移動の数値誤差は絶対閾値と移動量に対する15%の相対閾値の小さい方を使用し、非常に小さい要求を誤差の範囲として見逃さない。float32の丸めで精度不足の場合、正しく拒否する安全側の設計。
 - 新規回帰テスト6件：1軸のみ反映、未選択頂点の微小変更、期待移動量より大幅に小さな変更、微小な正しい移動、ゼロ移動軸の変更、頂点移動処理での部分反映の検出とロールバック。
 - ローカルPython（3.13.5）の**全238件成功**。最新のBlender/Windows GitHub CIはランナー割当前の問題が継続し、**未検証**。PR #18はmainへマージしていない。
+
+
+## v0.17 開発中 — 2026-11-05（背景Blender Undo/Redoの証拠分離）
+
+### 開発ブランチで追加
+- `scripts/blender_undo_redo_smoke.py`: CBDK生成の `modular_nudge` プレビューだけをBlenderファクトリー設定の別プロセスで有効化し、選択頂点の移動・トポロジー不変を確認。可能ならBlenderネイティブ `bpy.ops.ed.undo/redo` の結果を編集データから再取得して検証。
+- `cbdk/undo_probe_report.py`: 構造化JSON証拠を検証し、`verified_background` / `partial_background` / `unavailable_in_background` を区別。`poll()=False` を成功と誤認しない。GUIショートカット検証済みを名乗る証拠は禁止。
+- `tests/test_undo_probe_report.py`: 不整合・未検証の成功偽装・二重レコード・不正JSON・GUI検証誤認を拒否するPython回帰テストを追加。
+- `.github/workflows/blender-smoke.yml`: 既存6レシピをビルドした後に`modular_nudge`を対象として単独のUndo/Redoプローブを実行し、結果を`reports/ci/undo_redo.json`に保存するCI工程を追加。
+
+### 検証状態・注意
+- **この追加変更のPython全体テスト・Blender実機CI・Windows GUIは未実行。** 成功数は記録しない。
+- Blenderのバックグラウンド環境ではネイティブUndo/Redoのpollが利用不可の可能性があり、その場合は`unavailable_in_background`を保存する。これはUndo/Redo動作確認の成功ではない。
+- GUI Ctrl+Z / Ctrl+Shift+Z の実機操作は別件（GUI-001）として未実装・未検証のまま。
+- `main`はv0.15.0、v0.16のPR #18もCIブロッカー Issue #19 により未マージ。v0.17変更は`feature/v0.17-undo-redo-probe`に隔離し、正式検証前にmainへ統合しない。
+- `last_verified` はv0.15.0の記録を維持する。
