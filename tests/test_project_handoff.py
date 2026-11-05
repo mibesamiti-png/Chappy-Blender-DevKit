@@ -87,7 +87,7 @@ class ProjectHandoffTests(unittest.TestCase):
             validate_state(self.root)
 
     def test_duplicate_task_priority_fails(self):
-        self.state["next_actions"][1]["priority"] = 1
+        self.state["next_actions"][1]["priority"] = self.state["next_actions"][0]["priority"]
         self.save()
         with self.assertRaisesRegex(ValueError, "priority"):
             validate_state(self.root)
