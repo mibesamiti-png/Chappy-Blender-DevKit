@@ -26,7 +26,8 @@ _DRAFT_FIELDS = frozenset({
 
 def validate_saved_draft(draft: object, *, root: Path = ROOT) -> dict:
     """Reject stale, altered, or forged drafts before interpolating any text."""
-    if not isinstance(draft, dict) or set(draft) != _DRAFT_FIELDS:
+    if (not isinstance(draft, dict) or
+            set(draft) not in (_DRAFT_FIELDS, _DRAFT_FIELDS | {"behavior"})):
         raise ValueError("Unexpected registration draft fields")
     if type(draft["schema_version"]) is not int or draft["schema_version"] != 1:
         raise ValueError("Unexpected draft schema")
@@ -55,7 +56,8 @@ def validate_saved_draft(draft: object, *, root: Path = ROOT) -> dict:
     # checklist steps) forbids accidental promotion of a proposal to approval.
     expected = propose_registration(
         draft["feature_id"], draft["required_parts"],
-        new_part_id=part_id, new_part_module=module_name, root=root,
+        new_part_id=part_id, new_part_module=module_name,
+        behavior=draft.get("behavior", "unspecified"), root=root,
     )
     if draft != expected:
         raise ValueError("Registration draft is stale or modified; regenerate it")
@@ -69,6 +71,7 @@ def render_test_scaffold(draft: dict, *, root: Path = ROOT) -> str:
     class_name = "CBDK_" + ident + "_ReviewTests"
     part = checked["new_part"]
     required = tuple(checked["required_parts"])
+    behavior = checked.get("behavior", "unspecified")
     lines = [
         '"""UNREVIEWED CBDK TEST SCAFFOLD. Not a successful test or approved feature.',
         "",
@@ -81,6 +84,7 @@ def render_test_scaffold(draft: dict, *, root: Path = ROOT) -> str:
         f"FEATURE_SOURCE = {checked['feature_source']!r}",
         f"REQUIRED_PARTS = {required!r}",
         f"NEW_PART_SOURCE = {part['source'] if part else None!r}",
+        f"DECLARED_BEHAVIOR = {behavior!r}  # Developer-declared; not verified",
         "",
         f"class {class_name}(unittest.TestCase):",
         "    def test_ownership_and_dependency_review(self):",
@@ -98,10 +102,39 @@ def render_test_scaffold(draft: dict, *, root: Path = ROOT) -> str:
         "    def test_undo_redo_and_multi_version_smoke_contract(self):",
         '        self.fail("TODO: define Blender runtime smoke; verify Undo/Redo if destructive")',
         "",
+    ]
+    # Conservative checklists: behavior is declared explicitly by the author.
+    # Unknown/legacy drafts retain the five original general TODO tests.
+    if behavior == "read_only":
+        lines.extend([
+            "",
+            "    def test_read_only_preserves_geometry_and_selection(self):",
+            '        self.fail("TODO: snapshot and compare topology, coordinates, selection and mode")',
+            "",
+            "    def test_read_only_preserves_modifiers_and_object_transforms(self):",
+            '        self.fail("TODO: confirm modifiers, transforms and scene object counts unchanged")',
+            "",
+            "    def test_read_only_does_not_add_an_undo_operation(self):",
+            '        self.fail("TODO: verify inspection does not create an unintended Undo entry")',
+        ])
+    elif behavior == "mesh_edit":
+        lines.extend([
+            "",
+            "    def test_edit_changes_only_selected_mesh_elements(self):",
+            '        self.fail("TODO: compare selected and unselected vertices, edges and faces")',
+            "",
+            "    def test_edit_bad_input_rolls_back_topology_and_selection(self):",
+            '        self.fail("TODO: exercise invalid parameters, missing mesh and rollback")',
+            "",
+            "    def test_edit_undo_redo_replays_exact_expected_delta(self):",
+            '        self.fail("TODO: verify native Undo/Redo mesh deltas in real Blender")',
+        ])
+    lines.extend([
+        "",
         'if __name__ == "__main__":',
         "    unittest.main()",
         "",
-    ]
+    ])
     content = "\n".join(lines)
     ast.parse(content)
     return content
