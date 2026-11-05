@@ -24,6 +24,7 @@ HELPERS = {
     "parts/blender/context.py": "helpers/context.py",
     "parts/blender/edit_mesh.py": "helpers/edit_mesh.py",
     "parts/blender/edit_transform.py": "helpers/edit_transform.py",
+    "parts/blender/edit_audit.py": "helpers/edit_audit.py",
     "parts/blender/measure.py": "helpers/measure.py",
     "parts/blender/modifiers.py": "helpers/modifiers.py",
 }
