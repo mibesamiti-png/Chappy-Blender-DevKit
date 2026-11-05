@@ -86,7 +86,7 @@ try {
     $pyargs = @($python.Args)
     Write-Host "Python: $pycmd $($pyargs -join ' ')"
     if (-not $SkipUnitTests) {
-        Write-Host '`n[1/3] Python unit tests (stderr-safe)...'
+        Write-Host "`n[1/3] Python unit tests (stderr-safe)..."
         $unitLog = Join-Path $reportDir 'python_unit_tests.log'
         $rc = Invoke-Logged -Executable $pycmd -CommandArgs ($pyargs + @('-m','unittest','discover','-s','tests','-v')) -LogPath $unitLog
         Get-Content -LiteralPath $unitLog -Tail 8
