@@ -5,8 +5,13 @@ tiny triangle-only benchmark. Timings and tracked Python heap peak are emitted
 as observations, not claims of a universal speed guarantee.
 """
 import json
+import sys
 import time
 import tracemalloc
+from pathlib import Path
+
+# Blender --python scripts/.. does not automatically add repository root.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import bmesh
 import bpy
