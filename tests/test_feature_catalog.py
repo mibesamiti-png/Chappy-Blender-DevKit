@@ -76,7 +76,7 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
 
     def test_cycle_is_rejected_even_if_selection_is_one_feature(self):
         self.feature('edit_selection')['requires_features'] = ['object_selection']
-        self.doc['features'][1]['requires_features'] = ['edit_selection']
+        self.feature('object_selection')['requires_features'] = ['edit_selection']
         self.save()
         with self.assertRaisesRegex(ValueError, 'Cycle'):
             plan_features(['object_selection'], root=self.root)
