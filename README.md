@@ -222,3 +222,17 @@ python -m cbdk part-matrix --evidence reports/latest/parts_evidence_Blender_4_4_
 ```
 
 出力は `reports/latest/parts_matrix.json` と `parts_matrix.md`。Windowsのワンクリックテストでは検証後に自動作成します。古い・壊れた証拠は除外理由を表示し、集計コマンドは失敗を返します。**自作部品の台帳は変更せず、正式採用・ライセンス確認・検証記録の真正性を自動認定しません。**
+
+
+## v0.10 — CBDK Mesh Inspectorアドオンを自動生成
+
+レシピから安全側の自作部品3個を選び、Blender 4.4+向けの**プライベートなレガシーアドオン開発プレビュー**を自動生成できるようになりました。
+
+```bash
+python -m cbdk build-addon --recipe recipes/mesh_inspector.json \
+  --preview-unapproved --output dist/CBDK_Mesh_Inspector_Preview.zip
+```
+
+Blenderの **3D View > Sidebar > CBDK** に「Mesh Inspector」が追加され、選択メッシュ/頂点/辺/面の数を検査する読み取り中心のサンプルです。部品の正式採用・配布許諾は未確認のため、`--preview-unapproved` を指定した個人開発用途に限定します。
+
+導入・テスト方法: [docs/ADDON_BUILDER.md](docs/ADDON_BUILDER.md)
