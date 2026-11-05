@@ -84,6 +84,7 @@ def build_addon(
     *,
     preview_unapproved: bool = False,
     root: Path | None = None,
+    target_blender: str | None = None,
 ) -> dict:
     """Deterministically package trusted files; no third-party code execution."""
     project = (root or ROOT).resolve()
@@ -91,8 +92,13 @@ def build_addon(
     if isinstance(recipe, dict) and recipe.get("schema_version") == 2:
         # Delayed import keeps the stable v0.10 recipe implementation isolated.
         from .modular_builder import build_modular
-        return build_modular(recipe, output, preview_unapproved=preview_unapproved, root=project)
+        return build_modular(recipe, output, preview_unapproved=preview_unapproved,
+                             root=project, target_blender=target_blender)
     _validate_recipe(recipe)
+    if target_blender is not None:
+        from .feature_catalog import parse_version
+        if parse_version(target_blender) < (4, 4, 0):
+            raise ValueError("Legacy Mesh Inspector preview requires Blender 4.4.0 or later")
     entries = _read_catalog(root=project)
     chosen = {}
     for part_id in sorted(PART_IDS):
