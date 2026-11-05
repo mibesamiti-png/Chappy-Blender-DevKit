@@ -254,3 +254,12 @@
 - 本記録のCIの合否は各Pull Requestの実際のチェックを優先し、確認前に成功とは扱わない。
 - GitHubからBlenderへの直接インストール・更新機能は、希望により保留中。
 - **未実装**：汎用的なメッシュ加工オペレーター（形状変更）、高度なUIビルダー、Blender Extensions正式パッケージ、ライセンス/正式採用、Windows GUI手動操作の自動評価。
+
+
+### GitHub Actions 実測結果（PR #14 / 2026-11-05）
+
+- Python 3.11 / 3.12 / 3.13：**166テスト成功**（前版154件＋新規12件）。
+- Windows PowerShell 5.1：Python 3.11 / 3.13両ジョブ成功。
+- Blender 4.4.3 / 4.5.15 LTS / 5.2.1 LTS：それぞれ**5/5共通部品スモーク成功**。5つのレシピ（objects/edit/combined/geometry/all）で生成したアドオンすべて、有効化・演算子・モード拒否・解除の各実機テスト成功（合計15構成）。旧v1プレビューも3バージョンで成功。
+- 途中のGitHub ActionsでBlender公式ダウンロードへのHTTP 403が発生したが、PR #14の最終コミット `beb92406757b79e5ac389d1b9de548d24cbb6c32` に対応する成功した3ジョブのログで確かめた。外部ダウンロードの一時的な失敗とコードの不具合を区別する。
+- 部品は引き続き `approved=false`、`license_review=pending`。クラウドのLinux/ヘッドレス実機スモークはWindowsの視覚的UI品質・実作業での操作感の確認ではない。
