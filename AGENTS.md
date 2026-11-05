@@ -105,3 +105,12 @@ The legacy full-snapshot verifier and the streamed post-edit verifier must agree
 ## v0.16 per-axis audit safety
 
 Audit each XYZ component independently for each vertex. A successful X displacement must not hide a lost small Y displacement. Reject any mutation on axes with zero requested offset or on unselected vertices; no tolerance there because coordinates are read back from the same BMesh value domain. For requested nonzero axes require observable movement and compare the expected displacement with the tighter of the absolute limit and 15% of delta. Maintain strict old/full-snapshot versus streamed audit parity and a rollback regression for partially written multi-axis edits. Local Python 238/238 passed on 2026-11-05; latest Windows and Blender CI are still blocked before runners start, so do not claim verification or merge PR #18.
+
+
+## v0.17 draft — Native Undo/Redo evidence boundaries
+
+The dedicated `scripts/blender_undo_redo_smoke.py` must use only a CBDK-authored generated nudge preview, launched with Blender `--background --factory-startup`. A successful nudge only proves the edit operation; do not report that native Undo, native Redo, or GUI shortcuts passed unless those *specific* operations were actually tested.
+
+Validate the structured output using `python -m cbdk.undo_probe_report`. A false `bpy.ops.ed.undo.poll()` or `redo.poll()` is `unavailable`, never `passed`. Preserve `gui_hotkey_verified=false` and `user_project_tested=false`. Do not silently promote optional background probe results to GUI certification or project approval.
+
+While PR #18 is blocked by GitHub Actions runner allocation, v0.17 remains a separate development branch with no new CI success claim. Do not change `last_verified`, publish a package, or merge before necessary CI and compatibility checks.
