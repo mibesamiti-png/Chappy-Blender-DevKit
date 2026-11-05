@@ -193,3 +193,12 @@
 - Blender Extensionsの公式manifest形式でのビルド・公開
 - 外部コードのライセンス許諾と部品正式採用
 - UI操作感やユーザーの実際のプロジェクトでの動作
+
+### 実際のGitHub Actions検証結果（PR #11）
+
+- Python 3.11 / 3.12 / 3.13: **115/115件成功**（既存101＋アドオンビルダー新規14）。
+- Windows PowerShellランナー（Python 3.11 / 3.13）: 成功。
+- Blender 4.4.3 / 4.5.15 LTS / 5.2.1 LTS: 3ジョブとも成功。
+- 生成したアドオンZIPをBlenderの一時環境に展開し、`addon_utils.enable` / UI登録 / Object Modeの読み取り / Edit ModeのV・E・F / 対象メッシュなしの拒否 / `addon_utils.disable`での登録解除を、各バージョンで**6/6項目ずつ実機確認**。
+- CI成果物から `CBDK_Mesh_Inspector_Preview.zip` とテストログを取得。ユーザーWindowsの画面を操作してインストールする手順・他アドオンとの競合は未検証。
+- `CBDK_BUILD_INFO.json`内の`blender_runtime_verified_for_this_build=false`は保守的なローカル生成時点の値。CIに付随する別ログが実行証拠となる（ZIPだけでは真正性を証明しない）。
