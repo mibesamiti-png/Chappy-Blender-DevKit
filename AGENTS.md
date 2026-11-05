@@ -54,3 +54,8 @@ The v2 `modular_preview` recipe schema is a **strict declarative allowlist**. On
 ## v0.12 trusted authored feature metadata
 
 For v2 modular previews, inspect `catalog/addon_features.json` and `cbdk/feature_catalog.py` before adding new features. Catalog metadata is not executable authorization. New features require code-level allowlist entries, authored feature modules, preserved source-to-part mappings, correct dependencies, and actual Blender integration checks. Reject graph cycles, duplicate or unknown features, changed code paths, missing source registrations and incompatible target Blender versions. Use `python -m cbdk feature-list` and `python -m cbdk addon-plan --recipe ... --target-blender 4.4.3` to review before a preview-only `build-addon`. Do not treat a plan or source hash as licensing, approval or runtime proof. Keep GitHub auto-install postponed unless the user asks again.
+
+
+## CBDK v0.13 authored geometry/modifier inspection
+
+The allowlist now includes `BLGEO-001` (`mesh_world_bounds`) and `BLMOD-001` (`modifier_snapshot`). Both are read-only Blender Object Mode helpers. World bounds are an AABB of the **base mesh**, not an evaluated modifier result; do not claim measured final visible geometry. The modifier snapshot contains detached values and must not apply, edit, or reorder modifiers. The v0.13 modular previews add `mesh_bounds` and `modifier_summary` and two new recipes. Verify all 5 authored parts and all 5 modular recipe variants on Blender 4.4.3/4.5.15/5.2.1 before marking this version tested. Preserve original addon source privacy and explicit preview-unapproved opt-in. Public approval remains false.
