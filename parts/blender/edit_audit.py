@@ -88,6 +88,14 @@ def _near(a: float, b: float, *, delta: float = 0.0) -> bool:
     return abs(a - b) <= ABS_TOLERANCE + REL_TOLERANCE * max(1.0, abs(delta))
 
 
+def _validate_translation_delta(delta) -> None:
+    """Use the same strict input contract for snapshot and streaming audits."""
+    if (not isinstance(delta, tuple) or len(delta) != 3
+            or not all(isinstance(x, (int, float)) and not isinstance(x, bool)
+                       and isfinite(x) for x in delta)):
+        raise BlenderContextError("Audit requires a finite translation delta")
+
+
 def audit_vertex_translation(before: MeshEditSnapshot, after: MeshEditSnapshot,
                              delta: tuple[float, float, float]) -> MeshEditDiff:
     """Verify that exactly preselected vertices moved by the requested delta."""
@@ -96,8 +104,7 @@ def audit_vertex_translation(before: MeshEditSnapshot, after: MeshEditSnapshot,
         or before.edges != after.edges or before.faces != after.faces
     )
     selection_changed = before.selected != after.selected
-    if not isinstance(delta, tuple) or len(delta) != 3 or not all(isfinite(x) for x in delta):
-        raise BlenderContextError("Audit requires a finite translation delta")
+    _validate_translation_delta(delta)
     moved = []
     unexpected = []
     matched = True
@@ -112,6 +119,11 @@ def audit_vertex_translation(before: MeshEditSnapshot, after: MeshEditSnapshot,
             matched = False
     if len(before.coordinates) != len(after.coordinates):
         matched = False
+    # Match the streaming audit: a nonzero move must be observable. A
+    # too-small delta can disappear in float32 coordinates and must not be
+    # reported as successful, even if it lies within numeric tolerance.
+    if any(value != 0.0 for value in delta) and not moved:
+        matched = False
     return MeshEditDiff(tuple(moved), tuple(unexpected), selection_changed,
                         topology_changed, matched)
 
@@ -125,9 +137,7 @@ def audit_live_vertex_translation(before: MeshEditSnapshot, bm,
     winding/order must match the before-image. This is a safety audit, not an
     editable Blender undo stack or a topology-recovery mechanism.
     """
-    if (not isinstance(delta, tuple) or len(delta) != 3
-            or not all(isinstance(x, (int, float)) and isfinite(x) for x in delta)):
-        raise BlenderContextError("Audit requires a finite translation delta")
+    _validate_translation_delta(delta)
     preflight_audit_size(bm)
     try:
         verts = bm.verts
