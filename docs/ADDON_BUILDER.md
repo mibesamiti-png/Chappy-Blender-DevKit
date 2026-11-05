@@ -94,3 +94,22 @@ python -m cbdk addon-plan --recipe recipes/modular_combined.json \
 `build-addon` の `--target-blender` は任意指定。指定した場合、v1/v2両方のプレビューで4.4.0以降のサポート範囲を確認します。**指定しない場合はBlenderバージョンを推測しません**。GitHub Actionsは4.4.3・4.5.15・5.2.1を指定して、機能構成計画と実生成を確認します。CLIプランの `runtime_verified=false` はあくまで静的チェックを意味します。
 
 現段階のカタログは2機能だけ。将来の機能追加ではPython側の許可リスト・機能実装・依存テスト・Blender実機テストも追加していきます。外部の自作アドオン原本は無条件でインポート/実行しません。
+
+
+## v0.13 — 新しい共通部品を追加
+
+`BLGEO-001 / mesh_world_bounds`：Object Modeのアクティブメッシュのローカルバウンディングボックスを `matrix_world` で変換し、ワールド軸に沿った最小・最大座標、寸法、頂点数を独立した読み取り専用レコードで返す。スケール/回転/移動を考慮する。**未適用モディファイアは計算に含まない**。Edit ModeはBMeshとの同期不整合を避けて拒否、空メッシュと非有限値は拒否する。
+
+`BLMOD-001 / modifier_snapshot`：Object Modeのアクティブメッシュのモディファイア名・種類・viewport/renderフラグを、変更可能なBlenderオブジェクトへの参照を保持しないタプルとして返す。値を変更せず適用もしない。
+
+機能レシピ：
+- `recipes/modular_geometry.json` — `mesh_bounds` と `modifier_summary`
+- `recipes/modular_all.json` — 従来の `object_selection` / `edit_selection` も加えた計4機能
+
+```bash
+python -m cbdk build-addon --recipe recipes/modular_geometry.json \
+  --target-blender 4.4.3 --preview-unapproved \
+  --output dist/CBDK_Geometry_Preview.zip
+```
+
+既存の旧レシピから生成するアドオンは引き続き動作する。新しい部品を追加するときは、`catalog/authored_parts.json`・`catalog/addon_features.json`とコード側の許可リスト・実際のBlenderテストを更新する。サンプルZIPは開発プレビュー専用で、複数構成を同時インストールしないこと。

@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "template": "modular_preview",
+  "package_id": "cbdk_modular_preview",
+  "display_name": "CBDK Geometry and Modifiers Preview",
+  "features": [
+    "mesh_bounds",
+    "modifier_summary"
+  ],
+  "purpose": "local_development_preview"
+}

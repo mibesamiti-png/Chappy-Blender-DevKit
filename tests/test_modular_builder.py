@@ -20,9 +20,12 @@ class ModularBuilderTests(unittest.TestCase):
         self.root = Path(self.work.name)
         sources = [
             'catalog/authored_parts.json', 'catalog/addon_features.json', 'parts/blender/context.py',
-            'parts/blender/edit_mesh.py', 'templates/modular_preview/__init__.py',
+            'parts/blender/edit_mesh.py', 'parts/blender/measure.py',
+            'parts/blender/modifiers.py', 'templates/modular_preview/__init__.py',
             'templates/modular_preview/features/object_selection.py',
             'templates/modular_preview/features/edit_selection.py',
+            'templates/modular_preview/features/mesh_bounds.py',
+            'templates/modular_preview/features/modifier_summary.py',
         ]
         for path in sources:
             target = self.root / path
@@ -80,6 +83,31 @@ class ModularBuilderTests(unittest.TestCase):
         with ZipFile(self.output) as z:
             self.assertIn(f'{PACKAGE_ID}/helpers/edit_mesh.py', z.namelist())
             self.assertNotIn(f'{PACKAGE_ID}/features/object_selection.py', z.namelist())
+
+    def test_geometry_only_selects_exact_two_new_helpers(self):
+        self.data['features'] = ['mesh_bounds', 'modifier_summary']
+        self.save_recipe()
+        report = self.build()
+        self.assertEqual(report['part_ids'], ['BLCTX-001', 'BLGEO-001', 'BLMOD-001'])
+        with ZipFile(self.output) as z:
+            names = z.namelist()
+            self.assertIn(f'{PACKAGE_ID}/helpers/measure.py', names)
+            self.assertIn(f'{PACKAGE_ID}/helpers/modifiers.py', names)
+            self.assertNotIn(f'{PACKAGE_ID}/helpers/edit_mesh.py', names)
+            self.assertNotIn(f'{PACKAGE_ID}/features/object_selection.py', names)
+
+    def test_all_tools_recipe_includes_five_parts(self):
+        self.data['features'] = ['object_selection', 'edit_selection',
+                                 'mesh_bounds', 'modifier_summary']
+        self.save_recipe()
+        result = self.build()
+        self.assertEqual(result['part_ids'], [
+            'BLCTX-001', 'BLCTX-002', 'BLGEO-001', 'BLMOD-001', 'BME-001'
+        ])
+        with ZipFile(self.output) as z:
+            self.assertIn(f'{PACKAGE_ID}/helpers/measure.py', z.namelist())
+            self.assertIn(f'{PACKAGE_ID}/helpers/modifiers.py', z.namelist())
+            self.assertEqual(len(json.loads(z.read(f'{PACKAGE_ID}/CBDK_BUILD_INFO.json'))['features']), 4)
 
     def test_feature_order_does_not_affect_zip(self):
         self.build()
@@ -181,7 +209,7 @@ class ModularBuilderTests(unittest.TestCase):
             self.build()
 
     def test_cli_three_recipe_examples(self):
-        for recipe_name in ('modular_objects', 'modular_edit', 'modular_combined'):
+        for recipe_name in ('modular_objects', 'modular_edit', 'modular_combined', 'modular_geometry', 'modular_all'):
             with self.subTest(recipe_name=recipe_name):
                 output = self.root / f'{recipe_name}.zip'
                 rc = main(['build-addon', '--recipe', str(ROOT / f'recipes/{recipe_name}.json'),

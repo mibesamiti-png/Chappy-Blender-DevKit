@@ -266,3 +266,24 @@ python -m cbdk build-addon --recipe recipes/modular_combined.json --target-blend
 `feature-list` は機能の一覧、`addon-plan` は機能・部品の依存閉包と最低対応バージョンを表示し、ZIPは生成しません。`--output reports/latest/addon_plan.json` でJSON保存可能。
 
 カタログは宣言的データです。JSONだけを編集して任意のPython実装や外部アドオンを取り込むことはできません。新しい機能は**安全なコード側の許可リスト・出典・専用テストを追加してから**登録する設計。循環依存や存在しない部品、Blender互換性の不整合は拒否します。正式承認・再配布ライセンス認定は行いません。
+
+
+## CBDK v0.13 — メッシュの寸法とモディファイアを確認
+
+Blenderの実用的な読み取り部品を2件追加しました。自作の固定部品5件と、宣言的レシピから選べる4機能になりました。
+
+| 機能 | 操作 | 部品ID |
+|---|---|---|
+| `mesh_bounds` | メッシュのワールド軸に沿った寸法を表示（未適用モディファイアは含まない） | `BLGEO-001` |
+| `modifier_summary` | アクティブメッシュのモディファイア数と種類を表示 | `BLMOD-001` |
+
+```bash
+python -m cbdk addon-plan --recipe recipes/modular_all.json --target-blender 4.4.3
+python -m cbdk build-addon --recipe recipes/modular_all.json \
+    --target-blender 4.4.3 --preview-unapproved \
+    --output dist/CBDK_All_Tools_Preview.zip
+```
+
+従来の `modular_objects` / `modular_edit` / `modular_combined` に加え、`modular_geometry`（新しい2機能）と `modular_all`（計4機能）のレシピを追加。Blender 4.4.3 / 4.5.15 / 5.2.1で、それぞれのヘッドレス操作・登録解除を検査する仕組みです。
+
+**両機能とも基本は読み取りのみ**。Active Object・選択・モード・メッシュ形状・モディファイア設定を変更しません。検査結果の表示用Scene文字列プロパティだけを更新します。レガシー形式の個人プレビュー用であり、正式な配布・採用・ライセンス承認は含みません。
