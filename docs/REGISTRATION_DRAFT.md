@@ -31,6 +31,41 @@ python -m cbdk registration-draft \
 `catalog_modified=false` と明記します。
 ファイルへの保存は **reports/latest/ 以下への明示指定時だけ**、既存ファイルは上書きしません。
 
+## 動作の種類別にテストを切り替える（v0.17開発中）
+
+新しい機能が**読み取り専用**か、**メッシュを編集する**かを、登録計画を作るときに`--behavior`で指定できます。CBDKは機能名や未確認のソースから勝手に判定しません。
+
+読み取り専用なら：
+
+```bash
+python -m cbdk registration-draft \
+  --feature-id inspect_custom \
+  --requires-part BLCTX-001 \
+  --behavior read_only \
+  --output reports/latest/inspect_custom_draft.json
+python -m cbdk registration-tests --draft reports/latest/inspect_custom_draft.json
+```
+
+メッシュを変更するなら：
+
+```bash
+python -m cbdk registration-draft \
+  --feature-id nudge_custom \
+  --requires-part BLCTX-001 \
+  --requires-part BME-002 \
+  --behavior mesh_edit \
+  --output reports/latest/nudge_custom_draft.json
+python -m cbdk registration-tests --draft reports/latest/nudge_custom_draft.json
+```
+
+| 指定 | テストひな形（すべて初期状態はTODO失敗） |
+|---|---|
+| `--behavior read_only` | 共通5件＋メッシュ座標/選択の不変性、モディファイア/変換の不変性、不要なUndo操作がないこと（計8件） |
+| `--behavior mesh_edit` | 共通5件＋選択頂点だけの編集、異常入力時のロールバック、Undo/Redoによる正確な復元・再適用（計8件） |
+| 省略（`unspecified`） | 従来どおり共通5件。以前保存した登録計画も引き続き利用できる |
+
+**注意：`behavior`は開発者が申告した分類であって、実際のソースを解析して確認した結果ではありません。** 読み取り専用と申告しても、実際にコードが何も変更しないことを保証しません。レビューとBlender実機テストで確かめる必要があります。
+
 ## 登録計画からテストのひな形を生成（v0.17 ドラフト）
 
 上の `registration-draft` コマンドで `--output` を指定した場合、次のコマンドでレビュー用Pythonテストひな形を作れます。
