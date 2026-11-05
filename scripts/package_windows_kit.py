@@ -42,7 +42,7 @@ def build(output: Path) -> int:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, default=ROOT / "dist" / "CBDK_v0.12_Windows_Blender_DevKit.zip")
+    parser.add_argument("--output", type=Path, default=ROOT / "dist" / "CBDK_v0.13_Windows_Blender_DevKit.zip")
     args = parser.parse_args(argv)
     count = build(args.output)
     print(f"Packaged {count} tracked files into {args.output}")
