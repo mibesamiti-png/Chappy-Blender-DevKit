@@ -32,6 +32,8 @@ class FakeVertex:
 class FakeBMesh:
     def __init__(self, verts):
         self.verts = verts
+        self.edges = []
+        self.faces = []
 
 
 def setup(verts=None, *, updater=None):
@@ -141,7 +143,7 @@ class EditTransformTests(unittest.TestCase):
     def test_invalid_existing_coordinate_is_rejected_before_writes(self):
         verts = [FakeVertex((1,2,3)), FakeVertex((math.inf, 0, 0))]
         context, bm, module, _ = setup(verts)
-        with self.assertRaisesRegex(BlenderContextError, "invalid coordinates"):
+        with self.assertRaisesRegex(BlenderContextError, "invalid coordinates|non-finite"):
             self.perform(context, module, (0,0,0.1))
         self.assertEqual(bm.verts[0].co, (1,2,3))
 
@@ -160,6 +162,28 @@ class EditTransformTests(unittest.TestCase):
         self.assertEqual([v.co for v in bm.verts], [(1,2,3), (4,5,6)])
         self.assertEqual(len(updates), 1)
 
+    def test_post_audit_detects_unselected_vertex_tamper_and_restores(self):
+        verts = [FakeVertex((1, 2, 3)), FakeVertex((4, 5, 6), selected=False)]
+        context, bm, module, _ = setup(verts)
+        state = {'times': 0}
+        def update_once(mesh, **kwargs):
+            state['times'] += 1
+            if state['times'] == 1:
+                verts[1].co = (99, 99, 99)
+        module.update_edit_mesh = update_once
+        with self.assertRaisesRegex(BlenderContextError, "restored"):
+            self.perform(context, module, (0, 0, 0.125))
+        self.assertEqual([v.co for v in bm.verts], [(1, 2, 3), (4, 5, 6)])
+
+    def test_post_audit_rejects_topology_rewiring(self):
+        verts = [FakeVertex((0, 0, 0)), FakeVertex((1, 0, 0), selected=False)]
+        context, bm, module, _ = setup(verts)
+        def corrupt_topology(mesh, **kwargs):
+            bm.edges.append(types.SimpleNamespace(verts=(verts[0], verts[1])))
+        module.update_edit_mesh = corrupt_topology
+        with self.assertRaisesRegex(BlenderContextError, "could not be verified"):
+            self.perform(context, module, (0, 0, 0.125))
+
     def test_update_failure_attempts_rollback_and_second_update(self):
         state = {'count': 0}
         def updater():
@@ -177,7 +201,7 @@ class EditTransformTests(unittest.TestCase):
         def updater():
             raise RuntimeError("always fails")
         context, bm, module, _ = setup(verts, updater=updater)
-        with self.assertRaisesRegex(BlenderContextError, "incomplete"):
+        with self.assertRaisesRegex(BlenderContextError, "could not be verified"):
             self.perform(context, module, (0,0,0.1))
         self.assertEqual(bm.verts[0].co, (0,0,0))
 
