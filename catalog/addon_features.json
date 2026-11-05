@@ -16,6 +16,30 @@
       "max_blender": null
     },
     {
+      "id": "mesh_bounds",
+      "name": "Measure Mesh Bounds",
+      "source": "templates/modular_preview/features/mesh_bounds.py",
+      "required_parts": [
+        "BLCTX-001",
+        "BLGEO-001"
+      ],
+      "requires_features": [],
+      "min_blender": "4.4.0",
+      "max_blender": null
+    },
+    {
+      "id": "modifier_summary",
+      "name": "Inspect Modifier Stack",
+      "source": "templates/modular_preview/features/modifier_summary.py",
+      "required_parts": [
+        "BLCTX-001",
+        "BLMOD-001"
+      ],
+      "requires_features": [],
+      "min_blender": "4.4.0",
+      "max_blender": null
+    },
+    {
       "id": "object_selection",
       "name": "Count Selected Meshes",
       "source": "templates/modular_preview/features/object_selection.py",
