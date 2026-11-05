@@ -236,3 +236,18 @@ python -m cbdk build-addon --recipe recipes/mesh_inspector.json \
 Blenderの **3D View > Sidebar > CBDK** に「Mesh Inspector」が追加され、選択メッシュ/頂点/辺/面の数を検査する読み取り中心のサンプルです。部品の正式採用・配布許諾は未確認のため、`--preview-unapproved` を指定した個人開発用途に限定します。
 
 導入・テスト方法: [docs/ADDON_BUILDER.md](docs/ADDON_BUILDER.md)
+
+
+## CBDK v0.11 — 部品を選べるモジュラー・アドオン生成
+
+これまでの固定サンプル（v1レシピ）を残したまま、**v2の宣言的レシピ**から必要な機能だけを組み込むようになりました。
+
+```bash
+python -m cbdk build-addon --recipe recipes/modular_objects.json --preview-unapproved --output dist/CBDK_Objects_Preview.zip
+python -m cbdk build-addon --recipe recipes/modular_edit.json --preview-unapproved --output dist/CBDK_Edit_Preview.zip
+python -m cbdk build-addon --recipe recipes/modular_combined.json --preview-unapproved --output dist/CBDK_Combined_Preview.zip
+```
+
+有効な機能は `object_selection`（選択メッシュ数）と `edit_selection`（編集中メッシュの頂点・辺・面の選択数）。レシピが指定したものだけZIPに封入します。実装はCBDKが作成した固定の安全側モジュールを再利用します。**任意の外部アドオンを自動実行・自動組み込みする機能ではありません。**
+
+3つとも同じ開発用アドオン識別子 `cbdk_modular_preview` を使うので、**同時インストールせず、前のプレビューを無効化してから差し替える**想定です。正式な配布用Blender Extensionは未対応。詳細は [docs/ADDON_BUILDER.md](docs/ADDON_BUILDER.md)。

@@ -46,3 +46,34 @@ Blender 4.4.3以降で、編集 > プリファレンス > アドオンから「�
 ## 安全上の境界
 
 元の外部アドオンはコピー・実行しない。既存の `catalog/authored_parts.json` の正式採用状態も変更しない。出力される開発用ZIPは、正式公開・一般配布に用いない。
+
+
+## v0.11: v2モジュラーレシピ
+
+`recipes/modular_objects.json`、`recipes/modular_edit.json`、`recipes/modular_combined.json` の3例を追加。
+
+| 機能ID | 必要なCBDK部品ID | 同梱される機能 |
+|---|---|---|
+| `object_selection` | `BLCTX-001`, `BLCTX-002` | Object Modeで選択メッシュ数の確認 |
+| `edit_selection` | `BLCTX-001`, `BME-001` | Edit Modeで選択V/E/Fの確認 |
+
+レシピ例：
+
+```json
+{
+  "schema_version": 2,
+  "template": "modular_preview",
+  "package_id": "cbdk_modular_preview",
+  "display_name": "CBDK Combined Inspector Preview",
+  "features": ["object_selection", "edit_selection"],
+  "purpose": "local_development_preview"
+}
+```
+
+生成は従来の `python -m cbdk build-addon --recipe ... --preview-unapproved --output ...` を使います。
+
+依存部品を**機能IDから自動算出**し、不要なモジュールは同梱しません。ソースハッシュと依存した部品IDを `CBDK_BUILD_INFO.json` に記録。実行可能なPython文字列、ファイルパス、ユーザーソースの指定は禁止で、レシピは厳密に検証されます。ZIPは同一入力ならバイト列が一定で既存ファイルを上書きしません。
+
+3レシピとも**同じ `cbdk_modular_preview` パッケージを別構成で生成**するため、同時にBlenderへインストールしないでください。旧v1の `cbdk_mesh_inspector_preview` は引き続き生成できます。
+
+GitHub Actionsでは、Blender 4.4.3、4.5.15、5.2.1ごとに3構成を実際に有効化・操作・無効化して検査します。この検査はヘッドレスであり画面の視覚的品質評価を含みません。

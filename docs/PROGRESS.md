@@ -202,3 +202,20 @@
 - 生成したアドオンZIPをBlenderの一時環境に展開し、`addon_utils.enable` / UI登録 / Object Modeの読み取り / Edit ModeのV・E・F / 対象メッシュなしの拒否 / `addon_utils.disable`での登録解除を、各バージョンで**6/6項目ずつ実機確認**。
 - CI成果物から `CBDK_Mesh_Inspector_Preview.zip` とテストログを取得。ユーザーWindowsの画面を操作してインストールする手順・他アドオンとの競合は未検証。
 - `CBDK_BUILD_INFO.json`内の`blender_runtime_verified_for_this_build=false`は保守的なローカル生成時点の値。CIに付随する別ログが実行証拠となる（ZIPだけでは真正性を証明しない）。
+
+
+## v0.11.0 — 2026-11-05
+
+### 実装済
+- `cbdk/modular_builder.py`: スキーマ2の宣言的レシピを厳密に検証し、機能IDから必要な部品IDを依存解決。許可済みテンプレートのみ取り込み、決定的なZIPを生成。任意Python・ディレクトリ参照・未検証の自動採用は禁止。
+- 2種類の独立機能 `object_selection` / `edit_selection` を導入。各機能が必要とするモジュールのみ同梱。
+- サンプルレシピ3種類（Object-only、Edit-only、Combined）。3つとも同一パッケージ識別子なので同時導入不可。
+- v0.10の旧固定 `recipes/mesh_inspector.json` とそのビルダーは**後方互換を維持**。
+- `scripts/blender_modular_addon_smoke.py` を追加、GitHub Actionsで3レシピ×Blender 4.4.3 / 4.5.15 / 5.2.1のZIP構造、選択機能、読取処理、登録解除を自動検査。
+- `tests/test_modular_builder.py`: 許可リスト、不要依存の除外、決定性、インジェクション阻止、旧形式保持などの回帰テストを追加。
+
+### まだ対象外
+- 一般のユーザー提供アドオンから無承認コードを自動収集・導入すること
+- 動的に新しいPython実装を生成すること、任意のUIレイアウト構成
+- 個人向けプレビュー以外の公開・販売向けExtension生成、ライセンス正式承認
+- UIの視覚的品質、利用者のPC固有の操作感

@@ -88,6 +88,10 @@ def build_addon(
     """Deterministically package trusted files; no third-party code execution."""
     project = (root or ROOT).resolve()
     recipe = json.loads(Path(recipe_path).read_text(encoding="utf-8"))
+    if isinstance(recipe, dict) and recipe.get("schema_version") == 2:
+        # Delayed import keeps the stable v0.10 recipe implementation isolated.
+        from .modular_builder import build_modular
+        return build_modular(recipe, output, preview_unapproved=preview_unapproved, root=project)
     _validate_recipe(recipe)
     entries = _read_catalog(root=project)
     chosen = {}
