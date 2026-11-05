@@ -21,11 +21,13 @@ class ModularBuilderTests(unittest.TestCase):
         sources = [
             'catalog/authored_parts.json', 'catalog/addon_features.json', 'parts/blender/context.py',
             'parts/blender/edit_mesh.py', 'parts/blender/measure.py',
-            'parts/blender/modifiers.py', 'templates/modular_preview/__init__.py',
+            'parts/blender/modifiers.py', 'parts/blender/edit_transform.py',
+            'templates/modular_preview/__init__.py',
             'templates/modular_preview/features/object_selection.py',
             'templates/modular_preview/features/edit_selection.py',
             'templates/modular_preview/features/mesh_bounds.py',
             'templates/modular_preview/features/modifier_summary.py',
+            'templates/modular_preview/features/vertex_nudge.py',
         ]
         for path in sources:
             target = self.root / path
@@ -98,16 +100,16 @@ class ModularBuilderTests(unittest.TestCase):
 
     def test_all_tools_recipe_includes_five_parts(self):
         self.data['features'] = ['object_selection', 'edit_selection',
-                                 'mesh_bounds', 'modifier_summary']
+                                 'mesh_bounds', 'modifier_summary', 'vertex_nudge']
         self.save_recipe()
         result = self.build()
         self.assertEqual(result['part_ids'], [
-            'BLCTX-001', 'BLCTX-002', 'BLGEO-001', 'BLMOD-001', 'BME-001'
+            'BLCTX-001', 'BLCTX-002', 'BLGEO-001', 'BLMOD-001', 'BME-001', 'BME-002'
         ])
         with ZipFile(self.output) as z:
             self.assertIn(f'{PACKAGE_ID}/helpers/measure.py', z.namelist())
             self.assertIn(f'{PACKAGE_ID}/helpers/modifiers.py', z.namelist())
-            self.assertEqual(len(json.loads(z.read(f'{PACKAGE_ID}/CBDK_BUILD_INFO.json'))['features']), 4)
+            self.assertEqual(len(json.loads(z.read(f'{PACKAGE_ID}/CBDK_BUILD_INFO.json'))['features']), 5)
 
     def test_feature_order_does_not_affect_zip(self):
         self.build()
@@ -209,7 +211,7 @@ class ModularBuilderTests(unittest.TestCase):
             self.build()
 
     def test_cli_three_recipe_examples(self):
-        for recipe_name in ('modular_objects', 'modular_edit', 'modular_combined', 'modular_geometry', 'modular_all'):
+        for recipe_name in ('modular_objects', 'modular_edit', 'modular_combined', 'modular_geometry', 'modular_nudge', 'modular_all'):
             with self.subTest(recipe_name=recipe_name):
                 output = self.root / f'{recipe_name}.zip'
                 rc = main(['build-addon', '--recipe', str(ROOT / f'recipes/{recipe_name}.json'),

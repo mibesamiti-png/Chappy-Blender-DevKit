@@ -77,12 +77,12 @@ jobs:
           from pathlib import Path
           p = json.loads(Path('reports/ci/parts_evidence.json').read_text())
           assert p['run_status'] == 'passed', p
-          assert set(p['parts']) == {'BLCTX-001', 'BLCTX-002', 'BME-001', 'BLGEO-001', 'BLMOD-001'}, p
+          assert set(p['parts']) == {'BLCTX-001', 'BLCTX-002', 'BME-001', 'BME-002', 'BLGEO-001', 'BLMOD-001'}, p
           assert all(x['status'] == 'blender_smoke_passed' for x in p['parts'].values()), p
           with Path('reports/ci/summary.md').open('w', encoding='utf-8') as f:
               f.write('# CBDK Blender runtime test\n\n')
               f.write(f"Blender: **{p['blender_version']}**  \n")
-              f.write('Parts passed: **5/5** (smoke only; not approved)\n')
+              f.write('Parts passed: **6/6** (smoke only; not approved)\n')
           PY
           cat reports/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Verify authored feature catalog and preview plan for target Blender
@@ -111,11 +111,11 @@ jobs:
             2>&1 | tee reports/ci/generated_addon_smoke.log
           grep -F 'CBDK_GENERATED_ADDON_PASS ' reports/ci/generated_addon_smoke.log
           echo "Generated preview add-on: enable, Object/Edit operators, negative case and disable PASSED." >> "$GITHUB_STEP_SUMMARY"
-      - name: Build and test five modular recipe combinations in real Blender
+      - name: Build and test six modular recipe combinations in real Blender
         shell: bash
         run: |
           set -euo pipefail
-          for recipe in modular_objects modular_edit modular_combined modular_geometry modular_all; do
+          for recipe in modular_objects modular_edit modular_combined modular_geometry modular_nudge modular_all; do
             output="reports/ci/CBDK_${recipe}_Preview.zip"
             python -m cbdk build-addon \
               --recipe "recipes/${recipe}.json" \
@@ -127,7 +127,7 @@ jobs:
               -- "$output" 2>&1 | tee "reports/ci/${recipe}_smoke.log"
             grep -F 'CBDK_MODULAR_ADDON_PASS ' "reports/ci/${recipe}_smoke.log"
           done
-          echo 'Modular preview variants: objects, edit, combined, geometry and all PASSED.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Modular preview variants: objects, edit, combined, geometry, nudge and all PASSED.' >> "$GITHUB_STEP_SUMMARY"
       - name: Upload evidence and log even when Blender fails
         if: always()
         uses: actions/upload-artifact@v4

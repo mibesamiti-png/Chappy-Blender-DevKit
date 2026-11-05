@@ -50,6 +50,16 @@
       "blender_runtime": "not_recorded",
       "approved": false,
       "license_review": "pending"
+    },
+    {
+      "part_id": "BME-002",
+      "name": "translate_selected_vertices",
+      "module": "parts.blender.edit_transform",
+      "source": "parts/blender/edit_transform.py",
+      "status": "unit_tested",
+      "blender_runtime": "not_recorded",
+      "approved": false,
+      "license_review": "pending"
     }
   ],
   "note": "Runtime smoke test evidence is stored separately under ignored reports/. Do not infer approval or import results automatically."

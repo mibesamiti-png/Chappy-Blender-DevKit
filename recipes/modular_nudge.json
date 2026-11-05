@@ -1,0 +1,10 @@
+{
+  "schema_version": 2,
+  "template": "modular_preview",
+  "package_id": "cbdk_modular_preview",
+  "display_name": "CBDK Vertex Nudge Preview",
+  "features": [
+    "vertex_nudge"
+  ],
+  "purpose": "local_development_preview"
+}

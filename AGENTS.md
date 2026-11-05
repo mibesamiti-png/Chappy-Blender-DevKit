@@ -59,3 +59,8 @@ For v2 modular previews, inspect `catalog/addon_features.json` and `cbdk/feature
 ## CBDK v0.13 authored geometry/modifier inspection
 
 The allowlist now includes `BLGEO-001` (`mesh_world_bounds`) and `BLMOD-001` (`modifier_snapshot`). Both are read-only Blender Object Mode helpers. World bounds are an AABB of the **base mesh**, not an evaluated modifier result; do not claim measured final visible geometry. The modifier snapshot contains detached values and must not apply, edit, or reorder modifiers. The v0.13 modular previews add `mesh_bounds` and `modifier_summary` and two new recipes. Verify all 5 authored parts and all 5 modular recipe variants on Blender 4.4.3/4.5.15/5.2.1 before marking this version tested. Preserve original addon source privacy and explicit preview-unapproved opt-in. Public approval remains false.
+
+
+## CBDK v0.14 edit-mode vertex transform
+
+The new BME-002 helper `parts/blender/edit_transform.py` is the first intentionally mutating component. Do not present it as a fully atomic mesh transaction. It preflights all vertex values, blocks multi-object edit, shared datablocks, shape keys, linked data and nonfinite/oversized offsets, and attempts rollback if mutation fails. Consumers must put it behind a Blender Operator with REGISTER/UNDO; direct Python helper calls are not automatically undoable. Test that only selected vertices move, nonselected vertices/selection/topology remain unchanged, bad inputs do not modify anything, and legacy inspection recipes still work. Keep approval false; no arbitrary code injection, no auto publishing, no GitHub-to-Blender direct install.

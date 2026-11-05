@@ -287,3 +287,20 @@ python -m cbdk build-addon --recipe recipes/modular_all.json \
 従来の `modular_objects` / `modular_edit` / `modular_combined` に加え、`modular_geometry`（新しい2機能）と `modular_all`（計4機能）のレシピを追加。Blender 4.4.3 / 4.5.15 / 5.2.1で、それぞれのヘッドレス操作・登録解除を検査する仕組みです。
 
 **両機能とも基本は読み取りのみ**。Active Object・選択・モード・メッシュ形状・モディファイア設定を変更しません。検査結果の表示用Scene文字列プロパティだけを更新します。レガシー形式の個人プレビュー用であり、正式な配布・採用・ライセンス承認は含みません。
+
+
+## CBDK v0.14 — 編集モードの安全な頂点移動（開発プレビュー）
+
+`BME-002` / `vertex_nudge` を追加。Edit Modeで選択した頂点だけをローカル座標で少し移動できるようになりました。デフォルトはZ方向 +0.1 Blender単位、操作実行時にはX/Y/Zのオフセットを変更可能です。
+
+```bash
+python -m cbdk build-addon --recipe recipes/modular_nudge.json \
+  --target-blender 4.4.3 --preview-unapproved \
+  --output dist/CBDK_Vertex_Nudge_Preview.zip
+```
+
+NパネルのCBDKタブに `Nudge Selected Vertices` を表示する開発用レガシーアドオンです。`recipes/modular_all.json` にも追加したので、他の4機能と一緒に生成できます。
+
+保護策：**Edit Mode・メッシュ1個・選択頂点あり・有効な有限オフセット**を満たさない場合は編集前に拒否。共有メッシュ/シェイプキー/リンクデータを拒否し、選択/トポロジー/モードは変更しません。例外が発生した際は元の頂点座標へ復元を試み、復元できなかった場合は明示的にエラー表示します。オペレーターにはBlender標準の `REGISTER` / `UNDO` を設定しています。自動テストはオペレーター設定と前後の頂点座標を確認しますが、**ヘッドレスではGUIのCtrl+Z操作感まで保証しません**。
+
+公開用の完成アドオンではなく、未承認部品を含む個人開発用プレビューです。重要な本番作業の.blendファイルでは試さないでください。

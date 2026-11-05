@@ -7,7 +7,8 @@
     "object_selection",
     "edit_selection",
     "mesh_bounds",
-    "modifier_summary"
+    "modifier_summary",
+    "vertex_nudge"
   ],
   "purpose": "local_development_preview"
 }

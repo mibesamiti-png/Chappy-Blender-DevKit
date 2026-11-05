@@ -16,6 +16,7 @@ from parts.blender import (
 )
 from parts.blender.measure import mesh_world_bounds
 from parts.blender.modifiers import modifier_snapshot
+from parts.blender.edit_transform import translate_selected_vertices
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 mesh = bpy.data.meshes.new('CBDK_Parts_Test')
@@ -30,7 +31,7 @@ bpy.context.view_layer.objects.active = obj
 obj.select_set(True)
 light.select_set(True)
 checks = {'BLCTX-001': [], 'BLCTX-002': [], 'BME-001': [],
-          'BLGEO-001': [], 'BLMOD-001': []}
+          'BLGEO-001': [], 'BLMOD-001': [], 'BME-002': []}
 try:
     assert require_active_mesh(bpy.context, mode='OBJECT') is obj
     checks['BLCTX-001'].append('active_mesh_object')
@@ -51,12 +52,51 @@ try:
         raise AssertionError('Expected edit-mode requirement')
     except BlenderContextError:
         checks['BME-001'].append('object_mode_rejected')
+    try:
+        translate_selected_vertices(bpy.context, (0.0, 0.0, 0.1))
+        raise AssertionError('Edit Mode-only nudge should reject Object Mode')
+    except BlenderContextError:
+        checks['BME-002'].append('object_mode_rejected')
     light.select_set(False)
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='SELECT')
     counts = count_edit_selection(bpy.context)
     assert (counts.vertices, counts.edges, counts.faces) == (3, 3, 1), counts
     checks['BME-001'].append('triangle_edit_selection')
+
+    import bmesh
+    edit_bm = bmesh.from_edit_mesh(mesh)
+    edit_bm.verts.ensure_lookup_table()
+    # Select one vertex only and confirm topology and other vertex positions do not change.
+    bpy.ops.mesh.select_all(action='DESELECT')
+    vertex = edit_bm.verts[0]
+    vertex.select_set(True)
+    bmesh.update_edit_mesh(mesh, loop_triangles=False, destructive=False)
+    before = [tuple(v.co) for v in edit_bm.verts]
+    vert_count, edge_count, face_count = len(edit_bm.verts), len(edit_bm.edges), len(edit_bm.faces)
+    result = translate_selected_vertices(bpy.context, (0.0, 0.0, 0.125))
+    after = [tuple(v.co) for v in edit_bm.verts]
+    assert result.moved_vertices == 1
+    assert abs(after[0][2] - before[0][2] - 0.125) < 1e-6
+    assert after[1:] == before[1:]
+    assert (len(edit_bm.verts), len(edit_bm.edges), len(edit_bm.faces)) == (vert_count, edge_count, face_count)
+    assert bpy.context.mode == 'EDIT_MESH'
+    checks['BME-002'].append('selected_vertex_nudge')
+    before_bad = [tuple(v.co) for v in edit_bm.verts]
+    try:
+        translate_selected_vertices(bpy.context, (float('nan'), 0.0, 0.1))
+        raise AssertionError('Expected nonfinite offset to be rejected')
+    except BlenderContextError:
+        pass
+    assert before_bad == [tuple(v.co) for v in edit_bm.verts]
+    checks['BME-002'].append('invalid_offset_rejected')
+    # Reset the fixture before the later read-only geometry/matrix tests.
+    # The previous test genuinely changed one vertex, so using the original
+    # flat-triangle bounds without restoring it would be a false failure.
+    translated_back = translate_selected_vertices(bpy.context, (0.0, 0.0, -0.125))
+    assert translated_back.moved_vertices == 1
+    assert [tuple(v.co) for v in edit_bm.verts] == before
+
 
     # Mesh datablocks can be out of sync while an editable BMesh is active.
     for func, part_id in ((mesh_world_bounds, 'BLGEO-001'),
