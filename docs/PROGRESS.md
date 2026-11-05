@@ -157,3 +157,19 @@
 - CIのソースチェックアウトと一時フォルダが異なるドライブだった場合、`os.path.relpath` が `ValueError` を返していた。
 - `cbdk/scanner.py` を修正し、異なるドライブ間では絶対パスにフォールバック。Pythonテスト `test_cross_volume_path_does_not_abort_scan` を追加。
 - スキルZIP生成時の初期パッケージングは、公開ドキュメント `reports/README.md` を過剰に拒否していたため、ZIPから除外したうえで他の `reports/` は引き続き拒否する。
+
+
+## v0.9.0 — 2026-11-05
+
+### 実装
+- `cbdk/part_matrix.py`: ローカルの実機テスト証拠JSONを読み込んで、部品IDごとのBlenderバージョン別スモーク検証表を出力。古いSHA-256・不完全な部品チェック・不正なJSON・未知の部品ID・台帳とのソース不一致は除外する。
+- `python -m cbdk part-matrix --evidence-dir reports/latest`: 既存のWindowsで作成された `parts_evidence*.json` を自動集計し、`parts_matrix.json` と `.md` を作成。`--evidence` の複数指定にも対応。
+- Windowsワンクリックテストは、全Blenderバージョンの実機検査後に部品マトリクスを自動生成。古いログがあってもBlenderのテスト自体を失敗扱いにしない。
+- GitHub Actionsの各Blenderバージョンの実機テストでも `part-matrix` を実行し、検証結果を成果物に含める。
+- `tests/test_part_matrix.py`: 3バージョン集計、改変/古いコードの拒否、破損JSON、巨大ファイル、シンボリックリンク、台帳のID・ソース不整合、CLIなど14テストを追加。
+
+### 検証状態
+- Pythonローカル 101件成功（既存87件＋新規14件）
+- 部品台帳 `catalog/authored_parts.json` の採用状態を自動変更しない。集計結果は `approved_by_evidence=false`、`authenticity=not_verified` を明示。
+- テストJSONは署名や真正性の保証がない。コードSHA-256一致と実機スモーク成功は、外部アドオンの挙動同等性やライセンス許諾を意味しない。
+- GitHub CI / Windows版 / Blender実機テストは別途確認する。
