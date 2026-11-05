@@ -16,9 +16,12 @@ _REDO = {"passed", "unavailable", "not_attempted"}
 
 def build_report(blender_version: str, undo: str, redo: str) -> dict:
     """Describe what was *observed*, with GUI hotkeys explicitly excluded."""
-    if not isinstance(blender_version, str) or not blender_version.strip():
-        raise ValueError("Missing Blender version")
-    if undo not in _UNDO or redo not in _REDO:
+    if (not isinstance(blender_version, str) or not blender_version.strip()
+            or len(blender_version) > 100
+            or any(ord(ch) < 32 or ord(ch) == 127 for ch in blender_version)):
+        raise ValueError("Missing or invalid Blender version")
+    if (not isinstance(undo, str) or not isinstance(redo, str)
+            or undo not in _UNDO or redo not in _REDO):
         raise ValueError("Invalid Undo/Redo result")
     if (undo == "unavailable") != (redo == "not_attempted"):
         raise ValueError("Redo must be not_attempted exactly when Undo was unavailable")
@@ -52,7 +55,8 @@ def validate_report(data: object) -> dict:
     }
     if set(data) != required:
         raise ValueError("Undo probe report fields missing or unexpected")
-    if data["schema_version"] != 1 or data["suite"] != "native_undo_redo_probe":
+    if (type(data["schema_version"]) is not int or data["schema_version"] != 1
+            or data["suite"] != "native_undo_redo_probe"):
         raise ValueError("Unknown Undo probe report schema")
     if data["operator_completed"] is not True or data["nudge_delta_verified"] is not True:
         raise ValueError("Nudge was not verified")
