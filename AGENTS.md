@@ -132,3 +132,11 @@ Implementation of a proposed feature remains a separate reviewed change that upd
 `python -m cbdk registration-tests --draft reports/latest/registration_draft.json` is a review-only, local scaffold workflow. Never trust a saved JSON plan without recomputing it from the present trusted allowlists and catalogs. Reject duplicate JSON keys, inconsistent safety flags, unknown parts, source collisions and path escapes before rendering.
 
 Output Python must remain under ignored `reports/latest/scaffolds/`, never auto-added to tracked `tests/`, runtime scripts, catalogs or Blender. Use exclusive file creation (no overwrite). All generated TODO assertions must deliberately fail until human review and actual implementation. Generating a scaffold, parsing its syntax or passing static validation proves neither runtime correctness nor license clearance. Keep v0.17 PR #20 in draft until proper Python, Windows and Blender CI are actually observed.
+
+## v0.17 draft — explicit feature behavior and test selection
+
+For registration proposals, `--behavior` must be one of `unspecified`, `read_only`, or `mesh_edit`. This choice is *developer-declared planning metadata*, never inferred from filenames, unknown code or static AST similarity, and never proof that actual code is read-only or safely mutating. Omitted behavior must retain schema-1 legacy plan shape and its original five failing TODO tests.
+
+`read_only` adds independent immutability and unnecessary-Undo checks; `mesh_edit` adds selected-only mutation, rollback and native Undo/Redo checks. Both branches remain unexecuted review scaffolds under ignored `reports/latest/scaffolds/`, with all TODOs deliberately failing and files created exclusively. Neither branch may be silently admitted to `tests/`, runtime templates, catalog allowlists, official Blender Extensions or approved release status.
+
+Document every untested code change in STATE/HANDOFF. Until GitHub Actions Issue #19 resolves, the new thirteen Python regression tests and Blender/Windows behavior are unverified. Preserve the last real v0.15 CI evidence.
