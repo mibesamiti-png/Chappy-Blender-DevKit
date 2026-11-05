@@ -40,6 +40,8 @@ def validate_saved_draft(draft: object, *, root: Path = ROOT) -> dict:
         if not isinstance(new, dict) or set(new) != {
                 "id", "source", "approved", "license_review"}:
             raise ValueError("Malformed new part proposal")
+        if new["approved"] is not False or new["license_review"] != "pending":
+            raise ValueError("New part cannot claim approval or license clearance")
         part_id = new["id"]
         source = new["source"]
         if not isinstance(part_id, str) or not PART_ID.fullmatch(part_id):
@@ -125,7 +127,15 @@ def read_saved_draft(path: str | Path, *, root: Path = ROOT) -> dict:
     if target.is_symlink() or not target.is_file() or target.stat().st_size > MAX_DRAFT_BYTES:
         raise ValueError("Missing, symlinked, or oversized registration draft")
     try:
-        value = json.loads(target.read_text(encoding="utf-8"))
+        def reject_duplicate_keys(pairs):
+            data = {}
+            for key, value in pairs:
+                if key in data:
+                    raise ValueError("Duplicate key in registration draft: " + key)
+                data[key] = value
+            return data
+        value = json.loads(target.read_text(encoding="utf-8"),
+                           object_pairs_hook=reject_duplicate_keys)
     except (json.JSONDecodeError, UnicodeError) as exc:
         raise ValueError("Invalid JSON registration draft") from exc
     return validate_saved_draft(value, root=root)
