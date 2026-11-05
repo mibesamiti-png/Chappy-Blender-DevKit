@@ -122,6 +122,8 @@ def main(argv=None) -> int:
     draft_cmd = sub.add_parser('registration-draft',
                                help='Propose manual registration steps without approving or executing code')
     draft_cmd.add_argument('--feature-id', required=True)
+    draft_cmd.add_argument('--behavior', choices=('unspecified', 'read_only', 'mesh_edit'),
+                           default='unspecified', help='Author-declared behavior; never inferred or verified')
     draft_cmd.add_argument('--requires-part', action='append', required=True)
     draft_cmd.add_argument('--new-part-id')
     draft_cmd.add_argument('--new-part-module')
@@ -240,7 +242,8 @@ def main(argv=None) -> int:
         if args.command == 'registration-draft':
             report = propose_registration(args.feature_id, args.requires_part,
                                           new_part_id=args.new_part_id,
-                                          new_part_module=args.new_part_module)
+                                          new_part_module=args.new_part_module,
+                                          behavior=args.behavior)
             if args.output:
                 saved = write_draft(report, relative_path=args.output)
                 print(f"Registration proposal saved: {saved} (review-only; NOT approved)")
