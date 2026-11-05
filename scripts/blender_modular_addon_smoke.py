@@ -1,0 +1,142 @@
+"""Trusted real-Blender end-to-end smoke for a schema-2 modular preview ZIP.
+
+Blender executes only the CBDK-owned generated preview from an explicit CI
+build, never scanned/private third-party scripts. Factory startup is required.
+"""
+import json
+import sys
+import tempfile
+from pathlib import Path
+from zipfile import ZipFile
+
+import addon_utils
+import bpy
+
+
+PACKAGE = "cbdk_modular_preview"
+KNOWN = {"object_selection", "edit_selection"}
+
+
+def verify_zip(path):
+    with ZipFile(path, "r") as archive:
+        members = archive.namelist()
+        assert len(members) == len(set(members)), "Duplicate ZIP entries"
+        metadata = json.loads(archive.read(f"{PACKAGE}/CBDK_BUILD_INFO.json"))
+        features = set(metadata["features"])
+        assert features and features <= KNOWN, features
+        expected = {
+            f"{PACKAGE}/__init__.py", f"{PACKAGE}/CBDK_BUILD_INFO.json",
+            f"{PACKAGE}/README.txt", f"{PACKAGE}/helpers/__init__.py",
+            f"{PACKAGE}/helpers/context.py", f"{PACKAGE}/features/__init__.py",
+        }
+        for feature in features:
+            expected.add(f"{PACKAGE}/features/{feature}.py")
+        if "edit_selection" in features:
+            expected.add(f"{PACKAGE}/helpers/edit_mesh.py")
+        assert set(members) == expected, (set(members), expected)
+        for info in archive.infolist():
+            assert not any(part in ("", ".", "..") for part in info.filename.split("/"))
+            assert not ((info.external_attr >> 16) & 0o170000) == 0o120000
+        assert metadata["preview_only"] is True
+        assert metadata["approved"] is False
+        assert metadata["redistribution_cleared"] is False
+        assert metadata["blender_runtime_verified_for_this_build"] is False
+        return features
+
+
+def run(path):
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    features = verify_zip(path)
+    checks = ["safe_recipe_zip"]
+    with tempfile.TemporaryDirectory(prefix="cbdk-modular-") as directory:
+        with ZipFile(path, "r") as archive:
+            archive.extractall(directory)
+        sys.path.insert(0, directory)
+        enabled = False
+        try:
+            module = addon_utils.enable(PACKAGE, default_set=False, persistent=False)
+            assert module is not None
+            enabled = True
+            assert hasattr(bpy.types, "VIEW3D_PT_cbdk_modular_preview")
+            assert hasattr(bpy.types.Scene, "cbdk_modular_result")
+            operator_ids = {op.bl_idname for op in module._OPERATORS}
+            expected_ops = set()
+            if "object_selection" in features:
+                expected_ops.add("cbdk.modular_selected_meshes")
+            if "edit_selection" in features:
+                expected_ops.add("cbdk.modular_edit_selection")
+            assert operator_ids == expected_ops, (operator_ids, expected_ops)
+            checks.append("only_selected_operators_registered")
+
+            mesh = bpy.data.meshes.new("CBDK_Modular_Triangle")
+            mesh.from_pydata([(0, 0, 0), (1, 0, 0), (0, 1, 0)], [], [(0, 1, 2)])
+            mesh.update()
+            obj = bpy.data.objects.new("CBDK_Modular_Object", mesh)
+            bpy.context.scene.collection.objects.link(obj)
+            light_data = bpy.data.lights.new("CBDK_Modular_Light", "POINT")
+            light = bpy.data.objects.new("CBDK_Modular_Light", light_data)
+            bpy.context.scene.collection.objects.link(light)
+            bpy.context.view_layer.objects.active = obj
+            obj.select_set(True)
+            light.select_set(True)
+
+            if "object_selection" in features:
+                assert bpy.ops.cbdk.modular_selected_meshes() == {"FINISHED"}
+                status = bpy.context.scene.cbdk_modular_result
+                assert "Selected meshes: 1" in status and "CBDK_Modular_Object" in status, status
+                assert obj.select_get() and light.select_get()
+                assert bpy.context.mode == "OBJECT"
+                checks.append("object_selection_readonly")
+            if "edit_selection" in features:
+                assert bpy.ops.cbdk.modular_edit_selection() == {"CANCELLED"}
+                checks.append("edit_requires_edit_mode")
+
+            light.select_set(False)
+            bpy.ops.object.mode_set(mode="EDIT")
+            bpy.ops.mesh.select_all(action="SELECT")
+            if "edit_selection" in features:
+                assert bpy.ops.cbdk.modular_edit_selection() == {"FINISHED"}
+                status = bpy.context.scene.cbdk_modular_result
+                assert "V=3 E=3 F=1" in status, status
+                assert bpy.context.mode == "EDIT_MESH"
+                checks.append("edit_selection_readonly")
+            if "object_selection" in features:
+                assert bpy.ops.cbdk.modular_selected_meshes() == {"CANCELLED"}
+                checks.append("object_requires_object_mode")
+
+            bpy.ops.object.mode_set(mode="OBJECT")
+            bpy.context.view_layer.objects.active = None
+            if "object_selection" in features:
+                assert bpy.ops.cbdk.modular_selected_meshes() == {"CANCELLED"}
+                checks.append("missing_active_mesh_cancelled")
+            addon_utils.disable(PACKAGE, default_set=False)
+            enabled = False
+            assert not hasattr(bpy.types, "VIEW3D_PT_cbdk_modular_preview")
+            assert not hasattr(bpy.types.Scene, "cbdk_modular_result")
+            assert not module._REGISTERED
+            checks.append("disable_unregistered_all")
+        finally:
+            if enabled:
+                try:
+                    addon_utils.disable(PACKAGE, default_set=False)
+                except Exception:
+                    pass
+            sys.path.remove(directory)
+    print("CBDK_MODULAR_ADDON_PASS " + json.dumps({
+        "schema_version": 2,
+        "blender": bpy.app.version_string,
+        "package_id": PACKAGE,
+        "features": sorted(features),
+        "checks": checks,
+        "preview_only": True,
+        "approved": False,
+    }, sort_keys=True))
+
+
+if __name__ == "__main__":
+    if "--" not in sys.argv:
+        raise RuntimeError("Expected -- <trusted-generated-zip>")
+    args = sys.argv[sys.argv.index("--") + 1:]
+    if len(args) != 1:
+        raise RuntimeError("Exactly one ZIP is required")
+    run(Path(args[0]).resolve())
