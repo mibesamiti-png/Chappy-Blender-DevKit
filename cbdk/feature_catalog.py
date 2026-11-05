@@ -25,7 +25,7 @@ TRUSTED_FEATURES = {
     },
     "vertex_nudge": {
         "source": "templates/modular_preview/features/vertex_nudge.py",
-        "parts": frozenset({"BLCTX-001", "BME-002"}),
+        "parts": frozenset({"BLCTX-001", "BME-002", "BME-003"}),
     },
     "mesh_bounds": {
         "source": "templates/modular_preview/features/mesh_bounds.py",
@@ -41,6 +41,7 @@ TRUSTED_PART_SOURCES = {
     "BLCTX-002": "parts/blender/context.py",
     "BME-001": "parts/blender/edit_mesh.py",
     "BME-002": "parts/blender/edit_transform.py",
+    "BME-003": "parts/blender/edit_audit.py",
     "BLGEO-001": "parts/blender/measure.py",
     "BLMOD-001": "parts/blender/modifiers.py",
 }
