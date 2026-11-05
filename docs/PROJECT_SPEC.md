@@ -110,3 +110,13 @@ python -m unittest discover -s tests -v
 新しい機能を登録したときは、`TRUSTED_FEATURES`/`TRUSTED_PART_SOURCES`、カタログとレシピ、独立した`EXPECTED_RECIPES`、生成テンプレートと各テストを同時更新する必要がある。静的マトリクス成功はBlender実機・Windows GUIやライセンス認定の代わりにならない。
 
 現段階では開発ブランチの未検証変更。GitHub Actionsの実行前障害Issue #19が解決するまでは、CIの実行結果を成功とは書かない。
+
+## v0.17 開発中：新機能・部品の安全な登録準備
+
+新規機能の登録候補は `python -m cbdk registration-draft` で**レビュー専用JSON**として生成できる。既存台帳とコードallowlistの整合性、提案IDの重複、新規ソース予定パスの衝突、部品依存を静的に検査し、マトリクス・CI・ライセンス・引き継ぎ更新の手順を出力する。
+
+例：`python -m cbdk registration-draft --feature-id align_vertices --requires-part BLCTX-001 --requires-part BME-004 --new-part-id BME-004 --new-part-module edit_align`
+
+`--output` を明示した場合だけ `reports/latest/` 以下にJSONを新規保存。既存ファイルの上書き、私有ソースのインポート/実行、カタログやコードの自動変更、権利認定、実機テスト成功の自動認定は**禁止**する。出力は登録の提案であり、パーツ採用や公開を許可するものではない。
+
+実際の組み込みには、原本/権利を人手で確認したうえで台帳・許可リスト・コード・レシピ・スモークテストを別PRで更新する。全体Python/Windows/Blender CIの実測完了までは `main` へマージしない。参照：`docs/REGISTRATION_DRAFT.md`。
