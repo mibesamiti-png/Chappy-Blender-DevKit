@@ -343,3 +343,13 @@
 ### v0.16 CIリソースの調整（2026-11-05）
 
 GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態をAPIで再確認。11月4日のGitHub Actions障害は公式では解消済みのため、Actions利用枠・予算ブロックなどアカウント固有の原因も候補としてIssue #19に記録（**原因は未確定**）。過去の大量のPR更新で同じコミットのpushとpull_requestが重複テストを実行していたため、Python CIのpush対象をmainに限定。6つのワークフローにPR単位のconcurrencyキャンセルを追加。引き継ぎCIはPRでの重複Pythonテストを省略し、main push時の実測記録は維持。Blender3版とWindows PowerShellの実機品質ゲートは削除しない。新しいCI改善用の回帰テストを追加。**全CIが実行できるまでマージしない**。
+
+
+
+### v0.16 追加修正：非有限座標からの安全な復元（2026-11-05）
+
+- BME-003の復元処理が、異常座標を修復する前に `capture_edit_snapshot` を呼び出し、NaN/Infを含むBMeshを拒否する問題を確認。
+- `_topology_matches_snapshot` を追加し、**座標を読み取らず**に頂点/辺/面の個数と接続関係を照合してから元座標・頂点選択を復元するように修正。
+- 復元後は元座標、選択、接続関係を**再検査**する。Setterが例外を出さず元の値に戻せなかった場合も、不完全復元として明示する。
+- NaN/Inf混入、破損座標の読み出し不可、サイレントsetter失敗、編集途中で未選択頂点が非有限に破損する場合を扱う回帰テスト4件を追加。
+- ローカル（Python 3.13.5）で **229/229件成功**。これはGitHubの実機CI合格とは区別する。CI用ブランチ `feature/v0.16-audit-streaming` 上に保存済み。最新のGitHub Actionsは `runner_id=0` / `steps=0`で終了するため未マージ。原因追跡は [Issue #19](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/issues/19)。
