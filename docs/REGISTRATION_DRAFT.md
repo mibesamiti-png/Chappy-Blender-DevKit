@@ -31,6 +31,29 @@ python -m cbdk registration-draft \
 `catalog_modified=false` と明記します。
 ファイルへの保存は **reports/latest/ 以下への明示指定時だけ**、既存ファイルは上書きしません。
 
+## 登録計画からテストのひな形を生成（v0.17 ドラフト）
+
+上の `registration-draft` コマンドで `--output` を指定した場合、次のコマンドでレビュー用Pythonテストひな形を作れます。
+
+```bash
+python -m cbdk registration-tests --draft reports/latest/registration_draft.json
+```
+
+出力先は `reports/latest/scaffolds/test_<機能ID>_review.py` に固定され、**既存ファイルを上書きしません**。Gitで無視されるローカル領域にのみ出力し、CBDK本体の`tests/`、許可リスト、カタログは変更しません。
+
+生成されるPythonには、次の5件の未完成テストを設けています。
+
+1. 自作ソース・依存部品・権利の人手確認
+2. BlenderのObject/Editモードと選択状態の仕様
+3. 期待する正常動作
+4. 異常入力時にメッシュや選択が破壊されないこと
+5. 変更操作の場合のUndo/Redo、複数Blender版の実機テスト
+
+**全項目は初期状態では `self.fail("TODO: ...")` として失敗します。**
+実装・レビュー・本物のテスト追加が終わるまで、完成・合格扱いにはしません。生成ファイルを勝手に実行する処理もありません。
+
+読み込み時は登録計画を現行許可リストから再計算し、JSONの重複・変更・有効期限切れに相当する台帳の不一致・危険なパスを拒否します。失敗した場合は登録計画を再生成してね。
+
 ## 自動で確かめる範囲
 
 - 新しい機能IDと部品IDの形式・重複、既存の部品IDの実在
@@ -41,7 +64,7 @@ python -m cbdk registration-draft \
 
 ## 自動化しない範囲（重要）
 
-- 新しいPythonコードやBlender UIの自動生成・実行
+- 新しい**機能実装用**PythonコードやBlender UIの自動生成・実行（未完成のテストひな形のみ生成可）
 - `TRUSTED_FEATURES` / `TRUSTED_PART_SOURCES` への自動追加
 - `approved=true`、ライセンス許諾、第三者ソースの採用
 - Blender Extensionsの公開・配布やGitHub→Blender自動インストール
