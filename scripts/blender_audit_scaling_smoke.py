@@ -12,7 +12,8 @@ import bmesh
 import bpy
 from parts.blender import edit_audit
 from parts.blender.context import BlenderContextError
-from parts.blender.edit_audit import capture_edit_snapshot, preflight_audit_size
+from parts.blender.edit_audit import (capture_edit_snapshot, preflight_audit_size,
+                                     audit_vertex_translation)
 from parts.blender.edit_transform import translate_selected_vertices
 
 
@@ -53,6 +54,9 @@ def run():
     _current, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     assert result.audit.valid
+    reference_diff = audit_vertex_translation(before, capture_edit_snapshot(bm),
+                                              (0., 0., 0.125))
+    assert result.audit == reference_diff, (result.audit, reference_diff)
     assert result.moved_vertices == 1
     assert len(result.audit.moved_vertices) == 1
     assert abs(float(bm.verts[0].co.z) - 0.125) < 1e-6
