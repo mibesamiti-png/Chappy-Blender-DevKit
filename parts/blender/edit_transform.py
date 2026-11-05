@@ -13,7 +13,7 @@ from math import isfinite
 
 from .context import BlenderContextError, require_active_mesh
 from .edit_audit import (MeshEditDiff, capture_edit_snapshot,
-                         audit_vertex_translation, restore_edit_snapshot)
+                         audit_live_vertex_translation, restore_edit_snapshot)
 
 
 MAX_OFFSET = 10.0
@@ -84,8 +84,9 @@ def translate_selected_vertices(context, offset) -> VertexTranslationResult:
         for vertex, old, new in planned:
             vertex.co = new
         bmesh.update_edit_mesh(mesh, loop_triangles=False, destructive=False)
-        after = capture_edit_snapshot(bm)
-        diff = audit_vertex_translation(before, after, delta)
+        # Stream post-edit coordinates directly from BMesh, avoiding a
+        # second full-size immutable snapshot on every successful operation.
+        diff = audit_live_vertex_translation(before, bm, delta)
         if not diff.valid:
             raise BlenderContextError("Post-edit audit failed: unexpected geometry or selection change")
     except Exception as exc:
