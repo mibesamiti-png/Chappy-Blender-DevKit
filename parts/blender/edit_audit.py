@@ -82,10 +82,28 @@ def capture_edit_snapshot(bm) -> MeshEditSnapshot:
         raise BlenderContextError("Failed to inspect BMesh snapshot safely") from exc
 
 
-def _near(a: float, b: float, *, delta: float = 0.0) -> bool:
-    # Scaling tolerance by a world coordinate (possibly 1e9) could accept a
-    # missing small translation as valid. Bound it by requested movement.
-    return abs(a - b) <= ABS_TOLERANCE + REL_TOLERANCE * max(1.0, abs(delta))
+def _axis_matches(old: float, new: float, delta: float) -> bool:
+    """Verify each axis, including axes that must not change.
+
+    A whole-vertex 'any axis changed' check can incorrectly accept a missing
+    tiny Y translation when X moved correctly. Exact unchanged comparisons
+    prevent edits to unselected vertices and zero-delta axes from passing.
+    For nonzero deltas use a tight, delta-relative error budget as well as
+    the existing absolute bound; float32 quantization beyond this is safely
+    rejected instead of being misreported as a successful edit.
+    """
+    if delta == 0.0:
+        return new == old
+    if new == old:
+        return False
+    expected = old + delta
+    if not isfinite(expected):
+        return False
+    tolerance = min(
+        ABS_TOLERANCE + REL_TOLERANCE * max(1.0, abs(delta)),
+        abs(delta) * 0.15,
+    )
+    return abs(new - expected) <= tolerance
 
 
 def _validate_translation_delta(delta) -> None:
@@ -110,11 +128,11 @@ def audit_vertex_translation(before: MeshEditSnapshot, after: MeshEditSnapshot,
     matched = True
     for i in range(min(len(before.coordinates), len(after.coordinates))):
         old, new = before.coordinates[i], after.coordinates[i]
-        changed = any(not _near(old[j], new[j], delta=delta[j]) for j in range(3))
+        changed = any(old[j] != new[j] for j in range(3))
         if changed:
             moved.append(i)
-        target = tuple(old[j] + delta[j] if before.selected[i] else old[j] for j in range(3))
-        if any(not _near(target[j], new[j], delta=delta[j]) for j in range(3)):
+        if any(not _axis_matches(old[j], new[j], delta[j] if before.selected[i] else 0.0)
+               for j in range(3)):
             unexpected.append(i)
             matched = False
     if len(before.coordinates) != len(after.coordinates):
@@ -164,11 +182,10 @@ def audit_live_vertex_translation(before: MeshEditSnapshot, bm,
             if not all(isfinite(value) for value in now):
                 unexpected.append(i)
                 continue
-            if any(not _near(old[j], now[j], delta=delta[j]) for j in range(3)):
+            if any(old[j] != now[j] for j in range(3)):
                 moved.append(i)
-            target = tuple(old[j] + delta[j] if before.selected[i] else old[j]
-                           for j in range(3))
-            if any(not _near(target[j], now[j], delta=delta[j]) for j in range(3)):
+            if any(not _axis_matches(old[j], now[j], delta[j] if before.selected[i] else 0.0)
+                   for j in range(3)):
                 unexpected.append(i)
         # A valid nonzero translation must produce observable changes.
         # This also rejects edits lost to float32 precision at huge coordinates.
