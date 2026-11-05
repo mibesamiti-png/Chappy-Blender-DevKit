@@ -23,11 +23,21 @@ TRUSTED_FEATURES = {
         "source": "templates/modular_preview/features/object_selection.py",
         "parts": frozenset({"BLCTX-001", "BLCTX-002"}),
     },
+    "mesh_bounds": {
+        "source": "templates/modular_preview/features/mesh_bounds.py",
+        "parts": frozenset({"BLCTX-001", "BLGEO-001"}),
+    },
+    "modifier_summary": {
+        "source": "templates/modular_preview/features/modifier_summary.py",
+        "parts": frozenset({"BLCTX-001", "BLMOD-001"}),
+    },
 }
 TRUSTED_PART_SOURCES = {
     "BLCTX-001": "parts/blender/context.py",
     "BLCTX-002": "parts/blender/context.py",
     "BME-001": "parts/blender/edit_mesh.py",
+    "BLGEO-001": "parts/blender/measure.py",
+    "BLMOD-001": "parts/blender/modifiers.py",
 }
 VERSION_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 
