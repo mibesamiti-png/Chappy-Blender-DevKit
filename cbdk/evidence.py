@@ -91,6 +91,14 @@ def verify_authored_parts(blender: str, *, timeout: int = 90, root: Path | None 
                 }
     else:
         report['error'] = run.get('reason') or run.get('message', 'Blender smoke failed')
+        # Preserve bounded diagnostics on failed trusted smoke runs. The
+        # success marker is absent by design, so print traceback context
+        # without declaring any parts validated.
+        report['failure_details'] = {
+            'exit_code': run.get('returncode'),
+            'stderr_tail': str(run.get('stderr_tail', ''))[-3000:],
+            'stdout_tail': str(run.get('stdout_tail', ''))[-3000:],
+        }
     return report
 
 
