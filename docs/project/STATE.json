@@ -161,6 +161,14 @@
       "verification": "not_tested",
       "source": "cbdk/recipe_matrix.py",
       "note": "6レシピ・5機能・7部品の整合性と3版の静的互換性を照合。13件の回帰テストを追加したが現行CI未実行、実機認定なし"
+    },
+    {
+      "id": "REG-001",
+      "title": "自作部品・機能の登録計画自動生成",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/registration_draft.py",
+      "note": "未登録ID・依存・ソース衝突を検査して非実行のレビュー計画を生成。コード/台帳の自動追加・承認は行わない。16件の追加回帰テストは未実測"
     }
   ],
   "known_issues": [
@@ -297,6 +305,11 @@
       "id": "DEC-008",
       "decision": "レシピ追加や部品登録の整合性を別の静的マトリクスで検査",
       "note": "新たなレシピ/機能は明示的な期待構成と全依存ファイルの検査が必要。静的検査をBlender実機やライセンス確認の代用にしない"
+    },
+    {
+      "id": "DEC-009",
+      "decision": "新規部品登録は提案生成と人手の許可を分離",
+      "note": "CLIでレビュー案を出力しても許可リスト・元ソース・部品台帳を変更しない。新部品は正式採用せず、手動レビューとCIが必要"
     }
   ],
   "last_verified": {
@@ -354,6 +367,7 @@
     "ci_usage": "GitHub Actionsの利用枠を節約するため、不要な重複PR push実行は止め、更新で古くなったPR CIはキャンセル。請求/利用枠のブロックはユーザー側のGitHub設定確認が必要",
     "local_verification_note": "2026-11-05: PR #18のPython全238件、ローカルPython 3.13.5で成功（GitHub CIの代用ではない）。新規6件でXYZ部分移動・未選択微小変更・復元を検証。Windows/Blender最新版CIはIssue #19でランナー割当前に失敗",
     "v017_pending": "2026-11-05: feature/v0.17-undo-redo-probe は検証追加の開発ブランチ。GitHub Actions未実行、実機結果なし。v0.16のCIブロッカーIssue #19は継続。",
-    "recipe_matrix_pending": "2026-11-05: v0.17 draft PR #20 に cbdk/recipe_matrix.py と13 Pythonテストを追加。新コードのローカルPython/Blender/Windowsのテスト実測は未確認。main 0.15を維持しlast_verifiedは変更しない"
+    "recipe_matrix_pending": "2026-11-05: v0.17 draft PR #20 に cbdk/recipe_matrix.py と13 Pythonテストを追加。新コードのローカルPython/Blender/Windowsのテスト実測は未確認。main 0.15を維持しlast_verifiedは変更しない",
+    "registration_draft": "2026-11-05: v0.17 draft PR #20 に REG-001登録計画CLI・16テスト・操作文書を追加。新規テストのCI成功は未確認。mainは0.15、last_verifiedは変更しない"
   }
 }
