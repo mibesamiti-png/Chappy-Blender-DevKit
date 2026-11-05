@@ -209,3 +209,16 @@ python -m cbdk evidence-status --evidence reports/latest/parts_evidence.json
 スキルZIP生成: `python scripts/package_skill.py`（`dist/` にスタンドアロン／プラグインの2形式を生成）
 
 **注意:** スキルが存在してもChatGPTへの自動インストールはされません。既存のBlender実機テストは指定の3つの自作部品に限定されています。
+
+
+## v0.9 — 部品別のBlenderバージョン検証マトリクス
+
+Windows実機テストやGitHub Actionsが残した `parts_evidence*.json` を、SHA-256と部品IDごとに検査し、**どのBlender版でテストできたか**一覧化します。
+
+```bash
+python -m cbdk part-matrix --evidence-dir reports/latest
+# 個別ファイルを指定する場合
+python -m cbdk part-matrix --evidence reports/latest/parts_evidence_Blender_4_4_3_3.json
+```
+
+出力は `reports/latest/parts_matrix.json` と `parts_matrix.md`。Windowsのワンクリックテストでは検証後に自動作成します。古い・壊れた証拠は除外理由を表示し、集計コマンドは失敗を返します。**自作部品の台帳は変更せず、正式採用・ライセンス確認・検証記録の真正性を自動認定しません。**

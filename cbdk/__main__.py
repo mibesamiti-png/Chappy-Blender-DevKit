@@ -13,6 +13,7 @@ from .crossfile import inspect_crossfile, extract_crossfile
 from .blender_audit import audit_blender_dependencies
 from .contracts import make_blender_contracts, write_contracts
 from .evidence import verify_authored_parts, save_evidence, check_evidence_freshness
+from .part_matrix import evidence_paths, summarize_parts, write_matrix, render_matrix_markdown
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -92,6 +93,12 @@ def main(argv=None) -> int:
 
     status_cmd = sub.add_parser('evidence-status', help='Check the current hashes against a parts smoke report (not authentication)')
     status_cmd.add_argument('--evidence', default='reports/latest/parts_evidence.json')
+
+    matrix_cmd = sub.add_parser('part-matrix', help='Compare locally saved smoke evidence across Blender versions (review only)')
+    matrix_cmd.add_argument('--catalog', default='catalog/authored_parts.json')
+    matrix_cmd.add_argument('--evidence-dir', default=None)
+    matrix_cmd.add_argument('--evidence', action='append', default=[])
+    matrix_cmd.add_argument('--output', default='reports/latest/parts_matrix.json')
 
     args = parser.parse_args(argv)
     try:
@@ -194,6 +201,19 @@ def main(argv=None) -> int:
             result = check_evidence_freshness(_json(args.evidence))
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if result['fresh'] else 1
+        if args.command == 'part-matrix':
+            chosen_dir = args.evidence_dir if args.evidence_dir is not None else (None if args.evidence else 'reports/latest')
+            paths = evidence_paths(chosen_dir, args.evidence)
+            matrix = summarize_parts(_json(args.catalog), paths)
+            write_matrix(args.output, matrix)
+            md = Path(args.output).with_suffix('.md')
+            md.write_text(render_matrix_markdown(matrix), encoding='utf-8')
+            print(f"Part matrix: {matrix['valid_evidence_count']} valid evidence file(s), "
+                  f"{matrix['invalid_evidence_count']} rejected; output: {args.output}")
+            for part in matrix['parts']:
+                print(f"  {part['part_id']}: {', '.join(part['runtime_versions']) or 'not recorded'} "
+                      f"(approved by evidence: no)")
+            return 0 if matrix['has_runtime_evidence'] and not matrix['invalid_evidence_count'] else 1
         if args.command == "parts":
             parts = read_registry(args.registry)["parts"]
             for item in sorted(parts, key=lambda x: x["part_id"]):

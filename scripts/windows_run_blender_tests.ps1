@@ -122,6 +122,19 @@ try {
         Write-Host "PASS: $label; evidence: $evidence" -ForegroundColor Green
     }
     if ($failures.Count -gt 0) { throw "$($failures.Count)/$($blenders.Count) Blender installations failed; all were attempted." }
+    Write-Host '[Matrix] Summarize per-version evidence...'
+    $matrixLog = Join-Path $reportDir 'parts_matrix.log'
+    $matrixOutput = Join-Path $reportDir 'parts_matrix.json'
+    $matrixRc = Invoke-Logged -Executable $pycmd -CommandArgs ($pyargs + @(
+        '-m','cbdk','part-matrix','--catalog',(Join-Path $repo 'catalog\authored_parts.json'),
+        '--evidence-dir',$reportDir,'--output',$matrixOutput
+    )) -LogPath $matrixLog
+    Get-Content -LiteralPath $matrixLog -Tail 8
+    if ($matrixRc -ne 0) {
+        Write-Host 'WARNING: Part matrix had missing or stale reports. Check parts_matrix.log.' -ForegroundColor Yellow
+    } else {
+        Write-Host "Part matrix saved: $matrixOutput"
+    }
     Write-Host "SUCCESS: $($blenders.Count)/$($blenders.Count) Blender installations passed."
     Write-Host "Reports: $reportDir"
     Write-Host 'Blender smoke success does not constitute formal component approval.'
