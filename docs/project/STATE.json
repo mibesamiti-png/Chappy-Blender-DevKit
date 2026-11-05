@@ -7,7 +7,7 @@
     "current": "0.16.0",
     "stage": "private_development_preview",
     "next_planned": "0.17.0",
-    "milestone": "v0.16 ストリーミング監査・NaN/Inf座標復元・旧新監査の判定統一を実装。ローカルPython232件成功。最新GitHub Actionsはランナー未割当でPR #18未マージ"
+    "milestone": "v0.16 ストリーミング監査とXYZ各軸独立照合を実装。微小な部分移動・未選択頂点の微小変化も検出し復元。ローカルPython238件成功。CIランナー問題によりPR #18未マージ"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -96,7 +96,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "parts/blender/edit_audit.py",
-      "note": "加工前の不変スナップショットと加工後のライブ監査。非有限座標も接続関係が無傷なら復元し再検証。旧新監査とも非ゼロ移動の無反映を拒否（2026-11-05: ローカルPython232件成功、最新版CI待ち）"
+      "note": "加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。ローカル238件成功・最新版CIは未検証"
     },
     {
       "id": "TEST-001",
@@ -326,6 +326,6 @@
     "source_of_truth": "docs/project/STATE.json",
     "generated_handoff": "docs/PROJECT_HANDOFF.md",
     "ci_usage": "GitHub Actionsの利用枠を節約するため、不要な重複PR push実行は止め、更新で古くなったPR CIはキャンセル。請求/利用枠のブロックはユーザー側のGitHub設定確認が必要",
-    "local_verification_note": "2026-11-05: PR #18 ローカルPython 3.13.5で232件成功（CIの代用ではない）。新規3件で旧/新の数値監査を整合。最終Blender/Windows CI実測はランナー問題解消後に必要"
+    "local_verification_note": "2026-11-05: PR #18のPython全238件、ローカルPython 3.13.5で成功（GitHub CIの代用ではない）。新規6件でXYZ部分移動・未選択微小変更・復元を検証。Windows/Blender最新版CIはIssue #19でランナー割当前に失敗"
   }
 }
