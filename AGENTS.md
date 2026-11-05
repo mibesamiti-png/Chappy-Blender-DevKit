@@ -120,3 +120,9 @@ While PR #18 is blocked by GitHub Actions runner allocation, v0.17 remains a sep
 Before changing any authored feature, recipe or dependency, inspect `cbdk/recipe_matrix.py` and its independent `EXPECTED_RECIPES` mapping. `python -m cbdk.recipe_matrix` must reject missing modules, incomplete 6-recipe coverage, metadata tampering or unsupported Blender targets without executing arbitrary source code. Update trusted source mappings, the feature catalog, all expected recipe combinations and tests together for a new authored feature.
 
 An offline `static_checks_passed` report explicitly means **not** Blender runtime verified, GUI tested, legal redistribution cleared or approved. Keep the existing CI gate and `--preview-unapproved` safety policy. Do not merge v0.17 while its new CI and upstream v0.16 are unverified.
+
+## v0.17 draft — review-only authored registration plans
+
+Before manually adding a CBDK-authored feature or part, use `python -m cbdk registration-draft` for a proposal and inspect `docs/REGISTRATION_DRAFT.md`. This command may only print JSON or write an exclusive private report under `reports/latest/`; it must never execute untrusted source, change `catalog/`, populate trusted allowlists, approve licensing, publish, or claim CI/runtime success. Unknown IDs, stale catalog mappings and colliding paths must fail closed.
+
+Implementation of a proposed feature remains a separate reviewed change that updates trusted source mappings, recipes, tests and CI. Keep `approved=false`, `license_review=pending`, and the explicit preview-only gate. PR #20 remains a draft until all upstream v0.16 and v0.17 checks actually pass.
