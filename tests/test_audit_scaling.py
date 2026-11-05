@@ -150,6 +150,62 @@ class StreamingAuditTests(unittest.TestCase):
                 with self.assertRaises(BlenderContextError):
                     audit_live_vertex_translation(before, bm, bad)
 
+    def test_both_reject_one_missing_axis_in_mixed_translation(self):
+        bm = tri()
+        before = capture_edit_snapshot(bm)
+        bm.verts[0].co = (0.125, 0., 0.)  # X succeeded, tiny Y was lost
+        delta = (0.125, 0.000001, 0.)
+        old = audit_vertex_translation(before, capture_edit_snapshot(bm), delta)
+        live = audit_live_vertex_translation(before, bm, delta)
+        self.assertEqual(old, live)
+        self.assertFalse(live.valid)
+        self.assertEqual(live.unexpected_vertices, (0,))
+
+    def test_both_reject_subthreshold_unselected_coordinate_tamper(self):
+        bm = tri()
+        before = capture_edit_snapshot(bm)
+        bm.verts[0].co = (0., 0., 0.125)
+        bm.verts[1].co = (1.000001, 0., 0.)
+        delta = (0., 0., 0.125)
+        old = audit_vertex_translation(before, capture_edit_snapshot(bm), delta)
+        live = audit_live_vertex_translation(before, bm, delta)
+        self.assertEqual(old, live)
+        self.assertFalse(live.valid)
+        self.assertEqual(live.unexpected_vertices, (1,))
+
+    def test_both_reject_tiny_underdelivery_even_if_axis_changed(self):
+        bm = tri()
+        before = capture_edit_snapshot(bm)
+        bm.verts[0].co = (0., 0., 0.0000001)
+        delta = (0., 0., 0.000001)
+        old = audit_vertex_translation(before, capture_edit_snapshot(bm), delta)
+        live = audit_live_vertex_translation(before, bm, delta)
+        self.assertEqual(old, live)
+        self.assertFalse(live.valid)
+        self.assertEqual(live.unexpected_vertices, (0,))
+
+    def test_both_accept_correct_tiny_delta(self):
+        bm = tri()
+        before = capture_edit_snapshot(bm)
+        bm.verts[0].co = (0., 0., 0.000001)
+        delta = (0., 0., 0.000001)
+        old = audit_vertex_translation(before, capture_edit_snapshot(bm), delta)
+        live = audit_live_vertex_translation(before, bm, delta)
+        self.assertEqual(old, live)
+        self.assertTrue(live.valid)
+        self.assertEqual(live.moved_vertices, (0,))
+
+    def test_selected_axis_without_offset_must_stay_identical(self):
+        bm = tri()
+        before = capture_edit_snapshot(bm)
+        bm.verts[0].co = (0.000001, 0., 0.125)
+        delta = (0., 0., 0.125)
+        old = audit_vertex_translation(before, capture_edit_snapshot(bm), delta)
+        live = audit_live_vertex_translation(before, bm, delta)
+        self.assertEqual(old, live)
+        self.assertFalse(live.valid)
+        self.assertEqual(live.unexpected_vertices, (0,))
+
     def test_streamed_detects_silent_noop(self):
         bm = tri()
         before = capture_edit_snapshot(bm)
