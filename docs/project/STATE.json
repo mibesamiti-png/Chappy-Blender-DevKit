@@ -177,6 +177,14 @@
       "verification": "not_tested",
       "source": "cbdk/registration_scaffold.py",
       "note": "現行カタログと登録計画の完全一致を確認し、5つのTODO失敗テストをignored領域に新規生成。19件の回帰テスト追加、実行・Blender実機は未検証"
+    },
+    {
+      "id": "REG-003",
+      "title": "読み取り専用・メッシュ編集で未完成テストの内容を切替",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/registration_scaffold.py",
+      "note": "--behavior read_only/mesh_editを明示指定。共通5項目に不変性・Undo・選択範囲・復元など3項目を追加。従来未指定JSONは互換維持。新規13テストはCI未実測"
     }
   ],
   "known_issues": [
@@ -323,6 +331,11 @@
       "id": "DEC-010",
       "decision": "テストひな形はレビュー用の未完成コードと明示して非実行・非上書き",
       "note": "生成先はreports/latest/scaffolds内のみ。全TODOはself.failで成功偽装を防止し、tests/や元機能・台帳へ自動登録しない"
+    },
+    {
+      "id": "DEC-011",
+      "decision": "新機能の動作種別は開発者の明示申告とし自動推測しない",
+      "note": "read_onlyとmesh_editの申告は静的メタデータであり実機での安全性証明ではない。既存ドラフトはunspecifiedとして共通5項目を維持し、生成ひな形はすべて失敗TODO"
     }
   ],
   "last_verified": {
@@ -382,6 +395,7 @@
     "v017_pending": "2026-11-05: feature/v0.17-undo-redo-probe は検証追加の開発ブランチ。GitHub Actions未実行、実機結果なし。v0.16のCIブロッカーIssue #19は継続。",
     "recipe_matrix_pending": "2026-11-05: v0.17 draft PR #20 に cbdk/recipe_matrix.py と13 Pythonテストを追加。新コードのローカルPython/Blender/Windowsのテスト実測は未確認。main 0.15を維持しlast_verifiedは変更しない",
     "registration_draft": "2026-11-05: v0.17 draft PR #20 に REG-001登録計画CLI・16テスト・操作文書を追加。新規テストのCI成功は未確認。mainは0.15、last_verifiedは変更しない",
-    "registration_scaffold": "2026-11-05: v0.17 draft PR #20 にREG-002テストひな形生成CLI・19件の回帰テストを追加。GitHub Actionsはランナー未割当で未実測。現行mainとlast_verifiedはv0.15のまま"
+    "registration_scaffold": "2026-11-05: v0.17 draft PR #20 にREG-002テストひな形生成CLI・19件の回帰テストを追加。GitHub Actionsはランナー未割当で未実測。現行mainとlast_verifiedはv0.15のまま",
+    "registration_behavior": "2026-11-05: PR #20 v0.17 にREG-003動作種別別ひな形とPython回帰テスト13件を追加。変更後Python/Windows/Blender実機CIは未検証。main 0.15とlast_verifiedの記録は維持"
   }
 }
