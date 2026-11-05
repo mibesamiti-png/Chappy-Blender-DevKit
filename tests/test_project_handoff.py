@@ -34,7 +34,7 @@ class ProjectHandoffTests(unittest.TestCase):
             shutil.copyfile(ROOT / rel, destination)
 
     def save(self):
-        (self.root / STATE).write_text(json.dumps(self.state, ensure_ascii=False))
+        (self.root / STATE).write_text(json.dumps(self.state, ensure_ascii=False), encoding="utf-8")
 
     def test_current_repository_state_is_valid(self):
         data = validate_state()
