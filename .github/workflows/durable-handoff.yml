@@ -1,0 +1,98 @@
+name: CBDK durable handoff
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: dev-handoff-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Verify project state and publish actual test observation
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate canonical state, release number, part catalog and references
+        run: python scripts/project_handoff.py --validate
+      - name: Run Python regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci
+          python -m unittest discover -s tests -v 2>&1 | tee reports/ci/project_unittest.log
+      - name: Save actual Python CI observation
+        run: |
+          python scripts/project_handoff.py --ci-snapshot reports/ci/project_ci.json \
+            --python-log reports/ci/project_unittest.log
+      - name: Generate standalone new-chat handoff
+        run: |
+          python scripts/project_handoff.py --write
+          python scripts/project_handoff.py --check
+          echo "Durable handoff generated from the current checked-in milestone state." >> "$GITHUB_STEP_SUMMARY"
+      - name: Save documentation and test observation as CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-durable-handoff-${{ github.run_id }}
+          path: |
+            docs/PROJECT_HANDOFF.md
+            reports/ci/project_ci.json
+            reports/ci/project_unittest.log
+          retention-days: 30
+          if-no-files-found: error
+
+  sync-main:
+    name: Sync latest durable handoff to GitHub main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v4
+        with:
+          name: cbdk-durable-handoff-${{ github.run_id }}
+          path: downloaded-state
+      - name: Validate and generate latest handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/project_handoff.py --validate
+          python scripts/project_handoff.py --write
+          python scripts/project_handoff.py --check
+          mkdir -p docs/project
+          cp downloaded-state/reports/ci/project_ci.json docs/project/LAST_CI.json
+      - name: Commit generated handoff and successful CI snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/PROJECT_HANDOFF.md docs/project/LAST_CI.json
+          if git diff --cached --quiet; then
+            echo "No changes needed" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -m "docs: synchronize CBDK development handoff and Python test observation [skip ci]"
+          git push origin HEAD:main
+          echo "Latest handoff and actual Python CI observation committed to main." >> "$GITHUB_STEP_SUMMARY"

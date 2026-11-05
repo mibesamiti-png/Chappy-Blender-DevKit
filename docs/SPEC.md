@@ -1,3 +1,9 @@
+# 旧版仕様の記録（歴史的スナップショット）
+
+**現行仕様は [PROJECT_SPEC.md](PROJECT_SPEC.md)、実装状態・未実装・テストは [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) および [project/STATE.json](project/STATE.json) を確認。** この旧文書の未実装表は初期開発時点の記録であり、最新版の進捗を表しません。
+
+---
+
 # CBDK 開発仕様 / 要件ID
 
 目的: 自作・OSS由来のBlenderコードの機能単位での棚卸し、重複抑制、独立性検証を経た再利用。
