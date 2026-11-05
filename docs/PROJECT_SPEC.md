@@ -120,3 +120,11 @@ python -m unittest discover -s tests -v
 `--output` を明示した場合だけ `reports/latest/` 以下にJSONを新規保存。既存ファイルの上書き、私有ソースのインポート/実行、カタログやコードの自動変更、権利認定、実機テスト成功の自動認定は**禁止**する。出力は登録の提案であり、パーツ採用や公開を許可するものではない。
 
 実際の組み込みには、原本/権利を人手で確認したうえで台帳・許可リスト・コード・レシピ・スモークテストを別PRで更新する。全体Python/Windows/Blender CIの実測完了までは `main` へマージしない。参照：`docs/REGISTRATION_DRAFT.md`。
+
+## v0.17 開発中：登録ドラフトからレビュー用Pythonテストの自動ひな形
+
+`registration-draft --output reports/latest/registration_draft.json` で保存した提案を、`python -m cbdk registration-tests --draft reports/latest/registration_draft.json` で読み込む。提案の全項目を現行の信頼済み台帳から再生成して比較し、期限切れ相当の不一致、改変されたID/依存/承認フラグ、重複JSONキー、危険な出力パスを拒否する。
+
+生成される `reports/latest/scaffolds/test_<feature_id>_review.py` はプライベートな非追跡領域のみ。既存ファイルは上書きしない。想定テスト5項目は初期状態ですべて `self.fail("TODO: ...")` とし、未完成なのに成功するテストは生成しない。生成されたファイルや元ソースはCBDKから自動でインポート・実行しない。公式 `tests/`、台帳、許可リストへ移動/登録するのは人手レビューと実装・実測の後。
+
+**CI/Blender実機成功・公開ライセンス承認・UI品質を意味しない。** v0.16/0.17の未検証コードは安定版mainにマージしない。詳細：`docs/REGISTRATION_DRAFT.md`。
