@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from math import isfinite
 
 from .context import BlenderContextError, require_active_mesh
+from .edit_audit import (MeshEditDiff, capture_edit_snapshot,
+                         audit_vertex_translation, restore_edit_snapshot)
 
 
 MAX_OFFSET = 10.0
@@ -22,6 +24,7 @@ MAX_ABS_COORD = 1_000_000_000.0
 class VertexTranslationResult:
     moved_vertices: int
     offset: tuple[float, float, float]
+    audit: MeshEditDiff
 
 
 def translate_selected_vertices(context, offset) -> VertexTranslationResult:
@@ -57,6 +60,7 @@ def translate_selected_vertices(context, offset) -> VertexTranslationResult:
     import bmesh
 
     bm = bmesh.from_edit_mesh(mesh)
+    before = capture_edit_snapshot(bm)
     chosen = tuple(vertex for vertex in bm.verts if vertex.select)
     if not chosen:
         raise BlenderContextError("Select at least one vertex before translating")
@@ -74,28 +78,26 @@ def translate_selected_vertices(context, offset) -> VertexTranslationResult:
             raise BlenderContextError("Vertex translation would create invalid coordinates")
         planned.append((vertex, old, new))
 
-    changed = []
+    # Capture immutable state before writing and inspect the entire mesh after.
+    # Unexpected changes are rejected and recovery is attempted.
     try:
         for vertex, old, new in planned:
-            # Also track the current vertex; a data API setter might fail after
-            # changing only some of its coordinate components.
-            changed.append((vertex, old))
             vertex.co = new
         bmesh.update_edit_mesh(mesh, loop_triangles=False, destructive=False)
+        after = capture_edit_snapshot(bm)
+        diff = audit_vertex_translation(before, after, delta)
+        if not diff.valid:
+            raise BlenderContextError("Post-edit audit failed: unexpected geometry or selection change")
     except Exception as exc:
-        errors = []
-        for vertex, old in reversed(changed):
-            try:
-                vertex.co = old
-            except Exception as rollback_exc:
-                errors.append(type(rollback_exc).__name__)
         try:
+            restore_edit_snapshot(bm, before)
             bmesh.update_edit_mesh(mesh, loop_triangles=False, destructive=False)
-        except Exception as rollback_exc:
-            errors.append(type(rollback_exc).__name__)
-        if errors:
+        except Exception as recovery:
             raise BlenderContextError(
-                "Translation failed and rollback was incomplete: " + ", ".join(errors)
+                "Translation failed; automatic restoration could not be verified: "
+                + str(recovery)
             ) from exc
-        raise BlenderContextError("Translation failed; original vertex positions restored") from exc
-    return VertexTranslationResult(len(chosen), delta)
+        raise BlenderContextError(
+            "Translation or post-edit audit failed; original mesh snapshot restored"
+        ) from exc
+    return VertexTranslationResult(len(chosen), delta, diff)
