@@ -81,7 +81,7 @@ jobs:
           python scripts/project_handoff.py --write
           python scripts/project_handoff.py --check
           mkdir -p docs/project
-          cp downloaded-state/project_ci.json docs/project/LAST_CI.json
+          cp downloaded-state/reports/ci/project_ci.json docs/project/LAST_CI.json
       - name: Commit generated handoff and successful CI snapshot
         shell: bash
         run: |
