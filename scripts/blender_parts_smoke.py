@@ -90,6 +90,12 @@ try:
         pass
     assert before_bad == [tuple(v.co) for v in edit_bm.verts]
     checks['BME-002'].append('invalid_offset_rejected')
+    # Reset the fixture before the later read-only geometry/matrix tests.
+    # The previous test genuinely changed one vertex, so using the original
+    # flat-triangle bounds without restoring it would be a false failure.
+    translated_back = translate_selected_vertices(bpy.context, (0.0, 0.0, -0.125))
+    assert translated_back.moved_vertices == 1
+    assert [tuple(v.co) for v in edit_bm.verts] == before
 
 
     # Mesh datablocks can be out of sync while an editable BMesh is active.
