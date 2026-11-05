@@ -414,3 +414,13 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - **今回追加した16件のPython回帰テストとGitHub Actionsはまだ成功を実測していない。** コードとテストが保存された段階。Blender GUI・Windows実機でも未検証。
 - レポートは `status=proposal_only`, `approved=false`, `runtime_verified=false`, `catalog_modified=false`。元アドオンの自動実行や許可済みソースへの自動登録は実施しない。
 - v0.17の開発先はドラフトPR #20、ベースv0.16 PR #18はIssue #19のCIランナー未割当問題で未マージ。安定版mainとlast_verifiedはv0.15.0のまま。
+
+## v0.17 開発中 — 2026-11-05（登録計画→安全なテストひな形生成）
+
+- `cbdk/registration_scaffold.py`: 保存済みの登録提案JSONを厳密に検証し、現行カタログ/許可リストから同じ計画を再計算。不一致・重複JSONキー・型不整合・シンボリックリンク・領域外参照を拒否する。
+- `python -m cbdk registration-tests --draft reports/latest/registration_draft.json`: `reports/latest/scaffolds/test_<feature_id>_review.py` のみ新規生成。Git管理外領域で上書き禁止。元ソース、カタログ、公式テストには書かない。
+- ひな形の5テストは、権利と依存のレビュー、Blenderモード・選択、期待結果、異常入力の不変性、Undo/Redoと複数版でのスモーク。それぞれ `self.fail("TODO: ...")` を初期設定にして、レビュー前に誤って成功しないようにする。
+- `tests/test_registration_scaffold.py`: 19件の回帰テストを追加。悪意ある入力、JSONキー重複、検証結果の偽装、誤った依存関係、古い台帳、出力上書き、symlink経由の領域逸脱、CLI接続を確認するテストコード。
+- `docs/REGISTRATION_DRAFT.md` を更新。要件 `REG-002` と決定 `DEC-010` をGitHub引き継ぎ台帳に追加。
+
+**検証状況：** この変更の19回帰テストとBlender/Windows実機CIの成功はまだ実測していない。GitHub ActionsはIssue #19で実行開始前に失敗しており、主張できる直近の全CI成功はv0.15.0のまま。ドラフトPR #20で保留。
