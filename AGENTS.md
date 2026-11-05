@@ -100,3 +100,8 @@ The rollback function must be capable of restoring a mesh whose *current* vertex
 ## v0.16 numeric audit consistency
 
 The legacy full-snapshot verifier and the streamed post-edit verifier must agree on reject conditions. Treat any nonzero requested translation with **no observable vertex movement** as a failure; do not let float32-rounding within tolerance silently pass. Reject nonnumeric, boolean, missing and nonfinite deltas with a controlled BlenderContextError. Maintain the dual-implementation regression tests, and keep locally successful tests separate from pending GitHub Actions Windows/Blender evidence (Issue #19).
+
+
+## v0.16 per-axis audit safety
+
+Audit each XYZ component independently for each vertex. A successful X displacement must not hide a lost small Y displacement. Reject any mutation on axes with zero requested offset or on unselected vertices; no tolerance there because coordinates are read back from the same BMesh value domain. For requested nonzero axes require observable movement and compare the expected displacement with the tighter of the absolute limit and 15% of delta. Maintain strict old/full-snapshot versus streamed audit parity and a rollback regression for partially written multi-axis edits. Local Python 238/238 passed on 2026-11-05; latest Windows and Blender CI are still blocked before runners start, so do not claim verification or merge PR #18.
