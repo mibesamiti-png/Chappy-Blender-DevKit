@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "template": "modular_preview",
+  "package_id": "cbdk_modular_preview",
+  "display_name": "CBDK Combined Inspector Preview",
+  "features": [
+    "object_selection",
+    "edit_selection"
+  ],
+  "purpose": "local_development_preview"
+}
