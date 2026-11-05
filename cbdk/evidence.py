@@ -18,6 +18,7 @@ PART_CASES: dict[str, tuple[str, tuple[str, ...]]] = {
     'BLCTX-001': ('parts/blender/context.py', ('active_mesh_object', 'wrong_mode_rejected')),
     'BLCTX-002': ('parts/blender/context.py', ('selection_excludes_non_mesh', 'selection_snapshot_tuple')),
     'BME-001': ('parts/blender/edit_mesh.py', ('object_mode_rejected', 'triangle_edit_selection')),
+    'BME-002': ('parts/blender/edit_transform.py', ('object_mode_rejected', 'selected_vertex_nudge', 'invalid_offset_rejected')),
     'BLGEO-001': ('parts/blender/measure.py', ('edit_mode_rejected', 'scaled_world_bounds')),
     'BLMOD-001': ('parts/blender/modifiers.py', ('edit_mode_rejected', 'modifier_metadata_snapshot')),
 }
