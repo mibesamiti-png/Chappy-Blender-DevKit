@@ -95,3 +95,8 @@ Private-repository runner usage has limits and costs. Suppress duplicate PR push
 ## v0.16 guarded recovery after nonfinite edits
 
 The rollback function must be capable of restoring a mesh whose *current* vertex coordinates are NaN/Inf or otherwise unreadable; do not call the finite-coordinate capture function before restoring. Verify vertex counts/connectivity independently of coordinates, then restore the saved coordinate and selection values, and **verify the result**. Fail closed on topology corruption, silent setter failure or incomplete rollback. This is a best-effort repair and must not be presented as crash-safe. The new four regression cases pass locally (229 total Python tests); GitHub Actions remains blocked at runner allocation (Issue #19), so do not merge PR #18 or claim latest CI success.
+
+
+## v0.16 numeric audit consistency
+
+The legacy full-snapshot verifier and the streamed post-edit verifier must agree on reject conditions. Treat any nonzero requested translation with **no observable vertex movement** as a failure; do not let float32-rounding within tolerance silently pass. Reject nonnumeric, boolean, missing and nonfinite deltas with a controlled BlenderContextError. Maintain the dual-implementation regression tests, and keep locally successful tests separate from pending GitHub Actions Windows/Blender evidence (Issue #19).
