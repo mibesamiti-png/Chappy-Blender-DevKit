@@ -14,6 +14,7 @@ from .blender_audit import audit_blender_dependencies
 from .contracts import make_blender_contracts, write_contracts
 from .evidence import verify_authored_parts, save_evidence, check_evidence_freshness
 from .part_matrix import evidence_paths, summarize_parts, write_matrix, render_matrix_markdown
+from .addon_builder import build_addon
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -99,6 +100,12 @@ def main(argv=None) -> int:
     matrix_cmd.add_argument('--evidence-dir', default=None)
     matrix_cmd.add_argument('--evidence', action='append', default=[])
     matrix_cmd.add_argument('--output', default='reports/latest/parts_matrix.json')
+
+    addon_cmd = sub.add_parser('build-addon', help='Build allowlisted, private development-preview Blender addon ZIP')
+    addon_cmd.add_argument('--recipe', default='recipes/mesh_inspector.json')
+    addon_cmd.add_argument('--output', default='dist/CBDK_Mesh_Inspector_Preview.zip')
+    addon_cmd.add_argument('--preview-unapproved', action='store_true',
+                           help='Required explicit opt-in; output is NOT a release or approved component')
 
     args = parser.parse_args(argv)
     try:
@@ -201,6 +208,11 @@ def main(argv=None) -> int:
             result = check_evidence_freshness(_json(args.evidence))
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if result['fresh'] else 1
+        if args.command == 'build-addon':
+            result = build_addon(args.recipe, args.output,
+                                 preview_unapproved=args.preview_unapproved)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+            return 0
         if args.command == 'part-matrix':
             chosen_dir = args.evidence_dir if args.evidence_dir is not None else (None if args.evidence else 'reports/latest')
             paths = evidence_paths(chosen_dir, args.evidence)

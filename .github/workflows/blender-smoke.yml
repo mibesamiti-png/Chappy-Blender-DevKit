@@ -9,6 +9,10 @@ on:
       - 'cbdk/evidence.py'
       - 'cbdk/__main__.py'
       - 'scripts/blender_parts_smoke.py'
+      - 'cbdk/addon_builder.py'
+      - 'recipes/**'
+      - 'templates/mesh_inspector/**'
+      - 'scripts/blender_generated_addon_smoke.py'
       - '.github/workflows/blender-smoke.yml'
 
 permissions:
@@ -76,6 +80,25 @@ jobs:
               f.write('Parts passed: **3/3** (smoke only; not approved)\n')
           PY
           cat reports/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Build private development-preview addon ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cbdk build-addon \
+            --recipe recipes/mesh_inspector.json \
+            --preview-unapproved \
+            --output reports/ci/CBDK_Mesh_Inspector_Preview.zip \
+            2>&1 | tee reports/ci/addon_build.log
+      - name: Activate generated addon and test operator in real Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_generated_addon_smoke.py \
+            -- reports/ci/CBDK_Mesh_Inspector_Preview.zip \
+            2>&1 | tee reports/ci/generated_addon_smoke.log
+          grep -F 'CBDK_GENERATED_ADDON_PASS ' reports/ci/generated_addon_smoke.log
+          echo "Generated preview add-on: enable, Object/Edit operators, negative case and disable PASSED." >> "$GITHUB_STEP_SUMMARY"
       - name: Upload evidence and log even when Blender fails
         if: always()
         uses: actions/upload-artifact@v4
