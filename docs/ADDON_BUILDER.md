@@ -113,3 +113,21 @@ python -m cbdk build-addon --recipe recipes/modular_geometry.json \
 ```
 
 既存の旧レシピから生成するアドオンは引き続き動作する。新しい部品を追加するときは、`catalog/authored_parts.json`・`catalog/addon_features.json`とコード側の許可リスト・実際のBlenderテストを更新する。サンプルZIPは開発プレビュー専用で、複数構成を同時インストールしないこと。
+
+
+## v0.14 — 選択頂点の局所的な移動
+
+`BME-002: translate_selected_vertices(context, offset)` は、Blender Edit Modeで単一の独立したメッシュの選択頂点をローカル座標で移動する共通部品です。
+
+- **実行前チェック**：`EDIT_MESH`、1メッシュだけ編集中、共有されていないメッシュ、リンクライブラリなし、シェイプキーなし、頂点選択あり、3成分の有限なオフセット（各軸±10単位、ゼロ移動は禁止）、既存/計算後の座標が有限かつ安全な範囲内。
+- **成功時**：選択頂点の座標のみ変更。頂点/辺/面の数、選択状態、オブジェクト変換、モディファイアはそのまま。
+- **失敗時**：全頂点を事前検証するので入力不備による部分更新を避ける。書込み・`bmesh.update_edit_mesh`中の例外では元座標へのロールバックを試みる。復元不能なエラーも隠さない。電源断やBlender内部の致命的エラーまで原子性を保証するものではない。
+- **Undo**：共通部品を直接Pythonから呼ぶだけではUndoステップが作成されないため、アドオンのOperator `cbdk.modular_vertex_nudge` に `bl_options={'REGISTER','UNDO'}` を設定した。GUIでのUndo動作は必要になったときに別途確認。
+- **実機テスト**：デフォルト未選択頂点が変化しないこと、Edit Mode維持、BMeshトポロジー不変、ゼロ/NaN等の入力拒否を検査。レシピ `modular_nudge` と `modular_all` の両方でテスト。
+
+```bash
+python -m cbdk addon-plan --recipe recipes/modular_nudge.json --target-blender 4.4.3
+python -m cbdk build-addon --recipe recipes/modular_nudge.json --target-blender 4.4.3 --preview-unapproved --output dist/CBDK_Vertex_Nudge_Preview.zip
+```
+
+個人用の開発プレビューのみ。元の外部アドオンは取り込まず、カタログ承認やライセンス確認を自動変更しません。
