@@ -329,3 +329,12 @@
 - 20万要素の上限は継続。辺/面の接続照合では一時的なデータを確保し、完全なゼロメモリではない。
 - Blenderのクラッシュ時の原子性、GUIでのCtrl+Z/Redo操作感は未検証。
 - CIの実行結果を確認するまでこのバージョンの成功を断定しない。状態台帳のlast_verifiedが旧版を指す場合、新版は未確認という意味。
+
+
+### v0.16 の確認済み実測とCIブロッカー（2026-11-05）
+
+- PR #18 のコミット `aa4a5cb8c93e1d58c1b9a1649b6dc38b55ac174c` で、GitHub Python CI（3.11/3.12/3.13）、Blender 4.4.3/4.5.15/5.2.1 の実機スモーク、開発用Windows ZIP生成は成功。
+- GitHub Actionsから取得したBlender 70×70格子の実測: 5,041頂点、9,940辺、4,900面。頂点移動＋監査 4.4.3: 0.19051秒、4.5.15: 0.24000秒、5.2.1: 0.45833秒（GitHubホスト固有の参考値、一般的速度保証ではない）。上限超過の変更前拒否と旧差分検査との一致を3バージョンで確認。
+- ローカルに取得したPRのWindowsキットをPython 3.13で展開し、`python -m unittest discover -s tests` を実行して **221/221 OK** を確認。旧テストの優先順位固定値と新しいBlender性能テストのモジュール読み込みパスは修正済み。
+- **ただしWindows PowerShell CIはGitHub上で失敗扱い**。該当ジョブの `steps`・`logs_url` が未取得、ログ取得は404 BlobNotFound。再実行およびWindows 2025ランナーへの一時的切替でも改善せず、既存Windows 2022ランナーへ戻した。
+- さらに後続のCI実行ではPython/Blender/ZIPまで実行ステップが出ないまま失敗扱いとなる。原因は現時点で未確定。詳細は [Issue #19](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/issues/19)。**全CIが再検証できるまでPR #18をmainへマージしない**。`last_verified` は引き続きv0.15の成功記録。
