@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "template": "mesh_inspector",
+  "package_id": "cbdk_mesh_inspector_preview",
+  "part_ids": [
+    "BLCTX-001",
+    "BLCTX-002",
+    "BME-001"
+  ],
+  "purpose": "local_development_preview"
+}
