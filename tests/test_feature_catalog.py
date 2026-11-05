@@ -28,9 +28,12 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
     def save(self):
         self.source.write_text(json.dumps(self.doc, ensure_ascii=False), encoding='utf-8')
 
-    def test_current_allowlist_has_two_known_features(self):
+    def feature(self, feature_id):
+        return next(item for item in self.doc['features'] if item['id'] == feature_id)
+
+    def test_current_allowlist_has_four_known_features(self):
         catalog = load_feature_catalog(root=self.root)
-        self.assertEqual(set(catalog), {'edit_selection', 'object_selection'})
+        self.assertEqual(set(catalog), {'edit_selection', 'object_selection', 'mesh_bounds', 'modifier_summary'})
         self.assertTrue(all(x['min_blender'] == '4.4.0' for x in catalog.values()))
 
     def test_object_only_plans_exact_two_parts(self):
@@ -64,7 +67,7 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
 
     def test_dependency_is_added_transitively(self):
         # Simulates metadata adding a dependency, still limited to known features.
-        self.doc['features'][1]['requires_features'] = ['edit_selection']
+        self.feature('object_selection')['requires_features'] = ['edit_selection']
         self.save()
         plan = plan_features(['object_selection'], root=self.root)
         self.assertEqual(plan['ordered_features'], ['edit_selection', 'object_selection'])
@@ -72,7 +75,7 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
         self.assertEqual(plan['part_ids'], ['BLCTX-001', 'BLCTX-002', 'BME-001'])
 
     def test_cycle_is_rejected_even_if_selection_is_one_feature(self):
-        self.doc['features'][0]['requires_features'] = ['object_selection']
+        self.feature('edit_selection')['requires_features'] = ['object_selection']
         self.doc['features'][1]['requires_features'] = ['edit_selection']
         self.save()
         with self.assertRaisesRegex(ValueError, 'Cycle'):
@@ -118,7 +121,7 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
 
     def test_version_range_conflict_and_invalid_ranges_rejected(self):
         self.doc['features'][0]['max_blender'] = '4.4.5'
-        self.doc['features'][1]['min_blender'] = '4.5.0'
+        self.feature('object_selection')['min_blender'] = '4.5.0'
         self.save()
         with self.assertRaisesRegex(ValueError, 'incompatible'):
             plan_features(['object_selection', 'edit_selection'], root=self.root)
@@ -162,7 +165,7 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
             f = json.loads(features.read_text(encoding='utf-8'))
             p = json.loads(planned.read_text(encoding='utf-8'))
             self.assertFalse(f['approved'])
-            self.assertEqual(len(f['features']), 2)
+            self.assertEqual(len(f['features']), 4)
             self.assertEqual(p['part_ids'], ['BLCTX-001', 'BLCTX-002', 'BME-001'])
             self.assertEqual(p['target_blender'], '4.4.3')
 
