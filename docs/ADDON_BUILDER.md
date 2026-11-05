@@ -77,3 +77,20 @@ Blender 4.4.3以降で、編集 > プリファレンス > アドオンから「�
 3レシピとも**同じ `cbdk_modular_preview` パッケージを別構成で生成**するため、同時にBlenderへインストールしないでください。旧v1の `cbdk_mesh_inspector_preview` は引き続き生成できます。
 
 GitHub Actionsでは、Blender 4.4.3、4.5.15、5.2.1ごとに3構成を実際に有効化・操作・無効化して検査します。この検査はヘッドレスであり画面の視覚的品質評価を含みません。
+
+
+## v0.12 — 機能カタログと静的な構成プラン
+
+`catalog/addon_features.json` は、自作機能の `id` / `source` / `required_parts` / `requires_features` / `min_blender` / `max_blender` を管理。実装ファイル・部品対応は `cbdk/feature_catalog.py` 側の許可リストにも固定し、カタログのJSONだけを書き換えて未知のコードを導入することはできません。
+
+```bash
+python -m cbdk feature-list --output reports/latest/features.json
+python -m cbdk addon-plan --recipe recipes/modular_combined.json \
+    --target-blender 4.4.3 --output reports/latest/addon_plan.json
+```
+
+計画の結果には、要求した機能 `requested_features`、依存関係を満たす順に並べた `ordered_features`、自動追加した依存機能 `dependency_features_added`、必要部品 `part_ids`、必要ソース `part_sources`、Blenderバージョン範囲などが含まれます。循環・未知の依存・コード側と違う部品ID・互換性違反は、生成前にエラーで止めます。
+
+`build-addon` の `--target-blender` は任意指定。指定した場合、v1/v2両方のプレビューで4.4.0以降のサポート範囲を確認します。**指定しない場合はBlenderバージョンを推測しません**。GitHub Actionsは4.4.3・4.5.15・5.2.1を指定して、機能構成計画と実生成を確認します。CLIプランの `runtime_verified=false` はあくまで静的チェックを意味します。
+
+現段階のカタログは2機能だけ。将来の機能追加ではPython側の許可リスト・機能実装・依存テスト・Blender実機テストも追加していきます。外部の自作アドオン原本は無条件でインポート/実行しません。
