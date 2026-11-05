@@ -7,7 +7,7 @@
     "current": "0.16.0",
     "stage": "private_development_preview",
     "next_planned": "0.17.0",
-    "milestone": "v0.16ストリーミング監査実装・実Blender3版とPython221件成功。最終Windows CIはIssue #19で継続調査中"
+    "milestone": "v0.16 ストリーミング差分監査と復元保護を強化。ローカルPython229件成功。GitHub Actionsランナー割当前の失敗につきPR #18は未マージ"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -96,7 +96,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "parts/blender/edit_audit.py",
-      "note": "加工前のスナップショットと加工後のストリーミング監査。座標/選択/接続を検証、異常時の復元はベストエフォート"
+      "note": "加工前の不変スナップショットと加工後のライブ監査。NaN/Infで破損した座標もトポロジーが無傷なら復元可能。復元後は座標・選択・接続関係を再確認。完全なクラッシュ耐性は対象外"
     },
     {
       "id": "TEST-001",
@@ -193,7 +193,7 @@
       "status": "open",
       "severity": "high",
       "title": "PR #18のCIがランナー未割当(0)・実行ステップ0で終了。GitHub Actions利用枠またはサービス側制限の可能性",
-      "workaround": "GitHub Issue #19でAPI証拠を確認し、リポジトリ所有者のActions使用枠/予算/支払いブロックをGitHub設定から点検。確認まで機能の失敗と断定しない。全CI成功まではmain=v0.15を維持",
+      "workaround": "Issue #19にGitHub Actionsランナー未割当/steps=0を記録。プライベートリポジトリのActions利用枠・予算などを所有者が点検。PR #18にはCI重複排除を導入済み。全CI成功までmainはv0.15を維持",
       "related_requirement": "TEST-001"
     }
   ],
@@ -266,6 +266,11 @@
       "id": "DEC-005",
       "decision": "PR更新時の重複・陳腐化したCIを抑制し使用枠を節約",
       "note": "PythonはPRとmain pushに限定。全CIにPR単位concurrencyを適用し、引き継ぎCIはPRで重複unittestを実行しない。品質ゲート自体は維持"
+    },
+    {
+      "id": "DEC-006",
+      "decision": "編集失敗時のロールバックは非有限座標でも可能な限り復元し、結果を実際に再検証",
+      "note": "復元前の接続関係を座標と独立に検証。元の値を書き戻してから座標・選択・接続関係を再検査し、完全に戻らなければ成功扱いしない"
     }
   ],
   "last_verified": {
@@ -320,6 +325,7 @@
     "on_ci_failure": "検証結果を成功と書かず、原因・失敗ジョブのURLをknown_issuesまたは作業メモに記録",
     "source_of_truth": "docs/project/STATE.json",
     "generated_handoff": "docs/PROJECT_HANDOFF.md",
-    "ci_usage": "GitHub Actionsの利用枠を節約するため、不要な重複PR push実行は止め、更新で古くなったPR CIはキャンセル。請求/利用枠のブロックはユーザー側のGitHub設定確認が必要"
+    "ci_usage": "GitHub Actionsの利用枠を節約するため、不要な重複PR push実行は止め、更新で古くなったPR CIはキャンセル。請求/利用枠のブロックはユーザー側のGitHub設定確認が必要",
+    "local_verification_note": "2026-11-05: PR #18 ローカルPython 3.13で229件成功（CIの代用ではない）。最新版Blender/Windowsの全CI実測はランナー問題解消後に必要"
   }
 }
