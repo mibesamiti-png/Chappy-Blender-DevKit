@@ -14,7 +14,7 @@ import bpy
 
 
 PACKAGE = "cbdk_modular_preview"
-KNOWN = {"object_selection", "edit_selection", "mesh_bounds", "modifier_summary"}
+KNOWN = {"object_selection", "edit_selection", "mesh_bounds", "modifier_summary", "vertex_nudge"}
 
 
 def verify_zip(path):
@@ -37,6 +37,8 @@ def verify_zip(path):
             expected.add(f"{PACKAGE}/helpers/measure.py")
         if "modifier_summary" in features:
             expected.add(f"{PACKAGE}/helpers/modifiers.py")
+        if "vertex_nudge" in features:
+            expected.add(f"{PACKAGE}/helpers/edit_transform.py")
         assert set(members) == expected, (set(members), expected)
         for info in archive.infolist():
             assert not any(part in ("", ".", "..") for part in info.filename.split("/"))
@@ -73,6 +75,8 @@ def run(path):
                 expected_ops.add("cbdk.modular_mesh_bounds")
             if "modifier_summary" in features:
                 expected_ops.add("cbdk.modular_modifier_summary")
+            if "vertex_nudge" in features:
+                expected_ops.add("cbdk.modular_vertex_nudge")
             assert operator_ids == expected_ops, (operator_ids, expected_ops)
             checks.append("only_selected_operators_registered")
 
@@ -98,6 +102,9 @@ def run(path):
             if "edit_selection" in features:
                 assert bpy.ops.cbdk.modular_edit_selection() == {"CANCELLED"}
                 checks.append("edit_requires_edit_mode")
+            if "vertex_nudge" in features:
+                assert bpy.ops.cbdk.modular_vertex_nudge() == {"CANCELLED"}
+                checks.append("nudge_requires_edit_mode")
 
             if "mesh_bounds" in features:
                 obj.scale = (2.0, 3.0, 1.0)
@@ -132,6 +139,32 @@ def run(path):
                 assert "V=3 E=3 F=1" in status, status
                 assert bpy.context.mode == "EDIT_MESH"
                 checks.append("edit_selection_readonly")
+            if "vertex_nudge" in features:
+                import bmesh
+                bm = bmesh.from_edit_mesh(mesh)
+                bm.verts.ensure_lookup_table()
+                bpy.ops.mesh.select_all(action="DESELECT")
+                chosen = bm.verts[0]
+                chosen.select_set(True)
+                bmesh.update_edit_mesh(mesh, loop_triangles=False, destructive=False)
+                before = [tuple(v.co) for v in bm.verts]
+                original_structure = (len(bm.verts), len(bm.edges), len(bm.faces))
+                assert bpy.ops.cbdk.modular_vertex_nudge(offset=(0.0, 0.0, 0.125)) == {"FINISHED"}
+                after = [tuple(v.co) for v in bm.verts]
+                assert abs(after[0][2] - before[0][2] - 0.125) < 1e-6, (before, after)
+                assert after[1:] == before[1:], (before, after)
+                assert original_structure == (len(bm.verts), len(bm.edges), len(bm.faces))
+                assert bm.verts[0].select and not any(v.select for v in list(bm.verts)[1:])
+                assert bpy.context.mode == "EDIT_MESH"
+                assert "UNDO" in next(op for op in module._OPERATORS if op.bl_idname ==
+                                      "cbdk.modular_vertex_nudge").bl_options
+                assert "REGISTER" in next(op for op in module._OPERATORS if op.bl_idname ==
+                                      "cbdk.modular_vertex_nudge").bl_options
+                checks.append("nudge_local_selected_only_and_undo_flag")
+                untouched = [tuple(v.co) for v in bm.verts]
+                assert bpy.ops.cbdk.modular_vertex_nudge(offset=(0.0, 0.0, 0.0)) == {"CANCELLED"}
+                assert untouched == [tuple(v.co) for v in bm.verts]
+                checks.append("nudge_zero_offset_preserves_mesh")
             if "object_selection" in features:
                 assert bpy.ops.cbdk.modular_selected_meshes() == {"CANCELLED"}
                 checks.append("object_requires_object_mode")
