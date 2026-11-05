@@ -14,6 +14,8 @@ from parts.blender import (
     BlenderContextError, count_edit_selection, require_active_mesh,
     selected_mesh_objects,
 )
+from parts.blender.measure import mesh_world_bounds
+from parts.blender.modifiers import modifier_snapshot
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 mesh = bpy.data.meshes.new('CBDK_Parts_Test')
@@ -27,7 +29,8 @@ bpy.context.scene.collection.objects.link(light)
 bpy.context.view_layer.objects.active = obj
 obj.select_set(True)
 light.select_set(True)
-checks = {'BLCTX-001': [], 'BLCTX-002': [], 'BME-001': []}
+checks = {'BLCTX-001': [], 'BLCTX-002': [], 'BME-001': [],
+          'BLGEO-001': [], 'BLMOD-001': []}
 try:
     assert require_active_mesh(bpy.context, mode='OBJECT') is obj
     checks['BLCTX-001'].append('active_mesh_object')
@@ -54,6 +57,36 @@ try:
     counts = count_edit_selection(bpy.context)
     assert (counts.vertices, counts.edges, counts.faces) == (3, 3, 1), counts
     checks['BME-001'].append('triangle_edit_selection')
+
+    # Mesh datablocks can be out of sync while an editable BMesh is active.
+    for func, part_id in ((mesh_world_bounds, 'BLGEO-001'),
+                          (modifier_snapshot, 'BLMOD-001')):
+        try:
+            func(bpy.context)
+            raise AssertionError('Expected Object Mode-only helper to reject Edit Mode')
+        except BlenderContextError:
+            checks[part_id].append('edit_mode_rejected')
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    obj.scale = (2.0, 3.0, 1.0)
+    obj.location = (5.0, -3.0, 2.0)
+    bpy.context.view_layer.update()
+    original_verts = len(mesh.vertices)
+    bounds = mesh_world_bounds(bpy.context)
+    assert all(abs(a - b) < 1e-6 for a, b in zip(bounds.dimensions, (2, 3, 0))), bounds
+    assert all(abs(a - b) < 1e-6 for a, b in zip(bounds.minimum, (5, -3, 2))), bounds
+    assert bounds.vertex_count == original_verts
+    checks['BLGEO-001'].append('scaled_world_bounds')
+
+    mod = obj.modifiers.new(name='CBDK_Test_Subdivision', type='SUBSURF')
+    mod.show_viewport = False
+    before = (mod.name, mod.type, mod.show_viewport, mod.show_render)
+    snapshot = modifier_snapshot(bpy.context)
+    assert len(snapshot) == 1 and (
+        snapshot[0].name, snapshot[0].type, snapshot[0].viewport, snapshot[0].render
+    ) == before, snapshot
+    assert (mod.name, mod.type, mod.show_viewport, mod.show_render) == before
+    checks['BLMOD-001'].append('modifier_metadata_snapshot')
 finally:
     if bpy.context.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
