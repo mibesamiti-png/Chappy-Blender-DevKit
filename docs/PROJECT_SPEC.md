@@ -91,3 +91,12 @@ python -m unittest discover -s tests -v
 - ゼロ移動指定の軸や未選択頂点の座標は完全一致を求める。微小な誤変更も正当化しない。
 - 非ゼロ軸の差分誤差は、既存の絶対/差分連動閾値と要求距離の15%を比較し、小さい方で判定。float32精度で表現できない要求は成功扱いしない。
 - 監査違反ではBMeshの更新後スナップショットから可能な限り復元するが、Blender本体のクラッシュやトポロジー再構築までは保証しない。
+
+
+## v0.17 開発検証：Undo/Redo証拠の取り扱い
+
+- Native Undo/Redoは、CBDK生成プレビューだけをBlender `--background --factory-startup` 上で有効化して検査する。外部アドオンやユーザーの.blendを実行しない。
+- 正確な頂点移動と選択/トポロジー不変を最初に確かめる。`bpy.ops.ed.undo.poll()` または `redo.poll()` が偽なら、その工程を検証成功と記録しない。
+- 取得したレポートは `cbdk.undo_probe_report` でスキーマ・状態整合性を検証する。実行不能時の状態は `unavailable_in_background` であり、「Undoの成功」ではない。
+- GUI Ctrl+Z / Ctrl+Shift+Z、実際のUI操作感、ユーザーデータ上での互換性はヘッドレスCIでは保証しない。別途Windows GUIで検証する。
+- この節の実装は開発ブランチ上の未検証作業であり、v0.16のPR #18の未解決CI問題を解消するものではない。正式な合格実測が取れるまでmainへマージしない。
