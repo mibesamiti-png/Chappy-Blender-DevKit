@@ -50,6 +50,18 @@
       "requires_features": [],
       "min_blender": "4.4.0",
       "max_blender": null
+    },
+    {
+      "id": "vertex_nudge",
+      "name": "Nudge Selected Vertices",
+      "source": "templates/modular_preview/features/vertex_nudge.py",
+      "required_parts": [
+        "BLCTX-001",
+        "BME-002"
+      ],
+      "requires_features": [],
+      "min_blender": "4.4.0",
+      "max_blender": null
     }
   ]
 }
