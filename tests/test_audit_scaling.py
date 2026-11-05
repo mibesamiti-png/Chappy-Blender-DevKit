@@ -120,6 +120,36 @@ class StreamingAuditTests(unittest.TestCase):
         self.assertFalse(report.valid)
         self.assertEqual(report.unexpected_vertices, (0,))
 
+    def test_old_and_streaming_both_reject_subprecision_noop(self):
+        bm = tri()
+        before = capture_edit_snapshot(bm)
+        delta = (0.0, 0.0, 0.000001)
+        old = audit_vertex_translation(before, capture_edit_snapshot(bm), delta)
+        live = audit_live_vertex_translation(before, bm, delta)
+        self.assertEqual(old, live)
+        self.assertFalse(old.valid)
+        self.assertFalse(old.expected_delta_matched)
+
+    def test_old_and_streaming_both_reject_nonzero_unselected_noop(self):
+        bm = tri()
+        bm.verts[0].select = False
+        before = capture_edit_snapshot(bm)
+        delta = (0.0, 0.0, 0.125)
+        old = audit_vertex_translation(before, capture_edit_snapshot(bm), delta)
+        live = audit_live_vertex_translation(before, bm, delta)
+        self.assertEqual(old, live)
+        self.assertFalse(live.valid)
+
+    def test_old_and_streaming_validate_non_numeric_delta_consistently(self):
+        bm = tri()
+        before = capture_edit_snapshot(bm)
+        for bad in (("bad", 0.0, 0.0), (True, 0.0, 0.1), (None, 0.0, 0.1)):
+            with self.subTest(bad=bad):
+                with self.assertRaises(BlenderContextError):
+                    audit_vertex_translation(before, before, bad)
+                with self.assertRaises(BlenderContextError):
+                    audit_live_vertex_translation(before, bm, bad)
+
     def test_streamed_detects_silent_noop(self):
         bm = tri()
         before = capture_edit_snapshot(bm)
