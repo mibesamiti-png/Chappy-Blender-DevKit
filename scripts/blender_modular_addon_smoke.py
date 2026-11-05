@@ -39,6 +39,7 @@ def verify_zip(path):
             expected.add(f"{PACKAGE}/helpers/modifiers.py")
         if "vertex_nudge" in features:
             expected.add(f"{PACKAGE}/helpers/edit_transform.py")
+            expected.add(f"{PACKAGE}/helpers/edit_audit.py")
         assert set(members) == expected, (set(members), expected)
         for info in archive.infolist():
             assert not any(part in ("", ".", "..") for part in info.filename.split("/"))
