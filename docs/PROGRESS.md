@@ -263,3 +263,17 @@
 - Blender 4.4.3 / 4.5.15 LTS / 5.2.1 LTS：それぞれ**5/5共通部品スモーク成功**。5つのレシピ（objects/edit/combined/geometry/all）で生成したアドオンすべて、有効化・演算子・モード拒否・解除の各実機テスト成功（合計15構成）。旧v1プレビューも3バージョンで成功。
 - 途中のGitHub ActionsでBlender公式ダウンロードへのHTTP 403が発生したが、PR #14の最終コミット `beb92406757b79e5ac389d1b9de548d24cbb6c32` に対応する成功した3ジョブのログで確かめた。外部ダウンロードの一時的な失敗とコードの不具合を区別する。
 - 部品は引き続き `approved=false`、`license_review=pending`。クラウドのLinux/ヘッドレス実機スモークはWindowsの視覚的UI品質・実作業での操作感の確認ではない。
+
+
+## v0.14.0 — 2026-11-05
+
+### 開発内容
+- `parts/blender/edit_transform.py`：BME-002の `translate_selected_vertices` を追加。Edit Modeで選択頂点だけ、有限のローカルオフセットで移動。元座標の事前保存/全件検査、BMesh更新失敗時の復元、共有メッシュ・シェイプキー・マルチEdit Mode拒否。
+- `templates/modular_preview/features/vertex_nudge.py`：`REGISTER`/`UNDO`付きOperator。デフォルトZ+0.1、各軸の指定±10。
+- `recipes/modular_nudge.json`、拡張した `recipes/modular_all.json`。旧レシピは後方互換のまま維持。
+- カタログに `BME-002` と `vertex_nudge` を未承認のまま追加。6共通部品・5機能。許可リストと最小依存マッピングを更新。
+- 単体テストで移動前の検査・未選択頂点の不変・複数選択・例外時ロールバック/不完全復元検出を確認。実機スモークで頂点移動・不要なトポロジー変更なし・オペレーターのUndoフラグを検査。
+- GitHub ActionsでBlender 4.4.3 / 4.5.15 / 5.2.1それぞれの6部品と6レシピ実行を要求（合計18構成）。
+
+### 検証境界
+テスト実行結果はCIのログを確認してから記載。ヘッドレスのBlenderでは実際のGUI Undoキー操作・UIレイアウトの視覚品質は未検証。失敗時ロールバックはBlenderの致命的なクラッシュまでは保証しない。Githubからの自動インストールは保留。
