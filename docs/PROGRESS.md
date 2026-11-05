@@ -400,3 +400,17 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - v0.17ドラフトPR #20の開発ブランチに保存。前提のv0.16 PR #18はCI障害Issue #19のため未マージ。mainはv0.15。
 - 部品の正式採用や公開用Blender Extensions生成は引き続き範囲外。 `last_verified` は前回のv0.15のまま。
 - 追加のUndo証拠バリデーションでは、ステータスの非文字列型・真偽値によるJSONスキーマ偽装・Blenderバージョン文字列中の制御文字を拒否するよう強化。回帰テスト1件を追加（**実行結果は未確認**）。
+
+## v0.17 開発中 — 2026-11-05（登録ドラフト生成）
+
+### 実装したもの
+- `cbdk/registration_draft.py`: 新規自作機能ID・既存部品依存・任意の新規部品ID/ソース予定名を受け、登録に必要な作業項目を**レビュー用JSON**にまとめる。現行カタログとPythonの固定allowlistを照合し、未知の部品ID、重複ID、既存ソース衝突、パストラバーサルを拒否。
+- `python -m cbdk registration-draft`: CLIを追加。標準出力にJSON、`--output reports/latest/*.json` 指定時のみプライベートなローカルレポートを新規作成（上書き禁止）。
+- `tests/test_registration_draft.py`: 登録計画、既存部品のみの構成、悪意あるID、未登録/重複依存、改変されたカタログ、ファイル衝突、プライベート出力のシンボリックリンク回避、CLI異常終了など16件の回帰テストを追加。
+- `docs/REGISTRATION_DRAFT.md`: 操作例と、作業計画は実機認定でもライセンス確認でもないことを文書化。
+- GitHub引き継ぎのREG-001要件に登録し、NEXT-003（登録とレシピ構築の改善）を継続。
+
+### 検証・制限
+- **今回追加した16件のPython回帰テストとGitHub Actionsはまだ成功を実測していない。** コードとテストが保存された段階。Blender GUI・Windows実機でも未検証。
+- レポートは `status=proposal_only`, `approved=false`, `runtime_verified=false`, `catalog_modified=false`。元アドオンの自動実行や許可済みソースへの自動登録は実施しない。
+- v0.17の開発先はドラフトPR #20、ベースv0.16 PR #18はIssue #19のCIランナー未割当問題で未マージ。安定版mainとlast_verifiedはv0.15.0のまま。
