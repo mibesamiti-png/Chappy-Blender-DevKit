@@ -114,3 +114,9 @@ The dedicated `scripts/blender_undo_redo_smoke.py` must use only a CBDK-authored
 Validate the structured output using `python -m cbdk.undo_probe_report`. A false `bpy.ops.ed.undo.poll()` or `redo.poll()` is `unavailable`, never `passed`. Preserve `gui_hotkey_verified=false` and `user_project_tested=false`. Do not silently promote optional background probe results to GUI certification or project approval.
 
 While PR #18 is blocked by GitHub Actions runner allocation, v0.17 remains a separate development branch with no new CI success claim. Do not change `last_verified`, publish a package, or merge before necessary CI and compatibility checks.
+
+## v0.17 draft — complete recipe matrix, static-only
+
+Before changing any authored feature, recipe or dependency, inspect `cbdk/recipe_matrix.py` and its independent `EXPECTED_RECIPES` mapping. `python -m cbdk.recipe_matrix` must reject missing modules, incomplete 6-recipe coverage, metadata tampering or unsupported Blender targets without executing arbitrary source code. Update trusted source mappings, the feature catalog, all expected recipe combinations and tests together for a new authored feature.
+
+An offline `static_checks_passed` report explicitly means **not** Blender runtime verified, GUI tested, legal redistribution cleared or approved. Keep the existing CI gate and `--preview-unapproved` safety policy. Do not merge v0.17 while its new CI and upstream v0.16 are unverified.
