@@ -44,3 +44,8 @@ For Blender addon/CBDK development workflows, agents may use `.agents/skills/cha
 ## v0.10 — generated add-on preview
 
 When building Blender add-ons, use `python -m cbdk build-addon --recipe recipes/mesh_inspector.json --preview-unapproved` only for the **trusted CBDK-authored, local development preview**. Never adopt extracted or third-party functions through this pathway. Do not remove the explicit opt-in, replace source mappings with arbitrary files, or claim the resulting legacy ZIP is an approved Blender Extension. Validate with the actual `scripts/blender_generated_addon_smoke.py` run on Blender, not just unit tests; test ZIP enable/disable, UI class registration and operator behavior. Preserve `approved=false` and `license_review=pending` in the part catalog.
+
+
+## v0.11 modular preview recipes
+
+The v2 `modular_preview` recipe schema is a **strict declarative allowlist**. Only two CBDK-authored features (`object_selection`, `edit_selection`) may be composed until their tests and review are extended. Resolve exact part dependencies from IDs, never from arbitrary Python paths or user-defined executable snippets. Preserve v1 compatibility, ZIP determinism, source provenance, the `--preview-unapproved` opt-in, and the rule that this is a single-package preview (do not concurrently install multiple variants). Confirm actual Blender CI for each generated recipe; neither CI nor hashes can grant license approval.
