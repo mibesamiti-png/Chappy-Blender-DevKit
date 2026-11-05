@@ -173,3 +173,23 @@
 - 部品台帳 `catalog/authored_parts.json` の採用状態を自動変更しない。集計結果は `approved_by_evidence=false`、`authenticity=not_verified` を明示。
 - テストJSONは署名や真正性の保証がない。コードSHA-256一致と実機スモーク成功は、外部アドオンの挙動同等性やライセンス許諾を意味しない。
 - GitHub CI / Windows版 / Blender実機テストは別途確認する。
+
+
+## v0.10.0 — 2026-11-05
+
+### 新機能：レシピからBlenderアドオンを自動組み立て
+
+- `cbdk/addon_builder.py`: スキーマ固定・許可済み部品ID3件とソースの整合性を検査し、信頼済みテンプレートと自作ヘルパーから**レガシーBlenderアドオンZIP**を決定的に生成。
+- `recipes/mesh_inspector.json` と `templates/mesh_inspector/__init__.py`: 開発プレビューのMesh Inspector（3D View > Sidebar > CBDK）。Object/Edit Modeのメッシュ選択数を表示、選択状態・モード・トポロジーを変えない。
+- `python -m cbdk build-addon --preview-unapproved`：意図しない未承認部品の配布を避ける明示的プレビューフラグ。承認やライセンスクリアの判定は**自動では行わない**。
+- `scripts/blender_generated_addon_smoke.py`: クラウドのBlenderで生成ZIPを一時ロードし、アドオン有効化・Panel登録・Operator実行（Object/Edit/異常系）・無効化と後片付けを確認。
+- CIでBlender 4.4.3 / 4.5.15 / 5.2.1の各バージョンについて生成アドオンも検証し、ZIP・ログをActions成果物に追加。
+- `tests/test_addon_builder.py`: 構造・出典SHA・決定性・重複ID・未承認ブロック・既存ZIP上書き拒否など14件の回帰テストを追加。
+- `docs/ADDON_BUILDER.md`: 使い方・検証対象・形式の制約。
+
+### 現時点で未実装・未検証
+
+- サンプル以外のアドオンを組み立てる汎用レシピ/独自UI設計
+- Blender Extensionsの公式manifest形式でのビルド・公開
+- 外部コードのライセンス許諾と部品正式採用
+- UI操作感やユーザーの実際のプロジェクトでの動作
