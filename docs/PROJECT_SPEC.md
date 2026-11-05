@@ -128,3 +128,13 @@ python -m unittest discover -s tests -v
 生成される `reports/latest/scaffolds/test_<feature_id>_review.py` はプライベートな非追跡領域のみ。既存ファイルは上書きしない。想定テスト5項目は初期状態ですべて `self.fail("TODO: ...")` とし、未完成なのに成功するテストは生成しない。生成されたファイルや元ソースはCBDKから自動でインポート・実行しない。公式 `tests/`、台帳、許可リストへ移動/登録するのは人手レビューと実装・実測の後。
 
 **CI/Blender実機成功・公開ライセンス承認・UI品質を意味しない。** v0.16/0.17の未検証コードは安定版mainにマージしない。詳細：`docs/REGISTRATION_DRAFT.md`。
+
+## v0.17 追加仕様：宣言された動作種別でテストのひな形を切り替える
+
+`python -m cbdk registration-draft --feature-id ... --requires-part ... --behavior read_only` または `--behavior mesh_edit` で、開発者が新機能の動作種別を申告する。種類の判定に未確認コードを実行したり、機能名だけで勝手に推定したりしない。
+
+保存される `behavior` は省略可能なスキーマ1の補助フィールド。従来の省略状態は `unspecified` として扱い、既存の保存済み計画と共通5件のTODOを維持する。`read_only` と `mesh_edit` は共通5項目に各3件の専用TODOを追加する。読み取り専用では座標・選択・モディファイア・変換・Undo履歴の不変性を確認する。メッシュ編集では選択範囲のみの変更、入力エラー時のロールバック、ネイティブUndo/Redoによる再現を確認する。
+
+`behavior` はあくまで**申告されたテスト計画上の分類**であり、コードが本当に読み取り専用/編集可能であることを認証・自動判定するものではない。生成先は従来どおり無視対象の `reports/latest/scaffolds/` に限定、全TODO失敗・非実行・非上書きを維持。Blender実機確認・ライセンス審査・正式採用を自動化しない。
+
+CIブロッカー Issue #19 のため、この追加機能のPython/Windows/Blenderの全テスト合格は未実測。v0.17ドラフトPR #20に留め、安定版と `last_verified` を変更しない。
