@@ -19,6 +19,8 @@ on:
       - 'scripts/blender_generated_addon_smoke.py'
       - 'scripts/blender_modular_addon_smoke.py'
       - 'scripts/blender_audit_scaling_smoke.py'
+      - 'scripts/blender_undo_redo_smoke.py'
+      - 'cbdk/undo_probe_report.py'
       - '.github/workflows/blender-smoke.yml'
 
 permissions:
@@ -133,6 +135,21 @@ jobs:
             grep -F 'CBDK_MODULAR_ADDON_PASS ' "reports/ci/${recipe}_smoke.log"
           done
           echo 'Modular preview variants: objects, edit, combined, geometry, nudge and all PASSED.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Probe native Undo and Redo (background only, not GUI hotkeys)
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_undo_redo_smoke.py \
+            -- reports/ci/CBDK_modular_nudge_Preview.zip \
+            2>&1 | tee reports/ci/undo_redo_smoke.log
+          python -m cbdk.undo_probe_report \
+            reports/ci/undo_redo_smoke.log reports/ci/undo_redo.json
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          Native Undo/Redo was **probed** in background Blender.
+          See undo_redo.json: an unavailable poll is **not** counted as passed.
+          GUI Ctrl+Z / Ctrl+Shift+Z remains unverified.
+          EOF
       - name: Measure guarded audit on medium real Blender mesh
         shell: bash
         run: |
