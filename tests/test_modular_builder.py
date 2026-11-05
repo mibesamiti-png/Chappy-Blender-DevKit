@@ -22,6 +22,7 @@ class ModularBuilderTests(unittest.TestCase):
             'catalog/authored_parts.json', 'catalog/addon_features.json', 'parts/blender/context.py',
             'parts/blender/edit_mesh.py', 'parts/blender/measure.py',
             'parts/blender/modifiers.py', 'parts/blender/edit_transform.py',
+            'parts/blender/edit_audit.py',
             'templates/modular_preview/__init__.py',
             'templates/modular_preview/features/object_selection.py',
             'templates/modular_preview/features/edit_selection.py',
@@ -104,7 +105,7 @@ class ModularBuilderTests(unittest.TestCase):
         self.save_recipe()
         result = self.build()
         self.assertEqual(result['part_ids'], [
-            'BLCTX-001', 'BLCTX-002', 'BLGEO-001', 'BLMOD-001', 'BME-001', 'BME-002'
+            'BLCTX-001', 'BLCTX-002', 'BLGEO-001', 'BLMOD-001', 'BME-001', 'BME-002', 'BME-003'
         ])
         with ZipFile(self.output) as z:
             self.assertIn(f'{PACKAGE_ID}/helpers/measure.py', z.namelist())
