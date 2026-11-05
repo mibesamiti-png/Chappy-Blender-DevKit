@@ -30,6 +30,10 @@ def validate_saved_draft(draft: object, *, root: Path = ROOT) -> dict:
         raise ValueError("Unexpected registration draft fields")
     if type(draft["schema_version"]) is not int or draft["schema_version"] != 1:
         raise ValueError("Unexpected draft schema")
+    for flag in ("preview_only", "approved", "redistribution_cleared",
+                 "runtime_verified", "source_executed", "catalog_modified"):
+        if type(draft[flag]) is not bool:
+            raise ValueError("Registration draft status must use explicit booleans")
     new = draft["new_part"]
     part_id = module_name = None
     if new is not None:
