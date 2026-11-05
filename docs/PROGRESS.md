@@ -386,3 +386,16 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - GUI Ctrl+Z / Ctrl+Shift+Z の実機操作は別件（GUI-001）として未実装・未検証のまま。
 - `main`はv0.15.0、v0.16のPR #18もCIブロッカー Issue #19 により未マージ。v0.17変更は`feature/v0.17-undo-redo-probe`に隔離し、正式検証前にmainへ統合しない。
 - `last_verified` はv0.15.0の記録を維持する。
+
+## v0.17 追加開発 — 2026-11-05（6レシピの静的整合マトリクス）
+
+### 変更
+- `cbdk/recipe_matrix.py`: `modular_objects` / `modular_edit` / `modular_combined` / `modular_geometry` / `modular_nudge` / `modular_all` の期待機能セットを個別に管理し、カタログ許可リスト・部品依存閉包・信頼済みソースの存在・Blender 4.4.3/4.5.15/5.2.1との静的互換性をまとめて監査する。コードは**実行せず読み取りのみ**。
+- `python -m cbdk.recipe_matrix --output reports/ci/recipe_matrix.json`: 依存と安全情報だけを記した決定的JSONを生成。ライセンス承認/Blender実機検証/GUI品質を主張しない。
+- `tests/test_recipe_matrix.py`: 13テストを追加。レシピ構成変更、余計なコード欄、欠損ヘルパー、部品参照改変、対応Blender範囲、サイズ過大、シンボリックリンクなどを拒否する。
+- `.github/workflows/blender-smoke.yml` に一括監査を追加。Blender生成アドオンのビルド前に実行しJSONを証拠成果物へ格納する。
+
+### 検証状態
+- **今回追加した13件を含むPythonテストと新規CIはまだ実行結果を確認していない**。実装とテストの存在は確認したが、成功としては記載しない。
+- v0.17ドラフトPR #20の開発ブランチに保存。前提のv0.16 PR #18はCI障害Issue #19のため未マージ。mainはv0.15。
+- 部品の正式採用や公開用Blender Extensions生成は引き続き範囲外。 `last_verified` は前回のv0.15のまま。
