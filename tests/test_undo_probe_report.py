@@ -57,7 +57,7 @@ class UndoProbeReportTests(unittest.TestCase):
         valid = build_report("4.5.15", "passed", "passed")
         with self.assertRaises(ValueError):
             validate_report(dict(valid, schema_version=True))
-        for bad_version in ("", "4.5.15\\nmalformed", "\\x00", "x" * 101):
+        for bad_version in ("", "4.5.15\nmalformed", "\x00", "x" * 101):
             with self.subTest(bad_version=repr(bad_version)):
                 with self.assertRaises(ValueError):
                     build_report(bad_version, "passed", "passed")
