@@ -192,8 +192,8 @@
       "id": "LIM-006",
       "status": "open",
       "severity": "high",
-      "title": "PR #18でWindows CIジョブがログなしで失敗し、以降一部ジョブも実行前に失敗扱い",
-      "workaround": "GitHub Issue #19を確認し、Actionsの制限/ランナーの状態を調査。全CI成功までmainはv0.15のまま維持する",
+      "title": "PR #18のCIがランナー未割当(0)・実行ステップ0で終了。GitHub Actions利用枠またはサービス側制限の可能性",
+      "workaround": "GitHub Issue #19でAPI証拠を確認し、リポジトリ所有者のActions使用枠/予算/支払いブロックをGitHub設定から点検。確認まで機能の失敗と断定しない。全CI成功まではmain=v0.15を維持",
       "related_requirement": "TEST-001"
     }
   ],
@@ -238,7 +238,7 @@
       "priority": 1,
       "status": "in_progress",
       "title": "PR #18のGitHub Actions実行前失敗を調査しWindowsを含む全CIを再検証",
-      "acceptance": "Issue #19の原因を切り分け、Python/Windows/Blender 3バージョン/ZIPの実測CI結果をリンクしてからv0.16をmainにマージ"
+      "acceptance": "GitHub Issue #19: GitHub Actions usage/budgetまたはランナー供給問題を切り分け、Python/Windows/Blender3版/ZIPの全CI成功を実測してv0.16をマージ"
     }
   ],
   "decisions": [
@@ -261,6 +261,11 @@
       "id": "DEC-004",
       "decision": "GitHubから直接インストールする管理機能は当面保留",
       "note": "UI確認が必要になる段階で検討"
+    },
+    {
+      "id": "DEC-005",
+      "decision": "PR更新時の重複・陳腐化したCIを抑制し使用枠を節約",
+      "note": "PythonはPRとmain pushに限定。全CIにPR単位concurrencyを適用し、引き継ぎCIはPRで重複unittestを実行しない。品質ゲート自体は維持"
     }
   ],
   "last_verified": {
@@ -314,6 +319,7 @@
     "on_every_milestone": "STATE.jsonの仕様・進捗・課題・次の一手・CI実測を更新し、PROJECT_HANDOFF.mdを再生成",
     "on_ci_failure": "検証結果を成功と書かず、原因・失敗ジョブのURLをknown_issuesまたは作業メモに記録",
     "source_of_truth": "docs/project/STATE.json",
-    "generated_handoff": "docs/PROJECT_HANDOFF.md"
+    "generated_handoff": "docs/PROJECT_HANDOFF.md",
+    "ci_usage": "GitHub Actionsの利用枠を節約するため、不要な重複PR push実行は止め、更新で古くなったPR CIはキャンセル。請求/利用枠のブロックはユーザー側のGitHub設定確認が必要"
   }
 }

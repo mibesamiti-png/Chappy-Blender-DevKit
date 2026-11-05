@@ -338,3 +338,8 @@
 - ローカルに取得したPRのWindowsキットをPython 3.13で展開し、`python -m unittest discover -s tests` を実行して **221/221 OK** を確認。旧テストの優先順位固定値と新しいBlender性能テストのモジュール読み込みパスは修正済み。
 - **ただしWindows PowerShell CIはGitHub上で失敗扱い**。該当ジョブの `steps`・`logs_url` が未取得、ログ取得は404 BlobNotFound。再実行およびWindows 2025ランナーへの一時的切替でも改善せず、既存Windows 2022ランナーへ戻した。
 - さらに後続のCI実行ではPython/Blender/ZIPまで実行ステップが出ないまま失敗扱いとなる。原因は現時点で未確定。詳細は [Issue #19](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/issues/19)。**全CIが再検証できるまでPR #18をmainへマージしない**。`last_verified` は引き続きv0.15の成功記録。
+
+
+### v0.16 CIリソースの調整（2026-11-05）
+
+GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態をAPIで再確認。11月4日のGitHub Actions障害は公式では解消済みのため、Actions利用枠・予算ブロックなどアカウント固有の原因も候補としてIssue #19に記録（**原因は未確定**）。過去の大量のPR更新で同じコミットのpushとpull_requestが重複テストを実行していたため、Python CIのpush対象をmainに限定。6つのワークフローにPR単位のconcurrencyキャンセルを追加。引き継ぎCIはPRでの重複Pythonテストを省略し、main push時の実測記録は維持。Blender3版とWindows PowerShellの実機品質ゲートは削除しない。新しいCI改善用の回帰テストを追加。**全CIが実行できるまでマージしない**。

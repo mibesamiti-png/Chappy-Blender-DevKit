@@ -84,3 +84,8 @@ The new BME-002 helper `parts/blender/edit_transform.py` is the first intentiona
 ## v0.16 audit performance and resource guards
 
 Preflight the BMesh element count (limit: 200,000) BEFORE copying any coordinates. The new audit_live_vertex_translation streams live coordinates and selection data and still compares exact edge/face topology, preserving existing capture_edit_snapshot and audit_vertex_translation APIs. Compare requested movement rather than huge absolute world coordinates when computing tolerance. Refuse a size-limit operation before any edit. Validate adversarial Python tests and the real Blender 70x70 grid metric/size-limit smoke on 4.4.3/4.5.15/5.2.1. Update STATE.json and regenerate the handoff; claim verified CI only after actual successful runs. Keep user data private and GitHub direct installation deferred.
+
+
+## GitHub Actions CI cost and blocked runners
+
+Private-repository runner usage has limits and costs. Suppress duplicate PR push/test triggers, cancel superseded PR runs with workflow-scoped concurrency, and run only genuine required validation. The durable-handoff workflow should not rerun the full Python suite on PR; normal Python CI covers it, and durable-handoff still records actually passed Python tests on main. Never bypass or invent Windows/Blender evidence if runner allocation fails. Check GitHub Actions owner usage/budgets and Issue #19 before retrying large CI matrices or merging v0.16.
