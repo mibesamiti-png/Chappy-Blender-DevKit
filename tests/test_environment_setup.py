@@ -15,6 +15,7 @@ class EnvironmentSetupTests(unittest.TestCase):
         self.assertIn('windows_run_blender_tests.ps1', bat)
         self.assertIn('verify-parts', ps)
         self.assertIn('evidence-status', ps)
+        self.assertIn('part-matrix', ps)
         self.assertIn('Resolve-Blenders', ps)
         self.assertIn('Start-Process -FilePath', ps)
         self.assertIn('RedirectStandardError', ps)
@@ -35,6 +36,7 @@ class EnvironmentSetupTests(unittest.TestCase):
         self.assertIn('sha256sum --check --status', job)
         self.assertIn('verify-parts', job)
         self.assertIn('evidence-status', job)
+        self.assertIn('part-matrix', job)
         self.assertIn('upload-artifact@v4', job)
         self.assertIn('contents: read', job)
 
