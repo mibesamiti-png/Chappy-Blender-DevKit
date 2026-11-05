@@ -173,15 +173,43 @@ def audit_live_vertex_translation(before: MeshEditSnapshot, bm,
         raise BlenderContextError("Failed to audit live edited BMesh") from exc
 
 
+def _topology_matches_snapshot(bm, snapshot: MeshEditSnapshot) -> bool:
+    """Check connectivity without reading potentially invalid vertex coordinates.
+
+    Recovery must remain possible when an edit produces NaN/Inf coordinates.
+    Taking a new full snapshot would fail its finite-value guard before the
+    original valid coordinates could be written back.
+    """
+    try:
+        vertices, edges, faces = preflight_audit_size(bm)
+        if (vertices != len(snapshot.coordinates) or vertices != len(snapshot.selected)
+                or edges != len(snapshot.edges) or faces != len(snapshot.faces)):
+            return False
+        indices = {vertex: i for i, vertex in enumerate(bm.verts)}
+        if len(indices) != vertices:
+            return False
+        live_edges = tuple(sorted(
+            tuple(sorted((indices[edge.verts[0]], indices[edge.verts[1]])))
+            for edge in bm.edges
+        ))
+        if live_edges != snapshot.edges:
+            return False
+        live_faces = tuple(tuple(indices[vertex] for vertex in face.verts)
+                           for face in bm.faces)
+        return live_faces == snapshot.faces
+    except BlenderContextError:
+        raise
+    except (KeyError, TypeError, ValueError, IndexError, AttributeError, OverflowError) as exc:
+        raise BlenderContextError("Cannot verify BMesh connectivity for rollback") from exc
+
+
 def restore_edit_snapshot(bm, snapshot: MeshEditSnapshot) -> None:
     """Best-effort coordinate+selection recovery; reject different connectivity.
 
     This does not rebuild deleted vertices or faces. If topology is different
     from the snapshot, recovery cannot be guaranteed; report that explicitly.
     """
-    current = capture_edit_snapshot(bm)
-    if (len(current.coordinates) != len(snapshot.coordinates)
-            or current.edges != snapshot.edges or current.faces != snapshot.faces):
+    if not _topology_matches_snapshot(bm, snapshot):
         raise BlenderContextError("Topology changed: coordinate rollback cannot restore original mesh")
     failures = []
     for index, vert in enumerate(bm.verts):
@@ -191,5 +219,18 @@ def restore_edit_snapshot(bm, snapshot: MeshEditSnapshot) -> None:
                 vert.select_set(snapshot.selected[index])
         except Exception as exc:
             failures.append(f"vertex {index}: {type(exc).__name__}")
+    if failures:
+        raise BlenderContextError("Snapshot restoration incomplete: " + ", ".join(failures[:5]))
+    # Treat silent setters/partial restoration as failures too; error recovery
+    # must never claim that original coordinates were restored without proof.
+    for index, vert in enumerate(bm.verts):
+        try:
+            restored = tuple(float(vert.co[j]) for j in range(3))
+            if restored != snapshot.coordinates[index] or bool(vert.select) != snapshot.selected[index]:
+                failures.append(f"vertex {index}: restoration mismatch")
+        except Exception as exc:
+            failures.append(f"vertex {index}: verification {type(exc).__name__}")
+    if not _topology_matches_snapshot(bm, snapshot):
+        raise BlenderContextError("Snapshot restoration incomplete: topology changed")
     if failures:
         raise BlenderContextError("Snapshot restoration incomplete: " + ", ".join(failures[:5]))
