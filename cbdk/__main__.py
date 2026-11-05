@@ -15,6 +15,8 @@ from .contracts import make_blender_contracts, write_contracts
 from .evidence import verify_authored_parts, save_evidence, check_evidence_freshness
 from .part_matrix import evidence_paths, summarize_parts, write_matrix, render_matrix_markdown
 from .addon_builder import build_addon
+from .feature_catalog import load_feature_catalog, plan_features
+from .modular_builder import validate_modular_recipe
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -106,6 +108,17 @@ def main(argv=None) -> int:
     addon_cmd.add_argument('--output', default='dist/CBDK_Mesh_Inspector_Preview.zip')
     addon_cmd.add_argument('--preview-unapproved', action='store_true',
                            help='Required explicit opt-in; output is NOT a release or approved component')
+
+    feature_cmd = sub.add_parser('feature-list', help='List trusted authored preview features; no approval implied')
+    feature_cmd.add_argument('--output', default=None)
+
+    plan_cmd = sub.add_parser('addon-plan', help='Inspect feature dependency closure and Blender compatibility without building ZIP')
+    plan_cmd.add_argument('--recipe', default='recipes/modular_combined.json')
+    plan_cmd.add_argument('--target-blender', default=None)
+    plan_cmd.add_argument('--output', default=None)
+
+    addon_cmd.add_argument('--target-blender', default=None,
+                           help='Optional target version, e.g. 4.4.3; fail if incompatible')
 
     args = parser.parse_args(argv)
     try:
@@ -208,9 +221,28 @@ def main(argv=None) -> int:
             result = check_evidence_freshness(_json(args.evidence))
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if result['fresh'] else 1
+        if args.command == 'feature-list':
+            catalog = load_feature_catalog(root=Path(__file__).resolve().parent.parent)
+            report = {'schema_version': 1, 'kind': 'trusted_preview_features',
+                      'preview_only': True, 'approved': False,
+                      'features': [catalog[k] for k in sorted(catalog)]}
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            if args.output:
+                write_json(Path(args.output), report)
+            return 0
+        if args.command == 'addon-plan':
+            recipe = _json(args.recipe)
+            _name, selected = validate_modular_recipe(recipe)
+            report = plan_features(selected, root=Path(__file__).resolve().parent.parent,
+                                   target_blender=args.target_blender)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            if args.output:
+                write_json(Path(args.output), report)
+            return 0
         if args.command == 'build-addon':
             result = build_addon(args.recipe, args.output,
-                                 preview_unapproved=args.preview_unapproved)
+                                 preview_unapproved=args.preview_unapproved,
+                                 target_blender=args.target_blender)
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'part-matrix':
