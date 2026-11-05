@@ -17,6 +17,8 @@ from parts.blender import (
 from parts.blender.measure import mesh_world_bounds
 from parts.blender.modifiers import modifier_snapshot
 from parts.blender.edit_transform import translate_selected_vertices
+from parts.blender.edit_audit import (capture_edit_snapshot, audit_vertex_translation,
+                                     restore_edit_snapshot)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 mesh = bpy.data.meshes.new('CBDK_Parts_Test')
@@ -31,7 +33,7 @@ bpy.context.view_layer.objects.active = obj
 obj.select_set(True)
 light.select_set(True)
 checks = {'BLCTX-001': [], 'BLCTX-002': [], 'BME-001': [],
-          'BLGEO-001': [], 'BLMOD-001': [], 'BME-002': []}
+          'BLGEO-001': [], 'BLMOD-001': [], 'BME-002': [], 'BME-003': []}
 try:
     assert require_active_mesh(bpy.context, mode='OBJECT') is obj
     checks['BLCTX-001'].append('active_mesh_object')
@@ -82,6 +84,24 @@ try:
     assert (len(edit_bm.verts), len(edit_bm.edges), len(edit_bm.faces)) == (vert_count, edge_count, face_count)
     assert bpy.context.mode == 'EDIT_MESH'
     checks['BME-002'].append('selected_vertex_nudge')
+
+    assert result.audit.valid and result.audit.moved_vertices == (0,)
+    checks['BME-003'].append('snapshot_diff_valid')
+    safe_snapshot = capture_edit_snapshot(edit_bm)
+    # Deliberately tamper with a nonselected vertex in a disposable CI mesh:
+    # the new reusable auditor must detect it and restore it.
+    unselected = edit_bm.verts[1]
+    original_unselected = tuple(unselected.co)
+    unselected.co = (original_unselected[0], original_unselected[1], original_unselected[2] + 0.2)
+    damaged = capture_edit_snapshot(edit_bm)
+    audit = audit_vertex_translation(safe_snapshot, damaged, (0.0, 0.0, 0.0))
+    assert not audit.valid and audit.unexpected_vertices == (1,), audit
+    checks['BME-003'].append('unexpected_edit_detected')
+    restore_edit_snapshot(edit_bm, safe_snapshot)
+    bmesh.update_edit_mesh(mesh, loop_triangles=False, destructive=False)
+    assert capture_edit_snapshot(edit_bm) == safe_snapshot
+    checks['BME-003'].append('snapshot_restored')
+
     before_bad = [tuple(v.co) for v in edit_bm.verts]
     try:
         translate_selected_vertices(bpy.context, (float('nan'), 0.0, 0.1))

@@ -64,3 +64,8 @@ The allowlist now includes `BLGEO-001` (`mesh_world_bounds`) and `BLMOD-001` (`m
 ## CBDK v0.14 edit-mode vertex transform
 
 The new BME-002 helper `parts/blender/edit_transform.py` is the first intentionally mutating component. Do not present it as a fully atomic mesh transaction. It preflights all vertex values, blocks multi-object edit, shared datablocks, shape keys, linked data and nonfinite/oversized offsets, and attempts rollback if mutation fails. Consumers must put it behind a Blender Operator with REGISTER/UNDO; direct Python helper calls are not automatically undoable. Test that only selected vertices move, nonselected vertices/selection/topology remain unchanged, bad inputs do not modify anything, and legacy inspection recipes still work. Keep approval false; no arbitrary code injection, no auto publishing, no GitHub-to-Blender direct install.
+
+
+## v0.15 strict edit auditing
+
+`BME-003` provides immutable bounded BMesh snapshots and checks expected deltas after mutating edit operations. `BME-002` nudge must not report success unless the post-edit audit passes. Do not replace Blender's native Undo with snapshots. Audit checks vertices' coordinates/selection and edge/face connectivity. Restoration is best-effort and cannot rebuild changed topology; errors must say when original geometry cannot be verified. Keep a size cap to limit CPU/memory on larger meshes. Run both adversarial Python unit tests and actual Blender version-matrix tests before merging. No third-party source code ingestion, publishing or auto-install.

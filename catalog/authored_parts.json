@@ -60,6 +60,16 @@
       "blender_runtime": "not_recorded",
       "approved": false,
       "license_review": "pending"
+    },
+    {
+      "part_id": "BME-003",
+      "name": "capture_edit_snapshot",
+      "module": "parts.blender.edit_audit",
+      "source": "parts/blender/edit_audit.py",
+      "status": "unit_tested",
+      "blender_runtime": "not_recorded",
+      "approved": false,
+      "license_review": "pending"
     }
   ],
   "note": "Runtime smoke test evidence is stored separately under ignored reports/. Do not infer approval or import results automatically."

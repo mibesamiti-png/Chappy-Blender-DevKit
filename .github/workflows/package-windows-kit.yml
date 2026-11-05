@@ -30,7 +30,7 @@ jobs:
         run: |
           python - <<'PY'
           from zipfile import ZipFile
-          p = 'dist/CBDK_v0.14_Windows_Blender_DevKit.zip'
+          p = 'dist/CBDK_v0.15_Windows_Blender_DevKit.zip'
           with ZipFile(p) as z:
               names = z.namelist()
               assert 'Chappy-Blender-DevKit/run_blender_tests_windows.bat' in names
@@ -41,6 +41,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cbdk-windows-hotfix-kit
-          path: dist/CBDK_v0.14_Windows_Blender_DevKit.zip
+          path: dist/CBDK_v0.15_Windows_Blender_DevKit.zip
           retention-days: 14
           if-no-files-found: error
