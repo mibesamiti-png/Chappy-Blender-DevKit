@@ -57,7 +57,9 @@ def _validate_recipe(recipe: dict) -> None:
             recipe["purpose"] != "local_development_preview"):
         raise ValueError("Only the allowlisted private Mesh Inspector preview is supported")
     ids = recipe["part_ids"]
-    if not isinstance(ids, list) or len(ids) != 3 or len(set(map(str, ids))) != 3 or set(ids) != PART_IDS:
+    if (not isinstance(ids, list) or len(ids) != 3 or
+            any(not isinstance(item, str) for item in ids) or
+            len(set(ids)) != 3 or set(ids) != PART_IDS):
         raise ValueError("Recipe must specify exactly the three authored Mesh Inspector parts")
 
 
