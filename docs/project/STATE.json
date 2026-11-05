@@ -169,6 +169,14 @@
       "verification": "not_tested",
       "source": "cbdk/registration_draft.py",
       "note": "未登録ID・依存・ソース衝突を検査して非実行のレビュー計画を生成。コード/台帳の自動追加・承認は行わない。16件の追加回帰テストは未実測"
+    },
+    {
+      "id": "REG-002",
+      "title": "登録計画から未完成テストのひな形を安全に生成",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/registration_scaffold.py",
+      "note": "現行カタログと登録計画の完全一致を確認し、5つのTODO失敗テストをignored領域に新規生成。19件の回帰テスト追加、実行・Blender実機は未検証"
     }
   ],
   "known_issues": [
@@ -310,6 +318,11 @@
       "id": "DEC-009",
       "decision": "新規部品登録は提案生成と人手の許可を分離",
       "note": "CLIでレビュー案を出力しても許可リスト・元ソース・部品台帳を変更しない。新部品は正式採用せず、手動レビューとCIが必要"
+    },
+    {
+      "id": "DEC-010",
+      "decision": "テストひな形はレビュー用の未完成コードと明示して非実行・非上書き",
+      "note": "生成先はreports/latest/scaffolds内のみ。全TODOはself.failで成功偽装を防止し、tests/や元機能・台帳へ自動登録しない"
     }
   ],
   "last_verified": {
@@ -368,6 +381,7 @@
     "local_verification_note": "2026-11-05: PR #18のPython全238件、ローカルPython 3.13.5で成功（GitHub CIの代用ではない）。新規6件でXYZ部分移動・未選択微小変更・復元を検証。Windows/Blender最新版CIはIssue #19でランナー割当前に失敗",
     "v017_pending": "2026-11-05: feature/v0.17-undo-redo-probe は検証追加の開発ブランチ。GitHub Actions未実行、実機結果なし。v0.16のCIブロッカーIssue #19は継続。",
     "recipe_matrix_pending": "2026-11-05: v0.17 draft PR #20 に cbdk/recipe_matrix.py と13 Pythonテストを追加。新コードのローカルPython/Blender/Windowsのテスト実測は未確認。main 0.15を維持しlast_verifiedは変更しない",
-    "registration_draft": "2026-11-05: v0.17 draft PR #20 に REG-001登録計画CLI・16テスト・操作文書を追加。新規テストのCI成功は未確認。mainは0.15、last_verifiedは変更しない"
+    "registration_draft": "2026-11-05: v0.17 draft PR #20 に REG-001登録計画CLI・16テスト・操作文書を追加。新規テストのCI成功は未確認。mainは0.15、last_verifiedは変更しない",
+    "registration_scaffold": "2026-11-05: v0.17 draft PR #20 にREG-002テストひな形生成CLI・19件の回帰テストを追加。GitHub Actionsはランナー未割当で未実測。現行mainとlast_verifiedはv0.15のまま"
   }
 }
