@@ -113,6 +113,47 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
                     totals[color] += row[color]
             if totals != report[field]:
                 raise ValueError("Per-part and total colors disagree")
+        matches = report.get("part_match_candidates")
+        if (not isinstance(matches, dict) or
+                matches.get("status") != "review_only" or
+                matches.get("method") !=
+                "anonymous_spatial_centroid_extent_triangle_heuristic_v1" or
+                matches.get("cross_file_part_identity_proven") is not False or
+                matches.get("auto_apply") is not False or
+                matches.get("shared_coordinate_frame_required") is not True):
+            raise ValueError("Invalid conservative spatial part matching")
+        match_rows = matches.get("reference_parts")
+        if not isinstance(match_rows, list) or len(match_rows) != len(parts["reference"]):
+            raise ValueError("Missing reference part candidates")
+        target_ids = {part["part_id"] for part in parts["candidate"]}
+        suggested = set()
+        for idx, row in enumerate(match_rows, start=1):
+            if (not isinstance(row, dict) or
+                    row.get("reference_part_id") != f"part_{idx:03d}" or
+                    row.get("status") not in ("suggested", "ambiguous", "unmatched") or
+                    not isinstance(row.get("candidate_part_ids"), list) or
+                    len(row["candidate_part_ids"]) > 2 or
+                    len(row["candidate_part_ids"]) != len(set(row["candidate_part_ids"])) or
+                    any(sid not in target_ids for sid in row["candidate_part_ids"])):
+                raise ValueError("Invalid anonymous candidate record")
+            score = row.get("normalized_score")
+            if isinstance(score, bool) or not isinstance(score, (float, int)) or not (
+                    math.isfinite(score) and score >= 0):
+                raise ValueError("Invalid part candidate score")
+            if row["status"] == "suggested":
+                if len(row["candidate_part_ids"]) != 1:
+                    raise ValueError("Suggested match lacks unique candidate")
+                sid = row["candidate_part_ids"][0]
+                if sid in suggested:
+                    raise ValueError("Multiple references suggest same candidate")
+                suggested.add(sid)
+            elif row["status"] == "unmatched" and row["candidate_part_ids"]:
+                raise ValueError("Unmatched part cannot claim candidate IDs")
+        unpaired = matches.get("unpaired_candidate_part_ids")
+        if (not isinstance(unpaired, list) or
+                unpaired != [p["part_id"] for p in parts["candidate"]
+                             if p["part_id"] not in suggested]):
+            raise ValueError("Unpaired candidate IDs do not match suggestions")
         threshold = report.get("thresholds")
         if not isinstance(threshold, dict) or any(
             isinstance(threshold.get(k), bool)
