@@ -845,3 +845,8 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 
 この証拠に基づきSTATE/HANDOFFのGLB-019を**implemented / blender_ci**、NEXT-017を**done**に更新。後続の記録更新HEADのCI結果とは区別する。正式release last_verified v0.17.0維持、PR #25はドラフト。
 
+### GLB-019 最終再CI（2026-11-07）
+
+実装と記録のコミット`5b6196a59f86318128c768507fea53237e3a6e11`では、**全5ワークフローがsuccess**：Python3版 [42258076642](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076642)、Windows PowerShell2版 [42258076781](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076781)、Blender4.4.3/4.5.15/5.2.1 [42258076658](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076658)、Windows kit [42258076681](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076681)、引き継ぎ [42258076822](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076822)。旧Windows専用テストのパス区切り前提は修正済み。
+
+`glb-surface-review`の2種類の実GLBペアで、開口の検出と同じ形の別三角分割に差がないことを確認。GLB-019は実装済/Blender CI確認済み。報告の`status=review_only`は「観測した形状差のサンプル結果」であり、0も完全一致・内部空洞なし・安全な自動修正を意味しない。512面超はskippedであり大規模GLBの自動解析は今後の課題。これはコミット5b6196a5の実測であり、後続の文書記録コミットのCIとは区別する。PR #25ドラフト/正式v0.17.0維持。
