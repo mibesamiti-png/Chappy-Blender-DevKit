@@ -79,3 +79,7 @@
 - Pythonでは閉じた四面体/1面欠損/非多様体辺を検証。Blender3版CIには合成GLBの閉四面体0本、開四面体3本を検査する工程を追加。
 - **未保証**：境界0本でも閉じたソリッド・空洞無し・小穴無しとは言えない。近接統合は浮動小数点許容差の影響あり。詳細[境界エッジ仕様](GLB_BOUNDARY_AUDIT.md)。
 - GLB-020は一部実装、GLB-021/022は未実装。CI成功情報はテストSHAを確認して追記。
+
+#### 第6段階のCI証拠
+
+コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
