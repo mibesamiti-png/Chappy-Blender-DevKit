@@ -117,3 +117,9 @@
 - 合成モデルだけで直径0.78の狭窄→1.70への復帰による差分消失と、無関係なボール移動では未解消の事実をBlender3バージョンで検証。
 - テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
 - **実アドオンのプロパティが原因であるという推定は未成立**。GLB-021は一部実装、GLB-022は未実装。[検証プロトコル](GLB021_SYNTHETIC_INTERVENTION.md)。
+
+### GLB-021 第5段階：合成実験の変更履歴と比較
+
+- 3つの固定合成ケース（ソケット口を0.78に狭める、0.78のままボールを移動、元の1.70に戻して再生成）を、匿名部品の観測差分集計と安全フラグでJSON/日本語Markdownに記録。
+- テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
+- **合成モデル内の効果の差**を確認するものであり、元アドオン設定の実行時の依存性・正しい変更量は未確認。次は許可済み合成GLB-022への段階的な接続を検討するが、GLB-021 partial・GLB-022未実装を維持。[受け入れと残課題](GLB021_TRIAL_HISTORY.md)。
