@@ -19,6 +19,7 @@ async function run() {
     await page.waitForFunction(() => document.getElementById("status")?.textContent.includes("連動視点を使用中"));
     assert.equal(await page.locator("#part-reference option").count(), 3);
     assert.equal(await page.locator("#part-candidate option").count(), 3);
+    assert.match(await page.locator("#part-reference option").nth(1).innerText(), /境界辺3/);
     assert.equal(await page.locator("#jump-candidate").isDisabled(), true);
 
     const images = async () => await page.evaluate(() => [
