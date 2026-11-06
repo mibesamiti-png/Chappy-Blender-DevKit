@@ -1,6 +1,6 @@
 # GLB-020: 3D sampled-difference visualization (work in progress)
 
-Last updated: 2026-11-07. **Unreleased / draft PR #25.** Implementation exists, but Blender runtime verification must be tracked separately.
+Last updated: 2026-11-07. **Unreleased / draft PR #25.** Initial feature is partial, with Blender 4.4.3/4.5.15/5.2.1 CI verified on synthetic GLB fixtures at code SHA `91e8b6a2`.
 
 ## Goal
 
@@ -44,7 +44,7 @@ Thresholds and units appear in `review.json`. The deterministic triangle-sample/
 ## Verification gates
 
 - Python unit tests: `tests/test_glb_diff_visualize.py` (same faces, winding, medium/high offsets, source order, rejects invalid input, launcher privacy/overwrite refusal).
-- Blender 4.4.3 / 4.5.15 / 5.2.1 CI (pending result): `.github/workflows/blender-smoke.yml` invokes `glb-diff-visualize` on CBDK-authored synthetic hole and equivalent-surface fixtures, checks JSON, reimports both colored GLBs and checks materials.
+- Blender 4.4.3 / 4.5.15 / 5.2.1 CI: **success** at code SHA `91e8b6a2` ([run 42264413844](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264413844)). `.github/workflows/blender-smoke.yml` invokes `glb-diff-visualize` on CBDK-authored synthetic hole and equivalent-surface fixtures, checks JSON, reimports both colored GLBs and checks materials. Python ([run 42264413533](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264413533)), Windows ([run 42264413685](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264413685)), kit ([run 42264413982](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264413982)) and handoff ([run 42264413923](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264413923)) also succeeded for the same tested code SHA.
 - Release decision: do **not** mark GLB-020 fully implemented until this proves robust and the remaining interaction/uncertainty aspects are addressed.
 
 Related: [GLB-019 to GLB-022 roadmap](GLB_ROADMAP.md), [project state](project/STATE.json).
