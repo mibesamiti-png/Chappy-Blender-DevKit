@@ -35,3 +35,9 @@
 **未解決：** この段階では固定範囲・固定目標・最大4回の合成実験のみ。値を実ユーザーアドオンへ反映する機能、他形状での単調性、実物の公差、厳密Hausdorff距離や形状内部の完全一致は未対応。GLB-022は `partial` のまま。
 
 検証成功のコードSHAとCI run IDは、実際に成功確認してから追記する。
+
+## 第5段階のCI実測結果（2026-11-07）
+
+テスト対象コードSHA `37ee124aabb44df5ad9cb246342712bd9e0eb2ef`：[Python 42311608904](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608904)、[Windows 42311608916](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608916)、[Blender4.4.3/4.5.15/5.2.1 42311608910](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608910)、[Windows Kit 42311609353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609353)、[引き継ぎ 42311609070](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609070)、[Chromium 42311609211](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609211) **全6系統success**。
+
+Blender3バージョンの合成GLB実生成・実比較では、最初の1.24が目標未達→1.47が目標内→その下の1.35が目標未達→1.41も目標未達となり、**測定結果に応じて1.24→1.47→1.35→1.41**を自動選択。測定で確認した条件内の候補1.47、停止時の探索区間1.41〜1.47を匿名JSON/日本語Markdownに残す。これは最適な寸法を確定したわけではない。Python単体テストでは1.24が目標以内という別データに変更すると次候補が1.01に切り替わることも確認。ユーザーアドオン実行・実GLB変更・私有形状出力なし。GLB-022は**partial**を維持。
