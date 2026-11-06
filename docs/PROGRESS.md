@@ -891,3 +891,9 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - \`tests/test_glb_part_match.py\` に部品の順番入替、同位置の曖昧性、未対応部品、軽微移動、異常データの回帰テストを追加。既存の\`tests/test_glb_diff_visualize.py\`も候補表示・安全フラグを確認。
 - \`scripts/glb_viewer_browser_fixture.py\` でCBDK自作の入替2部品モデルからテストHTMLを生成。Playwright/Chromiumによる\`scripts/glb_viewer_browser_smoke.mjs\`で左右のカメラ連動、ズーム、候補ボタン、灰色面表示、HTTP通信禁止をチェックするCIを追加。Ubuntu 26.04非対応のPlaywrightブラウザインストーラ問題を避けるため、ブラウザCIランナーをUbuntu 24.04に固定。
 - **開発中・リリースはまだv0.17.0。** ブラウザでの実操作検証とBlender3版CIの最新版SHAの結果が出たら、状態台帳・Notionに正確な成功/失敗を追記。部品の因果・一致判定、未知領域、大規模GLBは未解決。
+
+### GLB-020 第4段階：CI検証結果（2026-11-07）
+
+コードSHA `72e9bd4e4ad2cb9b9716ee0cb5ea10de60cd779e` では、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183982)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184368)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184086)・[Windowsキット](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184021)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183990)・[Chromium実ブラウザ操作](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183979)が**全6系統success**。
+
+Chromium CIはUbuntu24.04でPlaywrightを導入し、CBDK自作の合成2部品モデルから生成したHTMLで、左右回転/ズーム・部品候補の手動表示・灰色面切替・HTTP通信の不発生・JS例外なしを確認。Ubuntu26.04でのPlaywright1.56.1インストール不対応による初回CI失敗はUbuntu24.04固定で解消。**部品の本当の対応関係や任意の実GLB精度はまだ未検証**。GLB-020は一部実装を維持。
