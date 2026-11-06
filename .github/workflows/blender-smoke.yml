@@ -501,6 +501,14 @@ jobs:
           assert review['viewer_shared_camera'] is True
           assert review['viewer_browser_interaction_verified'] is False
           assert review['unobserved_regions_verified'] is False
+          audit = review['sampling_sensitivity_audit']
+          assert audit['method'] == 'extra_halton_24_probe_sensitivity_v1'
+          assert audit['initial_samples_per_triangle'] == 24
+          assert audit['additional_samples_per_triangle'] == 24
+          assert audit['unobserved_regions_verified'] is False
+          for side in ('reference', 'candidate'):
+              assert audit[side]['face_count'] == sum(review[side].values())
+              assert sum(audit['per_part_sensitive_faces'][side]) == audit[side]['sensitive_faces']
           html = Path('reports/ci/surface_distance/diff_multipart/compare_viewer.html').read_text()
           assert html.count('id="canvas-reference"') == 1
           assert html.count('id="canvas-candidate"') == 1
