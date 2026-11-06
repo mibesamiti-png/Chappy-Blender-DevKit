@@ -1,6 +1,6 @@
 """Blender CI-only GLB roundtrip evidence for bounded triangle surface distance.
 
-This script constructs SIX CBDK-authored planar meshes. Nothing in this script
+This script constructs SEVEN CBDK-authored planar meshes. Nothing in this script
 opens, imports, evaluates, or runs any user-supplied addon or geometry.
 """
 from __future__ import annotations
@@ -17,6 +17,7 @@ if str(PROJECT) not in sys.path:
 
 from cbdk.glb_surface_distance import compare_triangle_surfaces  # noqa: E402
 from cbdk.surface_benchmark import benchmark_surface_search  # noqa: E402
+from cbdk.glb_multires_surface import compare_multires_triangle_surfaces  # noqa: E402
 
 MESH_NAME = "CBDK_Surface_Fixture"
 
@@ -37,10 +38,13 @@ def _mesh_fixture(variant):
         return _outer(0.0), [(0, 1, 3), (1, 2, 3)]
     if variant == "raised":
         return _outer(0.25), [(0, 1, 2), (0, 2, 3)]
-    if variant == "with_open_hole":
+    if variant in ("with_open_hole", "with_narrow_hole"):
+        # The narrow version has a known 24-sample blind spot on the
+        # filled square and is used only as a bounded synthetic test.
+        h = 0.45 if variant == "with_open_hole" else 0.22
         inner = [
-            (-0.45, -0.45, 0.0), (0.45, -0.45, 0.0),
-            (0.45, 0.45, 0.0), (-0.45, 0.45, 0.0),
+            (-h, -h, 0.0), (h, -h, 0.0),
+            (h, h, 0.0), (-h, h, 0.0),
         ]
         faces = []
         for i in range(4):
@@ -110,8 +114,8 @@ def main():
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     surfaces = {}
-    names = ("filled_main", "filled_other", "with_open_hole", "raised",
-             "grid_256", "grid_512")
+    names = ("filled_main", "filled_other", "with_open_hole",
+             "with_narrow_hole", "raised", "grid_256", "grid_512")
     for variant in names:
         _clear()
         _create(variant)
@@ -127,6 +131,22 @@ def main():
     baseline = surfaces["filled_main"]
     same = compare_triangle_surfaces(baseline, surfaces["filled_other"])
     hole = compare_triangle_surfaces(surfaces["with_open_hole"], baseline)
+    # Narrow hole: baseline 24-point scan misses it, but bounded
+    # coarse+selective-refinement 48-point scan should see it.
+    narrow_legacy = compare_triangle_surfaces(
+        baseline, surfaces["with_narrow_hole"])
+    narrow_multires = compare_multires_triangle_surfaces(
+        baseline, surfaces["with_narrow_hole"])
+    if narrow_legacy["symmetric_sampled_max"] != 0.0:
+        raise AssertionError("Narrow-hole fixture no longer tests original blind spot")
+    if narrow_multires["coarse_symmetric_sampled_max"] != 0.0:
+        raise AssertionError("Coarse narrow-hole fixture unexpectedly detected an offset")
+    if not narrow_multires["refined_symmetric_sampled_max"] > .005:
+        raise AssertionError("Refined surface sampler missed the narrow opening")
+    if not narrow_multires["new_nonzero_sample_after_refinement"]:
+        raise AssertionError("No new narrow-opening signal was found by refinement")
+    if narrow_multires["complete_surface_coverage"] or narrow_multires["auto_approve"]:
+        raise AssertionError("Refinement must never auto-certify exact geometry")
     raised = compare_triangle_surfaces(baseline, surfaces["raised"])
     grid = compare_triangle_surfaces(surfaces["grid_256"], surfaces["grid_256"])
     grid_large = compare_triangle_surfaces(surfaces["grid_512"], surfaces["grid_512"])
@@ -188,6 +208,8 @@ def main():
             "all_four_glbs_roundtripped": True,
             "all_five_glbs_roundtripped": True,
             "all_six_glbs_roundtripped": True,
+            "all_seven_glbs_roundtripped": True,
+            "narrow_hole_only_detected_after_targeted_refinement": True,
             "bvh_512_face_glb_zero": True,
             "wall_clock_observations_recorded_without_speed_assertions": True,
             "bvh_256_face_glb_zero_and_pruned": True,
@@ -196,9 +218,13 @@ def main():
         "comparisons": {
             "alternate_triangulation": same,
             "open_hole": hole,
+            "narrow_hole_legacy": narrow_legacy,
             "raised": raised,
             "grid_256": grid,
             "grid_512": grid_large,
+        },
+        "multires": {
+            "narrow_hole": narrow_multires,
         },
         "timings": {
             "grid_64_same_input_bvh_vs_bruteforce": benchmark_small,
@@ -211,7 +237,7 @@ def main():
             "auto_approves": False,
         },
         "limitations": [
-            "Only six repository-authored planar GLBs were evaluated in Blender",
+            "Only seven repository-authored planar GLBs were evaluated in Blender",
             "Open planar cutout detection is not enclosed-cavity or watertightness proof",
             "Sampled maximum is not an exact Hausdorff distance",
             "Bounded CPU comparator rejects >512 triangles; synthetic observations are not production benchmarks",
@@ -226,6 +252,8 @@ def main():
         "blender": bpy.app.version_string,
         "alternate_mean": same["symmetric_mean"],
         "hole_mean": hole["symmetric_mean"],
+        "narrow_hole_legacy_max": narrow_legacy["symmetric_sampled_max"],
+        "narrow_hole_refined_max": narrow_multires["refined_symmetric_sampled_max"],
         "offset_mean": raised["symmetric_mean"],
         "bvh_grid_triangles": len(surfaces["grid_256"]),
         "benchmark_64_bvh_ms": benchmark_small["benchmarks"]["bvh"]["median_elapsed_ms"],
