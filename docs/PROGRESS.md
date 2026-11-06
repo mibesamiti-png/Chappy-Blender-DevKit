@@ -1004,3 +1004,10 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - 許可済みのリポジトリ自作生成スクリプトだけを実行。任意のユーザーアドオン、私有コード・GLBの無断実行/変更/公開はせず、合成GLBとジェネレーターのSHA256を比較。
 - テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`： [Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)、[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)、[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)、[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)、[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)、[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
 - **GLB-022は一部実装（合成モデル限定）**であり、自由な最適値探索・実アドオンの自動修正・完全な形状同一性は未実装。GLB-021も一部実装。詳細：[第1段階検証仕様](GLB022_ALLOWLISTED_ITERATION.md)。
+
+## 2026-11-07 GLB-022 第2段階：合成3候補の部品間退行防止
+
+- `cbdk/glb_synthetic_multi.py`を追加し、固定条件`narrow_placebo`→`shifted`→`identical`をCBDK自作GLBで実生成・比較。**ソケット改善なし**と**ソケット改善でもボール悪化**の双方を棄却、他部品の悪化がない既知正常モデルのみ採用・観測差分0で停止。
+- 既存の2候補`--protocol basic`は維持し、`--protocol cross_part`を追加。試行予算1/2/3、変造された採否履歴、不正な安全フラグと試験名、ローカル上書き防止をPythonで検証。
+- コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
+- GLB-022は`partial`のまま。**任意の私有アドオンの自動修正ではなく、CBDK合成3部品の固定3候補**だけを試した。細かな誤差の連続的最適化や形状の完全一致は未検証。[合成3候補の仕様](GLB022_MULTI_CANDIDATE.md)。
