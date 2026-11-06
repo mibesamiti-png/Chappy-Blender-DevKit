@@ -1027,3 +1027,11 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - JSON/日本語Markdown履歴はローカル新規ファイル、候補値の安全範囲・未知入力・上書き禁止・SHA-256不変を確認。旧3プロトコルもCIに保持。
 - テスト対象コード SHA `23e9dec5d313468a70cc3bab7a5bb57fc090a8b3`：[Python 42309145079](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145079)、[Windows 42309145003](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145003)、[Blender4.4.3/4.5.15/5.2.1 42309145076](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145076)、[Windows kit 42309145019](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145019)、[引き継ぎ 42309145005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145005)、[Chromium 42309145006](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145006) **全6系統success**。
 - **GLB-022はpartialのまま**。これは自作合成モデルの固定格子探索であり、実アドオンの自由最適化や厳密な距離・完全幾何一致ではない。[第4段階仕様](GLB022_GENERATED_GRID.md)。
+
+## 2026-11-07 GLB-022 第5段階 — 実測フィードバックで次候補を変える合成探索
+
+- CBDK自作合成ソケットの安全範囲0.78〜1.70（0.01刻み）で、GLB-020の**双方向サンプリング最大距離が合成専用目標0.12以内か**を使って次の二分区間・開口径を更新。前回の固定格子と異なり、実測の分岐結果で試行順が変わる。
+- 実Blenderの3バージョンで **1.24→1.47→1.35→1.41**を生成・比較。1.47を目標内候補として記録、最小の合格値の確定はせず最大4回で停止。測定を変えると1.24→1.01と分岐することもPythonで検証。
+- 他部品悪化の拒否、未知値・不正入力・偽の改善履歴の拒否、入力ジェネレーター/GLB SHA-256不変、新規ローカルJSON/日本語MDのみ保存。既存のbasic/cross_part/progressive/generated_gridもCIで維持。
+- テスト対象コードSHA `37ee124aabb44df5ad9cb246342712bd9e0eb2ef`：[Python 42311608904](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608904)、[Windows 42311608916](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608916)、[Blender4.4.3/4.5.15/5.2.1 42311608910](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608910)、[Windows Kit 42311609353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609353)、[引き継ぎ 42311609070](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609070)、[Chromium 42311609211](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609211) **全6系統success**。
+- GLB-022はpartial。距離は全体のサンプリング最大で厳密Hausdorffや部品別誤差ではなく、0.12も実物の製造公差ではない。[詳細](GLB022_ADAPTIVE_SYNTHETIC.md)。
