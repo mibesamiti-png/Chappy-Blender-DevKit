@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import math
 
-MAX_TRIANGLES = 128
+MAX_TRIANGLES = 512
+BVH_LEAF_TRIANGLES = 8
 SAMPLES_PER_TRIANGLE = 24
 MAX_COORDINATE = 1_000_000.0
 MIN_DOUBLE_AREA = 1e-10
@@ -134,14 +135,105 @@ def _sample(face):
         yield tuple(alpha * a[j] + beta * b[j] + gamma * c[j] for j in range(3))
 
 
-def _directed(source, target):
+def _face_box(face):
+    return (
+        tuple(min(point[axis] for point in face) for axis in range(3)),
+        tuple(max(point[axis] for point in face) for axis in range(3)),
+    )
+
+
+def _box_distance_squared(point, box):
+    lo, hi = box
+    return sum(
+        (lo[axis] - point[axis]) ** 2 if point[axis] < lo[axis] else
+        (point[axis] - hi[axis]) ** 2 if point[axis] > hi[axis] else 0.0
+        for axis in range(3)
+    )
+
+
+def _build_bvh(target):
+    """Build a deterministic median-split triangle-AABB hierarchy.
+
+    Nodes are (bbox, left, right, face_indices). Internal indices are empty.
+    Bounds are conservative; pruning cannot exclude a closer triangle.
+    """
+    boxes = [_face_box(face) for face, _ in target]
+    centers = [tuple((lo[i] + hi[i]) * .5 for i in range(3)) for lo, hi in boxes]
+
+    def build(indices):
+        lo = tuple(min(boxes[i][0][axis] for i in indices) for axis in range(3))
+        hi = tuple(max(boxes[i][1][axis] for i in indices) for axis in range(3))
+        bounds = (lo, hi)
+        if len(indices) <= BVH_LEAF_TRIANGLES:
+            return bounds, None, None, tuple(indices)
+        # Split by the largest centroid extent; index breaks equal-centroid ties.
+        extent = tuple(
+            max(centers[i][axis] for i in indices) -
+            min(centers[i][axis] for i in indices)
+            for axis in range(3)
+        )
+        axis = max(range(3), key=lambda i: (extent[i], -i))
+        order = sorted(indices, key=lambda i: (centers[i][axis], i))
+        middle = len(order) // 2
+        return bounds, build(order[:middle]), build(order[middle:]), ()
+
+    return build(tuple(range(len(target))))
+
+
+def _bvh_nearest_distance_squared(point, target, tree):
+    """Exact nearest triangle distance with AABB lower-bound pruning.
+
+    Returns (distance squared, number of precise triangle evaluations).
+    """
+    best, evaluations = math.inf, 0
+    pending = [(0.0, tree)]
+    while pending:
+        lower, node = pending.pop()
+        if lower >= best:
+            continue
+        _, left, right, indices = node
+        if indices:
+            for index in indices:
+                # Triangle-local AABB pruning also helps crowded leaf nodes.
+                # The parent node bound is sufficient for correctness.
+                evaluations += 1
+                d2 = _closest_distance_squared(point, target[index][0])
+                if d2 < best:
+                    best = d2
+        else:
+            lo = _box_distance_squared(point, left[0])
+            hi = _box_distance_squared(point, right[0])
+            if lo <= hi:
+                # LIFO: put farther child first, explore nearer child first.
+                if hi < best:
+                    pending.append((hi, right))
+                if lo < best:
+                    pending.append((lo, left))
+            else:
+                if lo < best:
+                    pending.append((lo, left))
+                if hi < best:
+                    pending.append((hi, right))
+    if not math.isfinite(best):
+        raise SurfaceDistanceError("BVH failed to find a finite nearest triangle")
+    return max(best, 0.0), evaluations
+
+
+def _directed(source, target, *, accelerated=True):
     total_area = sum(area for _, area in source)
-    weighted_sum, worst = 0.0, 0.0
+    weighted_sum, worst, evaluations = 0.0, 0.0, 0
+    tree = _build_bvh(target) if accelerated else None
     for face, area in source:
         face_sum = 0.0
         for point in _sample(face):
-            shortest = min(_closest_distance_squared(point, other)
-                           for other, _ in target)
+            if tree is None:
+                shortest = min(_closest_distance_squared(point, other)
+                               for other, _ in target)
+                evaluations += len(target)
+            else:
+                shortest, performed = _bvh_nearest_distance_squared(
+                    point, target, tree)
+                evaluations += performed
             distance = math.sqrt(max(shortest, 0.0))
             if not math.isfinite(distance):
                 raise SurfaceDistanceError("Nonfinite surface distance")
@@ -155,6 +247,8 @@ def _directed(source, target):
         "mean": round(mean, 7),
         "sampled_max": round(worst, 7),
         "sample_count": len(source) * SAMPLES_PER_TRIANGLE,
+        "triangle_distance_evaluations": evaluations,
+        "brute_force_evaluations": len(source) * SAMPLES_PER_TRIANGLE * len(target),
     }
 
 
@@ -184,6 +278,8 @@ def compare_triangle_surfaces(reference: list, candidate: list) -> dict:
         "reference_triangles": len(ref),
         "candidate_triangles": len(cand),
         "samples_per_triangle": SAMPLES_PER_TRIANGLE,
+        "search_acceleration": "deterministic_median_split_triangle_aabb_bvh",
+        "max_triangles_per_mesh": MAX_TRIANGLES,
         "units": "input_coordinate_units",
         "vertex_correspondence_required": False,
         "triangulation_correspondence_required": False,
@@ -196,6 +292,7 @@ def compare_triangle_surfaces(reference: list, candidate: list) -> dict:
             "Degenerate faces, excessive sizes and nonfinite vertices are rejected",
             "Geometry must be in an explicitly aligned common coordinate space",
             "No topology, watertightness or internal-volume equivalence proof",
+            "BVH accelerates exact point-to-triangle queries, not sampling density or accuracy",
         ],
         "safety": {
             "executes_addon": False,
