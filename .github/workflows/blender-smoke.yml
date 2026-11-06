@@ -495,7 +495,31 @@ jobs:
           assert 'PRIVATE_SOURCE' not in str(review)
           assert 'multipart_reference.glb' not in str(review)
           assert 'multipart_candidate.glb' not in str(review)
+          assert review['viewer'] == 'compare_viewer.html'
+          assert review['viewer_contains_derived_geometry'] is True
+          assert review['viewer_local_only'] is True
+          assert review['viewer_shared_camera'] is True
+          assert review['viewer_browser_interaction_verified'] is False
+          assert review['unobserved_regions_verified'] is False
+          html = Path('reports/ci/surface_distance/diff_multipart/compare_viewer.html').read_text()
+          assert html.count('id="canvas-reference"') == 1
+          assert html.count('id="canvas-candidate"') == 1
+          assert "connect-src 'none'" in html
+          assert '__CBDK_VIEWER_DATA__' not in html
+          assert 'PRIVATE_SOURCE_ALPHA' not in html
+          assert 'PRIVATE_SOURCE_BETA' not in html
+          assert 'multipart_reference.glb' not in html
+          assert 'multipart_candidate.glb' not in html
           PY
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('reports/ci/surface_distance/diff_multipart/compare_viewer.html').read_text()
+          source = re.findall(r'<script>(.*?)</script>', html, re.S)
+          assert len(source) == 1, 'Offline viewer must have exactly one executable script'
+          Path('reports/ci/surface_distance/diff_multipart/viewer_syntax.js').write_text(source[0])
+          PY
+          node --check "$root/diff_multipart/viewer_syntax.js"
           "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
             --python-exit-code 7 \
             --python scripts/blender_verify_glb_diff_visualize.py -- \
