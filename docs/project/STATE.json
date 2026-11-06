@@ -285,10 +285,10 @@
     {
       "id": "GLB-013",
       "title": "CBDK合成GLBの設定値を上下プローブして参考形状への改善方向を判定",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/parameter_direction.py",
-      "note": "CBDK自作合成アドオンのみで7 GLB（基準、球/Bevel参照、上下プローブ）を生成し、生成直後/再読込後の頂点順に依存しない局所半径分布スコアで増減方向をレビュー判定。非対象部品の無変化を必須。Blender5.2初回で頂点番号比較の誤判定を見つけ改修。純Python16件とBlender3版の改修後CI実測待ち。一般形状の同一性は証明しない"
+      "note": "自作合成モデルで基準・参照2・上下4の計7 GLBを生成/再読込。頂点順不変の局所半径分布で球半径とBevel幅の増加方向のみ参考に近づくこと、減少方向で遠ざかること、非対象部品が不変であることをBlender4.4.3/4.5.15/5.2.1 CIで検証。PR #25 commit e73f7ebaはPython3版/Windows2版/Blender3版/kit/handoff全成功。実ユーザーGLBには適用保証なし"
     }
   ],
   "known_issues": [
@@ -431,9 +431,9 @@
     {
       "id": "NEXT-011",
       "priority": 11,
-      "status": "in_progress",
+      "status": "done",
       "title": "合成GLBの上下パラメータ探索で改善方向を検証",
-      "acceptance": "Blender 4.4.3/4.5.15/5.2.1で基準・参照2条件・上下4条件のGLBを生成し、球半径とBevel幅の正方向のみ参考に近づき、逆方向は離れることをGLB再読込後まで実測。非対象部品は不変"
+      "acceptance": "生成前後・GLB再読込後の7条件に対し半径分布スコアを使い、正方向で誤差減、負方向で誤差増、非対象の頂点変化0をBlender3版で確認（commit e73f7eba）。"
     }
   ],
   "decisions": [
@@ -632,6 +632,6 @@
     "glb_geometry_flow": "2026-11-06: PR #25 GLB-010 source glb_geometry_flow.py、20件の回帰テスト、3版Blender合成GLB fixtureを追加。メッシュ生成API引数までの静的経路は推測であり実行時因果は未検証。実ジョブの結果確認前は partial/not_tested。正式last_verified v0.17.0は保持",
     "glb_modifier_flow": "2026-11-06: PR #25 SHA b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 全5ワークフロー成功: Python 42214954563; Windows 42214954671; Blender 3版 42214954642; kit 42214954657; handoff 42214954600。GLB-011 implemented/blender_ci、PR draft、last_verified v0.17.0維持",
     "trusted_parameter_displacement": "2026-11-06: GLB-012 PR #25実装コミット04526f1ddd9f336df16d2841ccafc278cd8edf4fで全成功: Python 42220053230, Windows 42220053331, Blender3版 42220053332, kit 42220053222, handoff 42220053158。GLB-012 implemented/blender_ci。PRドラフト・正式last_verified v0.17.0維持",
-    "trusted_parameter_direction": "2026-11-06: GLB-013 7条件の生成/GLB再読込と頂点順不変な原点半径分布で上下方向を評価。Blender5.2でindex-aligned距離の誤判定を検出し修正。純Python新規11+5回帰テスト、3版Blender CIは改修HEADの結果待ち。GLB-013 partial/not_tested; release last_verified 0.17.0 unchanged."
+    "trusted_parameter_direction": "2026-11-06: GLB-013 code/CI commit e73f7eba0cd0bd5ceafacab53b64c397a7bd45a4; Python (42223468580), Windows (42223468045), Blender3 version (42223468513), kit (42223468046), handoff (42223468069) all SUCCESS. Includes 11 direction plus 5 radial metric regression tests. Direction from synthetic GLB scores only; GLB-013 implemented/blender_ci, NEXT-011 done. PR draft; last_verified 0.17.0 unchanged."
   }
 }
