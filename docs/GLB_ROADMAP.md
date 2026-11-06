@@ -71,3 +71,11 @@
 - 既存24点の色は維持し、別の24点で誤差が増えた面だけ紫枠表示（ローカルHTML）。集計JSONには匿名部品別の件数と未検証フラグのみ。
 - コードSHA `38057b1da49eeb61020664c4923ced2b2bad8406`： [Python 42279824321](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824321)、[Windows 42279824307](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824307)、[Blender 4.4.3/4.5.15/5.2.1 42279824378](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824378)、[Windows kit 42279824398](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824398)、[引き継ぎ 42279824427](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824427)、[Chromium GUI 42279824304](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824304) **全6系統success**。
 - **紫枠無し＝検証済みではない**。全体未観測領域、内壁の詳細検証、実GLB、部品同一性の証明は次の課題。GLB-021/022は未着手。
+
+### GLB-020 第6段階：開口や欠損面を調べる境界エッジ監査
+
+- 各匿名メッシュ部品で、近接座標の辺共有を数え、**観測上の境界辺数**と非多様体候補を集計。ローカルHTMLの部品一覧にも境界辺数を表示。
+- 単独の空間的な部品対応候補でも、境界の有無・非多様体の状態が食い違うと`ambiguous`へ降格。**一致した部品という証明・自動補修はしない**。
+- Pythonでは閉じた四面体/1面欠損/非多様体辺を検証。Blender3版CIには合成GLBの閉四面体0本、開四面体3本を検査する工程を追加。
+- **未保証**：境界0本でも閉じたソリッド・空洞無し・小穴無しとは言えない。近接統合は浮動小数点許容差の影響あり。詳細[境界エッジ仕様](GLB_BOUNDARY_AUDIT.md)。
+- GLB-020は一部実装、GLB-021/022は未実装。CI成功情報はテストSHAを確認して追記。
