@@ -134,7 +134,7 @@ def diagnose_comparison(report: dict) -> dict:
         code, severity, metrics = row.get("code"), row.get("severity"), row.get("metrics", {})
         if not isinstance(code, str) or not 1 <= len(code) <= 128:
             raise DiagnosticError(f"difference[{index}].code is invalid")
-        if severity not in SEVERITIES:
+        if not isinstance(severity, str) or severity not in SEVERITIES:
             raise DiagnosticError(f"difference[{index}].severity is invalid")
         if not isinstance(metrics, dict):
             raise DiagnosticError(f"difference[{index}].metrics is invalid")
