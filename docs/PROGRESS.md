@@ -939,3 +939,12 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
 
 合成GLBで「閉四面体の推定境界線は0本、1面欠損では3本」を実表示用のHTMLデータでも検証。実Chromiumで線のオン/オフ・左右両方の描画変化を確認。試験用HTMLはCBDK合成モデルのみで私有GLBを含まない。第7段階もレビュー補助の部分実装であり、v0.18正式マージ・リリースは行わない。
+
+## 2026-11-07 — GLB-020レビューMVP総合受け入れ（スコープ凍結）
+
+- BlenderでCBDK自作の3部品（12分割中空ソケット、8三角形ボール、端面付き12分割軸）を作り、**正常・開口狭窄・ボール移動・ソケット面欠損**の4条件でGLB実出力→読込→比較→集計検証。
+- 初回の「正常なのに開放境界がある」失敗はテスト形状の軸が開いていたことによる。軸の端面を修正し、**正常モデルの誤検出0**を確認。変更した部品を検出し、変更していない他部品は誤検出しない条件も成功。
+- ソケット上端リップの2三角面を抜くと**観測境界4本**を検出。ソースGLBのSHA256一致、私有データ非含有の集計JSON、生成HTML/GLBのローカル扱いも確認。
+- 最終テスト対象コード SHA `db33ce4242bbe98b3c5f9ac43d89bf21c3657089`：
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898364)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898499)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898512)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898604)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898325)・[Chromium実GUI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898701) **全6系統成功**。
+- スコープ判断：`GLB-020`は**レビューMVPの受け入れ合格**として細かな機能増築を凍結。ただし実GLB・完全精度が未保証なので機能全体は`partial`を維持。`NEXT-018`を`done`、**次は`GLB-021`の改善候補レビュー連携**を優先し、その後`GLB-022`へ。詳細 [受け入れ条件](GLB020_MVP_ACCEPTANCE.md)。
