@@ -289,7 +289,7 @@ jobs:
           fi
           echo "Trusted additive parameter GLB generation and roundtrip controls passed." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Benchmark BVH wall-clock and compare six trusted GLB surface fixtures
+      - name: Benchmark BVH and detect narrow synthetic hole using coarse-to-fine sampling
         shell: bash
         run: |
           set -euo pipefail
@@ -306,13 +306,23 @@ jobs:
           report = json.loads((root / 'surface_distance_experiment.json').read_text())
           assert report['kind'] == 'cbdk_trusted_glb_surface_distance_experiment', report
           assert report['source'] == 'repository_authored_synthetic_only', report
-          assert len(report['variants']) == 6, report
+          assert len(report['variants']) == 7, report
           assert all(report['checks'].values()), report
           assert all(v is False for v in report['safety'].values()), report
           a = report['comparisons']['alternate_triangulation']
           h = report['comparisons']['open_hole']
           t = report['comparisons']['raised']
           grid = report['comparisons']['grid_256']
+          narrow = report['multires']['narrow_hole']
+          assert report['comparisons']['narrow_hole_legacy']['symmetric_sampled_max'] == 0, report
+          assert narrow['coarse_symmetric_sampled_max'] == 0, narrow
+          assert narrow['refined_symmetric_sampled_max'] > .005, narrow
+          assert narrow['new_nonzero_sample_after_refinement'] is True
+          assert narrow['coarse_samples_per_triangle'] == 8
+          assert narrow['fine_samples_per_selected_triangle'] == 48
+          assert narrow['auto_approve'] is False
+          assert narrow['complete_surface_coverage'] is False
+          assert all(value is False for value in narrow['safety'].values())
           assert report['triangles']['grid_256'] == 256, report
           assert report['triangles']['grid_512'] == 512, report
           assert report['comparisons']['grid_512']['symmetric_mean'] == 0, report
@@ -345,7 +355,7 @@ jobs:
           for variant in report['variants']:
               assert (root / (variant + '.glb')).stat().st_size > 100
           PY
-          echo "Synthetic six-GLB BVH wall-clock observations and cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
+          echo "Synthetic seven-GLB BVH/coarse-to-fine narrow-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
