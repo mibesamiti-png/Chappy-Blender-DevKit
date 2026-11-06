@@ -701,3 +701,13 @@ GLB-012を実装済/Blender CI検証、NEXT-010をdoneとしてSTATE/HANDOFFに�
 Blender4.5.15の実測例（生成・再読込とも同じ値）：球半径は基準誤差0.4000002、増加0.2、減少0.6。Bevel幅は基準0.240685、増加0.1308848、減少0.2875242。いずれも非対象部品の頂点変化数は0。
 
 これを根拠にSTATE/HANDOFFのGLB-013を実装済/Blender CI確認、NEXT-011をdoneへ更新。記録変更後のコミットのCI結果とは区別する。PR #25はドラフトで正式release last_verified v0.17.0維持。実ユーザーアドオン/私有GLBの実行とアップロード、自動パラメータ修正なし。
+
+## v0.18 開発中 — 2026-11-06（GLB-014: 頂点順非依存の3D表面距離）
+
+- `cbdk/glb_surface_distance.py` を新規実装。面積重み付きのサンプル点→相手三角形への最近接3D距離を双方向で集計。頂点順/三角分割は不一致でも可能。上限128面、24 Halton点/面。
+- `tests/test_glb_surface_distance.py`に13件の単体テストを追加。同面の別三角分割/頂点順変更=ゼロ、Z+0.25、同外寸の中央開口、片方向では見逃しうる違い、異常数値・退化面拒否・完全一致を主張しないことを検証。
+- 初回のPython CIが中央開口テスト失敗を検出。相関の強い12点/面のサンプリングが中央の穴を外していた。base2/3 Halton列24点/面へ変更後、Python3版CI成功を確認。
+- `scripts/blender_surface_distance_smoke.py`を新規追加。CBDK自身が生成する4 GLBをBlenderで実書出/再読込し、異三角分割・開口・Z移動を比較するCIを3版Blenderで追加。
+- `docs/GLB_SURFACE_DISTANCE.md`を作成。GLB-014/DEC-026/NEXT-012をSTATE/HANDOFFへ記録。
+
+**制限:** 現時点は小規模でレビュー専用の合成モデル検証。小さな穴・内部空洞や大規模実モデルの比較を保証しない。Blender実機CIの成功を実測するまではGLB-014は一部実装/未検証。PRドラフト、正式v0.17.0維持。
