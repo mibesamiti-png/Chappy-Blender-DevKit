@@ -341,3 +341,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - Compare **freshly regenerated** GLBs under strict input SHA-256 checks. Stop at 2 attempts or observed sampled yellow/red count zero without new other-part regressions. Rejection must leave accepted baseline unchanged.
 - Synthetic local JSON/Markdown records anonymous sampled face counts and accept/reject reasons; never publish derived geometry, private input GLB, AST property mappings, source paths or user code to GitHub/Notion.
 - CI synthetic success is not proof of watertightness, 100% surface equivalence, true part correspondence, or user addon optimization. GLB-022 remains `partial` until broader explicit permission and tests. Formal release v0.17.0 and draft PR #25 unchanged.
+
+## GLB-022 phase 2 multi-candidate synthetic regression guard
+
+- `cbdk/glb_synthetic_multi.py` is a strict finite, synthetic-only protocol with exactly 3 candidates: `narrow_placebo`, `shifted`, `identical`. The cross-part regression case `shifted` must be rejected despite the socket being restored because the ball is displaced.
+- Do not describe sampled yellow/red face reductions as continuous distance optimization, guaranteed complete geometry match, causal explanation for an arbitrary addon, or recommended joint sizes.
+- Bounded 1/2/3 budget tests must not report success on an unresolved socket, and old 2-candidate CI must remain intact. Keep all model geometry, local AST paths and HTML/GLB artifacts private. No arbitrary addon execution or automatic source writes.
+- GLB-022 remains partial / blender_ci. Tested CI SHA and run IDs are recorded in `docs/GLB022_MULTI_CANDIDATE.md`; the subsequent docs-only commits are not treated as newly code-tested.
