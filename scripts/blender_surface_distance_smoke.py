@@ -1,6 +1,6 @@
 """Blender CI-only GLB roundtrip evidence for bounded triangle surface distance.
 
-This script constructs FIVE CBDK-authored planar meshes. Nothing in this script
+This script constructs SIX CBDK-authored planar meshes. Nothing in this script
 opens, imports, evaluates, or runs any user-supplied addon or geometry.
 """
 from __future__ import annotations
@@ -16,6 +16,7 @@ if str(PROJECT) not in sys.path:
     sys.path.insert(0, str(PROJECT))
 
 from cbdk.glb_surface_distance import compare_triangle_surfaces  # noqa: E402
+from cbdk.surface_benchmark import benchmark_surface_search  # noqa: E402
 
 MESH_NAME = "CBDK_Surface_Fixture"
 
@@ -46,12 +47,13 @@ def _mesh_fixture(variant):
             j = (i + 1) % 4
             faces.extend(((i, j, j + 4), (i, j + 4, i + 4)))
         return _outer(0.0) + inner, faces
-    if variant == "grid_256":
-        # 256 spatially separated triangles to test actual GLB import and
-        # BVH pruning. Not a production-sized user asset.
+    if variant in ("grid_256", "grid_512"):
+        # Spatially separated 256/512-triangle grids, only authored here.
+        # Never read a user's source files or arbitrary GLBs in public CI.
+        cols = 16 if variant == "grid_256" else 32
         verts, faces = [], []
         for y in range(16):
-            for x in range(16):
+            for x in range(cols):
                 ox, oy = x * 2.75, y * 2.75
                 idx = len(verts)
                 verts.extend(((ox, oy, 0.0), (ox + 1.0, oy, 0.0),
@@ -109,7 +111,7 @@ def main():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     surfaces = {}
     names = ("filled_main", "filled_other", "with_open_hole", "raised",
-             "grid_256")
+             "grid_256", "grid_512")
     for variant in names:
         _clear()
         _create(variant)
@@ -127,6 +129,14 @@ def main():
     hole = compare_triangle_surfaces(surfaces["with_open_hole"], baseline)
     raised = compare_triangle_surfaces(baseline, surfaces["raised"])
     grid = compare_triangle_surfaces(surfaces["grid_256"], surfaces["grid_256"])
+    grid_large = compare_triangle_surfaces(surfaces["grid_512"], surfaces["grid_512"])
+    # Small identical post-GLB-import inputs permit a fair BVH/brute trial;
+    # large meshes only time BVH to avoid making every CI run expensive.
+    benchmark_small = benchmark_surface_search(
+        surfaces["grid_256"][:64], surfaces["grid_256"][:64], repeats=3)
+    benchmark_large = benchmark_surface_search(
+        surfaces["grid_512"], surfaces["grid_512"],
+        repeats=3, include_brute_force=False)
     exact_evaluations = grid["reference_to_candidate"]["triangle_distance_evaluations"]
     brute_evaluations = grid["reference_to_candidate"]["brute_force_evaluations"]
     if len(surfaces["grid_256"]) != 256:
@@ -135,6 +145,18 @@ def main():
         raise AssertionError("256-face identical mesh must have zero sampled distance")
     if not 0 < exact_evaluations < brute_evaluations // 4:
         raise AssertionError("BVH did not reduce exact triangle checks by at least 4x")
+    if len(surfaces["grid_512"]) != 512:
+        raise AssertionError("Imported 512-face synthetic GLB lost triangles")
+    if grid_large["symmetric_mean"] != 0.0:
+        raise AssertionError("512-face identical GLB must have zero sampled score")
+    if not benchmark_small["scores_agree_with_brute_force"]:
+        raise AssertionError("Same-input timed BVH and brute results disagree")
+    if benchmark_small["performance_regression_gate"] or benchmark_large["performance_regression_gate"]:
+        raise AssertionError("Wall-clock speed must remain observational only")
+    for bench in (benchmark_small, benchmark_large):
+        for measured in bench["benchmarks"].values():
+            if measured["median_elapsed_ms"] < 0:
+                raise AssertionError("Invalid measured elapsed time")
 
 
     if same["symmetric_mean"] > 1e-6 or same["symmetric_sampled_max"] > 1e-6:
@@ -147,9 +169,9 @@ def main():
         raise AssertionError("Missing center region is too weakly represented")
     if not 0.249 <= raised["symmetric_mean"] <= 0.251:
         raise AssertionError("World-space Z displacement was not measured correctly")
-    if any(x["safety"]["auto_approves"] for x in (same, hole, raised, grid)):
+    if any(x["safety"]["auto_approves"] for x in (same, hole, raised, grid, grid_large)):
         raise AssertionError("Sampled distance must never auto-approve geometry")
-    if any(x["exact_surface_equivalence_verified"] for x in (same, hole, raised, grid)):
+    if any(x["exact_surface_equivalence_verified"] for x in (same, hole, raised, grid, grid_large)):
         raise AssertionError("Sampled comparison cannot prove exact equivalence")
 
     output = {
@@ -165,6 +187,9 @@ def main():
             "real_world_z_offset_detected": True,
             "all_four_glbs_roundtripped": True,
             "all_five_glbs_roundtripped": True,
+            "all_six_glbs_roundtripped": True,
+            "bvh_512_face_glb_zero": True,
+            "wall_clock_observations_recorded_without_speed_assertions": True,
             "bvh_256_face_glb_zero_and_pruned": True,
             "no_exact_surface_equivalence_claims": True,
         },
@@ -173,6 +198,11 @@ def main():
             "open_hole": hole,
             "raised": raised,
             "grid_256": grid,
+            "grid_512": grid_large,
+        },
+        "timings": {
+            "grid_64_same_input_bvh_vs_bruteforce": benchmark_small,
+            "grid_512_bvh_only": benchmark_large,
         },
         "safety": {
             "user_addon_executed": False,
@@ -181,10 +211,11 @@ def main():
             "auto_approves": False,
         },
         "limitations": [
-            "Only five repository-authored planar GLBs were evaluated in Blender",
+            "Only six repository-authored planar GLBs were evaluated in Blender",
             "Open planar cutout detection is not enclosed-cavity or watertightness proof",
             "Sampled maximum is not an exact Hausdorff distance",
-            "Bounded CPU comparator rejects >512 triangles; no large asset benchmark yet",
+            "Bounded CPU comparator rejects >512 triangles; synthetic observations are not production benchmarks",
+            "Observed elapsed times depend on runner CPU load; never require a speed ratio",
         ],
     }
     (root / "surface_distance_experiment.json").write_text(
@@ -197,6 +228,9 @@ def main():
         "hole_mean": hole["symmetric_mean"],
         "offset_mean": raised["symmetric_mean"],
         "bvh_grid_triangles": len(surfaces["grid_256"]),
+        "benchmark_64_bvh_ms": benchmark_small["benchmarks"]["bvh"]["median_elapsed_ms"],
+        "benchmark_64_bruteforce_ms": benchmark_small["benchmarks"]["brute_force"]["median_elapsed_ms"],
+        "benchmark_512_bvh_ms": benchmark_large["benchmarks"]["bvh"]["median_elapsed_ms"],
         "bvh_triangle_evaluations": exact_evaluations,
         "brute_triangle_evaluations": brute_evaluations,
     }))
