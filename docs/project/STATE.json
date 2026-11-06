@@ -317,10 +317,10 @@
     {
       "id": "GLB-017",
       "title": "粗い8点から疑わしい面と探索枠だけ48点へ細分化する多解像度表面比較",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/glb_multires_surface.py",
-      "note": "合成メッシュ専用レビュー指標。各面8 Halton点で粗く調べ、差のある面最大8面＋差がなくても面積上位2面を追加の48点へ精査。双方向距離を面積重み付きで集計。従来24点で見逃す幅0.44の中央開口を検出するPython13回帰テスト・Blender3版合成7 GLB CIを追加。小穴すべて・内部空洞・精確なHausdorffの保証なし。最新CI実測待ち"
+      "note": "粗8点/面から疑わしい最大8面＋面積上位2面を48点/面まで選択精査するレビュー専用双方向距離。従来24点と粗8点で見逃した幅0.44の中央開口を精査で検出（最大距離0.0657466）。Blender4.4.3/4.5.15/5.2.1で自作合成7 GLBの書出・再読込に成功。コード+文書commit 4c7248c8のPython3版、Windows2版、Blender3版、Windows kit、handoff全CI成功。閉じた内部空洞・任意の微小穴の検出保証なし"
     }
   ],
   "known_issues": [
@@ -491,9 +491,9 @@
     {
       "id": "NEXT-015",
       "priority": 15,
-      "status": "in_progress",
+      "status": "done",
       "title": "細い開口を検出する多解像度表面サンプリングを合成GLBで検証",
-      "acceptance": "Pythonで従来24点の見逃しが48点で検出できる合成狭穴を回帰検証。Blender4.4.3/4.5.15/5.2.1で7合成GLBを実出力/再読込し粗8点=0、追加48点>0を観測。最終的にも同一性/内部空洞を自動認定しない"
+      "acceptance": "実測済: Pythonの13回帰テストとBlender4.4.3/4.5.15/5.2.1自作合成7 GLB。従来24点最大距離0、粗8点0、精査48点0.0657466（run 42244257499）。同一性認定・私有モデルの実行/公開なし"
     }
   ],
   "decisions": [
@@ -716,6 +716,6 @@
     "surface_distance": "2026-11-06 GLB-014 code+docs SHA f7e9e114e3484da650044737189ae20395a53e74: Python 42235161491, Windows 42235161515, Blender 42235161529 (4.4.3/4.5.15/5.2.1), kit 42235161511, handoff 42235161506 all SUCCESS. 13 new tests, sampled bidirectional surface distance, open-hole and alternate triangulation synthetic roundtrip. GLB-014 implemented/blender_ci, NEXT-012 done; PR draft and formal last_verified 0.17.0 unchanged.",
     "surface_bvh": "2026-11-06: GLB-015 code/docs SHA bcef8572994065f73d05e2e9c37245d64a13035e: Python 42238115233, Windows 42238115886, Blender3-version 42238114860, kit 42238115035, handoff 42238115141 all SUCCESS. Blender 4.5.15 256-face GLB observed 1,572,864 brute vs 49,152 BVH exact triangle computations (32x fewer), 0 distance. GLB-015 implemented/blender_ci; NEXT-013 done. Formal v0.17.0 unchanged; PR draft.",
     "surface_benchmark": "2026-11-07: GLB-016 implementation+docs SHA ca9ad5076fb911bc8337bc525c163b1b069c6bcb all 5 workflows SUCCESS: Python 42241396452, Windows PowerShell 42241396094, Blender 3-version 42241395979, Windows kit 42241396296, durable handoff 42241396289. Synthetic 64-face BVH/brute median ms by Blender version: 4.4.3 35.510505/161.156313, 4.5.15 19.356758/86.027068, 5.2.1 32.467850/149.716417; synthetic 512-face BVH-only median ms 352.050953/192.798623/321.247609. No portable speedup promise; GLB-016 implemented/blender_ci, NEXT-014 done; v0.17.0 formal release remains.",
-    "multires_surface": "2026-11-07: GLB-017 coarse8/refined48 surface probing with max 8 suspect + 2 area-biased exploratory faces per direction, 13 pure Python tests, seven trust-owned Blender GLB fixture including narrow hole, CI pending. Does not prove all holes. PR draft, formal release v0.17.0."
+    "multires_surface": "2026-11-07: GLB-017 SHA 4c7248c853047b1f21088e01441a6c5fed9ca4b2 all CI SUCCESS: Blender 4.4.3/4.5.15/5.2.1 42244257499 (narrow hole legacy24=0, coarse8=0, selected48=0.0657466), Python3-version 42244257474 (13 new tests), Windows PowerShell 42244257438, Windows kit 42244257461, durable handoff 42244257445. GLB-017 implemented/blender_ci, NEXT-015 done. General coverage and enclosed cavities not proven. PR draft, release last_verified 0.17.0 preserved."
   }
 }
