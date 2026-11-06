@@ -897,3 +897,11 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 コードSHA `72e9bd4e4ad2cb9b9716ee0cb5ea10de60cd779e` では、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183982)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184368)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184086)・[Windowsキット](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184021)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183990)・[Chromium実ブラウザ操作](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183979)が**全6系統success**。
 
 Chromium CIはUbuntu24.04でPlaywrightを導入し、CBDK自作の合成2部品モデルから生成したHTMLで、左右回転/ズーム・部品候補の手動表示・灰色面切替・HTTP通信の不発生・JS例外なしを確認。Ubuntu26.04でのPlaywright1.56.1インストール不対応による初回CI失敗はUbuntu24.04固定で解消。**部品の本当の対応関係や任意の実GLB精度はまだ未検証**。GLB-020は一部実装を維持。
+
+## 2026-11-07 GLB-020 第5段階：追加測定で見逃しに注意する面を可視化
+
+- `cbdk/glb_sampling_audit.py` を追加。従来の24点/三角面に加え、重複しないHalton24点でも相手のBVH面までの距離を調べる。追加測定で観測誤差が共有AABB対角線の0.5%以上増えるか、灰/黄/赤の閾値を横断した面を**「サンプリング感度あり」**とする。
+- ローカルの`compare_viewer.html`では、該当面に**紫色の枠**を重ねる。チェックボックスから表示切替が可能。通常の面の赤/黄/灰の色は従来24点の指標を維持。
+- `review.json`はセンシティブな面の総数と匿名部品別の集計のみ保存。個別のフラグは**元の3D形状が含まれるローカルHTML側のみ**。公開GitHub/Notionには私有モデルを書き出さない。
+- `tests/test_glb_sampling_audit.py`と既存テストを更新し、異常数値・部品境界・HTMLの不正フラグを拒否する。Blender CIは集計・フラグの保守的な定義を確認し、Chromiumの合成HTML試験は紫枠表示切替による描画変化を検査。
+- **重要**：紫枠がない部分も未観測領域が残る可能性がある。これは未知部分の完全な特定でも、元アドオン設定を自動修正する機能でもない。GLB-020は一部実装のまま、正式v0.17.0とドラフトPR #25を維持する。
