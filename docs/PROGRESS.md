@@ -933,3 +933,9 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - `compare_viewer.html`に水色の境界線オーバーレイと表示切替を追加。参照/生成の独立した部品選択・同期カメラに追従。Canvas 2Dの描画は**奥側の線も見えるX-ray的な近似**で、正確な遮蔽判定や実物の穴位置の証明には使わない。
 - `tests/test_glb_boundary_audit.py`と`tests/test_glb_diff_visualize.py`で閉/開四面体の線分座標・非公開HTMLの保持・匿名部品ごとの分離を検証。Chromium GUIで左右の境界線の表示切替と、Blender3版CIでGLB由来HTMLの境界線0対3本を検証するゲートを追加。
 - これは**形状の検査を補助する表示**であり、内部空洞の一致・小穴の完全検出・元アドオンの自動修正は行わない。GLB-020部分実装、GLB-021/022未実装、正式版v0.17.0のまま。
+
+### GLB-020 第7段階・CI検証結果（2026-11-07）
+
+テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
+
+合成GLBで「閉四面体の推定境界線は0本、1面欠損では3本」を実表示用のHTMLデータでも検証。実Chromiumで線のオン/オフ・左右両方の描画変化を確認。試験用HTMLはCBDK合成モデルのみで私有GLBを含まない。第7段階もレビュー補助の部分実装であり、v0.18正式マージ・リリースは行わない。
