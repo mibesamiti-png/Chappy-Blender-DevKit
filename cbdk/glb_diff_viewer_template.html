@@ -35,6 +35,7 @@
     </div>
     <div class="bar">
       <label><input id="hide-low" type="checkbox"> 差が小さい面を非表示</label>
+      <label><input id="show-sensitive" type="checkbox" checked> 追加測定で差が増えた面を強調</label>
       <button id="reset" type="button">視点をリセット</button>
     </div>
   </header>
@@ -65,6 +66,7 @@
     「候補を右側に表示」も形状と位置による推定であり、本人による確認が必要です。
     色は各三角面24点のサンプル測定による目安です。灰色・誤差ゼロも完全一致を証明せず、
     小穴や内部空間などの未測定部分は判定できない場合があります。
+    紫の枠は追加24点の測定で誤差が増えた面を示すだけで、<strong>紫の枠がない部分も完全に測定済みではありません</strong>。
     このHTMLには派生した3D形状データが含まれます。元モデルと同様に非公開で保管してください。
   </div>
   <div class="status" id="status" role="status">読込中...</div>
@@ -83,6 +85,8 @@
     const selectors = {};
     const canvases = {};
     let hideLow = false;
+    let showSensitive = true;
+    const sensitivity = data.sampling_sensitivity_flags || { reference: [], candidate: [] };
     const matches = data.part_suggestions && data.part_suggestions.reference_parts || [];
     const candidateJump = document.getElementById("jump-candidate");
     let dragging = null;
@@ -116,13 +120,13 @@
       ctx.clearRect(0, 0, width, height);
       const filter = selectors[side].value;
       const polygons = [];
-      for (const face of data[side].faces) {
+      for (const [faceIndex, face] of data[side].faces.entries()) {
         if (filter !== "all" && String(face[0]) !== filter) continue;
         if (hideLow && face[1] === 0) continue;
         const a = project(face[2], face[3], face[4], width, height);
         const b = project(face[5], face[6], face[7], width, height);
         const c = project(face[8], face[9], face[10], width, height);
-        polygons.push({ a: a, b: b, c: c, depth: (a[2] + b[2] + c[2]) / 3, color: palette[face[1]] });
+        polygons.push({ a: a, b: b, c: c, depth: (a[2] + b[2] + c[2]) / 3, color: palette[face[1]], sensitive: sensitivity[side][faceIndex] === 1 });
       }
       // Painter's algorithm is a bounded review approximation, not a GPU depth buffer.
       polygons.sort((a, b) => b.depth - a.depth);
@@ -134,13 +138,14 @@
         ctx.closePath();
         ctx.fillStyle = item.color;
         ctx.fill();
-        ctx.strokeStyle = "rgba(11,19,29,0.38)";
-        ctx.lineWidth = Math.max(0.6, dpr * 0.55);
+        ctx.strokeStyle = showSensitive && item.sensitive ? "#b28bff" : "rgba(11,19,29,0.38)";
+        ctx.lineWidth = showSensitive && item.sensitive ? Math.max(2.2, dpr * 2) : Math.max(0.6, dpr * 0.55);
         ctx.stroke();
       }
       const label = document.getElementById("count-" + side);
       label.textContent = polygons.length + " / " + data[side].faces.length +
-        " 三角面を表示（" + data[side].parts.length + " 部品）";
+        " 三角面を表示（" + data[side].parts.length + " 部品）・追加測定で差が増えた面 " +
+        (sensitivity[side] || []).filter(v => v === 1).length + " 枚";
     }
     function redraw() { for (const side of sides) drawOne(side); }
     function updateMatchHint() {
@@ -236,6 +241,10 @@
     }
     document.getElementById("hide-low").addEventListener("change", function (event) {
       hideLow = event.target.checked;
+      redraw();
+    });
+    document.getElementById("show-sensitive").addEventListener("change", function (event) {
+      showSensitive = event.target.checked;
       redraw();
     });
     document.getElementById("reset").addEventListener("click", function () {
