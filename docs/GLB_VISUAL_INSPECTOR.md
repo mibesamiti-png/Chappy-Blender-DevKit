@@ -6,10 +6,11 @@ GLBを「推測で見たつもり」にせず、**構造JSON + Blender実レン�
 
 Blenderアドオンが生成した形状や参考3DデータをChatGPT/Codexへ渡す際、GLBのファイル名や会話文だけで形状を推測すると取り違えが起きる。
 
-この機能は次の2段階で確認する。
+この機能は3段階で確認する。
 
 1. `glb-inspect`: BlenderなしでGLB 2.0のコンテナ/JSONチャンクだけを静的解析。
-2. `glb-preview`: 信頼済みBlenderを `--background --factory-startup` で起動し、実際にGLBを読み込んで**7方向PNG + 各部品単独サムネイル + scene metadata**を生成。
+2. `glb-quick-preview`: Blenderが使えない時の任意fallback。trimesh + matplotlibで7方向画像と部品単独画像を生成。
+3. `glb-preview`: 信頼済みBlenderを `--background --factory-startup` で起動し、実際にGLBを読み込んで**7方向PNG + 各部品単独サムネイル + scene metadata**を生成。
 
 ## 1. 静的構造解析
 
@@ -39,7 +40,25 @@ python -m cbdk glb-inspect model.glb --output reports/latest/glb_structure.json
 
 壊れたnode/mesh参照やnode graphの循環は安全側に拒否する。
 
-## 2. Blender多方向プレビュー
+## 2. BlenderなしQuick Preview（fallback）
+
+Blenderを起動できない環境では、任意依存を導入すると低精度fallbackを利用できる。
+
+```bash
+pip install -e ".[glb-quick]"
+python -m cbdk glb-quick-preview model.glb \
+  --output reports/latest/glb_quick_preview
+```
+
+生成物は7方向PNG、最大32個の部品単独サムネイル、`quick_scene_metadata.json`。
+
+- GLB node transformは反映する。
+- マテリアルは読み飛ばし、形状確認用の中立グレーで描画する。
+- 外部URI参照のあるGLBはtrimeshへ渡す前に拒否する。
+- 頂点50万 / 面25万を上限として、巨大モデルを安全側に拒否する。
+- Matplotlib 3D描画はBlenderより低精度。**Blender実レンダリングの代替証拠ではなくfallback**として扱う。
+
+## 3. Blender多方向プレビュー
 
 ```bash
 python -m cbdk glb-preview model.glb \
@@ -69,11 +88,12 @@ GLB内のマテリアルが透明・発光・極端に暗い場合でも形を�
 
 GLBの形状について回答する場合は、可能なら次の優先順位を使う。
 
-1. 各部品の単独サムネイル
+1. Blenderで生成した各部品の単独サムネイル
 2. 7方向のBlender実レンダリングPNG
-3. `scene_metadata.json`
-4. `structure.json`
-5. ユーザーのスクリーンショット/説明
+3. ユーザーが直接撮ったBlenderスクリーンショット
+4. Blender `scene_metadata.json`
+5. Quick Preview画像/metadata（Blenderが使えない場合）
+6. `structure.json`
 
 **画像生成AIによる再構成画像を、GLBそのものの正確な表示と扱わない。**
 
