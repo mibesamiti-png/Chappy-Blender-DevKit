@@ -45,7 +45,8 @@
 | `REG-001` | 自作部品・機能の登録計画自動生成 | 一部実装 | 未検証 | 未登録ID・依存・ソース衝突を検査して非実行のレビュー計画を生成。コード/台帳の自動追加・承認は行わない。16件の追加回帰テストは未実測 |
 | `REG-002` | 登録計画から未完成テストのひな形を安全に生成 | 一部実装 | 未検証 | 現行カタログと登録計画の完全一致を確認し、5つのTODO失敗テストをignored領域に新規生成。19件の回帰テスト追加、実行・Blender実機は未検証 |
 | `REG-003` | 読み取り専用・メッシュ編集で未完成テストの内容を切替 | 一部実装 | 未検証 | --behavior read_only/mesh_editを明示指定。共通5項目に不変性・Undo・選択範囲・復元など3項目を追加。従来未指定JSONは互換維持。新規13テストはCI未実測 |
-| `GLB-001` | GLB静的構造解析とBlender多方向プレビュー | 一部実装 | 未検証 | GLB 2.0のJSONチャンクを外部URI/画像/BIN payloadを読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカルPython13件成功。PR #21 CIはsteps/logs生成前に失敗し実機未検証 |
+| `GLB-001` | GLB静的構造解析とBlender多方向プレビュー | 一部実装 | 未検証 | schema v2でnode親子/mesh対応/POSITION bounds/外部URI参照を記録。Blender本命は7方向PNG+最大32部品単独サムネイル+neutral clay。PR #21 CIはsteps=nullで実行前失敗し実機未検証 |
+| `GLB-002` | BlenderなしGLB Quick Preview fallback | 実装済み | Python | 任意依存trimesh+matplotlibで7方向+最大32部品画像。外部URI事前拒否・50万頂点/25万面上限。ユーザーGLB 7 meshでローカル実生成確認。Blender本命より低精度 |
 
 ## 既知の問題・制約
 
@@ -67,7 +68,7 @@
 4. `NEXT-003` **機能登録と新レシピ構築の自動化を改善** (in_progress)。完了条件: 新規許可部品で台帳・依存・CIの不一致を検出する
 5. `NEXT-004` **GitHubからBlenderへ直接インストール・更新** (deferred)。完了条件: ユーザーがUI確認の必要性を示すまで作らない
 6. `NEXT-001` **v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断** (in_progress)。完了条件: メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない
-7. `NEXT-007` **GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認** (in_progress)。完了条件: テストGLBから構造JSON・scene metadata・front/right/top/iso PNGが4.4.3/4.5.15/5.2.1で生成され、実際のユーザーGLBでもオブジェクト名と形状ビューを取り違えず確認できる
+7. `NEXT-007` **GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認** (in_progress)。完了条件: 構造JSON・scene metadata・7方向PNG・部品単独画像を3つのBlender版で生成し、Quick/Blender両Previewで実ユーザーGLBの部品構成を取り違えず確認できる
 
 ## 前回、実際に確認されたテスト
 
@@ -93,6 +94,7 @@
 - `DEC-010` テストひな形はレビュー用の未完成コードと明示して非実行・非上書き。生成先はreports/latest/scaffolds内のみ。全TODOはself.failで成功偽装を防止し、tests/や元機能・台帳へ自動登録しない
 - `DEC-011` 新機能の動作種別は開発者の明示申告とし自動推測しない。read_onlyとmesh_editの申告は静的メタデータであり実機での安全性証明ではない。既存ドラフトはunspecifiedとして共通5項目を維持し、生成ひな形はすべて失敗TODO
 - `DEC-012` GLB形状理解は構造JSONとBlender実レンダリングを根拠にする。画像生成AIによる再構成を元GLBの正確な表示として扱わず、生成画像は説明図・設計案に限定する
+- `DEC-013` Blender不能時は任意依存Quick Previewをfallbackとして使う。実GLB形状から描画するがBlenderより低精度で、外部URIは事前拒否する
 
 ## 更新・プライバシールール
 
