@@ -528,3 +528,12 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - `glb-compare` は同方向bitsetのIoUを計算し、既定0.90未満を`scene_silhouette` / `object_silhouette`エラーとして記録する。部品差分では対象部品名と方向も出す。
 - boundsが同じでも輪郭が違うケースを検出するPython回帰テストを追加。小さな穴やサブピクセル細部は32x32量子化で見逃しうる。
 - 現時点では実装保存のみ。Python/Windows/Blender CI成功はまだ確認していない。
+
+
+### v0.18 silhouette drift 実機検証成功 — 2026-11-06
+
+- PR #24 head `2735aa974539ec95fde20e2c9f1de155f6687209` でPython **347/347**を3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Windows kit、durable handoffが成功。
+- Blender 4.4.3/4.5.15/5.2.1すべてで32x32 scene/object silhouette signatureを生成。
+- reference Cubeと、同じworld boundsを持つ八面体candidateを作り、bounds許容差を緩めても`scene_silhouette`または`object_silhouette`で失敗判定することを3版すべてで確認。
+- Blender 4.5.15では`glb-regression`のreference→candidate一括経路も意図どおりexit 1となり、比較レポートを生成。
+- GLB-004を実装済み/Blender CI検証済みに更新。小穴・内部形状・32x32未満細部は次段階の課題。
