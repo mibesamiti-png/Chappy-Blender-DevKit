@@ -45,7 +45,7 @@
 | `REG-001` | 自作部品・機能の登録計画自動生成 | 一部実装 | 未検証 | 未登録ID・依存・ソース衝突を検査して非実行のレビュー計画を生成。コード/台帳の自動追加・承認は行わない。16件の追加回帰テストは未実測 |
 | `REG-002` | 登録計画から未完成テストのひな形を安全に生成 | 一部実装 | 未検証 | 現行カタログと登録計画の完全一致を確認し、5つのTODO失敗テストをignored領域に新規生成。19件の回帰テスト追加、実行・Blender実機は未検証 |
 | `REG-003` | 読み取り専用・メッシュ編集で未完成テストの内容を切替 | 一部実装 | 未検証 | --behavior read_only/mesh_editを明示指定。共通5項目に不変性・Undo・選択範囲・復元など3項目を追加。従来未指定JSONは互換維持。新規13テストはCI未実測 |
-| `GLB-001` | GLB静的構造解析とBlender多方向プレビュー | 一部実装 | 未検証 | GLB 2.0のJSONチャンクを外部URI/画像を読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカルPython単体13件成功（静的解析8件＋Blender起動ラッパー5件）、Blender CIは未確認 |
+| `GLB-001` | GLB静的構造解析とBlender多方向プレビュー | 一部実装 | 未検証 | GLB 2.0のJSONチャンクを外部URI/画像/BIN payloadを読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカルPython13件成功。PR #21 CIはsteps/logs生成前に失敗し実機未検証 |
 
 ## 既知の問題・制約
 
@@ -57,7 +57,7 @@
 | `LIM-004` | medium | open | 自作部品の採用・ライセンス/再配布確認は未完了。回避策: 開発用プレビューのみで、approved=falseを維持する |
 | `LIM-005` | low | open | 大規模メッシュは監査20万要素上限を超えると操作しない。回避策: 小さなメッシュに分割するか、必要に応じ監査上限を再設計する。安全を確認せず上限を解除しない |
 | `LIM-006` | high | open | PR #18のCIがランナー未割当(0)・実行ステップ0で終了。GitHub Actions利用枠またはサービス側制限の可能性。回避策: Issue #19にGitHub Actionsランナー未割当/steps=0を記録。プライベートリポジトリのActions利用枠・予算などを所有者が点検。PR #18にはCI重複排除を導入済み。全CI成功までmainはv0.15を維持 |
-| `LIM-007` | low | open | GLB多方向プレビューのBlender実CIは未確認。回避策: 静的structure JSONとユーザースクリーンショットを併用し、4.4.3/4.5.15/5.2.1のCI成功を確認するまでレンダリング互換性を断定しない |
+| `LIM-007` | low | open | GLB多方向プレビューCIが既存ランナー割当問題で実行前失敗。回避策: PR #21のPython/Windows/Blender全失敗ジョブでsteps=null・logs_url=nullを確認。Issue #19で追跡し、ランナーが実際に起動するまでBlender実機検証済みとしない |
 
 ## 次にやること（優先順）
 
