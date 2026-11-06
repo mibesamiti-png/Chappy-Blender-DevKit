@@ -159,7 +159,13 @@ def _declaration_scope_review(declarations: list[dict], trace: dict) -> dict:
     Count all AST self accesses rather than only the capped example list.
     Source identity + class name are necessary, not sufficient, conditions.
     """
-    scopes = {(decl["source_label"], decl["class_name"]) for decl in declarations}
+    # Overlength class identifiers are intentionally redacted by the usage
+    # visitor. Do not treat its placeholder as a real matching class name.
+    scopes = {
+        (decl["source_label"], decl["class_name"]) for decl in declarations
+        if len(decl["class_name"]) <= 128
+        and decl["class_name"] != "identifier_omitted"
+    }
     selected = [
         row for row in trace["syntactic_self_scopes"]
         if (row["source_label"], row["class_name"]) in scopes
