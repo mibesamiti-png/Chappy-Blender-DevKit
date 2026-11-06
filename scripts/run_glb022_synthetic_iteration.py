@@ -25,6 +25,11 @@ from cbdk.glb_synthetic_multi import (
     CANDIDATES as MULTI_CANDIDATES,
     build_multi_iteration_history, write_multi_iteration_history,
 )
+from cbdk.glb_synthetic_progress import (
+    CANDIDATES as PROGRESS_CANDIDATES, MIN_DELTA,
+    _decision as progress_decision, _metric as progress_metric,
+    build_synthetic_progress, write_synthetic_progress,
+)
 
 
 def _sha256(path):
@@ -32,9 +37,11 @@ def _sha256(path):
 
 
 def run(blender, output, *, protocol="basic"):
-    if protocol not in ("basic", "cross_part"):
-        raise ValueError("Only the two CBDK-owned synthetic protocols are allowed")
-    trial_ids = CANDIDATES if protocol == "basic" else MULTI_CANDIDATES
+    if protocol not in ("basic", "cross_part", "progressive"):
+        raise ValueError("Only the three CBDK-owned synthetic protocols are allowed")
+    trial_ids = (CANDIDATES if protocol == "basic" else
+                 MULTI_CANDIDATES if protocol == "cross_part" else
+                 PROGRESS_CANDIDATES)
     trusted_script = REPO / "scripts/blender_make_glb_joint_mvp_fixtures.py"
     if trusted_script.is_symlink() or not trusted_script.is_file():
         raise ValueError("Missing CBDK-owned fixture generator")
@@ -94,36 +101,45 @@ def run(blender, output, *, protocol="basic"):
             root / ("review_" + kind), timeout=180,
         )
         reports[kind] = report
-        accepted, _ = _decision(_score(_safe_rows(reports[current])),
-                                _score(_safe_rows(report)))
+        if protocol == "progressive":
+            accepted, _ = progress_decision(
+                progress_metric(reports[current]), progress_metric(report))
+        else:
+            accepted, _ = _decision(_score(_safe_rows(reports[current])),
+                                    _score(_safe_rows(report)))
         executed += 1
         if accepted:
             current = kind
         score = _score(_safe_rows(reports[current]))
         if (score["socket_sampled_affected_faces"] == 0
-                and score["other_parts_sampled_affected_faces"] == 0):
+                and score["other_parts_sampled_affected_faces"] == 0
+                and (protocol != "progressive" or
+                     progress_metric(reports[current])["sampled_max_distance"] <= MIN_DELTA)):
             break
     if (executed != len(trial_ids)
             or set(reports) != set((BASELINE, *trial_ids))
             or current != "identical"):
         raise ValueError("Fixed allowlisted synthetic protocol did not converge")
-    history = (build_synthetic_iteration_history(reports)
-               if protocol == "basic" else
-               build_multi_iteration_history(reports))
+    history = (build_synthetic_iteration_history(reports) if protocol == "basic"
+               else build_multi_iteration_history(reports) if protocol == "cross_part"
+               else build_synthetic_progress(reports))
     if (before_script_hash != _sha256(trusted_script)
             or any(_sha256(path) != sha for path, sha in glb_hashes.items())):
         raise ValueError("Source-controlled generator or generated inputs changed")
-    paths = (write_iteration_history(history, root)
-             if protocol == "basic" else
-             write_multi_iteration_history(history, root))
+    paths = (write_iteration_history(history, root) if protocol == "basic"
+             else write_multi_iteration_history(history, root) if protocol == "cross_part"
+             else write_synthetic_progress(history, root))
     if not all(p.is_file() for p in paths):
         raise ValueError("Missing local iteration evidence")
     print("CBDK_GLB022_SYNTHETIC_ITERATION_PASS")
     if protocol == "basic":
         print("Two real regenerated comparisons: unrelated edit rejected, known restoration accepted")
-    else:
+    elif protocol == "cross_part":
         print("CBDK_GLB022_MULTI_SYNTHETIC_PASS")
         print("Three fresh candidates: no improvement rejected, cross-part regression rejected, restore accepted")
+    else:
+        print("CBDK_GLB022_PROGRESS_SYNTHETIC_PASS")
+        print("Three fresh candidates: cross-part regression rejected; intermediate and restored accepted")
     print("Stopped on sampled zero; sources unchanged; real addon validation unclaimed")
     return history
 
@@ -133,7 +149,7 @@ def main(argv=None):
     parser.add_argument("--blender", required=True, help="CI-verified Blender executable")
     parser.add_argument("--output", default="reports/ci/glb022_iteration",
                         help="New synthetic CI folder under reports/ci only")
-    parser.add_argument("--protocol", choices=("basic", "cross_part"),
+    parser.add_argument("--protocol", choices=("basic", "cross_part", "progressive"),
                         default="basic", help="CBDK-owned fixed synthetic protocol")
     args = parser.parse_args(argv)
     run(args.blender, args.output, protocol=args.protocol)
