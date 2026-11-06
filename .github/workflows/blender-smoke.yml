@@ -18,10 +18,15 @@ on:
       - 'templates/modular_preview/**'
       - 'scripts/blender_generated_addon_smoke.py'
       - 'scripts/blender_modular_addon_smoke.py'
+      - 'scripts/blender_audit_scaling_smoke.py'
       - '.github/workflows/blender-smoke.yml'
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   blender-parts:
@@ -128,6 +133,25 @@ jobs:
             grep -F 'CBDK_MODULAR_ADDON_PASS ' "reports/ci/${recipe}_smoke.log"
           done
           echo 'Modular preview variants: objects, edit, combined, geometry, nudge and all PASSED.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Measure guarded audit on medium real Blender mesh
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_audit_scaling_smoke.py \
+            2>&1 | tee reports/ci/audit_scaling_smoke.log
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows = Path('reports/ci/audit_scaling_smoke.log').read_text().splitlines()
+          matches = [x.split('CBDK_AUDIT_SCALING_PASS ', 1)[1]
+                     for x in rows if 'CBDK_AUDIT_SCALING_PASS ' in x]
+          assert len(matches) == 1, matches
+          data = json.loads(matches[0])
+          assert data['postedit_audit_passed'] and data['no_mutation_on_limit']
+          Path('reports/ci/audit_scaling.json').write_text(json.dumps(data, indent=2) + '\n')
+          PY
+          echo "Real Blender guarded audit scaling and mutation-free over-limit reject PASSED." >> "$GITHUB_STEP_SUMMARY"
       - name: Upload evidence and log even when Blender fails
         if: always()
         uses: actions/upload-artifact@v4

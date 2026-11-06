@@ -79,3 +79,29 @@ The new BME-002 helper `parts/blender/edit_transform.py` is the first intentiona
 ## v0.15 strict edit auditing
 
 `BME-003` provides immutable bounded BMesh snapshots and checks expected deltas after mutating edit operations. `BME-002` nudge must not report success unless the post-edit audit passes. Do not replace Blender's native Undo with snapshots. Audit checks vertices' coordinates/selection and edge/face connectivity. Restoration is best-effort and cannot rebuild changed topology; errors must say when original geometry cannot be verified. Keep a size cap to limit CPU/memory on larger meshes. Run both adversarial Python unit tests and actual Blender version-matrix tests before merging. No third-party source code ingestion, publishing or auto-install.
+
+
+## v0.16 audit performance and resource guards
+
+Preflight the BMesh element count (limit: 200,000) BEFORE copying any coordinates. The new audit_live_vertex_translation streams live coordinates and selection data and still compares exact edge/face topology, preserving existing capture_edit_snapshot and audit_vertex_translation APIs. Compare requested movement rather than huge absolute world coordinates when computing tolerance. Refuse a size-limit operation before any edit. Validate adversarial Python tests and the real Blender 70x70 grid metric/size-limit smoke on 4.4.3/4.5.15/5.2.1. Update STATE.json and regenerate the handoff; claim verified CI only after actual successful runs. Keep user data private and GitHub direct installation deferred.
+
+
+## GitHub Actions CI cost and blocked runners
+
+Private-repository runner usage has limits and costs. Suppress duplicate PR push/test triggers, cancel superseded PR runs with workflow-scoped concurrency, and run only genuine required validation. The durable-handoff workflow should not rerun the full Python suite on PR; normal Python CI covers it, and durable-handoff still records actually passed Python tests on main. Never bypass or invent Windows/Blender evidence if runner allocation fails. Check GitHub Actions owner usage/budgets and Issue #19 before retrying large CI matrices or merging v0.16.
+
+
+
+## v0.16 guarded recovery after nonfinite edits
+
+The rollback function must be capable of restoring a mesh whose *current* vertex coordinates are NaN/Inf or otherwise unreadable; do not call the finite-coordinate capture function before restoring. Verify vertex counts/connectivity independently of coordinates, then restore the saved coordinate and selection values, and **verify the result**. Fail closed on topology corruption, silent setter failure or incomplete rollback. This is a best-effort repair and must not be presented as crash-safe. The new four regression cases pass locally (229 total Python tests); GitHub Actions remains blocked at runner allocation (Issue #19), so do not merge PR #18 or claim latest CI success.
+
+
+## v0.16 numeric audit consistency
+
+The legacy full-snapshot verifier and the streamed post-edit verifier must agree on reject conditions. Treat any nonzero requested translation with **no observable vertex movement** as a failure; do not let float32-rounding within tolerance silently pass. Reject nonnumeric, boolean, missing and nonfinite deltas with a controlled BlenderContextError. Maintain the dual-implementation regression tests, and keep locally successful tests separate from pending GitHub Actions Windows/Blender evidence (Issue #19).
+
+
+## v0.16 per-axis audit safety
+
+Audit each XYZ component independently for each vertex. A successful X displacement must not hide a lost small Y displacement. Reject any mutation on axes with zero requested offset or on unselected vertices; no tolerance there because coordinates are read back from the same BMesh value domain. For requested nonzero axes require observable movement and compare the expected displacement with the tighter of the absolute limit and 15% of delta. Maintain strict old/full-snapshot versus streamed audit parity and a rollback regression for partially written multi-axis edits. Local Python 238/238 passed on 2026-11-05; latest Windows and Blender CI are still blocked before runners start, so do not claim verification or merge PR #18.

@@ -7,7 +7,7 @@ and operator identifiers and are intended to replace one another.
 bl_info = {
     "name": __CBDK_DISPLAY_NAME__,
     "author": "Chappy Blender DevKit (private development preview)",
-    "version": (0, 15, 0),
+    "version": (0, 16, 0),
     "blender": (4, 4, 0),
     "location": "3D View > Sidebar > CBDK",
     "description": "Recipe-built mesh inspection preview; no topology editing",

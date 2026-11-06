@@ -4,10 +4,10 @@
   "repository": "mibesamiti-png/Chappy-Blender-DevKit",
   "updated_on": "2026-11-05",
   "release": {
-    "current": "0.15.0",
+    "current": "0.16.0",
     "stage": "private_development_preview",
-    "next_planned": "0.16.0",
-    "milestone": "Edit Modeでのメッシュ移動に差分監査・異常検出・復元を導入"
+    "next_planned": "0.17.0",
+    "milestone": "v0.16 ストリーミング監査とXYZ各軸独立照合を実装。微小な部分移動・未選択頂点の微小変化も検出し復元。ローカルPython238件成功。CIランナー問題によりPR #18未マージ"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -96,7 +96,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "parts/blender/edit_audit.py",
-      "note": "座標/選択/接続関係の検査、完全なトランザクションではない"
+      "note": "加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。ローカル238件成功・最新版CIは未検証"
     },
     {
       "id": "TEST-001",
@@ -133,10 +133,10 @@
     {
       "id": "PERF-001",
       "title": "巨大メッシュ向け監査・効率化",
-      "status": "not_implemented",
-      "verification": "not_tested",
+      "status": "partial",
+      "verification": "blender_ci",
       "source": "",
-      "note": "監査は現在20万要素で上限制御"
+      "note": "20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否"
     },
     {
       "id": "GUI-001",
@@ -179,13 +179,29 @@
       "title": "自作部品の採用・ライセンス/再配布確認は未完了",
       "workaround": "開発用プレビューのみで、approved=falseを維持する",
       "related_requirement": "BUILD-001"
+    },
+    {
+      "id": "LIM-005",
+      "status": "open",
+      "severity": "low",
+      "title": "大規模メッシュは監査20万要素上限を超えると操作しない",
+      "workaround": "小さなメッシュに分割するか、必要に応じ監査上限を再設計する。安全を確認せず上限を解除しない",
+      "related_requirement": "PERF-001"
+    },
+    {
+      "id": "LIM-006",
+      "status": "open",
+      "severity": "high",
+      "title": "PR #18のCIがランナー未割当(0)・実行ステップ0で終了。GitHub Actions利用枠またはサービス側制限の可能性",
+      "workaround": "Issue #19にGitHub Actionsランナー未割当/steps=0を記録。プライベートリポジトリのActions利用枠・予算などを所有者が点検。PR #18にはCI重複排除を導入済み。全CI成功までmainはv0.15を維持",
+      "related_requirement": "TEST-001"
     }
   ],
   "next_actions": [
     {
       "id": "NEXT-001",
-      "priority": 1,
-      "status": "todo",
+      "priority": 6,
+      "status": "in_progress",
       "title": "v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断",
       "acceptance": "メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない"
     },
@@ -198,17 +214,31 @@
     },
     {
       "id": "NEXT-003",
-      "priority": 3,
+      "priority": 4,
       "status": "todo",
       "title": "機能登録と新レシピ構築の自動化を改善",
       "acceptance": "新規許可部品で台帳・依存・CIの不一致を検出する"
     },
     {
       "id": "NEXT-004",
-      "priority": 4,
+      "priority": 5,
       "status": "deferred",
       "title": "GitHubからBlenderへ直接インストール・更新",
       "acceptance": "ユーザーがUI確認の必要性を示すまで作らない"
+    },
+    {
+      "id": "NEXT-005",
+      "priority": 3,
+      "status": "todo",
+      "title": "v0.17：ベンチマーク実測を比較して監査の追加最適化・Undo/Redo回帰テストを検討",
+      "acceptance": "3つのBlender版の監査結果とメモリ測定を比較し、速度/安全性の妥協点と残るGUI検証を記録"
+    },
+    {
+      "id": "NEXT-006",
+      "priority": 1,
+      "status": "in_progress",
+      "title": "PR #18のGitHub Actions実行前失敗を調査しWindowsを含む全CIを再検証",
+      "acceptance": "GitHub Issue #19: GitHub Actions usage/budgetまたはランナー供給問題を切り分け、Python/Windows/Blender3版/ZIPの全CI成功を実測してv0.16をマージ"
     }
   ],
   "decisions": [
@@ -231,6 +261,16 @@
       "id": "DEC-004",
       "decision": "GitHubから直接インストールする管理機能は当面保留",
       "note": "UI確認が必要になる段階で検討"
+    },
+    {
+      "id": "DEC-005",
+      "decision": "PR更新時の重複・陳腐化したCIを抑制し使用枠を節約",
+      "note": "PythonはPRとmain pushに限定。全CIにPR単位concurrencyを適用し、引き継ぎCIはPRで重複unittestを実行しない。品質ゲート自体は維持"
+    },
+    {
+      "id": "DEC-006",
+      "decision": "編集失敗時のロールバックは非有限座標でも可能な限り復元し、結果を実際に再検証",
+      "note": "復元前の接続関係を座標と独立に検証。元の値を書き戻してから座標・選択・接続関係を再検査し、完全に戻らなければ成功扱いしない"
     }
   ],
   "last_verified": {
@@ -284,6 +324,8 @@
     "on_every_milestone": "STATE.jsonの仕様・進捗・課題・次の一手・CI実測を更新し、PROJECT_HANDOFF.mdを再生成",
     "on_ci_failure": "検証結果を成功と書かず、原因・失敗ジョブのURLをknown_issuesまたは作業メモに記録",
     "source_of_truth": "docs/project/STATE.json",
-    "generated_handoff": "docs/PROJECT_HANDOFF.md"
+    "generated_handoff": "docs/PROJECT_HANDOFF.md",
+    "ci_usage": "GitHub Actionsの利用枠を節約するため、不要な重複PR push実行は止め、更新で古くなったPR CIはキャンセル。請求/利用枠のブロックはユーザー側のGitHub設定確認が必要",
+    "local_verification_note": "2026-11-05: PR #18のPython全238件、ローカルPython 3.13.5で成功（GitHub CIの代用ではない）。新規6件でXYZ部分移動・未選択微小変更・復元を検証。Windows/Blender最新版CIはIssue #19でランナー割当前に失敗"
   }
 }

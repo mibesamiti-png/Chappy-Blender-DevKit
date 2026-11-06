@@ -175,6 +175,37 @@ class EditTransformTests(unittest.TestCase):
             self.perform(context, module, (0, 0, 0.125))
         self.assertEqual([v.co for v in bm.verts], [(1, 2, 3), (4, 5, 6)])
 
+    def test_post_audit_restores_nonfinite_unselected_tampering(self):
+        verts = [FakeVertex((1, 2, 3)), FakeVertex((4, 5, 6), selected=False)]
+        context, bm, module, _ = setup(verts)
+        count = {'value': 0}
+        def update_once(mesh, **kwargs):
+            count['value'] += 1
+            if count['value'] == 1:
+                verts[1].co = (math.nan, math.inf, 0.0)
+        module.update_edit_mesh = update_once
+        with self.assertRaisesRegex(BlenderContextError, "restored"):
+            self.perform(context, module, (0, 0, 0.125))
+        self.assertEqual([v.co for v in bm.verts], [(1, 2, 3), (4, 5, 6)])
+        self.assertEqual(count['value'], 2)
+
+    def test_post_audit_rejects_missing_axis_and_rolls_back(self):
+        class DropYWhenMoved(FakeVertex):
+            @FakeVertex.co.setter
+            def co(self, new):
+                # Simulates Blender precision losing a requested tiny Y delta.
+                values = tuple(new)
+                if values[0] != self._co[0]:
+                    values = (values[0], self._co[1], values[2])
+                self._co = values
+
+        verts = [DropYWhenMoved((0, 0, 0)), FakeVertex((1, 2, 3), selected=False)]
+        context, bm, module, updates = setup(verts)
+        with self.assertRaisesRegex(BlenderContextError, "restored"):
+            self.perform(context, module, (0.125, 0.000001, 0.0))
+        self.assertEqual([v.co for v in bm.verts], [(0, 0, 0), (1, 2, 3)])
+        self.assertEqual(len(updates), 2)
+
     def test_post_audit_rejects_topology_rewiring(self):
         verts = [FakeVertex((0, 0, 0)), FakeVertex((1, 0, 0), selected=False)]
         context, bm, module, _ = setup(verts)

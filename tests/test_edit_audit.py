@@ -105,6 +105,37 @@ class EditAuditTests(unittest.TestCase):
         restore_edit_snapshot(bm, before)
         self.assertEqual(capture_edit_snapshot(bm), before)
 
+    def test_restore_after_nonfinite_coordinate_corruption(self):
+        bm = sample_mesh()
+        saved = capture_edit_snapshot(bm)
+        bm.verts[0].co = (math.nan, math.inf, 1.0)
+        bm.verts[2].select_set(True)
+        restore_edit_snapshot(bm, saved)
+        self.assertEqual(capture_edit_snapshot(bm), saved)
+
+    def test_restore_without_reading_broken_coordinate(self):
+        bm = sample_mesh()
+        saved = capture_edit_snapshot(bm)
+        bm.verts[0].co = object()
+        restore_edit_snapshot(bm, saved)
+        self.assertEqual(capture_edit_snapshot(bm), saved)
+
+    def test_restore_rejects_silent_setter_failure(self):
+        class NoopVert(Vert):
+            def __setattr__(self, name, value):
+                if name == "co" and getattr(self, "lock", False):
+                    return
+                object.__setattr__(self, name, value)
+
+        bm = sample_mesh()
+        vertex = bm.verts[0]
+        vertex.__class__ = NoopVert
+        saved = capture_edit_snapshot(bm)
+        vertex.co = (7, 7, 7)
+        vertex.lock = True
+        with self.assertRaisesRegex(BlenderContextError, "restoration mismatch"):
+            restore_edit_snapshot(bm, saved)
+
     def test_refuse_restore_if_topology_different(self):
         bm = sample_mesh()
         before = capture_edit_snapshot(bm)

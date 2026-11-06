@@ -55,7 +55,7 @@ class ProjectHandoffTests(unittest.TestCase):
                          render_handoff(validate_state(self.root)))
 
     def test_stale_version_fails(self):
-        self.state["release"]["current"] = "0.16.0"
+        self.state["release"]["current"] = "99.0.0"
         self.save()
         with self.assertRaisesRegex(ValueError, "differs"):
             validate_state(self.root)
@@ -87,7 +87,7 @@ class ProjectHandoffTests(unittest.TestCase):
             validate_state(self.root)
 
     def test_duplicate_task_priority_fails(self):
-        self.state["next_actions"][1]["priority"] = 1
+        self.state["next_actions"][1]["priority"] = self.state["next_actions"][0]["priority"]
         self.save()
         with self.assertRaisesRegex(ValueError, "priority"):
             validate_state(self.root)

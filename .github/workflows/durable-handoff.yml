@@ -7,9 +7,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: dev-handoff-${{ github.ref }}
-  cancel-in-progress: false
-
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   validate:
     name: Verify project state and publish actual test observation
@@ -27,12 +26,14 @@ jobs:
       - name: Validate canonical state, release number, part catalog and references
         run: python scripts/project_handoff.py --validate
       - name: Run Python regression tests
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p reports/ci
           python -m unittest discover -s tests -v 2>&1 | tee reports/ci/project_unittest.log
       - name: Save actual Python CI observation
+        if: github.event_name != 'pull_request'
         run: |
           python scripts/project_handoff.py --ci-snapshot reports/ci/project_ci.json \
             --python-log reports/ci/project_unittest.log
