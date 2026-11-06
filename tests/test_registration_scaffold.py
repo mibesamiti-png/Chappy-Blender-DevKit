@@ -129,8 +129,7 @@ class RegistrationScaffoldTests(unittest.TestCase):
 
     def test_write_only_ignored_nontracked_scaffold(self):
         saved = write_test_scaffold(self.draft, root=self.root)
-        self.assertEqual(saved.relative_to(self.root).as_posix(),
-                         "reports/latest/scaffolds/test_align_vertices_review.py")
+        # Windows hosted runners may expose the temp root through an 8.3 alias\n        # while Path.resolve() returns the long path. Compare resolved roots.\n        self.assertEqual(saved.relative_to(self.root.resolve()).as_posix(),\n                         "reports/latest/scaffolds/test_align_vertices_review.py")
         self.assertEqual(saved.read_text("utf-8"),
                          render_test_scaffold(self.draft, root=self.root))
         self.assertFalse((self.root / "tests").exists())
