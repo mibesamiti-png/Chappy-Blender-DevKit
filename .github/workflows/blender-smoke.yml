@@ -622,6 +622,11 @@ jobs:
           python scripts/run_glb022_synthetic_iteration.py \
             --blender "$BLENDER_PATH" \
             --output reports/ci/glb022_iteration
+          # GLB-022 stage 2: generate an additional candidate that fixes the
+          # socket but regresses the ball. Both negative cases must be rejected.
+          python scripts/run_glb022_synthetic_iteration.py \
+            --blender "$BLENDER_PATH" --protocol cross_part \
+            --output reports/ci/glb022_multi_iteration
           python - <<'PY'
           import json
           from pathlib import Path
@@ -642,6 +647,31 @@ jobs:
               assert (root / ("review_" + mode) / "review.json").is_file()
               assert (root / "synthetic_inputs" / mode / (mode + ".glb")).is_file()
           assert (root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
+          # Stage-2 actual generation and cross-part safety checks
+          multi_root = Path("reports/ci/glb022_multi_iteration")
+          multi = json.loads((multi_root / "synthetic_multi_iteration_history.json").read_text())
+          assert multi["status"] == "synthetic_test_only"
+          assert multi["attempts_executed"] == 3
+          assert [a["accepted"] for a in multi["attempts"]] == [False, False, True]
+          assert [a["decision"] for a in multi["attempts"]] == [
+              "socket_not_improved",
+              "unrelated_part_regression",
+              "strict_sampled_socket_improvement_no_observed_regression",
+          ]
+          assert multi["accepted_candidate_id"] == "identical"
+          assert multi["final_observations"] == {
+              "socket_sampled_affected_faces": 0,
+              "other_parts_sampled_affected_faces": 0,
+          }
+          assert multi["stop_reason"] == "sampled_zero_without_other_part_regression"
+          assert not any(multi["safety"].values())
+          multi_md = (multi_root / "synthetic_multi_iteration_history.md").read_text()
+          assert "棄却（他部品が悪化）" in multi_md
+          assert "採用（合成モデル限定）" in multi_md
+          for name in ("narrow", "narrow_placebo", "shifted", "identical"):
+              assert (multi_root / ("review_" + name) / "review.json").is_file()
+              assert (multi_root / "synthetic_inputs" / name / (name + ".glb")).is_file()
+          assert (multi_root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
           PY
           sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
