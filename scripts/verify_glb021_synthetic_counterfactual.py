@@ -11,6 +11,14 @@ import json
 from pathlib import Path
 import sys
 
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from cbdk.glb_synthetic_trial_history import (
+    build_synthetic_trial_history, write_synthetic_trial_history,
+)
+
 
 def _read(path):
     return json.loads(path.read_text(encoding="utf-8"))
@@ -86,6 +94,18 @@ def verify(root):
     with target.open("x", encoding="utf-8") as stream:
         json.dump(result, stream, indent=2, ensure_ascii=False)
         stream.write("\n")
+    history = build_synthetic_trial_history({
+        "narrow": defect,
+        "narrow_placebo": placebo,
+        "identical": baseline,
+    })
+    json_path, markdown_path = write_synthetic_trial_history(history, root)
+    assert json_path.is_file() and markdown_path.is_file()
+    assert history["comparison"]["socket_affected_faces_after_restoration"] == 0
+    assert history["comparison"]["socket_affected_faces_after_unrelated_change"] > 0
+    assert history["safety"]["real_addon_causality_proven"] is False
+    assert history["safety"]["parameter_value_recommended_to_user"] is False
+    print("CBDK_GLB021_SYNTHETIC_HISTORY_PASS")
     print("CBDK_GLB021_SYNTHETIC_COUNTERFACTUAL_PASS")
     print("Observed socket error: defect positive; restored zero; decoy still positive")
     print("No execution of user addons; no claim of actual addon cause")
