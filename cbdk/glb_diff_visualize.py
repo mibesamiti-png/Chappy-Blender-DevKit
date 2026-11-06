@@ -83,6 +83,36 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
                 raise ValueError("Invalid face count")
             if not 1 <= sum(counts.values()) <= 512:
                 raise ValueError("Invalid scene face count")
+        if (report.get("part_count_limit_per_scene") != 64 or
+                report.get("part_id_scheme") !=
+                "anonymous_sequential_by_imported_object_name" or
+                report.get("cross_file_part_identity_proven") is not False):
+            raise ValueError("Invalid anonymous part scope")
+        parts = report.get("parts")
+        if not isinstance(parts, dict) or set(parts) != {"reference", "candidate"}:
+            raise ValueError("Missing per-source part grouping")
+        for field in ("reference", "candidate"):
+            rows = parts[field]
+            if not isinstance(rows, list) or not 1 <= len(rows) <= 64:
+                raise ValueError("Invalid number of visualized parts")
+            totals = {"low": 0, "medium": 0, "high": 0}
+            for index, row in enumerate(rows, start=1):
+                if not isinstance(row, dict) or set(row) != {
+                        "part_id", "triangle_count", "low", "medium", "high"}:
+                    raise ValueError("Invalid anonymous part record")
+                if row["part_id"] != f"part_{index:03d}":
+                    raise ValueError("Part index is missing or out of order")
+                if any(type(row[key]) is not int or row[key] < 0
+                       for key in ("triangle_count", "low", "medium", "high")):
+                    raise ValueError("Invalid part surface counts")
+                if not 1 <= row["triangle_count"] <= 512 or (
+                    sum(row[key] for key in totals) != row["triangle_count"]
+                ):
+                    raise ValueError("Part face count does not match colors")
+                for color in totals:
+                    totals[color] += row[color]
+            if totals != report[field]:
+                raise ValueError("Per-part and total colors disagree")
         threshold = report.get("thresholds")
         if not isinstance(threshold, dict) or any(
             isinstance(threshold.get(k), bool)
