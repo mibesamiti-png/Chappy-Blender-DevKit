@@ -217,3 +217,9 @@ Never execute a user's source addon or GLB within the trusted CI parameter exper
 ## v0.18 GLB-013 — two-sided trusted GLB parameter probing
 
 Use ONLY the repository-owned synthetic Blender fixture. Run seven fixed GLB variants (baseline, two references, four directional probes) and compare each probe to the same reference by sorted local-origin radial distribution mean absolute difference, independent of vertex order. Require the increase/decrease evidence to be sufficiently separated and the unrelated mesh to remain unchanged for both probes, in both generated and round-tripped GLB stages. An inconclusive result is valid when differences are small or ambiguous; never auto-apply settings or infer an optimal numeric value for user models. Keep private addon sources and GLBs out of public GitHub and tests. Preserve formal release last_verified=v0.17.0 until an actual release.
+
+## v0.18 GLB-014 — bounded sampled triangle surface comparison
+
+`cbdk/glb_surface_distance.py` implements an approximate bidirectional area-weighted mean and sampled maximum of real point-to-triangle distances, independent of vertex indexing and some triangulation differences. Bound each mesh to 128 triangles, 24 deterministic Halton samples per triangle; refuse degenerate/nonfinite/oversized input. These are sample-derived diagnostics, NOT exact Hausdorff bounds, watertightness proofs, enclosed-cavity checks or exact surface equivalence. Do not mark user addons auto-approved or infer safe fixes from near-zero scores.
+
+Only repository-authored four-GLB synthetic meshes may be executed in `scripts/blender_surface_distance_smoke.py` CI. Keep untrusted addon sources and private GLBs out of CI and public repo. Preserve last_verified=v0.17.0 until a separate release. See `docs/GLB_SURFACE_DISTANCE.md`.
