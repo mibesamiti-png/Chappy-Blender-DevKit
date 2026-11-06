@@ -300,6 +300,34 @@ jobs:
           assert p['safety']['edits_code'] is False, p
           assert p['safety']['applies_parameters'] is False, p
           PY
+          # This is a synthetic fixture. The source is NEVER imported or run.
+          cat > reports/ci/synthetic_property_declarations.py <<'PY'
+          from bpy.props import FloatProperty
+
+          class CBDKFixtureProperties:
+              profile_shape: FloatProperty(name="Profile shape", default=1.0)
+              boolean_cutter: FloatProperty(name="Boolean cutter", default=1.0)
+              visible_profile: FloatProperty(name="Visible profile", default=1.0)
+              part_arrangement: FloatProperty(name="Part arrangement", default=1.0)
+          PY
+          python -m cbdk glb-map-properties \
+            reports/ci/glb_drift_repair_plan.json \
+            --source reports/ci/synthetic_property_declarations.py \
+            --output reports/latest/ci_property_mapping.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m = json.loads(Path('reports/latest/ci_property_mapping.json').read_text())
+          assert m['kind'] == 'cbdk_glb_property_mapping', m
+          assert m['static_property_declarations_found'] == 4, m
+          hits = [match for rec in m['recommendations']
+                  for match in rec['exact_name_matches']]
+          assert hits, m
+          assert all(match['match'] == 'exact_declaration_name_only' for match in hits), m
+          assert m['safety']['source_executed'] is False, m
+          assert m['safety']['applies_parameters'] is False, m
+          assert m['safety']['private_source_committed'] is False, m
+          PY
 
           if [ "$BLENDER_VERSION" = "4.5.15" ]; then
             set +e
