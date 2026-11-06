@@ -25,6 +25,7 @@ from .glb_quick_render import quick_render_glb
 from .glb_compare import write_scene_comparison
 from .glb_regression import run_glb_regression
 from .glb_surface_pipeline import run_glb_surface_review
+from .glb_diff_visualize import run_glb_diff_visualize
 from .glb_diagnose import write_diagnosis
 from .glb_repair_plan import plan_from_comparison
 from .glb_property_map import map_properties_from_file
@@ -215,6 +216,16 @@ def main(argv=None) -> int:
     glb_surface_cmd.add_argument('--blender', required=True, help='Trusted local Blender executable path')
     glb_surface_cmd.add_argument('--output', default='reports/latest/glb_surface_review.json')
     glb_surface_cmd.add_argument('--timeout', type=int, default=180)
+
+    glb_diff_cmd = sub.add_parser(
+        'glb-diff-visualize',
+        help='Export two color-coded local 3D GLBs for sampled difference review (opt-in)',
+    )
+    glb_diff_cmd.add_argument('reference', help='Reference local .glb')
+    glb_diff_cmd.add_argument('candidate', help='Candidate local .glb')
+    glb_diff_cmd.add_argument('--blender', required=True, help='Trusted local Blender executable')
+    glb_diff_cmd.add_argument('--output', default='reports/latest/glb_diff_visualization')
+    glb_diff_cmd.add_argument('--timeout', type=int, default=180)
 
     glb_diagnose_cmd = sub.add_parser('glb-diagnose', help='Turn GLB comparison differences into review-only diagnostic hypotheses')
     glb_diagnose_cmd.add_argument('comparison')
@@ -435,6 +446,19 @@ def main(argv=None) -> int:
                 'complete_surface_equivalence_proven': False,
             }, ensure_ascii=False, indent=2))
             return 0 if report['status'] == 'review_only' else 2
+        if args.command == 'glb-diff-visualize':
+            report = run_glb_diff_visualize(
+                args.blender, args.reference, args.candidate, args.output,
+                timeout=args.timeout,
+            )
+            print(json.dumps({
+                'kind': report['kind'], 'status': report['status'],
+                'outputs': [str(Path(args.output) / name) for name in report['outputs']],
+                'reference': report['reference'], 'candidate': report['candidate'],
+                'thresholds': report['thresholds'],
+                'complete_surface_equivalence_proven': False,
+            }, ensure_ascii=False, indent=2))
+            return 0
         if args.command == 'glb-diagnose':
             report = write_diagnosis(args.comparison, args.output)
             print(json.dumps(report, ensure_ascii=False, indent=2))
