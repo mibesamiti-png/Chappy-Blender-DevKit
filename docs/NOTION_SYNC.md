@@ -102,6 +102,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
 - This evidence proves only the controlled synthetic generator behavior and SHA-256 invariance. **It does not certify a real user's Blender addon parameter or advise them to set 1.70.** GLB-021 remains partial, GLB-022 not implemented, private data stay local.
 
+## GLB-021 synthetic trial history (2026-11-07)
+
+- Built `cbdk/glb_synthetic_trial_history.py` to compare exactly three allowlisted CBDK-owned synthetic GLB-020 reports: defective socket (`narrow`), unrelated-ball-placebo (`narrow_placebo`), and known restored socket (`identical`). Outputs only bounded, anonymous per-part yellow/red counts and test-only control parameters in private local `synthetic_trial_history.json` and Japanese `synthetic_trial_history.md`.
+- Unsafe names, fake proof flags, contradictory counts and existing destination files are rejected. Real user sources/addons are not run or edited; a drop in observed error faces is not a proof of complete model equivalence or an appropriate actual joint parameter value.
+- Code SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f` verified by Python run `42299997255`, Windows `42299997246`, Blender 3-version `42299997251`, Windows kit `42299997311`, handoff `42299997254`, Chromium `42299997355` — **all success**. Exact code SHA is distinct from later docs-only commits.
+- Keep GLB-021 partial, GLB-020 accepted MVP/frozen, GLB-022 not implemented, v0.18 PR #25 draft, formal v0.17.0 unchanged. Never publish private GLB/HTML, local history reports or unapproved AST property names to Notion.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
