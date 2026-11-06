@@ -34,9 +34,9 @@ class PropertyMappingError(ValueError):
     pass
 
 
-def _imported_constructors(tree: ast.Module) -> tuple[set[str], set[str], set[str]]:
+def _imported_constructors(tree: ast.Module) -> tuple[dict[str, str], set[str], set[str]]:
     """Collect only visible bpy.props call aliases from module-level imports."""
-    names, bpy_aliases, props_aliases = set(), set(), set()
+    names, bpy_aliases, props_aliases = {}, set(), set()
     for node in tree.body:
         if isinstance(node, ast.Import):
             for item in node.names:
@@ -51,7 +51,7 @@ def _imported_constructors(tree: ast.Module) -> tuple[set[str], set[str], set[st
             if node.module == "bpy.props" and node.level == 0:
                 for item in node.names:
                     if item.name in PROPERTY_CONSTRUCTORS:
-                        names.add(item.asname or item.name)
+                        names[item.asname or item.name] = item.name
             if node.module == "bpy" and node.level == 0:
                 for item in node.names:
                     if item.name == "props":
@@ -59,14 +59,13 @@ def _imported_constructors(tree: ast.Module) -> tuple[set[str], set[str], set[st
     return names, bpy_aliases, props_aliases
 
 
-def _constructor(expr: ast.AST, imports: tuple[set[str], set[str], set[str]]) -> str | None:
+def _constructor(expr: ast.AST, imports: tuple[dict[str, str], set[str], set[str]]) -> str | None:
     if not isinstance(expr, ast.Call):
         return None
     func = expr.func
     names, bpy_aliases, props_aliases = imports
     if isinstance(func, ast.Name) and func.id in names:
-        # Aliases can be renamed, so keep only a safe generic type label.
-        return "imported_bpy_property"
+        return names[func.id]
     if isinstance(func, ast.Attribute) and func.attr in PROPERTY_CONSTRUCTORS:
         base = func.value
         if isinstance(base, ast.Name) and base.id in props_aliases:
