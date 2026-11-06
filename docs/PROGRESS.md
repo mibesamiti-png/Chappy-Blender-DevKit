@@ -685,3 +685,19 @@ GLB-012を実装済/Blender CI検証、NEXT-010をdoneとしてSTATE/HANDOFFに�
 - 要件GLB-013・設計判断DEC-025・タスクNEXT-011をSTATE.json/HANDOFFで管理。
 
 **検証境界:** 最新PR headのCIを見てからGLB-013の検証状態を更新する。これは合成メッシュの頂点順不変な局所半径分布による実験であり、一般GLBの表面一致や実ユーザーアドオンの最適設定値の証明ではない。PRはドラフト、正式last_verified v0.17.0維持。
+
+### GLB-013 CI実測結果（2026-11-06）
+
+コード・仕様の検証コミット `e73f7eba0cd0bd5ceafacab53b64c397a7bd45a4` に対して、次の5ワークフローの全成功を観測した。
+
+- Python 3.11/3.12/3.13: [run 42223468580](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468580)。方向判定11件＋頂点並び順に依存しない半径分布の追加5件を含む。
+- Windows PowerShell 3.11/3.13: [run 42223468045](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468045)。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42223468513](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468513)。7種類の実GLBを出力し、参照を固定した上下プローブで増加側が改善、減少側が悪化、非対象部品は不変、GLB再読込後も方向が一致した。
+- Windows kit: [run 42223468046](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468046)。
+- GitHub handoff: [run 42223468069](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468069)。
+
+初回のBlender5.2検証では、GLBインポートによる頂点番号の変更がindex-aligned局所距離を歪めて誤判定した。そこで**局所原点からの頂点半径をソートして比較する合成モデル専用の指標**に切り替え、変更後の3版Blender CIはすべて成功。頂点順不変である一方、別形状で同じ半径分布のケースは区別できず、一般GLBの形状同一性を証明しない。
+
+Blender4.5.15の実測例（生成・再読込とも同じ値）：球半径は基準誤差0.4000002、増加0.2、減少0.6。Bevel幅は基準0.240685、増加0.1308848、減少0.2875242。いずれも非対象部品の頂点変化数は0。
+
+これを根拠にSTATE/HANDOFFのGLB-013を実装済/Blender CI確認、NEXT-011をdoneへ更新。記録変更後のコミットのCI結果とは区別する。PR #25はドラフトで正式release last_verified v0.17.0維持。実ユーザーアドオン/私有GLBの実行とアップロード、自動パラメータ修正なし。
