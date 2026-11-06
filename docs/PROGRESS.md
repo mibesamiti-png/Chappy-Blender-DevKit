@@ -905,3 +905,9 @@ Chromium CIはUbuntu24.04でPlaywrightを導入し、CBDK自作の合成2部品�
 - `review.json`はセンシティブな面の総数と匿名部品別の集計のみ保存。個別のフラグは**元の3D形状が含まれるローカルHTML側のみ**。公開GitHub/Notionには私有モデルを書き出さない。
 - `tests/test_glb_sampling_audit.py`と既存テストを更新し、異常数値・部品境界・HTMLの不正フラグを拒否する。Blender CIは集計・フラグの保守的な定義を確認し、Chromiumの合成HTML試験は紫枠表示切替による描画変化を検査。
 - **重要**：紫枠がない部分も未観測領域が残る可能性がある。これは未知部分の完全な特定でも、元アドオン設定を自動修正する機能でもない。GLB-020は一部実装のまま、正式v0.17.0とドラフトPR #25を維持する。
+
+### GLB-020 第5段階CI結果（2026-11-07）
+
+コードSHA `38057b1da49eeb61020664c4923ced2b2bad8406`： [Python 42279824321](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824321)、[Windows 42279824307](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824307)、[Blender 4.4.3/4.5.15/5.2.1 42279824378](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824378)、[Windows kit 42279824398](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824398)、[引き継ぎ 42279824427](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824427)、[Chromium GUI 42279824304](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824304) **全6系統success**。
+
+合成GLB上で追加24点の数値監査と匿名部品別統計の整合が確認できた。ヘッドレスChromiumで、人工的に感度フラグを付けた合成ビューの紫枠表示切替を実際に検証。**フラグなしを全域検証済みと主張しない**。私有大規模モデル/小穴・空洞の完全検出/真の部品同一性は未検証。GLB-020の一部実装を維持。
