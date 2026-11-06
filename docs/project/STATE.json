@@ -358,10 +358,10 @@
     {
       "id": "GLB-022",
       "title": "生成→比較→改善の反復実験",
-      "status": "not_implemented",
-      "verification": "not_tested",
-      "source": "docs/GLB_ROADMAP.md",
-      "note": "予定: CBDK自作・明示許可済み合成アドオンで設定変更、GLB再生成、比較と履歴確認を反復。私有元コードや任意アドオンを自動実行・書換しない"
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_synthetic_iteration.py",
+      "note": "CBDK自作の合成3部品モデル限定で、固定の不具合narrowから2試行（無関係なボール位置narrow_placebo→既知正常形状identical）をBlenderで毎回再生成・GLB-020比較し、試行1を不採用、試行2を採用、観測差分0で停止。許可済み生成器のみ実行し合成GLBと生成スクリプトSHA256不変、匿名集計JSON/日本語MD履歴をローカル保存。コードSHA 9f1bb66e826d6568e923eb3d21c4d28692f74d5d：Python 42302517951、Windows 42302518051、Blender3版 42302517870、Windows Kit 42302517757、Handoff 42302517807、Chromium 42302517853 全6系統success。任意アドオン実行、実ユーザーGLB、最適値自由探索、全形状一致は未実装・未保証"
     }
   ],
   "known_issues": [
@@ -607,9 +607,9 @@
     {
       "id": "NEXT-020",
       "priority": 20,
-      "status": "todo",
-      "title": "GLB-022: 許可済み合成アドオンの反復改善実験",
-      "acceptance": "明示allowlistの自作合成アドオンで設定変更→GLB再生成→比較を反復し、誤差・失敗・改善履歴を保持する"
+      "status": "in_progress",
+      "title": "GLB-022: 合成固定2候補の実生成→比較→採否→差分0停止とローカル履歴をBlender3版で成功。一般化は次工程",
+      "acceptance": "CBDK自作の合成ソケットに限定して実Blenderで参照・初期モデル・候補2種をそれぞれ新規生成しGLB-020比較。無関係なボール移動は棄却、既知の合成正常設定への復帰は採用、最大2試行または観測差分0で停止。元合成GLB/ジェネレーターのSHA256不変、ローカルJSON/Markdownへ匿名の採否履歴保存。コードSHA 9f1bb66eのPython/Windows/Blender3版/Kit/Handoff/Chromiumの6CI成功。一般的なアドオン自動修正・実データでの有効性・最適値探索は未検証"
     }
   ],
   "decisions": [
@@ -832,6 +832,11 @@
       "id": "DEC-044",
       "decision": "GLB-021の変更履歴は既存GLB-020集計とCBDKが許可した固定合成条件のみから作成し、数値の改善を実アドオンの原因/最適値と混同しない",
       "note": "ソケット口0.78→既知正常1.70の復元で観測差分0、無関係なボール移動はソケット差分が残る。JSON/日本語Markdownの履歴はローカルの合成CI出力のみ。悪意ある試験名・数値や虚偽の因果フラグを拒否。コードSHA ece5b0a6の6系統CI成功。GLB-021 partial、GLB-022未実装、GLB-020 MVP凍結を維持"
+    },
+    {
+      "id": "DEC-045",
+      "decision": "GLB-022の最初の反復はCBDK合成モデルの固定2試行に限り、実Blenderによる再生成→サンプリング比較→非改善なら不採用→改善なら採用→上限/差分0停止まで検証する",
+      "note": "候補narrow_placeboはソケット改善なしなので不採用、identicalは既知正常合成値で差分0のため採用。固定生成スクリプト以外を実行せず、元スクリプト/GLB SHA256不変・匿名履歴JSON/MDを新規ローカル保存。コードSHA 9f1bb66eの6系統CI成功。一般のアドオン実行やユーザーGLBの自動修正、正しい数値の自由探索、完全な幾何等価性は未達。GLB-022はpartial、GLB-021 partial、正式v0.17.0維持・v0.18 PR #25ドラフト"
     }
   ],
   "last_verified": {
