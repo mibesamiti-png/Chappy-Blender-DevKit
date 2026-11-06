@@ -1,6 +1,6 @@
 """Blender CI-only GLB roundtrip evidence for bounded triangle surface distance.
 
-This script constructs SEVEN CBDK-authored planar meshes. Nothing in this script
+This script constructs NINE CBDK-authored planar meshes. Nothing in this script
 opens, imports, evaluates, or runs any user-supplied addon or geometry.
 """
 from __future__ import annotations
@@ -51,6 +51,35 @@ def _mesh_fixture(variant):
             j = (i + 1) % 4
             faces.extend(((i, j, j + 4), (i, j + 4, i + 4)))
         return _outer(0.0) + inner, faces
+    if variant in ("panels_filled", "panels_narrow_hole"):
+        # Large identical panels distract an area-only exploration budget.
+        # The small center panel has the only hole. Everything is test-owned.
+        verts, faces = [], []
+
+        def add_square(x0, x1, y0, y1):
+            idx = len(verts)
+            verts.extend(((x0, y0, 0), (x1, y0, 0),
+                          (x1, y1, 0), (x0, y1, 0)))
+            faces.extend(((idx, idx + 1, idx + 2),
+                          (idx, idx + 2, idx + 3)))
+
+        add_square(-30, -10, -8, 8)
+        add_square(10, 30, -8, 8)
+        if variant == "panels_filled":
+            add_square(-1, 1, -1, 1)
+        else:
+            outer = [(-1, -1, 0), (1, -1, 0),
+                     (1, 1, 0), (-1, 1, 0)]
+            h = .22
+            inner = [(-h, -h, 0), (h, -h, 0),
+                     (h, h, 0), (-h, h, 0)]
+            idx = len(verts)
+            verts.extend(outer + inner)
+            for i in range(4):
+                j = (i + 1) % 4
+                faces.extend(((idx + i, idx + j, idx + j + 4),
+                              (idx + i, idx + j + 4, idx + i + 4)))
+        return verts, faces
     if variant in ("grid_256", "grid_512"):
         # Spatially separated 256/512-triangle grids, only authored here.
         # Never read a user's source files or arbitrary GLBs in public CI.
@@ -115,7 +144,8 @@ def main():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     surfaces = {}
     names = ("filled_main", "filled_other", "with_open_hole",
-             "with_narrow_hole", "raised", "grid_256", "grid_512")
+             "with_narrow_hole", "raised", "grid_256", "grid_512",
+             "panels_filled", "panels_narrow_hole")
     for variant in names:
         _clear()
         _create(variant)
@@ -147,6 +177,25 @@ def main():
         raise AssertionError("No new narrow-opening signal was found by refinement")
     if narrow_multires["complete_surface_coverage"] or narrow_multires["auto_approve"]:
         raise AssertionError("Refinement must never auto-certify exact geometry")
+    # An unseen small defect among four very large flat triangles:
+    # area-only exploration inspects unrelated large panels. The new feature
+    # priorities should inspect the small center panel instead.
+    panel_area_only = compare_multires_triangle_surfaces(
+        surfaces["panels_filled"], surfaces["panels_narrow_hole"],
+        feature_aware=False)
+    panel_feature_aware = compare_multires_triangle_surfaces(
+        surfaces["panels_filled"], surfaces["panels_narrow_hole"],
+        feature_aware=True)
+    if panel_area_only["refined_symmetric_sampled_max"] != 0:
+        raise AssertionError("Area-only panel fixture no longer hides tiny defect")
+    if not panel_feature_aware["refined_symmetric_sampled_max"] > .01:
+        raise AssertionError("Feature-based selection missed the center opening")
+    if not panel_feature_aware["reference_to_candidate"]["feature_exploration_face_count"] == 1:
+        raise AssertionError("Expected one geometry-feature prioritized face")
+    if not panel_feature_aware["reference_to_candidate"]["area_fallback_face_count"] == 1:
+        raise AssertionError("Must keep an independent coverage fallback")
+    if panel_feature_aware["complete_surface_coverage"] or panel_feature_aware["auto_approve"]:
+        raise AssertionError("Feature hints must never certify 3D geometry")
     raised = compare_triangle_surfaces(baseline, surfaces["raised"])
     grid = compare_triangle_surfaces(surfaces["grid_256"], surfaces["grid_256"])
     grid_large = compare_triangle_surfaces(surfaces["grid_512"], surfaces["grid_512"])
@@ -209,6 +258,9 @@ def main():
             "all_five_glbs_roundtripped": True,
             "all_six_glbs_roundtripped": True,
             "all_seven_glbs_roundtripped": True,
+            "all_nine_glbs_roundtripped": True,
+            "feature_prioritization_finds_small_panel_hole": True,
+            "area_only_comparison_misses_same_small_hole": True,
             "narrow_hole_only_detected_after_targeted_refinement": True,
             "bvh_512_face_glb_zero": True,
             "wall_clock_observations_recorded_without_speed_assertions": True,
@@ -225,6 +277,8 @@ def main():
         },
         "multires": {
             "narrow_hole": narrow_multires,
+            "large_panels_tiny_hole_area_only": panel_area_only,
+            "large_panels_tiny_hole_features": panel_feature_aware,
         },
         "timings": {
             "grid_64_same_input_bvh_vs_bruteforce": benchmark_small,
@@ -237,7 +291,7 @@ def main():
             "auto_approves": False,
         },
         "limitations": [
-            "Only seven repository-authored planar GLBs were evaluated in Blender",
+            "Only nine repository-authored planar GLBs were evaluated in Blender",
             "Open planar cutout detection is not enclosed-cavity or watertightness proof",
             "Sampled maximum is not an exact Hausdorff distance",
             "Bounded CPU comparator rejects >512 triangles; synthetic observations are not production benchmarks",
@@ -254,6 +308,8 @@ def main():
         "hole_mean": hole["symmetric_mean"],
         "narrow_hole_legacy_max": narrow_legacy["symmetric_sampled_max"],
         "narrow_hole_refined_max": narrow_multires["refined_symmetric_sampled_max"],
+        "panels_area_only_max": panel_area_only["refined_symmetric_sampled_max"],
+        "panels_feature_aware_max": panel_feature_aware["refined_symmetric_sampled_max"],
         "offset_mean": raised["symmetric_mean"],
         "bvh_grid_triangles": len(surfaces["grid_256"]),
         "benchmark_64_bvh_ms": benchmark_small["benchmarks"]["bvh"]["median_elapsed_ms"],
