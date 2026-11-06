@@ -111,3 +111,9 @@
 - `--markdown` オプションで、GLB-020で観測された部品別の誤差、ASTの宣言名一致/構文的な使用経路、未確認の因果関係を分けて、**日本語の確認リスト**として出力できる。原因・修正値・部品の正しい対応関係を自動承認しない。
 - 候補名・宣言位置を含むMarkdownはローカル`reports/latest`の非公開データ。既存ファイルの上書きや追跡対象への書込みは拒否。公開GitHubやNotionには元アドオンに由来する識別子を載せない。
 - 次はレビュー内容の品質と原因の実験的検証を段階的に評価。GLB-021は`partial`のまま、GLB-022は未実装。[GLB-021詳細](GLB021_VISUAL_PROPERTY_REVIEW.md)。
+
+### GLB-021 第4段階：固定合成ソケットの原因と反証
+
+- 合成モデルだけで直径0.78の狭窄→1.70への復帰による差分消失と、無関係なボール移動では未解消の事実をBlender3バージョンで検証。
+- テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
+- **実アドオンのプロパティが原因であるという推定は未成立**。GLB-021は一部実装、GLB-022は未実装。[検証プロトコル](GLB021_SYNTHETIC_INTERVENTION.md)。
