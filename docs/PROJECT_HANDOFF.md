@@ -63,7 +63,7 @@
 | `GLB-016` | BVH/総当たりの実時間中央値を比較し512面の合成GLBを実機測定 | 実装済 | Blender CI | 同一合成64面でBVHと総当たりのウォームアップ後3回の時間中央値を比較、512面GLBはBVH単独で測定。合成GLB6種をBlender4.4.3/4.5.15/5.2.1で生成→再読込し、距離一致/512面距離0を確認（commit 9581ab20、Blender run 42240589340成功）。64面ms: Blender4.4.3 BVH35.510505/総当たり161.156313、4.5.15 BVH19.356758/86.027068、5.2.1 BVH32.46785/149.716417。512面BVH ms: 352.050953/192.798623/321.247609。Python3版/Windows PowerShell2版/kit/handoff含む全5 CI成功。速度比はCI閾値でなくランナー依存 |
 | `GLB-017` | 粗い8点から疑わしい面と探索枠だけ48点へ細分化する多解像度表面比較 | 実装済 | Blender CI | 粗8点/面から疑わしい最大8面＋面積上位2面を48点/面まで選択精査するレビュー専用双方向距離。従来24点と粗8点で見逃した幅0.44の中央開口を精査で検出（最大距離0.0657466）。Blender4.4.3/4.5.15/5.2.1で自作合成7 GLBの書出・再読込に成功。コード+文書commit 4c7248c8のPython3版、Windows2版、Blender3版、Windows kit、handoff全CI成功。閉じた内部空洞・任意の微小穴の検出保証なし |
 | `GLB-018` | 角・開口境界・微細面・頂点密集から多解像度の精査対象を優先選択 | 実装済 | Blender CI | 特徴ヒント（外寸内の境界・鋭角・細面・頂点近傍・非多様体疑い）で追加探索2枠中1枠を選び、残りは面積上位を調べる。旧area-onlyとの比較で、大型板2枚＋小部品の幅0.44の穴が旧方式では最大距離0、新方式で0.0657466。Blender4.4.3/4.5.15/5.2.1にて自作合成9 GLBの書出/再読込実CI成功（commit 676e92f8, run 42246918883）。Python3版/Windows2版/kit/handoff含む全5ワークフロー成功。どの境界が実際の穴か・閉じた空洞・一般GLB最適化は未証明 |
-| `GLB-019` | ローカル2GLBを安全に読み込みBVH表面距離と特徴優先多解像度の比較を既存パイプラインに統合 | 一部実装 | 未検証 | 新CLI glb-surface-review: 静的GLB preflight（ローカルのみ/外部URI禁止/24MiB/頂点参照10万）、factory-startup + disable-autoexec Blender trusted runnerで共通world-space三角面を読込、固定24点BVH表面距離+特徴優先粗8精48の集計JSONを保存。512面/GLB超はskipped明記、未実測を合格にしない。既存glb-regression --surface-reviewは任意追加で、元のpassedはメタデータ専用と注記。Pythonユニット/Blender3版で既存自作合成GLB実読込テストを追加したがCI結果待ち。ユーザーデータは公開CI未投入 |
+| `GLB-019` | ローカル2GLBを安全に読み込みBVH表面距離と特徴優先多解像度の比較を既存パイプラインに統合 | 実装済 | Blender CI | ローカル2GLBを静的preflight後、factory-startup/disable-autoexecのBlender固定スクリプトでworld-space三角面を抽出し、固定BVH距離+特徴優先多解像度の集計を出すglb-surface-review CLIを実装。glb-regression --surface-review opt-inにも統合。512面超はskippedで合格扱いしない。合成GLBの開口検出/別三角分割をBlender4.4.3/4.5.15/5.2.1で実輸入して確認（実装SHA ec13972f, Blender run 42257317535成功）。Python3版 42257317519, kit 42257317475, handoff 42257317601成功。Windows PowerShell run 42257317637は記録時pending。実ユーザーGLB大規模/個別オブジェクト対応は未検証 |
 
 ## 既知の問題・制約
 
@@ -96,7 +96,7 @@
 14. `NEXT-014` **Blenderの合成64面/512面GLBで実行時間中央値と正確性を検証** (done)。完了条件: 3版Blenderで6 GLB生成/再読込、64面の同一入力BVH/総当たりの距離一致と実行時間中央値、512面BVH単独中央値を観測（Blender run 42240589340）。速度倍率をCI合否条件としない。実ユーザーGLBに対する性能は未検証
 15. `NEXT-015` **細い開口を検出する多解像度表面サンプリングを合成GLBで検証** (done)。完了条件: 実測済: Pythonの13回帰テストとBlender4.4.3/4.5.15/5.2.1自作合成7 GLB。従来24点最大距離0、粗8点0、精査48点0.0657466（run 42244257499）。同一性認定・私有モデルの実行/公開なし
 16. `NEXT-016` **特徴優先で大型板に埋もれた小さい開口を見つける合成GLB比較を検証** (done)。完了条件: Python13回帰テストとBlender4.4.3/4.5.15/5.2.1合成9 GLBの実生成・再読込成功。大型板に囲まれた小部品でarea-only最大誤差0／feature-aware 0.0657466（run 42246918883）。旧GLB-017見逃し検出と512面BVH CIは維持、実ユーザーソース実行なし
-17. `NEXT-017` **本物の2つのGLB入力から表面誤差を出力し既存glb-regressionにopt-in統合** (in_progress)。完了条件: Blender 4.4.3/4.5.15/5.2.1で自作合成GLB2組を新CLIで読み込んで表面差有無を計測。glb-regression --surface-reviewが従来の比較/診断/プランと集計surface_review.jsonを共存させる。preflight/上限/スキップ/プライバシー検証のPythonテスト成功。privateユーザーGLBをCI投入しない
+17. `NEXT-017` **本物の2つのGLB入力から表面誤差を出力し既存glb-regressionにopt-in統合** (done)。完了条件: Blender 4.4.3/4.5.15/5.2.1で自作合成GLB2組を新CLIに実読込し、中央開口は差分検出・同じ面の別分割は差分なしを確認。既存glb-regression --surface-reviewとの共存を実機(4.5.15)とモック回帰テストで確認（run 42257317535）。Pythonの12 launcher+3 regressionテスト成功。未解析/一致保証の混同なし
 
 ## 前回、実際に確認されたテスト
 
