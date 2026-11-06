@@ -6,6 +6,7 @@ from pathlib import Path
 from .glb_compare import write_scene_comparison
 from .glb_inspector import write_glb_inspection
 from .glb_diagnose import diagnose_comparison, write_diagnosis_report
+from .glb_repair_plan import build_repair_plan, write_repair_plan
 from .glb_render import render_glb_preview
 
 
@@ -48,6 +49,9 @@ def run_glb_regression(
     diagnosis_path = root / "diagnosis.json"
     diagnosis = diagnose_comparison(report)
     write_diagnosis_report(diagnosis, diagnosis_path)
+    repair_path = root / 'repair_plan.json'
+    repair_plan = build_repair_plan(diagnosis)
+    write_repair_plan(repair_plan, repair_path)
     return {
         "kind": "cbdk_glb_regression",
         "passed": report["passed"],
@@ -56,6 +60,8 @@ def run_glb_regression(
         "candidate_preview": str(cand_dir),
         "comparison": str(comparison_path),
         "diagnosis": str(diagnosis_path),
+        "repair_plan": str(repair_path),
+        "parameter_review_candidates": repair_plan["recommendation_count"],
         "summary": report["summary"],
         "diagnostic_hypotheses": diagnosis["hypothesis_count"],
     }
