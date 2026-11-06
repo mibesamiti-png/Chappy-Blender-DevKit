@@ -32,6 +32,8 @@ class GLBRegressionTests(unittest.TestCase):
             self.assertEqual(compare.call_count, 1)
             self.assertTrue(result["passed"])
             self.assertEqual(result["profile"], "shape")
+            self.assertEqual(result["parameter_review_candidates"], 0)
+            self.assertTrue((root / "out" / "repair_plan.json").is_file())
 
 
 if __name__ == "__main__":
