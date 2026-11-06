@@ -1,0 +1,32 @@
+name: CBDK offline 3D browser interaction smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  chromium-offline-viewer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium browser smoke dependency
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Create local-only synthetic viewer fixture
+        run: |
+          PYTHONPATH=. python scripts/glb_viewer_browser_fixture.py reports/ci/browser_synthetic.html
+          test -f reports/ci/browser_synthetic.html
+      - name: Exercise real browser rotation, zoom, part suggestion and filtering
+        run: |
+          node scripts/glb_viewer_browser_smoke.mjs reports/ci/browser_synthetic.html
+      # Never upload artifact. HTML contains (synthetic here) derived mesh data.
