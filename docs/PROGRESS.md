@@ -640,3 +640,12 @@ GLB-007は実装済/Blender CI確認済みとして記録。正式バージョ�
 - GitHub handoff： [run 42210546734](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546734)。
 
 この実測に基づき、GLB-009を「実装済/Blender CI確認」としてSTATE/HANDOFFへ記録した。これは**実装コミット**の証拠。後続ドキュメント更新コミットの成功と混同しない。PR #25は未マージ・ドラフトで、正式リリース`last_verified`はv0.17.0のまま。実私有アドオンでの正しいクラス・受信実体・形状効果は未検証。
+
+## v0.18 開発中 — 2026-11-06（GLB-011: モディファイア候補経路）
+
+- `cbdk/glb_geometry_flow.py`に安全側の `MODIFIER_FIELDS` を追加。Blenderプロパティ式/直線的ローカル別名から `width`, `thickness`, `segments`, `levels`, `operation`, `object` などの属性代入・複合代入への構文上の経路を `possible_modifier_setting_assignment` として報告する。
+- `tests/test_glb_modifier_flow.py`の専用15回帰テストを追加。既存メッシュ経路テストは維持。Blender3版CIの合成ソースに `modifier.width` と `modifier.thickness` の候補を追加してチェックする。
+- 元アドオンソースはAST解析のみ。実Blenderモディファイアかどうか、モデルへの効果と適正値は未検証。候補を原因確定・自動修正には使わない。
+- `GLB-011`と`DEC-023`をSTATE/HANDOFFに記録。
+
+**検証境界:** 追加コード・テスト/CI定義のGitHub保存は完了。現headのCI成功を確認するまではGLB-011を一部実装・未検証とし、正式v0.17.0の`last_verified`を変更しない。
