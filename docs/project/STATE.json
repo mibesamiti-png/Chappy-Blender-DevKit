@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Chappy Blender DevKit (CBDK)",
   "repository": "mibesamiti-png/Chappy-Blender-DevKit",
-  "updated_on": "2026-11-05",
+  "updated_on": "2026-11-06",
   "release": {
     "current": "0.16.0",
     "stage": "private_development_preview",
@@ -185,6 +185,14 @@
       "verification": "not_tested",
       "source": "cbdk/registration_scaffold.py",
       "note": "--behavior read_only/mesh_editを明示指定。共通5項目に不変性・Undo・選択範囲・復元など3項目を追加。従来未指定JSONは互換維持。新規13テストはCI未実測"
+    },
+    {
+      "id": "GLB-001",
+      "title": "GLB静的構造解析とBlender多方向プレビュー",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/glb_inspector.py",
+      "note": "GLB 2.0のJSONチャンクを外部URI/画像を読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカル静的解析8件成功、Blender CIは未確認"
     }
   ],
   "known_issues": [
@@ -235,6 +243,14 @@
       "title": "PR #18のCIがランナー未割当(0)・実行ステップ0で終了。GitHub Actions利用枠またはサービス側制限の可能性",
       "workaround": "Issue #19にGitHub Actionsランナー未割当/steps=0を記録。プライベートリポジトリのActions利用枠・予算などを所有者が点検。PR #18にはCI重複排除を導入済み。全CI成功までmainはv0.15を維持",
       "related_requirement": "TEST-001"
+    },
+    {
+      "id": "LIM-007",
+      "status": "open",
+      "severity": "low",
+      "title": "GLB多方向プレビューのBlender実CIは未確認",
+      "workaround": "静的structure JSONとユーザースクリーンショットを併用し、4.4.3/4.5.15/5.2.1のCI成功を確認するまでレンダリング互換性を断定しない",
+      "related_requirement": "GLB-001"
     }
   ],
   "next_actions": [
@@ -279,6 +295,13 @@
       "status": "in_progress",
       "title": "PR #18のGitHub Actions実行前失敗を調査しWindowsを含む全CIを再検証",
       "acceptance": "GitHub Issue #19: GitHub Actions usage/budgetまたはランナー供給問題を切り分け、Python/Windows/Blender3版/ZIPの全CI成功を実測してv0.16をマージ"
+    },
+    {
+      "id": "NEXT-007",
+      "priority": 7,
+      "status": "in_progress",
+      "title": "GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認",
+      "acceptance": "テストGLBから構造JSON・scene metadata・front/right/top/iso PNGが4.4.3/4.5.15/5.2.1で生成され、実際のユーザーGLBでもオブジェクト名と形状ビューを取り違えず確認できる"
     }
   ],
   "decisions": [
@@ -336,6 +359,11 @@
       "id": "DEC-011",
       "decision": "新機能の動作種別は開発者の明示申告とし自動推測しない",
       "note": "read_onlyとmesh_editの申告は静的メタデータであり実機での安全性証明ではない。既存ドラフトはunspecifiedとして共通5項目を維持し、生成ひな形はすべて失敗TODO"
+    },
+    {
+      "id": "DEC-012",
+      "decision": "GLB形状理解は構造JSONとBlender実レンダリングを根拠にする",
+      "note": "画像生成AIによる再構成を元GLBの正確な表示として扱わず、生成画像は説明図・設計案に限定する"
     }
   ],
   "last_verified": {
