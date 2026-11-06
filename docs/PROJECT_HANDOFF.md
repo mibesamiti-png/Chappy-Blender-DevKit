@@ -53,7 +53,7 @@
 | `GLB-006` | GLB差分から確認すべきアドオン設定候補を提示 | 実装済 | Blender CI | GLB診断から設定候補群・確認手順・最悪IoU・代表軸をレビュー専用JSONへ出力。PR #25のコードcommit d9c5c925でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・Windowsキット・引き継ぎCIが全成功。実アドオン内にその設定が存在することや完全形状一致は未検証 |
 | `GLB-007` | GLB修正候補とローカル自作アドオンのプロパティ宣言を静的照合 | 実装済 | Blender CI | 元アドオンを実行せず指定Pythonのbpy.props宣言とGLB修正候補を名前完全一致で照合。匿名ソース名/クラス/行/種類のみ出力。PR #25のコードcommit c3635075でPython3版、Windows2版、Blender3版の合成fixture、Windows kit、handoffが全成功。実アドオンでの登録と形状影響は未検証 |
 | `GLB-008` | Blenderプロパティ候補の静的参照・書き込み追跡 | 実装済 | Blender CI | AST-onlyで同名属性へのread/write/read_write/deleteの可能性を匿名ソース、関数、行番号、件数で出力。PR #25実装commit c640ad06でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1の合成fixture・kit・引き継ぎCI全成功。受信オブジェクトの実体と実際の形状への影響は未検証 |
-| `GLB-009` | プロパティ宣言と同クラスself参照を別オブジェクトの参照から区別 | 一部実装 | 未検証 | 匿名ソースIDと宣言クラス名が一致するself属性参照候補を、他クラス/別オブジェクト由来から分離して全件集計（例示上限16件とは独立）。同一受信実体とBlender登録・形状影響は未証明。新規14回帰テストと3版Blender合成CIを追加、最新headの実測確認待ち |
+| `GLB-009` | プロパティ宣言と同クラスself参照を別オブジェクトの参照から区別 | 実装済 | Blender CI | 匿名ソース/同クラスself参照と別クラス・別オブジェクト参照をAST上区別しread/write等を全件集計。PR #25の実装commit 2c000dadでPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・kit・handoff CI全成功。宣言プロパティの実体同一/登録・ジオメトリ効果は未検証 |
 
 ## 既知の問題・制約
 
