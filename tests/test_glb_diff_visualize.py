@@ -137,7 +137,7 @@ class ColoredGLBLauncherTests(unittest.TestCase):
         self.assertIn("--factory-startup", command)
         self.assertEqual(command[-3:-1],
                          [str(self.ref.resolve()), str(self.cand.resolve())])
-        self.assertEqual(command[command.index("--python") + 1].split("/")[-1],
+        self.assertEqual(Path(command[command.index("--python") + 1]).name,
                          "blender_glb_diff_visualize.py")
         report_json = (self.dest / "review.json").read_text()
         self.assertNotIn("private_ref", report_json)
