@@ -878,3 +878,8 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - `scripts/blender_glb_diff_visualize.py` が従来の着色GLB2件・集計JSONに加えて`compare_viewer.html`を作成。`cbdk/glb_diff_visualize.py`が出力存在/フラグ/容量/テンプレートを検証、CLIに閲覧パスを表示。`pyproject.toml`でテンプレートをパッケージ化。
 - テスト: PythonでJSON埋め込みとプライバシー/安全上限・HTML構造を検証。Blender3版CIの合成2部品GLBでHTML生成とJSON安全フラグ、NodeでインラインJavaScript構文を確認する追加ゲートを用意。
 - **未完了**: ブラウザ実機での回転・部品切替・ズームの操作検証、Canvas 2Dの奥行き描画の正確さ、正確なクロスGLB部品対応、未解析領域の明示、大規模な実データ検証。完成扱いではなく一部実装を継続。正式v0.17.0/ドラフトPR #25は維持。
+
+### GLB-020 第3段階 CI実測（2026-11-07）
+
+- 実装・テストSHA `b5d1d27f5e7834fa22faeefb02792091c1ac87d0`：Python [42268089086](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268089086)、Windows [42268088883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088883)、Blender 4.4.3/4.5.15/5.2.1 [42268088779](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088779)、Windowsキット [42268088823](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088823)、引き継ぎ [42268088869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088869) **全成功**。これはHTML生成とJS構文のCIであり、ブラウザ実機の操作試験ではない。
+- `compare_viewer.html`はローカルでの2画面比較用。**ブラウザ操作・表示の正確さ・任意実ユーザーGLBの検証は未実施**。`GLB-020`は引き続き一部実装、v0.18 PR #25はドラフト。
