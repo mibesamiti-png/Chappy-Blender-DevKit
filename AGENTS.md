@@ -153,3 +153,12 @@ When a user/reference GLB must be understood, do not treat an image-generation r
 `glb-preview` may launch only a user-supplied trusted Blender executable with `--background --factory-startup` and the repository-owned `scripts/blender_glb_render.py`. It must not open/save a user .blend project. A successful render proves only that this GLB imported and produced the requested evidence images in that Blender environment; it does not prove addon correctness, GUI usability, physical motion, or legal/redistribution approval.
 
 CI must use only the CBDK-authored synthetic GLB fixture. Do not upload private user models as test fixtures or artifacts.
+
+
+## v0.18 — GLB reference/candidate shape regression
+
+`glb-compare` and `glb-regression` produce diagnostic evidence, not automatic approval or permission to rewrite trusted addon code. Keep private reference/candidate GLBs and derived previews out of GitHub; CI must use only repository-authored synthetic fixtures.
+
+Shape mode compares world-space scene/object bounds and placement and may geometrically match renamed parts. Do not claim exact shape equivalence from bounds alone: different silhouettes, cavities, or internal details can share the same AABB. Strict mode additionally checks names and topology counts but still is not a physical-fit or GUI-usability proof.
+
+When a comparison fails, use its structured diagnostics to guide a reviewed code change, then rerun Python/Windows/Blender CI. Never create an autonomous accept/merge loop based only on comparison score or a green GLB regression.
