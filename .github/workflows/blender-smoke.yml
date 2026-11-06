@@ -289,7 +289,7 @@ jobs:
           fi
           echo "Trusted additive parameter GLB generation and roundtrip controls passed." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Benchmark BVH and detect narrow synthetic hole using coarse-to-fine sampling
+      - name: Benchmark BVH and verify feature-prioritized small-hole detection
         shell: bash
         run: |
           set -euo pipefail
@@ -306,7 +306,7 @@ jobs:
           report = json.loads((root / 'surface_distance_experiment.json').read_text())
           assert report['kind'] == 'cbdk_trusted_glb_surface_distance_experiment', report
           assert report['source'] == 'repository_authored_synthetic_only', report
-          assert len(report['variants']) == 7, report
+          assert len(report['variants']) == 9, report
           assert all(report['checks'].values()), report
           assert all(v is False for v in report['safety'].values()), report
           a = report['comparisons']['alternate_triangulation']
@@ -314,6 +314,16 @@ jobs:
           t = report['comparisons']['raised']
           grid = report['comparisons']['grid_256']
           narrow = report['multires']['narrow_hole']
+          panels_old = report['multires']['large_panels_tiny_hole_area_only']
+          panels_new = report['multires']['large_panels_tiny_hole_features']
+          assert panels_old['refined_symmetric_sampled_max'] == 0, panels_old
+          assert panels_new['refined_symmetric_sampled_max'] > .01, panels_new
+          assert panels_new['reference_to_candidate']['feature_exploration_face_count'] == 1
+          assert panels_new['reference_to_candidate']['area_fallback_face_count'] == 1
+          assert panels_new['geometry_feature_prioritization_enabled'] is True
+          assert panels_old['geometry_feature_prioritization_enabled'] is False
+          assert not panels_new['auto_approve'] and not panels_new['complete_surface_coverage']
+          assert all(x is False for x in panels_new['safety'].values())
           assert report['comparisons']['narrow_hole_legacy']['symmetric_sampled_max'] == 0, report
           assert narrow['coarse_symmetric_sampled_max'] == 0, narrow
           assert narrow['refined_symmetric_sampled_max'] > .005, narrow
@@ -355,7 +365,7 @@ jobs:
           for variant in report['variants']:
               assert (root / (variant + '.glb')).stat().st_size > 100
           PY
-          echo "Synthetic seven-GLB BVH/coarse-to-fine narrow-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
+          echo "Synthetic nine-GLB feature-aware small-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
