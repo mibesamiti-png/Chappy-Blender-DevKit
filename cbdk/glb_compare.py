@@ -164,6 +164,9 @@ def _silhouette_signature(value: Any, label: str) -> dict | None:
         raise SceneComparisonError(f"{label}.bits_hex is not valid hex") from exc
     if not isinstance(filled, int) or isinstance(filled, bool) or not 0 <= filled <= grid * grid:
         raise SceneComparisonError(f"{label}.filled_cells is invalid")
+    actual_filled = sum(byte.bit_count() for byte in bits)
+    if actual_filled != filled:
+        raise SceneComparisonError(f"{label}.filled_cells does not match bits")
     return {"available": True, "grid_size": grid, "bits": bits, "filled_cells": filled}
 
 
@@ -263,6 +266,8 @@ def compare_scene_metadata(
     ):
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)) or value < 0:
             raise SceneComparisonError(f"{name} must be a non-negative finite number")
+        if name == "silhouette_iou_min" and value > 1:
+            raise SceneComparisonError("silhouette_iou_min must be within 0..1")
 
     ref_scene = _bounds(reference.get("bounds"), "reference.bounds")
     cand_scene = _bounds(candidate.get("bounds"), "candidate.bounds")
