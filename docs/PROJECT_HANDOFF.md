@@ -49,7 +49,7 @@
 | `GLB-002` | BlenderなしGLB Quick Preview fallback | 実装済 | Pythonテスト | 任意依存trimesh+matplotlibで7方向PNGと最大32部品単独サムネイルを生成。外部URIを事前拒否し、50万頂点/25万面の安全上限。ユーザーGLB(7 mesh)で7方向+7部品画像をローカル生成確認。本命のBlender実レンダリングより低精度であることを明示 |
 | `GLB-003` | 参考GLBと生成GLBのworld-space形状回帰比較 | 実装済 | Blender CI | scene metadata schema 3のworld bounds、shape/strict比較、geometry fallback matching、glb-regression CLIを実装。PR #23でPython 343件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1のsynthetic GLB metadata self-comparisonが全成功。bounds同一の輪郭差はLIM-008として継続 |
 | `GLB-004` | 7方向・部品別シルエットIoU回帰比較 | 実装済 | Blender CI | scene metadata schema 4で32x32 binary silhouetteを全体7方向＋最大32部品のfront/right/top/isoへ保存。IoU比較をglb-compare/glb-regressionへ接続。PR #24でPython 347件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1が成功し、Cubeと同boundsの八面体をsilhouette差だけで失敗判定できることを実機確認 |
-| `GLB-005` | 形状診断の数値根拠集約と矛盾データ拒否 | 一部実装 | 未検証 | 部品別/全体の複数視点IoU最悪値、相対誤差、欠落部品割合を集約。比較passedと差分件数の矛盾、異常数値、重複JSONキー等を拒否。新規19回帰テストは追加済み・実測前 |
+| `GLB-005` | 形状診断の数値根拠集約と矛盾データ拒否 | 実装済 | Blender CI | 参考/候補GLBのscene・部品差分を影響視点、最悪IoU、相対誤差、体積割合、重大度別で集約し、異常JSON・矛盾カウンタを拒否。PR #25のコードcommit e971b784でPython3版/Windows2版/Blender3版の実機診断と回帰テスト成功。公開・実ユーザーGLB再現の保証なし |
 
 ## 既知の問題・制約
 
