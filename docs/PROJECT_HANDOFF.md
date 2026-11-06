@@ -57,7 +57,7 @@
 | `GLB-010` | プロパティ式からメッシュ生成APIまでの構文上の経路を追跡 | 一部実装 | 未検証 | bpy.ops.meshのプリミティブ、bmesh.opsの一部、object寸法等へselfプロパティまたは直線的ローカル別名が引数として届くAST上の経路を検出。関数内共起のみでは判定しない。分岐/ループ/関数間は未追跡、実際の形状効果は未証明。新規20回帰テスト・Blender3版合成fixtureを追加、現head CI成功確認前 |
 | `GLB-011` | プロパティ値からBoolean/Bevel/Solidify等のモディファイア設定までAST上で追跡 | 実装済 | Blender CI | 直線的selfプロパティ/別名からmodifier.width/thickness/operation/object等の代入・複合代入までAST経路を検出。PR #25 commit b1a57e57のPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1合成fixture・kit・handoff CI全成功。実際のモディファイア実体・形状効果は未検証 |
 | `GLB-012` | 信頼済み合成Blenderアドオンのパラメータ変更前後を定量測定 | 実装済 | Blender CI | CBDK製合成アドオンの球半径/Bevel幅変更を生成直後とGLB再読込後で平均/最大頂点変位と変化点数として測定し、他の部品が不変の対照実験を確認。PR #25 commit 04526f1dのPython3版/Windows2版/Blender4.4.3/4.5.15/5.2.1/kit/handoff全CI成功。任意GLB・ユーザーアドオンへ一般化できない |
-| `GLB-013` | CBDK合成GLBの設定値を上下プローブして参考形状への改善方向を判定 | 一部実装 | 未検証 | 合成fixtureの参照GLBと基準/増加/減少プローブ7条件をBlenderで生成し、生成直後と再読込後の頂点平均距離で改善方向を判定。独立対照の無関係部品の頂点移動0を要求。近似同点/非改善はinconclusive、最適値は出さず自動適用しない。新規11純Python回帰テスト+Blender3版CI未実測 |
+| `GLB-013` | CBDK合成GLBの設定値を上下プローブして参考形状への改善方向を判定 | 一部実装 | 未検証 | 合成fixtureの参照GLBと基準/増加/減少プローブ7条件をBlenderで生成し、生成直後と再読込後の頂点順不変な原点半径分布の平均距離で改善方向を判定。独立対照の無関係部品の頂点移動0を要求。近似同点/非改善はinconclusive、最適値は出さず自動適用しない。新規11純Python回帰テスト+Blender3版CI未実測 |
 
 ## 既知の問題・制約
 
