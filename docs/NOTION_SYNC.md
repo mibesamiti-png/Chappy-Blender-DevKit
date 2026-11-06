@@ -137,6 +137,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - テスト対象コードSHA `44e15f8f6664fe29e06810fd06d8d73dda70bec6`：[Python 42307811087](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811087)、[Windows 42307810687](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810687)、[Blender4.4.3/4.5.15/5.2.1 42307810797](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810797)、[Windows Kit 42307810828](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810828)、[Handoff 42307811040](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811040)、[Chromium 42307810743](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810743) **全6系統成功**。
 - GLB-022 remains `partial`/Blender CI; GLB-021 partial; GLB-020 MVP freeze and v0.17.0 current release, v0.18 PR #25 draft remain unchanged.
 
+## GLB-022 bounded generated arithmetic grid (2026-11-07)
+
+- Introduced generated synthetic numeric socket values: CBDK-owned fixed interval 0.78..1.70 split arithmetically into 4 candidates 1.01,1.24,1.47,1.70. Trusted Blender generates each new GLB for the controlled candidates and GLB-020 compares sampled distance; stagnation is rejected, 1/2/3 budget is incomplete, and 1.70 known reference reaches sampled zero.
+- Private geometry and locally generated history stay under ignored `reports/ci`. No user addon code or private GLB is executed or modified. This is a bounded fixed arithmetic grid, NOT adaptive general optimization or proof of surface equivalence.
+- テスト対象コード SHA `23e9dec5d313468a70cc3bab7a5bb57fc090a8b3`：[Python 42309145079](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145079)、[Windows 42309145003](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145003)、[Blender4.4.3/4.5.15/5.2.1 42309145076](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145076)、[Windows kit 42309145019](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145019)、[引き継ぎ 42309145005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145005)、[Chromium 42309145006](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145006) **全6系統success**。
+- Keep GLB-022 partial, GLB-021 partial, GLB-020 MVP frozen; formal v0.17.0 and draft v0.18 PR #25 unchanged. CI SHA is for source tests; docs-only commits are not a new code verification.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
