@@ -91,3 +91,54 @@ def boundary_audit(faces, part_counts):
             "weld_collapsed_triangles": sum(r["weld_collapsed_triangles"] for r in rows),
         },
     }
+
+def local_boundary_segments(faces, part_counts):
+    """Return bounded private viewer-only line segments for observed open edges.
+
+    Each segment is [1-based-anonymous-part-index, ax, ay, az, bx, by, bz].
+    This data contains reconstructed world-space geometry and MUST NOT be
+    written to review.json, public logs, GitHub or Notion for private models.
+
+    The same scene-relative coordinate-welding tolerance as boundary_audit
+    defines edge incidence. The line location is approximate and does not
+    prove a real hole (or that unmarked areas contain no hole).
+    """
+    audited = boundary_audit(faces, part_counts)
+    vertices = [vertex for face in faces for vertex in face]
+    extent = [
+        max(float(vertex[k]) for vertex in vertices) -
+        min(float(vertex[k]) for vertex in vertices)
+        for k in range(3)
+    ]
+    tolerance = max(
+        math.sqrt(sum(d * d for d in extent)) * RELATIVE_WELD_EPSILON,
+        MIN_WELD_EPSILON,
+    )
+
+    def key(vertex):
+        return tuple(round(float(vertex[k]) / tolerance) for k in range(3))
+
+    result = []
+    face_offset = 0
+    for part_index, triangle_count in enumerate(part_counts, start=1):
+        incidence = {}
+        for face in faces[face_offset:face_offset + triangle_count]:
+            a, b, c = (key(vertex) for vertex in face)
+            if len({a, b, c}) != 3:
+                continue
+            for left, right in ((a, b), (b, c), (c, a)):
+                edge = (left, right) if left < right else (right, left)
+                incidence[edge] = incidence.get(edge, 0) + 1
+        face_offset += triangle_count
+        boundaries = sorted(edge for edge, count in incidence.items()
+                            if count == 1)
+        if len(boundaries) != audited["parts"][part_index - 1]["boundary_edges"]:
+            raise ValueError("Local edge overlay diverges from aggregate audit")
+        for a, b in boundaries:
+            coords = [float(v * tolerance) for point in (a, b) for v in point]
+            if not all(math.isfinite(component) for component in coords):
+                raise ValueError("Nonfinite local boundary coordinates")
+            result.append([part_index] + coords)
+    if len(result) > 3 * 512:
+        raise ValueError("Local boundary overlay exceeds safe segment limit")
+    return result
