@@ -209,7 +209,7 @@ jobs:
             -- reports/ci/parameter_experiment \
             2>&1 | tee reports/ci/parameter_experiment.log
           grep -F 'CBDK_PARAMETER_EXPERIMENT_PASS ' reports/ci/parameter_experiment.log
-          for variant in baseline sphere_radius_changed bevel_width_changed; do
+          for variant in baseline sphere_radius_changed bevel_width_changed sphere_probe_up sphere_probe_down bevel_probe_up bevel_probe_down; do
             python -m cbdk glb-inspect "reports/ci/parameter_experiment/${variant}.glb" \
               --output "reports/ci/parameter_experiment/${variant}_structure.json"
           done
@@ -220,9 +220,21 @@ jobs:
           result = json.loads((root / 'parameter_experiment.json').read_text())
           assert result['kind'] == 'cbdk_trusted_blender_parameter_experiment', result
           assert result['source_fixture'] == 'cbdk_authored_only', result
-          assert len(result['variants']) == 3, result
+          assert len(result['variants']) == 7, result
           assert all(result['controls'].values()), result
           assert all(v is False for v in result['safety'].values()), result
+          directions = result['direction_probe_evidence']
+          assert set(directions) == {'generated', 'imported'}, result
+          for stage in ('generated', 'imported'):
+              assert set(directions[stage]) == {'sphere_radius', 'bevel_width'}, result
+              for evidence in directions[stage].values():
+                  assert evidence['decision'] == 'increase', evidence
+                  score = evidence['reference_error']
+                  assert score['increase_probe'] < score['baseline'] < score['decrease_probe'], evidence
+                  assert all(count == 0 for count in evidence['unrelated_probe_changed_vertices'].values()), evidence
+                  assert evidence['suggested_numeric_value'] is None
+                  assert evidence['auto_apply'] is False
+                  assert evidence['verified_for_arbitrary_user_addons'] is False
           evidence = result['quantified_vertex_displacement']
           sphere = 'CBDK_Param_Sphere'
           cube = 'CBDK_Param_BevelCube'
@@ -234,7 +246,9 @@ jobs:
               assert all(not row['valid_for_arbitrary_glb']
                          for variant in evidence[stage].values()
                          for row in variant.values())
-          for variant in ('baseline', 'sphere_radius_changed', 'bevel_width_changed'):
+          for variant in ('baseline', 'sphere_radius_changed', 'bevel_width_changed',
+                          'sphere_probe_up', 'sphere_probe_down',
+                          'bevel_probe_up', 'bevel_probe_down'):
               assert (root / f'{variant}.glb').stat().st_size > 100
               data = json.loads((root / f'{variant}_structure.json').read_text())
               assert data['kind'] == 'cbdk_glb_static_inspection', data
