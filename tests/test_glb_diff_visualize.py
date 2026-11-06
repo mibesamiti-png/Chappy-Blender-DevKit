@@ -15,6 +15,7 @@ from cbdk.glb_diff_colors import (
 from cbdk.glb_diff_visualize import run_glb_diff_visualize
 from cbdk.glb_diff_viewer import render_local_diff_viewer
 from cbdk.glb_part_match import suggest_spatial_part_matches
+from cbdk.glb_boundary_audit import boundary_audit
 from cbdk.glb_surface_pipeline import GLBSurfacePipelineError
 
 
@@ -49,6 +50,20 @@ def report():
         "part_id_scheme": "anonymous_sequential_by_imported_object_name",
         "cross_file_part_identity_proven": False,
         "part_match_candidates": suggest_spatial_part_matches(TRI, TRI, [1], [1]),
+        "boundary_edge_audit": {
+            "method": boundary_audit(TRI, [1])["method"],
+            "relative_weld_epsilon": 1e-7,
+            "coordinate_welding_is_approximate": True,
+            "fully_watertight_proven": False,
+            "internal_voids_verified": False,
+            "hole_locations_verified": False,
+            "reference": boundary_audit(TRI, [1])["summary"],
+            "candidate": boundary_audit(TRI, [1])["summary"],
+            "parts": {
+                "reference": boundary_audit(TRI, [1])["parts"],
+                "candidate": boundary_audit(TRI, [1])["parts"],
+            },
+        },
         "sampling_sensitivity_audit": {
             "method": "extra_halton_24_probe_sensitivity_v1",
             "initial_samples_per_triangle": 24,
@@ -194,6 +209,7 @@ class OfflineLinkedViewerTests(unittest.TestCase):
         self.assertFalse(data["auto_apply"])
         self.assertEqual(data["part_suggestions"]["reference_parts"][0]["status"], "suggested")
         self.assertFalse(data["part_suggestions"]["cross_file_part_identity_proven"])
+        self.assertEqual(data["boundary_observations"]["reference"][0]["boundary_edges"], 3)
         self.assertEqual(data["sampling_sensitivity_flags"]["reference"], [0, 0])
         self.assertFalse(data["sampling_sensitivity_is_full_coverage"])
         self.assertNotIn("name", content)
