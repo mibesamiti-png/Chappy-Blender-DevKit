@@ -56,6 +56,12 @@ Last handoff: 2026-11-07 JST.
 - Observed mismatches in boundary/nonmanifold edge state demote confident spatial part suggestions to `ambiguous`. No exact part matching, hole identity or parameter cause is proved. Private viewer HTML and colored GLBs remain local.
 - The tested synthetic closed-vs-open tetra GLB comparison and CI outcome should be recorded in Notion with the code SHA. GLB-020 stays `partial`, GLB-021/022 remain `not_implemented`.
 
+### Phase-6 exact tested SHA
+
+コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
+
+GitHub is the technical source of truth; the Notion GLB-020 task remains 'in progress' and GLB-021/022 remain unimplemented. This evidence is limited to synthetic Blender tetrahedron cases and test harnesses, not arbitrary private user data.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
