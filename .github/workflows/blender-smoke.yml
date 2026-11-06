@@ -31,6 +31,12 @@ on:
       - 'cbdk/glb_compare.py'
       - 'tests/test_glb_diagnose.py'
       - 'cbdk/glb_diagnose.py'
+      - 'cbdk/glb_repair_plan.py'
+      - 'cbdk/glb_property_map.py'
+      - 'cbdk/glb_property_usage.py'
+      - 'tests/test_glb_repair_plan.py'
+      - 'tests/test_glb_property_map.py'
+      - 'tests/test_glb_property_usage.py'
       - 'scripts/blender_glb_render.py'
       - 'scripts/blender_make_glb_fixture.py'
       - 'tests/test_glb_inspector.py'
@@ -309,6 +315,13 @@ jobs:
               boolean_cutter: FloatProperty(name="Boolean cutter", default=1.0)
               visible_profile: FloatProperty(name="Visible profile", default=1.0)
               part_arrangement: FloatProperty(name="Part arrangement", default=1.0)
+
+              def read_profile(self):
+                  return self.profile_shape + self.visible_profile
+
+              def alter_profile(self):
+                  self.profile_shape += 0.1
+                  self.visible_profile = 1.2
           PY
           python -m cbdk glb-map-properties \
             reports/ci/glb_drift_repair_plan.json \
@@ -324,6 +337,16 @@ jobs:
                   for match in rec['exact_name_matches']]
           assert hits, m
           assert all(match['match'] == 'exact_declaration_name_only' for match in hits), m
+          assert m['static_possible_attribute_references_found'] == 4, m
+          assert any(x['possible_code_references']['possible_reference_count'] > 0
+                     and x['possible_code_references']['access_counts']['read'] > 0
+                     for x in hits), m
+          assert any(x['possible_code_references']['access_counts']['read_write'] > 0
+                     for x in hits), m
+          assert any(x['possible_code_references']['access_counts']['write'] > 0
+                     for x in hits), m
+          assert all(x['possible_code_references']['runtime_effect_verified'] is False
+                     for x in hits), m
           assert m['safety']['source_executed'] is False, m
           assert m['safety']['applies_parameters'] is False, m
           assert m['safety']['private_source_committed'] is False, m
