@@ -920,3 +920,9 @@ Chromium CIはUbuntu24.04でPlaywrightを導入し、CBDK自作の合成2部品�
 - `tests/test_glb_boundary_audit.py` / `tests/test_glb_part_match.py`：閉じた四面体0本、1面欠損の四面体3本、非多様体候補、近接頂点、部品不整合入力をテスト。
 - `scripts/blender_make_glb_boundary_fixture.py` と Blender CI：自作の閉/開四面体を実GLBとして書き出し、再読込して境界数と、対応候補を曖昧と判定することを検証。Chromium CIで部品セレクターの境界数表示も確認。
 - **注意**：境界エッジ0本は閉曲面や穴無しの証明ではない。近接座標の統合は数値近似であり、意図的な開口とバグは区別できない。対応部品の同一性・内部空洞・完全体積一致も未検証。正式v0.17.0、ドラフトPR #25、GLB-020一部実装を維持。詳しくは`docs/GLB_BOUNDARY_AUDIT.md`。
+
+### GLB-020 第6段階 — 検証記録
+
+コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
+
+closed/open 四面体のBlender3版での差分と、元ソースを公開しない匿名集計が確認できた。これをもってGLB-020全体を完成とはせず、手動レビュー・モデルの細部や本当の部品同一性は未解決のまま維持する。
