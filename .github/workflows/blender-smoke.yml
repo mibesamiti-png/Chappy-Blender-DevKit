@@ -28,6 +28,9 @@ on:
       - 'tests/test_glb_regression.py'
       - 'tests/test_glb_compare.py'
       - 'cbdk/glb_regression.py'
+      - 'cbdk/glb_surface_pipeline.py'
+      - 'scripts/blender_glb_surface_review.py'
+      - 'tests/test_glb_surface_pipeline.py'
       - 'cbdk/glb_compare.py'
       - 'tests/test_glb_diagnose.py'
       - 'cbdk/glb_diagnose.py'
@@ -266,7 +269,7 @@ jobs:
               --output reports/ci/parameter_experiment/radius_regression \
               --resolution 256 --timeout 180 \
               --scene-rel-tol 0.02 --dimension-rel-tol 0.10 --center-rel-tol 0.02 \
-              --silhouette-iou-min 0.90
+              --silhouette-iou-min 0.90 --surface-review
             status=$?
             set -e
             test "$status" -eq 1
@@ -277,6 +280,10 @@ jobs:
           comparison = json.loads((root / 'comparison.json').read_text())
           diagnosis = json.loads((root / 'diagnosis.json').read_text())
           repair = json.loads((root / 'repair_plan.json').read_text())
+          surface = json.loads((root / 'surface_review.json').read_text())
+          assert surface['status'] in ('review_only', 'skipped'), surface
+          assert surface['complete_surface_equivalence_proven'] is False
+          assert surface['auto_apply'] is False
           codes = {x['code'] for x in comparison['differences']
                    if x['severity'] == 'error'}
           assert not comparison['passed'], comparison
@@ -366,6 +373,43 @@ jobs:
               assert (root / (variant + '.glb')).stat().st_size > 100
           PY
           echo "Synthetic nine-GLB feature-aware small-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run local GLB-019 integrated surface-review CLI on imported synthetic pairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_distance
+          python -m cbdk glb-surface-review \
+            "$root/filled_main.glb" "$root/with_open_hole.glb" \
+            --blender "$BLENDER_PATH" \
+            --output "$root/integrated_open_hole.json" --timeout 180
+          python -m cbdk glb-surface-review \
+            "$root/filled_main.glb" "$root/filled_other.glb" \
+            --blender "$BLENDER_PATH" \
+            --output "$root/integrated_same_surface.json" --timeout 180
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/surface_distance')
+          hole = json.loads((root / 'integrated_open_hole.json').read_text())
+          same = json.loads((root / 'integrated_same_surface.json').read_text())
+          for report in (hole, same):
+              assert report['kind'] == 'cbdk_glb_surface_review'
+              assert report['source'] == 'local_blender_import_aggregate_only'
+              assert report['status'] == 'review_only'
+              assert report['complete_surface_equivalence_proven'] is False
+              assert report['auto_apply'] is False
+              assert all(flag is False for flag in report['safety'].values())
+              assert 'fixed_surface' in report and 'adaptive_surface' in report
+              assert 'source_name' not in report
+          assert hole['surface_observation'] == 'sampled_difference_detected'
+          assert hole['fixed_surface']['symmetric_sampled_max'] > .10
+          assert hole['adaptive_surface']['refined_symmetric_sampled_max'] > 0
+          assert same['surface_observation'] == 'no_difference_observed_at_samples'
+          assert same['fixed_surface']['symmetric_sampled_max'] < 1e-6
+          assert same['adaptive_surface']['refined_symmetric_sampled_max'] < 1e-6
+          PY
+          echo "GLB-019 imported local pair pipeline, exact source privacy and review-only caps passed." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
