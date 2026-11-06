@@ -192,7 +192,7 @@
       "status": "partial",
       "verification": "not_tested",
       "source": "cbdk/glb_inspector.py",
-      "note": "GLB 2.0のJSONチャンクを外部URI/画像を読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカルPython単体13件成功（静的解析8件＋Blender起動ラッパー5件）、Blender CIは未確認"
+      "note": "GLB 2.0のJSONチャンクを外部URI/画像/BIN payloadを読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカルPython13件成功。PR #21 CIはsteps/logs生成前に失敗し実機未検証"
     }
   ],
   "known_issues": [
@@ -248,8 +248,8 @@
       "id": "LIM-007",
       "status": "open",
       "severity": "low",
-      "title": "GLB多方向プレビューのBlender実CIは未確認",
-      "workaround": "静的structure JSONとユーザースクリーンショットを併用し、4.4.3/4.5.15/5.2.1のCI成功を確認するまでレンダリング互換性を断定しない",
+      "title": "GLB多方向プレビューCIが既存ランナー割当問題で実行前失敗",
+      "workaround": "PR #21のPython/Windows/Blender全失敗ジョブでsteps=null・logs_url=nullを確認。Issue #19で追跡し、ランナーが実際に起動するまでBlender実機検証済みとしない",
       "related_requirement": "GLB-001"
     }
   ],
