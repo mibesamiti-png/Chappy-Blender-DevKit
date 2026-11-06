@@ -159,3 +159,8 @@ CIブロッカー Issue #19 のため、この追加機能のPython/Windows/Blen
 - `shape` profileは見た目/機構の近似比較向けで、トポロジー差は非致命。`strict`は名前・トポロジーも一致条件にする。
 - `glb-regression` は2つのGLBを信頼済みBlenderで別々にpreviewし、そのmetadataを比較する。ユーザー私有GLB・生成previewはreports配下のローカル証拠として扱い、公開repoへコミットしない。
 - 比較失敗は自動コード採用を意味しない。差分は次の修正候補を決める証拠であり、修正後は通常のPython/Windows/Blender CIを再実行する。
+
+
+### Silhouette regression
+
+GLB scene metadata schema 4では、Blender実メッシュを固定正射影して32x32 binary silhouette signatureを記録する。sceneは7方向、部品はfront/right/top/isoを対象とする。`glb-compare` はIoUを計算し、既定0.90未満を形状差として扱う。signatureは証拠用であり、画像生成AIの推測ではない。三角形数上限を超えたsignatureは`available=false`として明示し、成功扱いにすり替えない。
