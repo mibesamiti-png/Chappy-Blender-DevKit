@@ -820,3 +820,13 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 既存の7 GLB検証、GLB-017の狭穴検出、256/512面BVHの精密距離・ウォールクロック測定、非公開データを実行/公開しないチェックも成功。GLB-018を`implemented/blender_ci`、NEXT-016を`done`としてSTATE/HANDOFFに反映した。
 
 **結果の解釈**：これは特定の自作合成モデル上での改善証拠。開放辺が本物の穴かどうか、粗いサンプルの未調査箇所に欠陥がないこと、すべての小部品/内部空洞が見つかることを意味しない。計算優先順位のヒューリスティックであり完全な表面一致は未証明。上記は実装コミットのCIであり、後続の記録更新コミットの再CIとは区別する。v0.18はドラフトPR #25、正式v0.17.0の`last_verified`は保持。
+
+## v0.18 開発中 — GLB-019（実2GLB表面比較への統合）
+
+- `cbdk/glb_surface_pipeline.py`新規。ローカルGLB2個の静的preflight、外部URI・大型入力拒否、factory-startup/disable-autoexecで固定Blenderスクリプト実行。結果JSONのschema/kind/status/privacy flags/最大サイズを検証し、不正な結果を採用しない。
+- `scripts/blender_glb_surface_review.py`新規。各GLBを別の初期化シーンでインポートし、全メッシュのworld-space三角形を比較。既存GLB-014の固定24点BVH距離＋GLB-017/018の特徴優先多解像度をまとめて計算し、集計のみ出力。512面を超えた場合は`skipped`、一致や合格とは呼ばない。
+- CLI `glb-surface-review`追加。既存`glb-regression`には`--surface-review`（明示任意指定）を追加。従来の`comparison.json`/`diagnosis.json`/`repair_plan.json`とは別に`surface_review.json`を出力し、`passed_is_metadata_only`を返す。
+- `tests/test_glb_surface_pipeline.py`に新規12件と`tests/test_glb_regression.py`に新規3件の回帰テスト追加。Blender 3版CIで自作合成GLBを読み込む新CLI・旧regression opt-inの統合試験を追加。
+- 正本STATE.json/PROJECT_HANDOFF.mdにGLB-019、DEC-031、NEXT-017を登録。利用手順と制限は`docs/GLB_SURFACE_PIPELINE.md`へ保存。
+
+**未検証境界:** GitHub CIの本head結果を観測するまでGLB-019を部分実装/未検証とする。512面超の実GLB、個別オブジェクト名対応、未知GLBのBlender輸入リスクゼロ化、内部空洞などは未対応。ユーザーの非公開GLBを公開GitHub/CIに含めない。v0.18 PR #25はドラフト・正式last_verified v0.17.0を保持。
