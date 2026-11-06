@@ -406,3 +406,11 @@ CBDK自作ボール/軸/ソケットの3部品だけをBlenderで毎回新規生
 コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
 
 出力はローカルの匿名JSON・日本語Markdownのみで、合成モデル以外のアドオンやGLBは実行/変更しない。GLB-022 `partial`を維持し、実アドオンのパラメータ自由探索・因果や全形状一致は未保証。[詳細](GLB022_MULTI_CANDIDATE.md)。
+
+## GLB-022 第3段階：合成中間状態とサンプリング距離（2026-11-07）
+
+GLB-020の全体双方向最大サンプル距離を再利用し、CBDK自作合成ソケットを0.78→1.24→1.70の固定値で新規GLB生成し、**中間状態を未修復のまま部分改善として採用**できるようにした。ボール位置ずれによる他部品悪化は必ず棄却し、元の合成正常形状に到達した時点で観測差分0・自動停止。
+
+テスト対象コードSHA `44e15f8f6664fe29e06810fd06d8d73dda70bec6`：[Python 42307811087](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811087)、[Windows 42307810687](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810687)、[Blender4.4.3/4.5.15/5.2.1 42307810797](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810797)、[Windows Kit 42307810828](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810828)、[Handoff 42307811040](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811040)、[Chromium 42307810743](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810743) **全6系統成功**。
+
+**注意**：連続的な自由探索ではなくCBDK固定試験。距離はモデル全体のサンプル最大値で、厳密なHausdorff距離でもソケットだけの距離でもなく、実ユーザーアドオンの最適値は確定できない。GLB-022 partial、v0.18ドラフトPR #25維持。[検証仕様](GLB022_PROGRESSIVE_SYNTHETIC.md)。
