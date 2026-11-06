@@ -9,6 +9,13 @@ description = "Static Blender addon inventory, API auditing and review-only depe
 requires-python = ">=3.11,<3.14"
 license = { text = "Proprietary / license to be selected by repository owner" }
 
+[project.optional-dependencies]
+glb-quick = [
+  "numpy>=2,<3",
+  "trimesh>=4.8,<5",
+  "matplotlib>=3.9,<4",
+]
+
 [project.scripts]
 cbdk = "cbdk.__main__:main"
 
