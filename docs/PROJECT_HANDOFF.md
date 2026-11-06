@@ -12,10 +12,10 @@
 
 ## 最新の開発状況
 
-- 現在のバージョン: `0.16.0`
-- 開発段階: public_repository_development_preview
-- 最新の節目: リポジトリ公開化でGitHub Actionsのランナー未割当問題が解消。PR #21のPython 3版・Windows 2版・Blender 3版が全成功し、GLB 7方向＋部品単独レンダリングも実機CI成功。PR #18/#20も再検証中
-- 次の予定リリース: `0.17.0`
+- 現在のバージョン: `0.17.0`
+- 開発段階: public_repository_release_candidate
+- 最新の節目: PR #18（v0.16監査）、#20（Undo/Redo・登録ワークフロー）、#21（GLB Visual Inspector）を順番にmainへ統合。v0.17.0正式化ブランチで最終CI待ち
+- 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
 - 部品の正式採用と再配布ライセンス確認は未完了。個人用プレビューのみ。
@@ -62,13 +62,14 @@
 
 ## 次にやること（優先順）
 
-1. `NEXT-006` **PR #18の公開リポジトリCI再検証とv0.16統合判断** (in_progress)。完了条件: 公開化でランナー問題は解消済み。PR #18のPython/Windows/Blender/パッケージ再実行を完了し、結果を確認して安全ならv0.16統合へ進む
+1. `NEXT-006` **PR #18の公開リポジトリCI再検証とv0.16統合** (done)。完了条件: 公開化後にPython/Windows/Blender/パッケージ全CI成功を確認し、PR #18をmainへ統合済み
 2. `NEXT-002` **Blender Undo・Redoの実機検証を拡充** (in_progress)。完了条件: 自動化可能なUndo/Redoの機械的チェックと、GUI操作未検証部分を切り分けて記録する
 3. `NEXT-005` **v0.17：ベンチマーク実測を比較して監査の追加最適化・Undo/Redo回帰テストを検討** (todo)。完了条件: 3つのBlender版の監査結果とメモリ測定を比較し、速度/安全性の妥協点と残るGUI検証を記録
 4. `NEXT-003` **機能登録と新レシピ構築の自動化を改善** (in_progress)。完了条件: 新規許可部品で台帳・依存・CIの不一致を検出する
 5. `NEXT-004` **GitHubからBlenderへ直接インストール・更新** (deferred)。完了条件: ユーザーがUI確認の必要性を示すまで作らない
-6. `NEXT-001` **v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断** (in_progress)。完了条件: メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない
+6. `NEXT-001` **v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断** (done)。完了条件: メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない
 7. `NEXT-007` **GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認** (in_progress)。完了条件: 合成fixtureの3バージョンBlender CIは完了。実ユーザーGLBでも必要に応じBlender Previewを生成し、Quick Previewとの部品対応と形状を照合する
+8. `NEXT-008` **参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ** (todo)。完了条件: 参照GLB/画像を入力として生成アドオンをBlender CIで実行し、出力GLBの構造・7方向画像・部品単独画像を期待形状と比較して失敗理由を機械可読に記録する
 
 ## 前回、実際に確認されたテスト
 
@@ -96,6 +97,7 @@
 - `DEC-012` GLB形状理解は構造JSONとBlender実レンダリングを根拠にする。画像生成AIによる再構成を元GLBの正確な表示として扱わず、生成画像は説明図・設計案に限定する
 - `DEC-013` Blender不能時は任意依存Quick Previewをfallbackとして使う。trimesh+matplotlib画像は実GLB形状から生成するが描画精度はBlenderより低い。外部URIを拒否し、Blender実レンダリングが利用可能ならそちらを優先する
 - `DEC-014` 公開リポジトリではGitHub Actionsを実機デバッグ基盤として積極利用する。2026-11-06のpublic化でprivate時のランナー未割当が解消。追跡済み内容は公開情報になるため、ユーザーGLB・私有元アドオン・生成private report・秘密情報は今後もコミットしない
+- `DEC-015` 積み上げPRは下位からmainへ順次統合し、正式バージョンは専用release PRのCIで確定する。v0.17では#18→#20→#21を通常mergeで履歴保持。release/v0.17.0でpyprojectと状態台帳を揃え、成功CI観測後にlast_verifiedを更新する
 
 ## 更新・プライバシールール
 
