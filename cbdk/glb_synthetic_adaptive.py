@@ -23,6 +23,7 @@ SAFETY = {
     "source_modified": False,
     "auto_applies_user_property": False,
     "recommends_real_joint_diameter": False,
+    "real_addon_causality_proven": False,
     "exact_hausdorff_proven": False,
     "complete_geometry_equivalence_proven": False,
     "true_part_identity_proven": False,
