@@ -209,6 +209,13 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
     # establish that a receiver points to that Blender property.
     from .glb_property_usage import trace_property_references
     traced = trace_property_references(sources, set(indexed))
+    # Only declarations in explicitly selected source files are eligible for
+    # syntactic geometry paths. This is not execution, registration or causality.
+    from .glb_geometry_flow import trace_geometry_paths
+    by_scope: dict[tuple[str, str], set[str]] = {}
+    for prop in declarations:
+        by_scope.setdefault((prop["source_label"], prop["class_name"]), set()).add(prop["property"])
+    geometry_paths = trace_geometry_paths(sources, by_scope)
     mapped = []
     for rec in recommendations:
         found, absent = [], []
@@ -222,6 +229,7 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
                     "possible_code_references": traced[candidate],
                     "same_class_reference_review": _declaration_scope_review(
                         hit, traced[candidate]),
+                    "possible_geometry_dataflow": geometry_paths[candidate],
                     "requires_human_review": True,
                 })
             else:
@@ -242,6 +250,8 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
         "static_property_declarations_found": len(declarations),
         "static_possible_attribute_references_found": sum(
             evidence["possible_reference_count"] for evidence in traced.values()),
+        "static_possible_geometry_paths_found": sum(
+            evidence["possible_path_count"] for evidence in geometry_paths.values()),
         "recommendation_count": len(mapped),
         "recommendations": mapped,
         "unmapped_difference_codes": plan.get("unmapped_difference_codes", []),
@@ -252,6 +262,8 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
             "No source snippets, default values or absolute paths are included",
             "Attribute references are text matches: receiver binding and geometry effect are unverified",
             "A syntactic same-class self reference is a review hint, never proof of runtime binding",
+            "Syntactic straight-line argument flow to an allowed geometry API is not proof of a geometric effect",
+            "Branches, loops, nested functions and interprocedural parameter flow are not traced",
         ],
         "safety": {
             "source_executed": False, "source_modified": False,
