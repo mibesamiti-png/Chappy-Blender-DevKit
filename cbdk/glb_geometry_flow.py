@@ -27,6 +27,15 @@ BMESH_OPERATIONS = frozenset({
     "bisect_plane", "delete", "translate", "scale", "rotate",
 })
 TRANSFORM_FIELDS = frozenset({"dimensions", "scale", "location"})
+# These are common modifier attributes but any Python object can define them.
+# Report only a candidate assignment to such an attribute, never an
+# authenticated Blender modifier or a proven effect. This allows reviewers to
+# inspect bevel/solidify/boolean code without executing private addons.
+MODIFIER_FIELDS = frozenset({
+    "width", "segments", "profile", "thickness", "offset", "levels",
+    "render_levels", "operation", "solver", "object", "use_self",
+    "use_even_offset", "use_clamp_overlap",
+})
 
 
 def _chain(expr: ast.AST) -> tuple[str, ...]:
@@ -152,10 +161,16 @@ def _trace_method(cls: str, node: ast.FunctionDef | ast.AsyncFunctionDef,
             targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
             deps = _dependencies(expression, declared, locals_)
             for target in targets:
-                if isinstance(target, ast.Attribute) and target.attr in TRANSFORM_FIELDS:
-                    for prop, mode in sorted(deps.items()):
-                        add(prop, "object_transform_assignment",
-                            "object." + target.attr, statement.lineno, mode)
+                if not isinstance(target, ast.Attribute):
+                    continue
+                if target.attr in TRANSFORM_FIELDS:
+                    category, api = "object_transform_assignment", "object." + target.attr
+                elif target.attr in MODIFIER_FIELDS:
+                    category, api = "possible_modifier_setting_assignment", "modifier." + target.attr
+                else:
+                    continue
+                for prop, mode in sorted(deps.items()):
+                    add(prop, category, api, statement.lineno, mode)
 
             # Invalidate old aliases on reassignment; only simple local names
             # are tracked, never attributes, indexing, destructuring or scopes.
