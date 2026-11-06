@@ -192,7 +192,7 @@
       "status": "partial",
       "verification": "not_tested",
       "source": "cbdk/glb_inspector.py",
-      "note": "GLB 2.0のJSONチャンクを外部URI/画像を読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカル静的解析8件成功、Blender CIは未確認"
+      "note": "GLB 2.0のJSONチャンクを外部URI/画像を読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカルPython単体13件成功（静的解析8件＋Blender起動ラッパー5件）、Blender CIは未確認"
     }
   ],
   "known_issues": [
