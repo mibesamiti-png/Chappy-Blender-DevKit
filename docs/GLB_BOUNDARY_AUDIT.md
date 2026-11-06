@@ -35,3 +35,9 @@ Python単体テストでは、4面の**閉じた四面体は境界エッジ0本*
 Blender 4.4.3/4.5.15/5.2.1のCIではCBDK自作の四面体を実GLBとして書き出してから再読込し、参照側0本/生成側3本・対応候補を曖昧と判定できることを検証する。Chromium CIでは部品セレクター内の境界エッジ数表示をチェックする。**CIの実際の結果と実行SHAは成功を確認した後で記録する。**
 
 次の改善候補は、ローカルのみに残る線分座標を使った**観測境界の位置表示**、複雑な隙間の誤検出対策、開いたメッシュの意図的な構造と実際の設計ミスの区別。
+
+## 第6段階のCI実測（2026-11-07）
+
+コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
+
+Blender3版の全ジョブで新しい合成四面体（閉じた状態／1面欠損）の実GLB取り込みと0対3本の境界差分・部品対応候補の降格を確認。これは合成ケースに限定され、任意の閉メッシュや内壁の検証ではない。後続のドキュメント更新コミットは別SHAで、同じCI結果を継承したと断定しない。
