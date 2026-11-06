@@ -331,3 +331,9 @@ Python側に12件のpreflight/安全ランナー/報告/スキップテストと
 JSONは匿名部品別・全体の**件数のみ**、元頂点/名前/元GLBパスは出さない。ローカルの比較HTMLに部品別境界数を表示し、境界の有無・非多様体候補が異なる部品対応候補はレビュー対象に格下げする（`topology_review_required=true`）。自動コード修正、元GLB上書き、対応確定は行わない。
 
 合成GLBの閉四面体（4面）と1面取り除いた四面体（3面）を各Blender CIで実読込し、境界数0と3、部品候補は`ambiguous`になることを検証。詳細は`docs/GLB_BOUNDARY_AUDIT.md`。GLB-020は一部実装、GLB-021/022は未実装。
+
+### GLB-020 第6段階・実測CI
+
+コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
+
+今回の境界エッジ数は数値的近似による観測のみで、穴や内部形状の完全検出の意味ではない。対応候補を曖昧に降格しても因果関係の特定や補修は実行しない。
