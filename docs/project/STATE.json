@@ -5,9 +5,9 @@
   "updated_on": "2026-11-06",
   "release": {
     "current": "0.17.0",
-    "stage": "public_repository_release_candidate",
+    "stage": "public_repository_verified",
     "next_planned": "0.18.0",
-    "milestone": "PR #18（v0.16監査）、#20（Undo/Redo・登録ワークフロー）、#21（GLB Visual Inspector）を順番にmainへ統合。v0.17.0正式化ブランチで最終CI待ち"
+    "milestone": "v0.17.0 release PR #22でPython 334件×3版、Windows PowerShell 2版、Blender 4.4.3/4.5.15/5.2.1、Windowsキット、引き継ぎCIが全成功。GLB 7方向＋部品単独レンダリングも3版成功"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -397,26 +397,26 @@
     }
   ],
   "last_verified": {
-    "release": "0.15.0",
-    "observed_on": "2026-11-05",
-    "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/16",
-    "checked_head_sha": "cf02f66ff3ef83901cc80084862d1ec1f48ee0bb",
+    "release": "0.17.0",
+    "observed_on": "2026-11-06",
+    "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/22",
+    "checked_head_sha": "804956cf56eafce1c34d1fe1d80d95e54a95fd4c",
     "result": "success",
     "python": {
-      "count": 196,
+      "count": 334,
       "versions": [
         "3.11",
         "3.12",
         "3.13"
       ],
-      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366371"
+      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42183135653"
     },
     "windows": {
       "versions": [
         "3.11",
         "3.13"
       ],
-      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366384"
+      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42183135667"
     },
     "blender": {
       "versions": [
@@ -426,12 +426,12 @@
       ],
       "part_count": 7,
       "recipe_count": 6,
-      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366369"
+      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42183135712"
     },
     "package": {
-      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366315"
+      "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42183135650"
     },
-    "limitations": "CIは環境別・変更コミット別の検証記録。以後の変更やGUIの操作感まで保証しない。"
+    "limitations": "ヘッドレスCIはGUI Ctrl+Z/操作感を保証しない。GLB fixtureの実レンダリングは検証済みだが、個別のユーザーGLBは必要時に別途Blender Previewで確認する。"
   },
   "security": {
     "private_source_paths": [
@@ -449,8 +449,8 @@
     "source_of_truth": "docs/project/STATE.json",
     "generated_handoff": "docs/PROJECT_HANDOFF.md",
     "ci_usage": "2026-11-06にリポジトリをpublic化し、private時のrunner未割当/steps=0問題を解消。PR単位concurrencyと重複抑制は維持し、公開リポジトリでも不要なCI実行を増やさない",
-    "local_verification_note": "2026-11-06: PR #21 head b2579a4c0149657089c5e6109bed263a5d619dde でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。GLB 7方向＋部品単独レンダリングも3版成功。mainのlast_verifiedはv0.15のまま",
-    "v017_pending": "2026-11-06: PR #18/#20/#21は順番にmainへ統合済み。release/v0.17.0で最終CIとlast_verified更新を行う。GUI Ctrl+Zは引き続き未検証",
+    "local_verification_note": "2026-11-06: release/v0.17.0 PR #22 head 804956cf56eafce1c34d1fe1d80d95e54a95fd4c でPython 334件を3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windowsキット、durable handoffが全成功。GLB 7方向＋部品単独fixtureも3版成功",
+    "v017_pending": "2026-11-06: v0.17.0 release gateは全CI成功。last_verifiedを0.17.0へ更新。GUI Ctrl+Zは引き続き未検証。release PR #22の最終整合CI後にmainへマージする",
     "recipe_matrix_pending": "2026-11-06: PR #21のPython 3版とBlender 3版でrecipe matrixを含む全体検証成功。正式統合は下位PR #18/#20の順序を維持して判断",
     "registration_draft": "2026-11-06: REG-001の回帰テストはPR #21のPython 3.11/3.12/3.13で成功。自動承認・自動登録は引き続き行わない",
     "registration_scaffold": "2026-11-06: REG-002回帰テストはPR #21のPython/Windows CIで成功。Windows hosted runnerの8.3短縮パス差を修正",
