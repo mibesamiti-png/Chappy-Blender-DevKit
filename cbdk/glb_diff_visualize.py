@@ -120,7 +120,9 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
                 "anonymous_spatial_centroid_extent_triangle_heuristic_v1" or
                 matches.get("cross_file_part_identity_proven") is not False or
                 matches.get("auto_apply") is not False or
-                matches.get("shared_coordinate_frame_required") is not True):
+                matches.get("shared_coordinate_frame_required") is not True or
+                matches.get("topology_guard") !=
+                "observed_boundary_nonmanifold_disagreement_demotes_suggestion"):
             raise ValueError("Invalid conservative spatial part matching")
         match_rows = matches.get("reference_parts")
         if not isinstance(match_rows, list) or len(match_rows) != len(parts["reference"]):
@@ -140,7 +142,11 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
             if isinstance(score, bool) or not isinstance(score, (float, int)) or not (
                     math.isfinite(score) and score >= 0):
                 raise ValueError("Invalid part candidate score")
+            if type(row.get("topology_review_required")) is not bool:
+                raise ValueError("Missing conservative topology review flag")
             if row["status"] == "suggested":
+                if row["topology_review_required"]:
+                    raise ValueError("Cannot suggest topology-incompatible pairing")
                 if len(row["candidate_part_ids"]) != 1:
                     raise ValueError("Suggested match lacks unique candidate")
                 sid = row["candidate_part_ids"][0]
@@ -154,6 +160,73 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
                 unpaired != [p["part_id"] for p in parts["candidate"]
                              if p["part_id"] not in suggested]):
             raise ValueError("Unpaired candidate IDs do not match suggestions")
+        edge_audit = report.get("boundary_edge_audit")
+        if (not isinstance(edge_audit, dict) or
+                edge_audit.get("method") !=
+                "world_space_quantized_triangle_edge_incidence_v1" or
+                edge_audit.get("relative_weld_epsilon") != 1e-7 or
+                edge_audit.get("coordinate_welding_is_approximate") is not True or
+                edge_audit.get("fully_watertight_proven") is not False or
+                edge_audit.get("internal_voids_verified") is not False or
+                edge_audit.get("hole_locations_verified") is not False):
+            raise ValueError("Missing conservative boundary edge audit")
+        edge_parts = edge_audit.get("parts")
+        if (not isinstance(edge_parts, dict) or
+                set(edge_parts) != {"reference", "candidate"}):
+            raise ValueError("Missing per-source edge observations")
+        for side in ("reference", "candidate"):
+            records = edge_parts[side]
+            stats = edge_audit.get(side)
+            if (not isinstance(records, list) or
+                    len(records) != len(parts[side]) or
+                    not isinstance(stats, dict) or
+                    set(stats) != {
+                        "part_count", "triangle_count", "boundary_edges",
+                        "nonmanifold_edge_incidence",
+                        "parts_with_observed_boundaries",
+                        "parts_with_nonmanifold_edges",
+                        "weld_collapsed_triangles",
+                    }):
+                raise ValueError("Invalid boundary audit structure")
+            if any(type(v) is not int or v < 0 for v in stats.values()):
+                raise ValueError("Invalid boundary aggregate counts")
+            if (stats["part_count"] != len(records) or
+                    stats["triangle_count"] != sum(report[side].values())):
+                raise ValueError("Mismatched edge part/triangle counts")
+            for index, (row, part) in enumerate(zip(records, parts[side]), start=1):
+                if (not isinstance(row, dict) or
+                        row.get("part_id") != f"part_{index:03d}" or
+                        row.get("triangle_count") != part["triangle_count"] or
+                        row.get("topology_proven") is not False or
+                        type(row.get("observed_boundary")) is not bool or
+                        type(row.get("observed_nonmanifold_edge")) is not bool):
+                    raise ValueError("Invalid anonymous edge row")
+                for key in ("unique_edges", "boundary_edges", "shared_edges",
+                            "nonmanifold_edge_incidence", "weld_collapsed_triangles"):
+                    if type(row.get(key)) is not int or row[key] < 0:
+                        raise ValueError("Invalid edge incidence")
+                if (row["observed_boundary"] != (row["boundary_edges"] > 0)
+                        or row["observed_nonmanifold_edge"] != (
+                            row["nonmanifold_edge_incidence"] > 0)):
+                    raise ValueError("Contradictory edge topology flags")
+                if (row["unique_edges"] !=
+                        row["boundary_edges"] + row["shared_edges"]
+                        + row["nonmanifold_edge_incidence"] or
+                        row["weld_collapsed_triangles"] > row["triangle_count"]):
+                    raise ValueError("Contradictory edge totals")
+            totals = {
+                "boundary_edges": sum(x["boundary_edges"] for x in records),
+                "nonmanifold_edge_incidence": sum(
+                    x["nonmanifold_edge_incidence"] for x in records),
+                "weld_collapsed_triangles": sum(
+                    x["weld_collapsed_triangles"] for x in records),
+                "parts_with_observed_boundaries": sum(
+                    x["observed_boundary"] for x in records),
+                "parts_with_nonmanifold_edges": sum(
+                    x["observed_nonmanifold_edge"] for x in records),
+            }
+            if any(stats[key] != value for key, value in totals.items()):
+                raise ValueError("Boundary audit summary mismatch")
         audit = report.get("sampling_sensitivity_audit")
         if (not isinstance(audit, dict) or
                 audit.get("method") != "extra_halton_24_probe_sensitivity_v1" or
