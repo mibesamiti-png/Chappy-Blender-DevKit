@@ -273,6 +273,14 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_geometry_flow.py",
       "note": "直線的selfプロパティ/別名からmodifier.width/thickness/operation/object等の代入・複合代入までAST経路を検出。PR #25 commit b1a57e57のPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1合成fixture・kit・handoff CI全成功。実際のモディファイア実体・形状効果は未検証"
+    },
+    {
+      "id": "GLB-012",
+      "title": "信頼済み合成Blenderアドオンのパラメータ変更前後を定量測定",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/parameter_experiment_metrics.py",
+      "note": "リポジトリ製合成アドオンの球半径・Bevel幅を個別変更し、生成メッシュとGLB再読込後の頂点移動量（平均/最大/変化件数）を集計。無関係の部品は変化0を確認。頂点順一致の合成fixtureに限定し、一般GLBの形状一致証明ではない。新規10回帰テスト+Blender3版CIの実測待ち"
     }
   ],
   "known_issues": [
@@ -404,6 +412,13 @@
       "status": "in_progress",
       "title": "診断した設定候補と実アドオンのプロパティの安全な照合",
       "acceptance": "bpy.props宣言とGLB候補の一致、属性read/write、同クラスself参照、Blenderメッシュ生成API引数への直線的AST経路をレビュー限定で実装。分岐/ループ/他関数や実プロパティの正確な実体・形状効果は未検証。次は承認済み合成アドオンの形状変化を実機で別途比較する"
+    },
+    {
+      "id": "NEXT-010",
+      "priority": 10,
+      "status": "in_progress",
+      "title": "安全な合成アドオンで形状変化を数値実証",
+      "acceptance": "Blender3版CIで球半径/Bevel幅を別々に変更してGLBの前後を比較し、対象の頂点移動量が正・非対象が0・再読み込み後も変化が残ることを記録"
     }
   ],
   "decisions": [
@@ -521,6 +536,11 @@
       "id": "DEC-023",
       "decision": "モディファイア名に似た属性への代入は未確認の構文上の経路に限定して表示する",
       "note": "modifier.widthやthickness等は任意のPythonオブジェクトにも存在可能。変数の型・実modifier・Boolean効果は証明できず、潜在経路をpossible_modifier_setting_assignmentとしてのみ記録。私有ソース実行/コード変更/自動承認は行わない"
+    },
+    {
+      "id": "DEC-024",
+      "decision": "幾何の実測はCBDK自作の合成fixture限定としユーザーアドオンへ一般化しない",
+      "note": "比較可能な同一頂点順の合成メッシュだけで局所頂点距離を数値化。一般モデルの別頂点順/トポロジ/内部穴の比較には不適用。パラメータの単独変更と他部品非変化の対照実験を必須とし、私有アドオンは実行/公開しない"
     }
   ],
   "last_verified": {
@@ -590,6 +610,7 @@
     "glb_property_usage": "2026-11-06: PR #25 c640ad06e5f55bf5a4112ba3bb5635751f2023a7 に対するPython 42208333161、Windows 42208333343、Blender3版 42208333010、kit 42208333310、handoff 42208332987 の全ワークフローsuccessを確認。GLB-008 implemented/blender_ci、PRドラフト・last_verified v0.17.0を保持",
     "glb_binding_hints": "2026-11-06: PR #25 code SHA 2c000dad0980ee76562576ba63c0e7b568284748の全CI成功: Python 42210546730、Windows 42210546742、Blender3版 42210546751、kit 42210546861、handoff 42210546734。GLB-009 implemented/blender_ci。PR draftのまま正式v0.17.0 last_verified変更なし",
     "glb_geometry_flow": "2026-11-06: PR #25 GLB-010 source glb_geometry_flow.py、20件の回帰テスト、3版Blender合成GLB fixtureを追加。メッシュ生成API引数までの静的経路は推測であり実行時因果は未検証。実ジョブの結果確認前は partial/not_tested。正式last_verified v0.17.0は保持",
-    "glb_modifier_flow": "2026-11-06: PR #25 SHA b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 全5ワークフロー成功: Python 42214954563; Windows 42214954671; Blender 3版 42214954642; kit 42214954657; handoff 42214954600。GLB-011 implemented/blender_ci、PR draft、last_verified v0.17.0維持"
+    "glb_modifier_flow": "2026-11-06: PR #25 SHA b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 全5ワークフロー成功: Python 42214954563; Windows 42214954671; Blender 3版 42214954642; kit 42214954657; handoff 42214954600。GLB-011 implemented/blender_ci、PR draft、last_verified v0.17.0維持",
+    "trusted_parameter_displacement": "2026-11-06 PR #25 GLB-012 定量頂点移動/変更しない対照部品を実験スクリプトに追加、10純Python回帰テスト+Blender3版CIを追加。実測成功前はpartial/not_tested。PR draftと正式v0.17.0維持"
   }
 }
