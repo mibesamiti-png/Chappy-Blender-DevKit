@@ -559,3 +559,14 @@ PR #25の実装コミット `e971b784e5f6694252e924c0b8183dd393aa3860` に対す
 - 永続引き継ぎチェック: 成功（run [42202419869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419869)）。
 
 **境界**：これは上記コミットの実測。検証記録を追記する後続のドキュメント変更やユーザー個別GLBの再現率まで保証しない。PR #25はドラフト、mainに統合していない。`last_verified`の正式v0.17.0は変更しない。
+
+## v0.18 開発中 — 2026-11-06（形状原因から設定候補へ）
+
+- `cbdk/glb_repair_plan.py` 新規実装。既存のGLB診断から、原因カテゴリ別の設定候補群、確認項目、対象部品、該当視点、最悪IoU、観測誤差の主軸を出力。ボール・ソケット・ヒンジの部品名を手がかりにした候補は、あくまで未確認の推測として表示する。
+- CLI `python -m cbdk glb-repair-plan <comparison.json> --output reports/latest/glb_repair_plan.json` を追加。入力を再診断してから候補計画に変換し、元のユーザーGLBやアドオンコードは実行しない。
+- `cbdk/glb_regression.py` に `repair_plan.json` の自動出力を統合。比較・診断・修正確認プランの3つのJSONをまとめて記録できる。
+- `tests/test_glb_repair_plan.py` に20件追加。部品別候補、軸方向の観測値、安全フラグ、未知差分、入力不正、CLI、出力と元データ不変性を回帰確認するテストを用意。`tests/test_glb_regression.py` も統合検証を追加。
+- Blender 4.4.3 / 4.5.15 / 5.2.1 のGLB差分fixtureで`glb-repair-plan`を実行し、レビュー専用・未承認・影響視点・最悪IoUを検査するCIを追加。Blender 4.5.15ではe2eの`repair_plan.json`も検査する。
+- 正本STATE.json/引き継ぎの新要件`GLB-006`、新設計判断`DEC-018`、次タスク`NEXT-009`を登録。
+
+**検証境界:** コード・テスト・CI定義を追加した段階の情報。最新commitに対する実ジョブの合否を確認するまでGLB-006は「一部実装・未検証」。参照GLBと生成GLBの完全一致や、実際のアドオン設定と候補名の合致は未検証。
