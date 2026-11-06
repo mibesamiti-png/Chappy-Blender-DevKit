@@ -361,3 +361,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - `scripts/run_glb022_synthetic_grid.py` executes only the trusted repo fixture generator with factory-startup/no autoexec Blender. Rebuilds new candidate GLBs, verifies hashes, rejects other-part observed regression and nonimproving candidates, enforces a four-trial cap and incomplete lower-budget states, and writes only local fresh JSON/Markdown.
 - Never publish actual GLB/HTML derived private geometry, user source or local AST. Metrics are the globally aggregated bidirectional sampled maximum, **not exact Hausdorff or per-part geometry**. The grid is computed but is not adaptive to measured results.
 - Keep all old `basic`, `cross_part`, `progressive` workflows in the 3-version Blender matrix. GLB-022 status remains partial; formal v0.17.0, v0.18 PR #25 draft.
+
+## GLB-022 phase 5 adaptive synthetic-feedback guardrails
+
+- Adaptive synthetic-only bisection uses CBDK-owned 0.78..1.70 socket range, 0.01 increments, at most 4 trials, and hardcoded synthetic sampled-max goal 0.12. A measured pass updates the upper bracket; a fail updates the lower bracket. This is a test target, **not** a printed joint tolerance or recommended user setting.
+- `cbdk/glb_synthetic_adaptive.py` replays and validates the feedback-driven candidate order and anonymous, local-only history. `scripts/run_glb022_synthetic_adaptive.py` runs only the trusted CBDK fixture generator with factory startup/no autoexec, recomputes GLB-020 aggregate review every candidate, and checks all generated GLB/source SHA-256 integrity.
+- A measured target-feasible candidate is **not a proven optimum**, nor evidence of actual addon causality, true part identity or exact surface equivalence. Unknown values, boundary violations, false safety flags and forged score/decision histories must fail closed. Never access or publish user private geometry or code.
+- All previous `basic`, `cross_part`, `progressive`, `generated_grid` paths must remain tested across Blender 4.4.3/4.5.15/5.2.1. Keep GLB-022 partial, v0.17.0 current release and draft v0.18 PR #25.
