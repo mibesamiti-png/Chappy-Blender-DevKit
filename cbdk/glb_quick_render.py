@@ -84,8 +84,7 @@ def _scene_meshes(scene, np):
             raise GLBQuickRenderError(f"Quick preview requires triangular faces: {node_name!r}")
         world_vertices = scene.geometry[geometry_name].vertices
         world_vertices = np.asarray(world_vertices)
-        # trimesh utility applies the GLB node transform without mutating source data.
-        transformed = importlib.import_module("trimesh.transformations") if False else None
+        # The node transform is applied later without mutating source geometry.
         rows.append({
             "object": str(node_name),
             "mesh": str(geometry_name),
