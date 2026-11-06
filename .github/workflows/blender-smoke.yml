@@ -489,7 +489,7 @@ jobs:
               assert second['part_id'] == 'part_002'
               assert first['triangle_count'] == second['triangle_count'] == 1
               assert first['low'] == 1 and second['high'] == 1
-              assert all(sum(x[key] for x in review[side]) == review[side][key]
+              assert all(sum(x[key] for x in review['parts'][side]) == review[side][key]
                          for key in ('low', 'medium', 'high'))
           # Private-looking *input* object names never enter the public-safe report.
           assert 'PRIVATE_SOURCE' not in str(review)
