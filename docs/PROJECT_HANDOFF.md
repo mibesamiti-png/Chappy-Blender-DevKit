@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.17.0を検証済みmainとして確定。v0.18開発でGLB world bounds比較とreference→candidate自動回帰オーケストレーションを実装中
+- 最新の節目: v0.17.0を検証済みmainとして維持しつつ、v0.18 PR #23でGLB world-space形状回帰比較を実装。Python 343件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -47,7 +47,7 @@
 | `REG-003` | 読み取り専用・メッシュ編集で未完成テストの内容を切替 | 一部実装 | Pythonテスト | --behavior read_only/mesh_editを明示指定。共通項目に不変性・Undo・選択範囲・復元を追加。PR #21のPython 3版CIで回帰テスト成功 |
 | `GLB-001` | GLB静的構造解析とBlender多方向プレビュー | 実装済 | Blender CI | schema v2静的解析＋Blender本命7方向PNG＋最大32部品単独サムネイル＋neutral clay/Workbench。PR #21のBlender 4.4.3/4.5.15/5.2.1で合成GLB fixtureの構造JSON・scene metadata・全画像生成が成功 |
 | `GLB-002` | BlenderなしGLB Quick Preview fallback | 実装済 | Pythonテスト | 任意依存trimesh+matplotlibで7方向PNGと最大32部品単独サムネイルを生成。外部URIを事前拒否し、50万頂点/25万面の安全上限。ユーザーGLB(7 mesh)で7方向+7部品画像をローカル生成確認。本命のBlender実レンダリングより低精度であることを明示 |
-| `GLB-003` | 参考GLBと生成GLBのworld-space形状回帰比較 | 一部実装 | 未検証 | scene_metadataの全体bounds・部品world bounds・配置を比較し、名前一致＋寸法/位置fallbackで差分JSONを生成。strictではトポロジーも必須。新規Python/Blender CIは未確認 |
+| `GLB-003` | 参考GLBと生成GLBのworld-space形状回帰比較 | 実装済 | Blender CI | scene metadata schema 3のworld bounds、shape/strict比較、geometry fallback matching、glb-regression CLIを実装。PR #23でPython 343件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1のsynthetic GLB metadata self-comparisonが全成功。bounds同一の輪郭差はLIM-008として継続 |
 
 ## 既知の問題・制約
 
