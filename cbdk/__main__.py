@@ -252,6 +252,8 @@ def main(argv=None) -> int:
                                    help='Optional human-declared candidate part role, e.g. part_003=socket')
     visual_review_cmd.add_argument('--output', default='reports/latest/glb_visual_property_review.json',
                                    help='Fresh private JSON under ignored reports/latest only')
+    visual_review_cmd.add_argument('--markdown', action='store_true',
+                                   help='Create a matching private human-review .md checklist next to JSON')
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -481,7 +483,7 @@ def main(argv=None) -> int:
             return 0
         if args.command == 'glb-visual-property-review':
             result = review_visual_file(args.review, args.source, args.output,
-                                        role_labels=args.role)
+                                        role_labels=args.role, markdown=args.markdown)
             # Do not print candidate source names, AST symbols or role labels.
             print(json.dumps({
                 'kind': result['kind'], 'status': result['status'],
