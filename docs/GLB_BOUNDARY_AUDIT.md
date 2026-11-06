@@ -41,3 +41,17 @@ Blender 4.4.3/4.5.15/5.2.1のCIではCBDK自作の四面体を実GLBとして書
 コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
 
 Blender3版の全ジョブで新しい合成四面体（閉じた状態／1面欠損）の実GLB取り込みと0対3本の境界差分・部品対応候補の降格を確認。これは合成ケースに限定され、任意の閉メッシュや内壁の検証ではない。後続のドキュメント更新コミットは別SHAで、同じCI結果を継承したと断定しない。
+
+## GLB-020 第7段階：境界線のローカル3D位置表示（開発版）
+
+従来の匿名部品別の境界エッジ**本数**に加えて、`compare_viewer.html` の左右3Dキャンバス上に**水色の境界線**を重ねて表示する。ヘッダーの「観測された境界線を表示」チェックでオン/オフでき、左右独立の部品選択にも追従する。移動・回転・ズームは既存の同期カメラを使用。
+
+- `cbdk/glb_boundary_audit.py`の`local_boundary_segments`は、既存の`boundary_audit`と同じ世界座標の近接統合許容差で、**1枚だけの三角面に接するエッジ**の座標をローカルHTML専用に再構築する。面の順序に依存しない安定した並びで1部品あたり上限付きで出す。
+- `cbdk/glb_diff_viewer.py`は`boundary_overlay.reference/candidate`に匿名部品番号と両端のワールド座標を含める。**この値は非公開の3D形状データである**。集計`review.json`に線分座標、元の部品名・元ファイルのパス・個別エッジIDを保存しない。
+- 描画は**Canvas 2Dの簡易的な3D投影とX-ray的な輪郭の重ね描き**。奥にある境界線でも前面に出る場合があり、正確な遮蔽表示ではない。線そのものも近接統合の誤差で実際の境界からわずかにずれる可能性がある。
+- **水色の線＝近接座標をまとめた結果の「観測境界」**。欠陥・穴の位置の証明ではない。開口部が設計どおりの場合もあり、線がないから完全に閉じているとも言えない。
+- 過去の`boundary_edge_audit`件数と同じエッジ集合を使い、匿名部品ごとの線分数が整合しなければローカルHTMLの生成を拒否する。入力の最大512面・64部品、元GLB不変、外部通信禁止を維持。
+
+### 検証計画
+
+Pythonでは閉じた四面体の境界線0本、面を1枚除いた四面体の境界線3本が欠けた面を囲むことを確認。Blender 3版CIでは合成GLBの再読み込みによって出力HTMLの線分数（参照0・生成3）と非公開風部品名の非漏出をチェック。Chromium実操作CIでは左右の水色線の表示切替によるキャンバス画像変化を調べる。**テストが完了したコミットSHAとrun IDだけを成功実績として追記する。**
