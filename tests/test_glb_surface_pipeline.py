@@ -93,8 +93,10 @@ class GLBSurfacePipelineTests(unittest.TestCase):
         self.assertEqual(command[-3], str(self.ref.resolve()))
         self.assertEqual(command[-2], str(self.cand.resolve()))
         self.assertEqual(command[-1], str(self.out.resolve()))
-        self.assertTrue(command[command.index("--python") + 1].endswith(
-            "scripts/blender_glb_surface_review.py"))
+        self.assertEqual(
+            Path(command[command.index("--python") + 1]).name,
+            "blender_glb_surface_review.py",
+        )
         self.assertNotIn("private-reference.glb", self.out.read_text())
         self.assertFalse(result["auto_apply"])
 
