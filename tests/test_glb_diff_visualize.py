@@ -13,6 +13,7 @@ from cbdk.glb_diff_colors import (
     classify_faces, COLOR_RGBA, summarize_anonymous_parts,
 )
 from cbdk.glb_diff_visualize import run_glb_diff_visualize
+from cbdk.glb_diff_viewer import render_local_diff_viewer
 from cbdk.glb_surface_pipeline import GLBSurfacePipelineError
 
 
@@ -36,6 +37,12 @@ def report():
         "status": "review_only",
         "source": "local_blender_import_color_overlay",
         "outputs": ["reference_diff.glb", "candidate_diff.glb"],
+        "viewer": "compare_viewer.html",
+        "viewer_contains_derived_geometry": True,
+        "viewer_local_only": True,
+        "viewer_shared_camera": True,
+        "viewer_browser_interaction_verified": False,
+        "unobserved_regions_verified": False,
         "triangle_limit_per_scene": 512,
         "part_count_limit_per_scene": 64,
         "part_id_scheme": "anonymous_sequential_by_imported_object_name",
@@ -140,6 +147,56 @@ class AnonymizedPartGroupingTests(unittest.TestCase):
                     summarize_anonymous_parts(labels, counts)
 
 
+class OfflineLinkedViewerTests(unittest.TestCase):
+    def test_bounded_offline_view_has_two_synced_canvases(self):
+        html = render_local_diff_viewer(
+            TRI, shift(TRI, .2), ["high"], ["high"], [1], [1],
+        )
+        self.assertEqual(html.count('id="cbdk-viewer-data"'), 1)
+        self.assertIn("canvas-reference", html)
+        self.assertIn("canvas-candidate", html)
+        self.assertIn("Content-Security-Policy", html)
+        self.assertIn("connect-src 'none'", html)
+        self.assertIn("camera.yaw", html)
+        self.assertIn("camera.zoom", html)
+        self.assertIn("window.addEventListener", html)
+        self.assertIn('"cross_file_part_identity_proven":false', html)
+        self.assertIn('"unobserved_regions_verified":false', html)
+        self.assertNotIn("__CBDK_VIEWER_DATA__", html)
+        self.assertNotIn('PRIVATE_SOURCE_ALPHA', html)
+
+    def test_html_payload_has_only_numeric_geometry_and_anonymous_parts(self):
+        html = render_local_diff_viewer(
+            TRI + shift(TRI, .3), TRI,
+            ["low", "high"], ["high"], [1, 1], [1],
+        )
+        prefix = '<script id="cbdk-viewer-data" type="application/json">'
+        content = html.split(prefix, 1)[1].split("</script>", 1)[0]
+        data = json.loads(content)
+        self.assertEqual(data["reference"]["faces"][0][0:2], [1, 0])
+        self.assertEqual(data["reference"]["faces"][1][0:2], [2, 2])
+        self.assertEqual(len(data["reference"]["faces"][1]), 11)
+        self.assertEqual(data["reference"]["parts"][1]["part_id"], "part_002")
+        self.assertEqual(len(data["candidate"]["parts"]), 1)
+        self.assertFalse(data["auto_apply"])
+        self.assertNotIn("name", content)
+        self.assertNotIn("private", content)
+
+    def test_invalid_or_excessive_geometry_does_not_generate_html(self):
+        for faces, categories, counts in (
+            ([], [], []),
+            (TRI, ["unknown"], [1]),
+            (TRI, ["low"], [2]),
+            (TRI * 513, ["low"] * 513, [513]),
+            (shift(TRI, float("nan")), ["low"], [1]),
+        ):
+            with self.subTest(counts=counts):
+                with self.assertRaises(ValueError):
+                    render_local_diff_viewer(
+                        faces, TRI, categories, ["low"], counts, [1],
+                    )
+
+
 class ColoredGLBLauncherTests(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
@@ -157,6 +214,10 @@ class ColoredGLBLauncherTests(unittest.TestCase):
         (target / "review.json").write_text(json.dumps(report()))
         for name in ("reference_diff.glb", "candidate_diff.glb"):
             (target / name).write_bytes(b"x" * 150)
+        (target / "compare_viewer.html").write_text(
+            render_local_diff_viewer(TRI, TRI, ["low"], ["low"], [1], [1]),
+            encoding="utf-8",
+        )
         return subprocess.CompletedProcess(
             cmd, 0, stdout="CBDK_GLB_DIFF_VISUALIZE_PASS " +
             json.dumps({"kind": "cbdk_glb_diff_visualization",
@@ -184,6 +245,11 @@ class ColoredGLBLauncherTests(unittest.TestCase):
         report_json = (self.dest / "review.json").read_text()
         self.assertNotIn("private_ref", report_json)
         self.assertFalse(result["auto_apply"])
+        html = (self.dest / "compare_viewer.html").read_text(encoding="utf-8")
+        self.assertIn("canvas-reference", html)
+        self.assertIn("canvas-candidate", html)
+        self.assertNotIn("private_ref", html)
+        self.assertNotIn("__CBDK_VIEWER_DATA__", html)
 
     def test_refuses_existing_folder_instead_of_overwriting(self):
         self.dest.mkdir()
