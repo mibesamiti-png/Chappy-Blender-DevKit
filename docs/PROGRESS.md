@@ -601,3 +601,13 @@ PR #25の実装コミット `e971b784e5f6694252e924c0b8183dd393aa3860` に対す
 - 引き継ぎ： [run 42206398078](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398078)。
 
 GLB-007は実装済/Blender CI確認済みとして記録。正式バージョンはv0.17.0のまま、v0.18 PR #25はドラフト。**未検証:** 個人用アドオンに実際に登録されたプロパティか、その値が形状に影響するか、ユーザーのGLBが正確に再現できるか。元私有ソースはコミット・実行していない。
+
+## v0.18 開発中 — 2026-11-06（GLB-008：プロパティ参照のAST静的追跡）
+
+- `cbdk/glb_property_usage.py` 新設。宣言名と同じ属性に対するread/write/read_write/deleteの4種をASTで識別し、関数・クラス・行番号・匿名ソースラベルをレポートに収録する。受け手の型・登録状態は**未検証**と明示。
+- `cbdk/glb_property_map.py` に `exact_name_matches[].possible_code_references` を統合。宣言がない同名のアクセスだけではプロパティが存在する扱いにしない。`static_possible_attribute_references_found` は宣言と同名属性のAST出現総数。
+- `tests/test_glb_property_usage.py` に新規23回帰テストを追加。読み取り/代入/拡張代入/削除、関数・クラス・複数ソース、動的getattrの未検出、機密値遮断、ソース副作用の未実行、上限超の拒否、マッピング連携を検証する。
+- Blender 3バージョンの合成fixtureを拡張し、静的参照読み書き・未検証フラグをCLIから検証するワークフローを追加。
+- 引き継ぎ仕様の`GLB-008` / `DEC-020` と `NEXT-009` の進捗記録を追加。
+
+**検証状況**：最新コミットのCI成功は実際のジョブ結果を確認してから記録する。コード修正や設定値適用、私有アドオンの実行はしていない。正式リリース`last_verified=v0.17.0`を維持。
