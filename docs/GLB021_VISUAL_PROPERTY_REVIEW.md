@@ -56,3 +56,11 @@ python -m cbdk glb-visual-property-review \
 Blender 4.4.3/4.5.15/5.2.1の既存\`joint_mvp\`工程後に、\`scripts/verify_glb021_joint_review.py\`で実際に生成された4組のGLB-020集計JSONを入力として利用する。合成ASTのプロパティ名と一致したときだけ候補が列挙されること、正常0件、設定値や因果関係を勝手に確定しないこと、元ソース・元レポートが不変であることを確認する。テスト結果は**実際のGitHub Actions runとコードSHAが成功してから記録**する。
 
 **残課題**：本当の部品の種類の自動特定、参考GLBとの確実な対応、AST外の動的設定、メッシュ生成処理への実際の依存性検証、ユーザー自身の非公開アドオンでの検証、正しい変更量や改善を自動決定する工程。後者の実験はGLB-022で許可済み合成環境に限定する。
+
+## 第1段階・実測CI結果（2026-11-07）
+
+コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
+
+合成の3部品・正常/ソケット狭窄/ボール移動/リップ面欠損について、Blender実GLB比較→匿名集計JSON→静的AST宣言の照合まで実行。正常時の候補0、差分がある部品で明示的な手動役割に基づく設定名候補、欠損では未確認の対応部品を確定しないことを確認。Python単体テストで不正安全フラグ/重複JSON/元ソース実行禁止/非公開情報の標準出力非表示/ローカルのみ新規書込を確認。
+
+**GLB-021全体は一部実装**。このCIはCBDK自作合成モデルと合成アドオン宣言のみで、ユーザーの任意アドオンの実行時の性質、正しい設定値、完全な原因特定は保証しない。正式v0.17.0は変更せず、v0.18はドラフトPR #25を維持。
