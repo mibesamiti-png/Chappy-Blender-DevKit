@@ -627,6 +627,12 @@ jobs:
           python scripts/run_glb022_synthetic_iteration.py \
             --blender "$BLENDER_PATH" --protocol cross_part \
             --output reports/ci/glb022_multi_iteration
+          # GLB-022 stage 3: measure partial improvement via existing
+          # aggregated bidirectional sampled maxima; reject shifted-ball
+          # regression, accept intermediate improvement, then sampled zero.
+          python scripts/run_glb022_synthetic_iteration.py \
+            --blender "$BLENDER_PATH" --protocol progressive \
+            --output reports/ci/glb022_progress_iteration
           python - <<'PY'
           import json
           from pathlib import Path
@@ -672,6 +678,28 @@ jobs:
               assert (multi_root / ("review_" + name) / "review.json").is_file()
               assert (multi_root / "synthetic_inputs" / name / (name + ".glb")).is_file()
           assert (multi_root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
+          progress_root = Path("reports/ci/glb022_progress_iteration")
+          progress = json.loads((progress_root / "synthetic_progress_history.json").read_text())
+          assert progress["status"] == "synthetic_test_only"
+          assert progress["metric"] == "global_bidirectional_sampled_max_distance_input_units"
+          assert progress["metric_is_part_specific"] is False
+          assert progress["metric_is_exact_hausdorff"] is False
+          assert [step["accepted"] for step in progress["attempts"]] == [False, True, True]
+          assert [step["baseline_before"] for step in progress["attempts"]] == [
+              "narrow", "narrow", "narrow_mid",
+          ]
+          assert progress["attempts"][0]["decision"] == "other_part_regression"
+          assert (progress["attempts"][1]["sampled_max_candidate"]
+                  < progress["attempts"][1]["sampled_max_before"])
+          assert progress["accepted_trial_id"] == "identical"
+          assert progress["stop_reason"] == "observed_sampled_zero"
+          assert progress["final_sampled_max"] <= 0.000001
+          assert not any(progress["safety"].values())
+          md = (progress_root / "synthetic_progress_history.md").read_text()
+          assert "段階的改善" in md and "棄却（他部品悪化）" in md
+          for name in ("narrow", "narrow_mid_shifted", "narrow_mid", "identical"):
+              assert (progress_root / ("review_" + name) / "review.json").is_file()
+              assert (progress_root / "synthetic_inputs" / name / (name + ".glb")).is_file()
           PY
           sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
