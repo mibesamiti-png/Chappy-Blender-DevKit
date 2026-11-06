@@ -454,6 +454,9 @@ def main(argv=None) -> int:
             print(json.dumps({
                 'kind': report['kind'], 'status': report['status'],
                 'outputs': [str(Path(args.output) / name) for name in report['outputs']],
+                'linked_viewer': str(Path(args.output) / report['viewer']),
+                'viewer_contains_derived_geometry': True,
+                'viewer_browser_interaction_verified': False,
                 'reference': report['reference'], 'candidate': report['candidate'],
                 'thresholds': report['thresholds'],
                 'complete_surface_equivalence_proven': False,
