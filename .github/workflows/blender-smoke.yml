@@ -29,6 +29,8 @@ on:
       - 'tests/test_glb_compare.py'
       - 'cbdk/glb_regression.py'
       - 'cbdk/glb_compare.py'
+      - 'tests/test_glb_diagnose.py'
+      - 'cbdk/glb_diagnose.py'
       - 'scripts/blender_glb_render.py'
       - 'scripts/blender_make_glb_fixture.py'
       - 'tests/test_glb_inspector.py'
@@ -262,6 +264,16 @@ jobs:
           assert 'scene_silhouette' in codes or 'object_silhouette' in codes, report
           assert 'object_dimensions' not in codes, report
           PY
+          python -m cbdk glb-diagnose reports/ci/glb_drift_compare.json --output reports/ci/glb_drift_diagnosis.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('reports/ci/glb_drift_diagnosis.json').read_text())
+          assert d['hypothesis_count'] >= 1, d
+          cats={x['category'] for x in d['hypotheses']}
+          assert 'part_profile_boolean_or_cutout' in cats or 'assembly_shape_mismatch' in cats, d
+          assert d['safety']['edits_code'] is False, d
+          PY
 
           if [ "$BLENDER_VERSION" = "4.5.15" ]; then
             set +e
@@ -275,6 +287,7 @@ jobs:
             regression_status=$?
             set -e
             test "$regression_status" -eq 1
+            test -f reports/ci/glb_regression_e2e/diagnosis.json
           fi
           echo "GLB views, silhouettes, self-compare, same-bounds silhouette drift detection and e2e regression behavior PASSED." >> "$GITHUB_STEP_SUMMARY"
 
