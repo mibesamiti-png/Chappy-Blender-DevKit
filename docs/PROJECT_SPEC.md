@@ -382,3 +382,11 @@ CBDK自作の合成3部品GLBに限り、**狭窄0.78、無関係なボール移
 テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
 
 機能全体は`GLB-021 partial`を維持。変更効果の履歴はサンプリングした面の集計であって、実アドオン設定の原因・正しい設定値・完全な幾何一致は証明しない。GLB-022の汎用反復実験は未実装。[第5段階の仕様](GLB021_TRIAL_HISTORY.md)。
+
+## GLB-022 第1段階：許可済み合成モデルの固定2試行ループ
+
+CBDK自作合成GLBに対してのみ、明示的に許可した`narrow`→`narrow_placebo`（観測誤差が減らないため不採用）→`identical`（合成モデルの既知正常値へ復帰して採用）の反復処理を実装。各候補でBlenderを`--factory-startup --disable-autoexec`で起動し固定合成GLBを新規生成し、GLB-020の集計差分で判定。観測異常面が減り、他部品の新たな悪化がない場合だけ採用。最大2試行、観測差分0または予算切れで終了。
+
+テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`：[Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)・[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)・[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)・[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)・[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)・[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+
+安全性：元GLB/既存ファイルの上書き禁止、実ユーザーアドオンの自動実行・修正・公開禁止、合成入力のSHA-256不変、匿名集計のみローカルJSON/日本語Markdown履歴に記録。固定2試行の合成試験であり、任意値の探索・実GLBの完全一致・本物のユーザー製アドオンの因果特定は未実装。GLB-022`partial`。詳細は`docs/GLB022_SYNTHETIC_ITERATION.md`。
