@@ -2,7 +2,7 @@
 
 This file is an allowlisted CI fixture, NOT a launcher for user addons.
 It changes one synthetic Blender PropertyGroup setting at a time, generates
-three real GLBs, reimports them and measures changed mesh coordinates.
+seven real GLBs, reimports them and measures changed mesh coordinates.
 """
 from __future__ import annotations
 
@@ -19,11 +19,18 @@ if str(PROJECT) not in sys.path:
 
 from fixtures import cbdk_parameter_experiment as fixture  # noqa: E402
 from cbdk.parameter_experiment_metrics import vertex_displacement  # noqa: E402
+from cbdk.parameter_direction import choose_review_direction  # noqa: E402
 
 VARIANTS = (
     ("baseline", 0.75, 0.08),
     ("sphere_radius_changed", 1.15, 0.08),
     ("bevel_width_changed", 0.75, 0.35),
+    # Deliberately bracket the baseline for direction evidence. The reference
+    # is held fixed, and all values are allowed by the trusted fixture.
+    ("sphere_probe_up", 0.95, 0.08),
+    ("sphere_probe_down", 0.55, 0.08),
+    ("bevel_probe_up", 0.75, 0.20),
+    ("bevel_probe_down", 0.75, 0.03),
 )
 
 
@@ -134,12 +141,60 @@ def main() -> None:
                     snapshots[changed][name]["local_vertices_for_trusted_fixture"])
                 for name in sorted(base)
             }
+    # Compare each deliberate probe against the SAME target reference and
+    # baseline. The geometry evidence is real Blender GLB roundtrip data,
+    # not a fabricated estimate or an inferred user-addon setting.
+    direction_evidence = {}
+    sphere = "CBDK_Param_Sphere"
+    cube = "CBDK_Param_BevelCube"
+    groups = (
+        ("sphere_radius", "sphere_radius_changed", "sphere_probe_up",
+         "sphere_probe_down", sphere, cube),
+        ("bevel_width", "bevel_width_changed", "bevel_probe_up",
+         "bevel_probe_down", cube, sphere),
+    )
+    for stage_name, snapshots in (("generated", generated), ("imported", imported)):
+        direction_evidence[stage_name] = {}
+        for prop, target, up, down, affected, unrelated in groups:
+            ref = snapshots[target][affected]["local_vertices_for_trusted_fixture"]
+            distances = {
+                label: vertex_displacement(
+                    ref, snapshots[variant][affected]["local_vertices_for_trusted_fixture"]
+                )["mean_local_displacement"]
+                for label, variant in (("baseline", "baseline"),
+                                       ("increase_probe", up),
+                                       ("decrease_probe", down))
+            }
+            direction = choose_review_direction(
+                distances["baseline"], distances["increase_probe"],
+                distances["decrease_probe"])
+            # Independent negative controls for both probe directions.
+            unchanged = {}
+            for variant in (up, down):
+                unchanged[variant] = vertex_displacement(
+                    snapshots["baseline"][unrelated]["local_vertices_for_trusted_fixture"],
+                    snapshots[variant][unrelated]["local_vertices_for_trusted_fixture"]
+                )["changed_vertex_count"]
+                if unchanged[variant] != 0:
+                    raise AssertionError(prop + " probe modified unrelated fixture mesh")
+            if direction["decision"] != "increase":
+                raise AssertionError(prop + " did not improve toward known synthetic reference")
+            if not distances["decrease_probe"] > distances["baseline"] + 1e-5:
+                raise AssertionError(prop + " wrong-direction probe did not increase reference error")
+            direction_evidence[stage_name][prop] = {
+                **direction,
+                "affected_fixture_object": affected,
+                "unrelated_fixture_object": unrelated,
+                "unrelated_probe_changed_vertices": unchanged,
+                "known_reference_variant": target,
+                "no_user_addon_assumptions": True,
+            }
+
     for stage in (generated, imported):
         for variant in stage.values():
             for stats in variant.values():
                 del stats["local_vertices_for_trusted_fixture"]
 
-    sphere = "CBDK_Param_Sphere"
     cube = "CBDK_Param_BevelCube"
     for stage, rows in displacement.items():
         radius = rows["sphere_radius_changed"]
@@ -167,6 +222,7 @@ def main() -> None:
         "generated_mesh": generated,
         "imported_glb_mesh": imported,
         "quantified_vertex_displacement": displacement,
+        "direction_probe_evidence": direction_evidence,
         "controls": {
             "sphere_radius_changes_sphere": True,
             "sphere_radius_does_not_change_bevel_cube": True,
@@ -174,11 +230,15 @@ def main() -> None:
             "bevel_width_does_not_change_sphere": True,
             "bevel_width_preserves_cube_bounds": True,
             "all_three_glbs_reimported": True,
+            "all_seven_glbs_reimported": True,
+            "both_parameter_directions_tested": True,
+            "unrelated_meshes_unchanged_for_all_probes": True,
         },
         "limitations": [
             "Only repository-owned trusted synthetic addon was executed",
             "This proves the fixture parameters change geometry, not arbitrary user-addon behavior",
             "Geometry coordinate hashes are test evidence, not equivalence proofs for real assets",
+            "A one-step direction result is not an optimum numeric setting for arbitrary geometry",
         ],
         "safety": {
             "user_addon_executed": False,
