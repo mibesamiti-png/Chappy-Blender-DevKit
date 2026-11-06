@@ -233,6 +233,14 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_repair_plan.py",
       "note": "GLB診断から設定候補群・確認手順・最悪IoU・代表軸をレビュー専用JSONへ出力。PR #25のコードcommit d9c5c925でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・Windowsキット・引き継ぎCIが全成功。実アドオン内にその設定が存在することや完全形状一致は未検証"
+    },
+    {
+      "id": "GLB-007",
+      "title": "GLB修正候補とローカル自作アドオンのプロパティ宣言を静的照合",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/glb_property_map.py",
+      "note": "明示したローカルPythonファイル（最大16）をASTのみで解析しbpy.props宣言を候補名と完全一致で照合。匿名ソースラベル/クラス名/行番号を保存、値や私有コードは出力しない。新規24回帰テスト・3版Blender合成fixtureは最新コミット実測前"
     }
   ],
   "known_issues": [
@@ -361,9 +369,9 @@
     {
       "id": "NEXT-009",
       "priority": 9,
-      "status": "todo",
+      "status": "in_progress",
       "title": "診断した設定候補と実アドオンのプロパティの安全な照合",
-      "acceptance": "未知の自作アドオンを実行せず、明示レビューしたproperty名・出典を候補群に結び付け、存在しない設定を確定候補として案内しない"
+      "acceptance": "元アドオンを実行せず明示指定したPythonファイルのbpy.props宣言と候補IDの完全一致を検出する（AST機能は実装）。次に人手確認済みのプロパティ出典/実際の形状影響を検証し、コード内容や私有GLBをGitHubへ上げない"
     }
   ],
   "decisions": [
@@ -456,6 +464,11 @@
       "id": "DEC-018",
       "decision": "診断から生成した設定候補は推測として表示し自動変更しない",
       "note": "ボール/ソケット/ヒンジ名称は弱いロール推測に限り、元ソースとの実一致・数値修正量は判断しない。候補→人手確認→生成GLB再出力→再比較を推奨し、コード実行/書換/自動承認/私有GLB公開を禁止"
+    },
+    {
+      "id": "DEC-019",
+      "decision": "プロパティ宣言の静的検出をBlender登録や形状への影響の証明と混同しない",
+      "note": "未確認アドオンはimport/execせず明示選択されたファイルのみAST検査。完全一致した宣言も登録済みとはみなさず、非一致を不存在と断定しない。私有コード本文/値/元パスはignored領域のレポートにも出さず、結果は自動適用/承認しない"
     }
   ],
   "last_verified": {
@@ -520,6 +533,7 @@
     "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま",
     "v018_silhouette_regression": "2026-11-06: PR #24 head 2735aa974539ec95fde20e2c9f1de155f6687209 でPython 347件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windows kit、handoffが全成功。実Blenderでreference Cubeと同bounds八面体のsilhouette driftを3版すべて検出。GLB-004をimplementedへ昇格",
     "glb_diagnosis_evidence": "2026-11-06: PR #25 e971b784e5f6694252e924c0b8183dd393aa3860 のPython(42202420004), Windows(42202419886), Blender3版(42202419874), Windows kit(42202419926), durable handoff(42202419869)で成功を観測。追加19テストを含む。PRはドラフトでmain未統合、last_verifiedはv0.17.0を維持",
-    "glb_repair_plan": "2026-11-06: PR #25 code SHA d9c5c92590759faac158824d84e4f8ca94c7c5bb; Python 42204425313, Windows 42204425351, Blender3版 42204425335, kit 42204425475, handoff 42204425288 の5ワークフロー全成功。GLB-006 implemented/blender_ci。PRはドラフト、mainと正式last_verified v0.17.0は不変"
+    "glb_repair_plan": "2026-11-06: PR #25 code SHA d9c5c92590759faac158824d84e4f8ca94c7c5bb; Python 42204425313, Windows 42204425351, Blender3版 42204425335, kit 42204425475, handoff 42204425288 の5ワークフロー全成功。GLB-006 implemented/blender_ci。PRはドラフト、mainと正式last_verified v0.17.0は不変",
+    "glb_property_mapping": "2026-11-06: PR #25 にGLB-007 glb-map-properties AST専用CLI、24件のPython回帰テスト、Blender3版合成プロパティfixture CIを追加。未実測段階では partial/not_tested、正式last_verified v0.17.0を保持"
   }
 }
