@@ -235,3 +235,9 @@ CI may execute only repository-authored 256-triangle synthetic `grid_256.glb` am
 Benchmark only repository-authored synthetic GLBs. `surface_benchmark.benchmark_surface_search` times warm-start single-direction `_directed`, including BVH build and sampling, using alternating order and 3 trial medians. Permit exhaustive brute-force timing only when source_faces*target_faces <=4096; for 512 faces time BVH only. Keep geometry scores identical where brute force is available. Record elapsed milliseconds and exact triangle operation counts separately; never assert any speedup threshold in CI, and never describe a ratio as portable to user hardware.
 
 Blender CI exports/reimports six CBDK synthetic surface GLBs including new `grid_512.glb`. The raw vertices, private GLBs and arbitrary addons must never enter public CI, benchmarks or reports. GLB-016 status must follow observed CI results; retain release v0.17.0 until independently released. Details: `docs/GLB_SURFACE_DISTANCE.md`.
+
+## v0.18 GLB-017 — bounded multi-resolution surface probes
+
+A new review-only coarse-to-fine surface score starts with 8 Halton points per face, refines at most 8 coarse-suspect and 2 large exploratory faces per direction to 48 points each, and reports both stages' results and the unrefined count. The exploration quota is necessary because a coarse zero can be a missed narrow hole. It is not proof of coverage; the method can still miss defects on unselected faces or between samples. Never mark exact equivalence or approve addon fixes from sampled zero scores.
+
+Blender CI may only run seven CBDK-owned GLBs, including a narrow synthetic opening that the legacy 24-sample comparator misses. Preserve previous BVH and 512-face benchmarks and test results. Never import user addons or upload private GLB/code. Record verified CI evidence in STATE/HANDOFF, maintain release last_verified v0.17.0 while PR #25 stays draft.
