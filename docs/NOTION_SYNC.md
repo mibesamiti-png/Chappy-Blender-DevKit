@@ -109,6 +109,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - Code SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f` verified by Python run `42299997255`, Windows `42299997246`, Blender 3-version `42299997251`, Windows kit `42299997311`, handoff `42299997254`, Chromium `42299997355` — **all success**. Exact code SHA is distinct from later docs-only commits.
 - Keep GLB-021 partial, GLB-020 accepted MVP/frozen, GLB-022 not implemented, v0.18 PR #25 draft, formal v0.17.0 unchanged. Never publish private GLB/HTML, local history reports or unapproved AST property names to Notion.
 
+## GLB-022 bounded synthetic regeneration loop (2026-11-07)
+
+- Added a **real** Blender regeneration/comparison loop for exactly two predefined CBDK-owned synthetic candidates. The unrelated ball move is rejected; restoration of the known synthetic socket setting is accepted; observed zero sampled error stops the run.
+- Implementations: `cbdk/glb_synthetic_iteration.py`, `scripts/run_glb022_synthetic_iteration.py`, tests `tests/test_glb_synthetic_iteration.py`. History with steps, decisions and stop reason is stored in local synthetic CI-only JSON and Japanese Markdown. No real addon code execution, no private GLB upload, no source overwrite; input SHA-256 checked.
+- テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`：[Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)・[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)・[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)・[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)・[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)・[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+- **GLB-022 status: partial / blender_ci**. This is a **fixed two-trial synthetic test**, not an arbitrary addon optimizer, not a verified cause on users' code, and not proof of exact geometry. GLB-020 stays accepted MVP/frozen and GLB-021 partial. Formal v0.17.0 remains unchanged and v0.18 PR #25 stays draft.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
