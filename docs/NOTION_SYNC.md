@@ -76,6 +76,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - Synthetic source SHA-256 integrity, aggregate-only JSON, modified-part-only observations and bounded Blender3 versions were verified.
 - **GLB-020 remains `partial` for full precision scope, but `NEXT-018=done` for its MVP acceptance.** Freeze optional GLB-020 elaborations; prioritize GLB-021 then GLB-022. Both remain not implemented. No real user/private GLB has been tested. Derived HTML and GLBs are geometry-bearing and local-only.
 
+## GLB-021 first-stage visual-to-AST review-only linkage (2026-11-07)
+
+- The new `glb-visual-property-review` consumes aggregate-only anonymous GLB-020 observations, reads **only explicitly selected** source Python AST, and reuses static declaration/reference/geometry-flow evidence. Human `--role` hints are unverified; no actual Blender property registration, cause, parameter value or part identity is proved.
+- Private AST mapping report stays under local ignored `reports/latest`; CLI stdout redacts property names, source paths, defaults and raw mesh details. Original addon/GLB never executed or modified.
+- コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
+- GLB-021 is now **partial / blender_ci**, next action `NEXT-019=in_progress`; GLB-020 remains partial with MVP accepted/frozen, GLB-022 remains not implemented, and v0.18 PR #25 remains draft. This synthetic CI does not validate arbitrary real user GLBs/addons.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
