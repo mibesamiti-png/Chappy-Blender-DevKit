@@ -16,7 +16,12 @@ import addon_utils
 import bmesh
 import bpy
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent
+# Blender does not guarantee the executed script directory is on sys.path.
+# Add both the repository root (for cbdk) and scripts/ (for the trusted sibling smoke helper).
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(SCRIPT_DIR))
 from cbdk.undo_probe_report import PREFIX, build_report
 from blender_modular_addon_smoke import PACKAGE, verify_zip
 
