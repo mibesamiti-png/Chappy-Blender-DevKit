@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from cbdk.glb_boundary_audit import boundary_audit
+from cbdk.glb_boundary_audit import boundary_audit, local_boundary_segments
 
 A, B, C, D = ((0., 0., 0.), (1., 0., 0.), (0., 1., 0.), (0., 0., 1.))
 TETRA = [[A, B, C], [A, D, B], [A, C, D], [B, D, C]]
@@ -61,6 +61,35 @@ class BoundaryEdgeAuditTests(unittest.TestCase):
         one = boundary_audit(TETRA, [4])["parts"][0]
         two = boundary_audit(list(reversed(TETRA)), [4])["parts"][0]
         self.assertEqual(one, two)
+
+    def test_private_boundary_lines_closed_and_open_tetra(self):
+        self.assertEqual(local_boundary_segments(TETRA, [4]), [])
+        segments = local_boundary_segments(TETRA[1:], [3])
+        self.assertEqual(len(segments), 3)
+        self.assertTrue(all(len(line) == 7 and line[0] == 1
+                            for line in segments))
+        # The removed cap is the ABC plane. Its outline connects A/B/C.
+        points = {tuple(round(value, 6) for value in line[i:i+3])
+                  for line in segments for i in (1, 4)}
+        self.assertEqual(points, {A, B, C})
+        self.assertNotIn("vertex", str(boundary_audit(TETRA[1:], [3])))
+
+    def test_private_lines_are_part_scoped_and_face_order_stable(self):
+        other = [[(5., 0., 0.), (6., 0., 0.), (5., 1., 0.)]]
+        faces = TETRA + other
+        segments = local_boundary_segments(faces, [4, 1])
+        self.assertEqual(len(segments), 3)
+        self.assertTrue(all(line[0] == 2 for line in segments))
+        self.assertEqual(
+            local_boundary_segments(list(reversed(TETRA)) + other, [4, 1]),
+            segments,
+        )
+
+    def test_boundary_overlay_rejects_invalid_part_layout(self):
+        with self.assertRaises(ValueError):
+            local_boundary_segments(TETRA, [1, 2])
+        with self.assertRaises(ValueError):
+            local_boundary_segments(TETRA * 129, [516])
 
     def test_nonfinite_degenerate_and_bad_part_layout_are_rejected(self):
         for faces, counts in (
