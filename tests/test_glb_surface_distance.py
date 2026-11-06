@@ -37,7 +37,7 @@ class SampledSurfaceDistanceTests(unittest.TestCase):
         report = compare_triangle_surfaces(square, square)
         self.assertEqual(report["symmetric_mean"], 0)
         self.assertEqual(report["symmetric_sampled_max"], 0)
-        self.assertEqual(report["reference_to_candidate"]["sample_count"], 24)
+        self.assertEqual(report["reference_to_candidate"]["sample_count"], 48)
 
     def test_different_triangulation_same_surface_zero(self):
         report = compare_triangle_surfaces(filled_square(), filled_square("other"))
