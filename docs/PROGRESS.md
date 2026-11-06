@@ -653,3 +653,13 @@ GLB-007は実装済/Blender CI確認済みとして記録。正式バージョ�
 ### GLB-011 CI結果（2026-11-06）
 
 実装コミット b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 で、Python 3版（run 42214954563）、Windows 2版（42214954671）、Blender 4.4.3/4.5.15/5.2.1（42214954642）、Windowsキット（42214954657）、引き継ぎ（42214954600）の全ジョブが成功。GLB-011は実装済・Blender CI検証。実アドオンの型・ジオメトリへの効果は未検証。PRドラフト、正式v0.17.0は維持。
+
+## v0.18 開発中 — 2026-11-06（GLB-012 頂点移動量の実測）
+
+- CBDK自作の合成Blenderアドオンを用いた3条件（基準、球半径だけ変更、Bevel幅だけ変更）のGLB実験を定量化。
+- `cbdk/parameter_experiment_metrics.py` 新規: 同一頂点順・有限XYZの比較に限り平均/最大局所移動距離、変化頂点数を算出。頂点数不一致・NaN・異常入力は拒否。一般GLBへの形状一致証明を明示的に否定。
+- `scripts/blender_parameter_experiment_smoke.py` 改善: 生成直後・GLB再読込後の2段階で比較対象と無変更対照の頂点移動量を計測し、個別に影響対象だけが動いたことをアサート。レポートには生の頂点リストを含めず集計値のみ残す。
+- `tests/test_parameter_experiment_metrics.py` に10件の純Python回帰テスト追加。`.github/workflows/blender-smoke.yml` で全Blender版の定量チェックを追加。
+- 要件GLB-012、設計判断DEC-024、NEXT-010をSTATE.json/PROJECT_HANDOFF.mdへ追加。
+
+**状態:** 最新コミットのCI合否を観測するまでGLB-012は部分実装/未検証。PR #25ドラフト、正式版v0.17.0維持。実ユーザーアドオンを実行しない。
