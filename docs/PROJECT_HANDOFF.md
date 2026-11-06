@@ -56,7 +56,7 @@
 | `GLB-009` | プロパティ宣言と同クラスself参照を別オブジェクトの参照から区別 | 実装済 | Blender CI | 匿名ソース/同クラスself参照と別クラス・別オブジェクト参照をAST上区別しread/write等を全件集計。PR #25の実装commit 2c000dadでPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・kit・handoff CI全成功。宣言プロパティの実体同一/登録・ジオメトリ効果は未検証 |
 | `GLB-010` | プロパティ式からメッシュ生成APIまでの構文上の経路を追跡 | 一部実装 | 未検証 | bpy.ops.meshのプリミティブ、bmesh.opsの一部、object寸法等へselfプロパティまたは直線的ローカル別名が引数として届くAST上の経路を検出。関数内共起のみでは判定しない。分岐/ループ/関数間は未追跡、実際の形状効果は未証明。新規20回帰テスト・Blender3版合成fixtureを追加、現head CI成功確認前 |
 | `GLB-011` | プロパティ値からBoolean/Bevel/Solidify等のモディファイア設定までAST上で追跡 | 実装済 | Blender CI | 直線的selfプロパティ/別名からmodifier.width/thickness/operation/object等の代入・複合代入までAST経路を検出。PR #25 commit b1a57e57のPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1合成fixture・kit・handoff CI全成功。実際のモディファイア実体・形状効果は未検証 |
-| `GLB-012` | 信頼済み合成Blenderアドオンのパラメータ変更前後を定量測定 | 一部実装 | 未検証 | リポジトリ製合成アドオンの球半径・Bevel幅を個別変更し、生成メッシュとGLB再読込後の頂点移動量（平均/最大/変化件数）を集計。無関係の部品は変化0を確認。頂点順一致の合成fixtureに限定し、一般GLBの形状一致証明ではない。新規10回帰テスト+Blender3版CIの実測待ち |
+| `GLB-012` | 信頼済み合成Blenderアドオンのパラメータ変更前後を定量測定 | 実装済 | Blender CI | CBDK製合成アドオンの球半径/Bevel幅変更を生成直後とGLB再読込後で平均/最大頂点変位と変化点数として測定し、他の部品が不変の対照実験を確認。PR #25 commit 04526f1dのPython3版/Windows2版/Blender4.4.3/4.5.15/5.2.1/kit/handoff全CI成功。任意GLB・ユーザーアドオンへ一般化できない |
 
 ## 既知の問題・制約
 
@@ -82,7 +82,7 @@
 7. `NEXT-007` **GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認** (in_progress)。完了条件: 合成fixtureの3バージョンBlender CIは完了。実ユーザーGLBでも必要に応じBlender Previewを生成し、Quick Previewとの部品対応と形状を照合する
 8. `NEXT-008` **参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ** (in_progress)。完了条件: 参照GLB/生成GLBをBlenderで別々に実レンダリングし、world-space bounds・部品対応・7方向画像・構造を比較して、ズレの種類と対象部品を機械可読JSONへ記録する。boundsだけでは判別できない形状差は次段階で画像/表面距離比較を追加する
 9. `NEXT-009` **診断した設定候補と実アドオンのプロパティの安全な照合** (in_progress)。完了条件: bpy.props宣言とGLB候補の一致、属性read/write、同クラスself参照、Blenderメッシュ生成API引数への直線的AST経路をレビュー限定で実装。分岐/ループ/他関数や実プロパティの正確な実体・形状効果は未検証。次は承認済み合成アドオンの形状変化を実機で別途比較する
-10. `NEXT-010` **安全な合成アドオンで形状変化を数値実証** (in_progress)。完了条件: Blender3版CIで球半径/Bevel幅を別々に変更してGLBの前後を比較し、対象の頂点移動量が正・非対象が0・再読み込み後も変化が残ることを記録
+10. `NEXT-010` **安全な合成アドオンで形状変化を数値実証** (done)。完了条件: CBDK製合成アドオンで球半径/Bevel幅の単独変更をGLB再読込後まで定量比較。変更対象の頂点移動が正・非対象は0を3版Blender CIで確認（commit 04526f1d）
 
 ## 前回、実際に確認されたテスト
 
