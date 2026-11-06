@@ -127,7 +127,33 @@ def render_review_markdown(report: dict) -> str:
                 "別名・別ファイル・動的登録・計算で導出される設定を人が確認してください。",
                 "",
             ])
-        for hint in hints:
+        # Review order is a navigation aid, never a ranking of true causes.
+        # Any malformed record is still rejected in the validation below.
+        def review_order(hint):
+            if not isinstance(hint, dict):
+                return (9, "")
+            flow = hint.get("possible_geometry_dataflow")
+            use = hint.get("possible_code_references")
+            if not isinstance(flow, dict) or not isinstance(use, dict):
+                return (9, "")
+            flows = flow.get("possible_path_count")
+            refs = use.get("possible_reference_count")
+            if type(flows) is not int or flows < 0 or type(refs) is not int or refs < 0:
+                return (9, "")
+            # A syntactic route is convenient to inspect first, not stronger
+            # evidence that this property caused the observed GLB change.
+            level = 0 if flows else 1 if refs else 2
+            name = hint.get("candidate_family")
+            return (level, name if isinstance(name, str) else "")
+
+        lines.extend([
+            "**確認する順番（原因の確からしさではありません）**",
+            "",
+            "構文上の形状処理経路あり → 属性参照あり → 宣言名だけ、の順に表示します。",
+            "実際の原因や修正値の正しさとは無関係です。",
+            "",
+        ])
+        for hint in sorted(hints, key=review_order):
             if not isinstance(hint, dict):
                 raise PropertyMappingError("Invalid AST match")
             name = hint.get("candidate_family")
