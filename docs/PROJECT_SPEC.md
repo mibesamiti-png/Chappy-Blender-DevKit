@@ -398,3 +398,11 @@ CBDK自作生成器の固定値だけでGLBを実際に再生成・比較し、�
 テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`： [Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)、[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)、[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)、[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)、[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)、[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
 
 **GLB-022はpartial**。合成モデル専用の固定2候補に限定し、実アドオンのパラメータを自由に探索・適用したものではない。実ユーザーデータ・因果関係・幾何の全域一致は未検証。GLB-020の追加機能は凍結を維持、GLB-021はpartial、v0.18はPR #25ドラフトのまま。[詳細](GLB022_ALLOWLISTED_ITERATION.md)。
+
+## GLB-022 第2段階：他部品悪化を防ぐ複数合成候補（2026-11-07）
+
+CBDK自作ボール/軸/ソケットの3部品だけをBlenderで毎回新規生成し、3候補の差分を再測定。**ソケット改善なし**、**ソケット改善だがボール悪化**は採用せず、ソケット改善と他部品の非悪化を同時に満たす既知正常候補だけを採用。打切り上限とサンプリング差分0の停止を明示。
+
+コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
+
+出力はローカルの匿名JSON・日本語Markdownのみで、合成モデル以外のアドオンやGLBは実行/変更しない。GLB-022 `partial`を維持し、実アドオンのパラメータ自由探索・因果や全形状一致は未保証。[詳細](GLB022_MULTI_CANDIDATE.md)。
