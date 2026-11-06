@@ -50,6 +50,7 @@
 | `GLB-003` | 参考GLBと生成GLBのworld-space形状回帰比較 | 実装済 | Blender CI | scene metadata schema 3のworld bounds、shape/strict比較、geometry fallback matching、glb-regression CLIを実装。PR #23でPython 343件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1のsynthetic GLB metadata self-comparisonが全成功。bounds同一の輪郭差はLIM-008として継続 |
 | `GLB-004` | 7方向・部品別シルエットIoU回帰比較 | 実装済 | Blender CI | scene metadata schema 4で32x32 binary silhouetteを全体7方向＋最大32部品のfront/right/top/isoへ保存。IoU比較をglb-compare/glb-regressionへ接続。PR #24でPython 347件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1が成功し、Cubeと同boundsの八面体をsilhouette差だけで失敗判定できることを実機確認 |
 | `GLB-005` | 形状診断の数値根拠集約と矛盾データ拒否 | 実装済 | Blender CI | 参考/候補GLBのscene・部品差分を影響視点、最悪IoU、相対誤差、体積割合、重大度別で集約し、異常JSON・矛盾カウンタを拒否。PR #25のコードcommit e971b784でPython3版/Windows2版/Blender3版の実機診断と回帰テスト成功。公開・実ユーザーGLB再現の保証なし |
+| `GLB-006` | GLB差分から確認すべきアドオン設定候補を提示 | 一部実装 | 未検証 | GLB診断の原因カテゴリ・対象部品名から、設定項目の候補群と確認順をレビュー専用JSONへ出力。部品名は未確認の推測であり実装内のパラメータ存在を保証しない。新規20回帰テスト・Blender実機CIは最新コミットの結果確認前 |
 
 ## 既知の問題・制約
 
@@ -74,6 +75,7 @@
 6. `NEXT-001` **v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断** (done)。完了条件: メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない
 7. `NEXT-007` **GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認** (in_progress)。完了条件: 合成fixtureの3バージョンBlender CIは完了。実ユーザーGLBでも必要に応じBlender Previewを生成し、Quick Previewとの部品対応と形状を照合する
 8. `NEXT-008` **参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ** (in_progress)。完了条件: 参照GLB/生成GLBをBlenderで別々に実レンダリングし、world-space bounds・部品対応・7方向画像・構造を比較して、ズレの種類と対象部品を機械可読JSONへ記録する。boundsだけでは判別できない形状差は次段階で画像/表面距離比較を追加する
+9. `NEXT-009` **診断した設定候補と実アドオンのプロパティの安全な照合** (todo)。完了条件: 未知の自作アドオンを実行せず、明示レビューしたproperty名・出典を候補群に結び付け、存在しない設定を確定候補として案内しない
 
 ## 前回、実際に確認されたテスト
 
@@ -104,6 +106,7 @@
 - `DEC-015` 積み上げPRは下位からmainへ順次統合し、正式バージョンは専用release PRのCIで確定する。v0.17では#18→#20→#21を通常mergeで履歴保持。release/v0.17.0でpyprojectと状態台帳を揃え、成功CI観測後にlast_verifiedを更新する
 - `DEC-016` 形状差分は修正判断の証拠であり、比較結果だけでアドオンコードを自動採用・承認しない。v0.18のglb-compare/glb-regressionはズレを機械可読化する。修正は通常のコードレビュー・Python/Windows/Blender CIを再度通し、ユーザー私有GLBは公開GitHubへ保存しない
 - `DEC-017` GLB診断は検証可能な比較差分に基づくレビュー仮説であり、自動修正・完全一致認定をしない。最悪IoUと差分誤差を証拠として並べ、32x32輪郭の死角を明示。未知の差分コードやwarning/infoが存在したら未確認事項として記録し、比較結果の矛盾は拒否する
+- `DEC-018` 診断から生成した設定候補は推測として表示し自動変更しない。ボール/ソケット/ヒンジ名称は弱いロール推測に限り、元ソースとの実一致・数値修正量は判断しない。候補→人手確認→生成GLB再出力→再比較を推奨し、コード実行/書換/自動承認/私有GLB公開を禁止
 
 ## 更新・プライバシールール
 
