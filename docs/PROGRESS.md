@@ -492,3 +492,11 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - `release/v0.17.0` をmainから作成。`pyproject.toml` とSTATEのcurrentを0.17.0へ更新し、次予定を0.18.0へ進める。
 - 正式な `last_verified` はこのrelease PRのPython/Windows/Blender CIが成功した後に更新する。GUI Ctrl+Z/操作感は対象外。
 - 次段階として `NEXT-008` に「参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ」を登録。
+
+
+### v0.17.0 release gate 成功 — 2026-11-06
+
+- PR #22 head `804956cf56eafce1c34d1fe1d80d95e54a95fd4c` でPython **334/334**を3.11/3.12/3.13すべて成功。
+- Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windows kit、durable handoffが全成功。
+- Blender 3版すべてで7部品、6レシピ、監査スケーリング、背景Undo/Redoプローブ、GLB 7方向＋部品単独レンダリングfixtureを成功。
+- `last_verified` をv0.17.0へ更新。GUI Ctrl+Z/操作感と個別ユーザーGLBのBlender実レンダリングは別検証として残す。
