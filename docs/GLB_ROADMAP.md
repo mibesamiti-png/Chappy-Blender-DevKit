@@ -7,7 +7,7 @@
 | ID | 目標 | 状態 | 次の扱い | Notion |
 |---|---|---|---|---|
 | GLB-019 | 実際の参照GLBと生成GLBを読み込み、表面距離・開口差・特徴優先解析を既存比較へ統合 | **implemented / blender_ci** | 合成モデルでCI成功。実ユーザーGLB・512三角形超・個別部品対応は追加検証 | [タスク](https://app.notion.com/p/410948b7493781e888acd4392249365d) |
-| GLB-020 | **形状差分の3D可視化**。差の位置、部品、規模を赤/黄などの色と凡例で確認 | **partial / blender_ci** | 2方向の着色GLB/集計JSONはBlender3版CI成功。部品選択・連動ビュー・未解析領域の表示は残る。詳細 [仕様](GLB_DIFF_VISUALIZATION.md) | [タスク](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25) |
+| GLB-020 | **形状差分の3D可視化**。差の位置、部品、規模を赤/黄などの色と凡例で確認 | **partial / blender_ci** | 2方向の着色GLBに匿名の部品別メッシュと部品別色集計を追加（Blender3版CI成功）。連動ビュー・クロスGLBの部品対応・未測定領域の表示は残る。詳細 [仕様](GLB_DIFF_VISUALIZATION.md) | [タスク](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25) |
 | GLB-021 | **アドオン設定の改善候補と連携**。例: ソケットの開口差→該当しそうな設定候補を人がレビュー | **not_implemented / not_tested** | AST静的解析・差分診断と結び、不明な関連は推測として分離 | [タスク](https://app.notion.com/p/410948b7493781efb123c459b521312e) |
 | GLB-022 | **生成→比較→改善の反復実験**。許可済み合成アドオンのパラメータを変更してGLB再生成と改善測定 | **not_implemented / not_tested** | まずCBDK自作・allowlistの合成アドオンのみ。人手の確認・測定履歴を保持 | [タスク](https://app.notion.com/p/410948b74937811ea006d4d6bd55b1dc) |
 
@@ -47,3 +47,9 @@
 - Pythonの色分類と固定Blender実行で、2つのGLBへ赤/黄/灰の面別レビュー色を付ける出力を実装。
 - [Blender3バージョン CI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143956) の合成モデル書出/再読込は実装コードコミット `01fff174` で成功。Windowsのテストコードのパス差異は後続修正コミット `91e8b6a2` の[Actions](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264413685)で成功。正式v0.17.0、v0.18はドラフトのまま。
 - **次の作業**: 元オブジェクト別の見やすさ、未知/未測定領域を偽装せず表示、連動ビューと実ユーザーGLBテスト。
+
+### GLB-020 第2段階・部品別CI実測
+
+- 合成2部品のGLBから、元の私有風部品名を出力せず別々に選択できる着色部品を出力。部品別赤/黄/灰色の統計もJSONに記録。
+- Code SHA `7365828b287e08046d66d62fc01c5fcfc2457fed`: [Python 42265921528](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921528), [Windows 42265921533](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921533), [Blender 4.4.3/4.5.15/5.2.1 42265921506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921506), [kit 42265921516](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921516), [handoff 42265921493](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921493): **all five completed/success**.
+- 参照と生成で同じ番号の部品が同じ部品とは限らない。完全な対応関係やUIはこれから。
