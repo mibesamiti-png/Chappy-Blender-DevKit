@@ -58,3 +58,36 @@ def vertex_displacement(reference: list, candidate: list) -> dict:
         "metric": "index_aligned_local_vertex_distance",
         "valid_for_arbitrary_glb": False,
     }
+
+def radial_distribution_error(reference: list, candidate: list) -> dict:
+    """Mean absolute sorted distance-from-local-origin difference.
+
+    A conservative, order-independent *synthetic-fixture* diagnostic used for
+    our centered sphere and bevel cube. It does NOT compare surfaces, direction,
+    topology identity, cavities or vertex correspondence. Different shapes
+    may share the exact same radial distribution.
+    """
+    left = _vertices(reference, "reference")
+    right = _vertices(candidate, "candidate")
+    if len(left) != len(right):
+        raise ExperimentMetricError("Radial comparison vertex counts must match")
+
+    def radii(points):
+        values = [math.hypot(*xyz) for xyz in points]
+        if not all(math.isfinite(r) for r in values):
+            raise ExperimentMetricError("Radial distance is not finite")
+        return sorted(values)
+
+    a = radii(left)
+    b = radii(right)
+    score = sum(abs(u - v) for u, v in zip(a, b)) / len(a)
+    if not math.isfinite(score):
+        raise ExperimentMetricError("Radial distribution score is not finite")
+    return {
+        "mean_sorted_radius_error": round(score, 7),
+        "vertex_count": len(a),
+        "metric": "sorted_local_origin_radius_mean_absolute_difference",
+        "invariant_to_vertex_order": True,
+        "valid_for_arbitrary_glb": False,
+        "geometry_equivalence_verified": False,
+    }
