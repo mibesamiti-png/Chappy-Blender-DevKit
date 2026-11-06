@@ -305,3 +305,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - The baseline synthetic shaft must be capped at both ends; an uncapped baseline was a real fixture bug found by the initial gate. Do not suppress this result by weakening diagnostics.
 - Keep the original input GLBs unchanged (SHA-256) and private derived GLBs/HTML local. JSON must not include raw geometry, input names or source addon code.
 - GLB-020 review MVP is accepted but the full requirement is `partial`. **Stop adding optional GLB-020 enhancements for now**; prioritize GLB-021 human-review parameter hints, then GLB-022 allowlisted synthetic iterations. Do not claim perfect geometry recognition, private-user test coverage, or arbitrary addon execution.
+
+## GLB-021 visual-to-AST review-only safety
+
+- Source model: only a **GLB-020 aggregate JSON** with explicit unapproved flags and no raw vertices or source object names. Never import/execute the original Blender addon, infer parameter values, or silently match reference/candidate part identities.
+- `--source` is a user-specified local Python file parsed with AST. `--role part_003=socket` is a **manual assertion**, not semantic part recognition. A syntactic declaration/name/reference/geometry path remains unverified without separately reviewed Blender execution evidence.
+- The output AST property hints may be private: write only new, untracked `reports/latest/*.json` files; no overwrite, no user source content/defaults/paths in stdout, GitHub or Notion. Never commit user's private code or actual GLB/derived HTML.
+- Real Blender 3-version CI uses only CBDK-owned synthetic joint GLBs and synthetic Python property declarations; the automation does not register user addons. GLB-021 is `partial`, GLB-022 remains unimplemented. Proceed toward human-review accuracy, not optional GLB-020 scope expansion.
