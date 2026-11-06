@@ -633,6 +633,11 @@ jobs:
           python scripts/run_glb022_synthetic_iteration.py \
             --blender "$BLENDER_PATH" --protocol progressive \
             --output reports/ci/glb022_progress_iteration
+          # GLB-022 stage 4: candidate values are computed arithmetically
+          # from a hard-bounded CBDK synthetic range, not handwritten IDs.
+          python scripts/run_glb022_synthetic_grid.py \
+            --blender "$BLENDER_PATH" \
+            --output reports/ci/glb022_generated_grid
           python - <<'PY'
           import json
           from pathlib import Path
@@ -700,6 +705,24 @@ jobs:
           for name in ("narrow", "narrow_mid_shifted", "narrow_mid", "identical"):
               assert (progress_root / ("review_" + name) / "review.json").is_file()
               assert (progress_root / "synthetic_inputs" / name / (name + ".glb")).is_file()
+          grid_root = Path("reports/ci/glb022_generated_grid")
+          grid = json.loads((grid_root / "synthetic_grid_history.json").read_text())
+          assert grid["kind"] == "cbdk_glb022_bounded_generated_grid_v1"
+          assert grid["generated_candidate_values"] == [1.01, 1.24, 1.47, 1.7]
+          assert grid["max_attempts"] == 4
+          assert len(grid["attempts"]) == 4
+          assert grid["accepted_trial_id"] == "grid_170"
+          assert grid["stop_reason"] == "observed_sampled_zero"
+          assert grid["final_sampled_max"] <= 0.000001
+          assert grid["safety"]["only_repo_owned_synthetic_fixtures"] is True
+          assert all(not v for k, v in grid["safety"].items()
+                     if k != "only_repo_owned_synthetic_fixtures")
+          assert "未完了" in (grid_root / "synthetic_grid_history.md").read_text()
+          for name in ("grid_101", "grid_124", "grid_147", "grid_170"):
+              assert (grid_root / ("review_" + name) / "review.json").is_file()
+              assert (grid_root / "synthetic_inputs" / name / "grid_candidate.glb").is_file()
+          assert (grid_root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
+          assert (grid_root / "synthetic_inputs" / "narrow" / "narrow.glb").is_file()
           PY
           sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
