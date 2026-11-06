@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - 'pyproject.toml'
+      - 'docs/project/STATE.json'
       - 'scripts/windows_run_blender_tests.ps1'
       - 'scripts/package_windows_kit.py'
       - 'run_blender_tests_windows.bat'
@@ -34,7 +36,11 @@ jobs:
         run: |
           python - <<'PY'
           from zipfile import ZipFile
-          p = 'dist/CBDK_v0.16_Windows_Blender_DevKit.zip'
+          import tomllib
+          from pathlib import Path
+          with Path('pyproject.toml').open('rb') as f:
+              version = tomllib.load(f)['project']['version']
+          p = f'dist/CBDK_v{version}_Windows_Blender_DevKit.zip'
           with ZipFile(p) as z:
               names = z.namelist()
               assert 'Chappy-Blender-DevKit/run_blender_tests_windows.bat' in names
@@ -45,6 +51,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cbdk-windows-hotfix-kit
-          path: dist/CBDK_v0.16_Windows_Blender_DevKit.zip
+          path: dist/CBDK_v*_Windows_Blender_DevKit.zip
           retention-days: 14
           if-no-files-found: error
