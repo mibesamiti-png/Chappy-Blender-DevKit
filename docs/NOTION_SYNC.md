@@ -29,7 +29,7 @@ Last handoff: 2026-11-07 JST.
 
 ## GLB roadmap restored from the prior chat on 2026-11-07
 
-- Source: [GLB-019 through GLB-022 roadmap](GLB_ROADMAP.md), canonical [STATE.json](project/STATE.json) and generated [PROJECT_HANDOFF.md](../PROJECT_HANDOFF.md).
+- Source: [GLB-019 through GLB-022 roadmap](GLB_ROADMAP.md), canonical [STATE.json](project/STATE.json) and generated [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md).
 - [GLB-019](https://app.notion.com/p/410948b7493781e888acd4392249365d): implemented / Blender synthetic CI; real-world GLB scalability and full geometry identity are not proven.
 - [GLB-020](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25): not_implemented / not_tested; 3D visual differences, next candidate.
 - [GLB-021](https://app.notion.com/p/410948b7493781efb123c459b521312e): not_implemented / not_tested; relate difference categories to review-only property candidates.
