@@ -20,6 +20,7 @@ from cbdk.glb_diff_colors import (  # noqa: E402
     COLOR_RGBA, MAX_PARTS, classify_faces, summarize_anonymous_parts,
 )
 from cbdk.glb_surface_distance import MAX_TRIANGLES  # noqa: E402
+from cbdk.glb_diff_viewer import render_local_diff_viewer  # noqa: E402
 
 MARKER = "CBDK_GLB_DIFF_VISUALIZE_PASS "
 
@@ -136,6 +137,14 @@ def main():
         output_dir / "candidate_diff.glb", role="Candidate",
     )
 
+    # The HTML intentionally contains local derived geometry. It is NOT a
+    # sanitized aggregate report and must never be published for private GLBs.
+    html = render_local_diff_viewer(
+        ref_faces, cand_faces, result["reference_labels"],
+        result["candidate_labels"], ref_counts, cand_counts,
+    )
+    (output_dir / "compare_viewer.html").write_text(html, encoding="utf-8")
+
     report = {
         "schema_version": 1,
         "kind": "cbdk_glb_diff_visualization",
@@ -143,6 +152,12 @@ def main():
         "source": "local_blender_import_color_overlay",
         "blender_version": bpy.app.version_string,
         "outputs": ["reference_diff.glb", "candidate_diff.glb"],
+        "viewer": "compare_viewer.html",
+        "viewer_contains_derived_geometry": True,
+        "viewer_local_only": True,
+        "viewer_shared_camera": True,
+        "viewer_browser_interaction_verified": False,
+        "unobserved_regions_verified": False,
         "triangle_limit_per_scene": MAX_TRIANGLES,
         "part_count_limit_per_scene": MAX_PARTS,
         "reference": result["reference_counts"],
@@ -170,7 +185,9 @@ def main():
             "Unmeasured regions are not localized or uniquely colored",
             "Only local derived GLBs contain private geometry; JSON is aggregate-only",
             "Source and candidate must share a coordinate system and units",
-            "No linked camera UI, automatic modification or parameter approval",
+            "Offline two-canvas synchronized-view HTML is implemented but browser UI automation is not verified",
+            "2D canvas painter uses approximate depth ordering, not a GPU depth buffer",
+            "No cross-file part matching, automatic modification or parameter approval",
         ],
     }
     (output_dir / "review.json").write_text(
