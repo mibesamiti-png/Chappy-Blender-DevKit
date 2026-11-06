@@ -284,3 +284,13 @@ Python側に12件のpreflight/安全ランナー/報告/スキップテストと
 参照・生成それぞれに最大64個の非空メッシュを保持したまま、匿名の`CBDK_Reference_Part_###` / `CBDK_Candidate_Part_###`として3D色分けモデルを書き出す。`review.json`の`parts.reference`/`parts.candidate`に部品別の三角面数と色の枚数を記録するが、元の部品名や生頂点座標は出さない。元GLBは書き換えず、派生モデルはローカル保存限定。**双方の同じ部品番号は対応関係の証明ではない。** 連動比較UIや未知領域の表示・大規模GLBは未完成。
 
 合成2部品GLBの実書出・再読込と色別材料の維持はBlender4.4.3/4.5.15/5.2.1でCI成功。検証: [Blender run 42265921506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921506)、実装テストSHA `7365828b`。正式v0.17.0/ドラフトPR #25維持。
+
+## GLB-020 第3段階：オフライン連動比較HTML
+
+2つのGLBを比較するローカル`compare_viewer.html`を出力。外部フロントエンド依存なしのCanvas 2Dソフトウェア3D投影で、左右視点の同期回転・ズーム・平行移動、左右独立した匿名部品の選択、灰色面の表示切替ができる。共通中心と世界単位の縮尺で位置ズレの隠蔽を避ける。元コードは実行しない。
+
+このHTMLには派生三角形の座標が含まれ、非公開モデルの場合はローカル専用。JSONには形状座標を書かない。CSPでネットワークへの接続と外部スクリプトを拒否。元GLB不変、最大512面・64部品を維持。
+
+実装テストSHA `b5d1d27`：Python [42268089086](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268089086)、Windows [42268088883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088883)、Blender3版 [42268088779](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088779)、kit [42268088823](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088823)、handoff [42268088869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088869) 全成功。
+
+実ブラウザ操作・正確な遮蔽判定・別GLB間の部品対応・未観測面の確定、512面超は今後の開発タスク。GLB-020は一部実装、正式v0.17.0/ドラフトPR #25を維持。
