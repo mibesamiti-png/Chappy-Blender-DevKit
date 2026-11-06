@@ -198,7 +198,7 @@ jobs:
           python -m cbdk glb-preview reports/ci/glb_fixture.glb \
             --blender "$BLENDER_PATH" \
             --output reports/ci/glb_preview \
-            --resolution 384 --timeout 180 \
+            --resolution 256 --timeout 180 \
             2>&1 | tee reports/ci/glb_preview.log
           python - <<'PY'
           import json
