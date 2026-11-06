@@ -153,6 +153,39 @@ def _validate_plan(plan: dict) -> list[dict]:
     return rows
 
 
+def _declaration_scope_review(declarations: list[dict], trace: dict) -> dict:
+    """Compare anonymous class/source identifiers; NEVER claim receiver identity.
+
+    Count all AST self accesses rather than only the capped example list.
+    Source identity + class name are necessary, not sufficient, conditions.
+    """
+    scopes = {(decl["source_label"], decl["class_name"]) for decl in declarations}
+    selected = [
+        row for row in trace["syntactic_self_scopes"]
+        if (row["source_label"], row["class_name"]) in scopes
+    ]
+    count = sum(item["possible_reference_count"] for item in selected)
+    total = trace["possible_reference_count"]
+    if count > total:
+        raise PropertyMappingError("Invalid static reference accounting")
+    return {
+        "classification": (
+            "syntactic_same_source_class_self_reference_found" if count
+            else "no_same_source_class_self_reference_found"
+        ),
+        "possible_same_source_class_self_count": count,
+        "other_or_unresolved_attribute_reference_count": total - count,
+        "possible_access_counts": {
+            access: sum(item["access_counts"][access] for item in selected)
+            for access in ("read", "write", "delete", "read_write")
+        },
+        "actual_receiver_binding_verified": False,
+        "registered_in_blender_verified": False,
+        "geometry_effect_verified": False,
+        "requires_manual_review": True,
+    }
+
+
 def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
     """Correlate declared class properties and family names. No runtime claims."""
     recommendations = _validate_plan(plan)
@@ -181,6 +214,8 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
                     "match": "exact_declaration_name_only",
                     "declarations": hit,
                     "possible_code_references": traced[candidate],
+                    "same_class_reference_review": _declaration_scope_review(
+                        hit, traced[candidate]),
                     "requires_human_review": True,
                 })
             else:
@@ -210,6 +245,7 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
             "Unmatched families may be renamed, derived, dynamically registered or elsewhere",
             "No source snippets, default values or absolute paths are included",
             "Attribute references are text matches: receiver binding and geometry effect are unverified",
+            "A syntactic same-class self reference is a review hint, never proof of runtime binding",
         ],
         "safety": {
             "source_executed": False, "source_modified": False,
