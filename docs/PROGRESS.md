@@ -859,3 +859,12 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - `.github/workflows/blender-smoke.yml`: CBDK自作の合成2組のGLBを色分け、統計検証後、着色出力をBlenderへ再インポートして材料を確認。既存GLB-019の計測と併走。
 - 実装コードのテストSHA `01fff17403b931390c1813dcce4577363eb9077f` で[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143616) / [Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143956) / [Windows kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143564) / [handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143732) **成功**。Windowsテストは同SHAでパス区切り差異により失敗（[run 42264143652](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143652)）。その後コミット `91e8b6a2` でテストのパス扱いを修正し、最新HEADのCI再確認を行う。
 - **ステータスは一部実装**。色付きGLB書き出しは動いたが、オブジェクト別選択・連動比較ビュー・未測定部の表示・より大きな実ユーザーGLBは未実装。正式リリースはv0.17.0、ドラフトPR #25維持。
+
+## 2026-11-07 GLB-020 — 匿名部品別カラー差分（第二段階）
+
+- `scripts/blender_glb_diff_visualize.py`: 初版の「全部の面を1メッシュに統合」を改良。入力GLBの個々の**非空メッシュ**を保持して、`CBDK_Reference_Part_001` / `CBDK_Candidate_Part_001` のような匿名の部品に分けて着色GLBを出力。元の部品名は出力しない。
+- `cbdk/glb_diff_colors.py`: `summarize_anonymous_parts` を追加。部品ごとの赤/黄/灰の面数と三角形数を集計し、入力順・合計・最大64部品の整合を検証。部品名・元頂点座標・私有ファイルパスはJSONに保存しない。
+- `cbdk/glb_diff_visualize.py`: 返却JSONの部品ID順、面数、集計合計、匿名化フラグ・64部品制限をチェック。`cross_file_part_identity_proven=false` を固定して、双方の同じ番号が対応部品だと誤認しない。
+- `tests/test_glb_diff_visualize.py`: 部品集計や不正な部品構造のPythonテスト。`scripts/blender_make_glb_diff_parts_fixture.py` で意図的に非公開風の名前を持つ2部品の合成GLBを生成し、`scripts/blender_verify_glb_diff_visualize.py` で別部品・色付け・元名称の非継承を実機再読込で確認するCIを追加。
+- CI対象: コード・テストSHA `7365828b287e08046d66d62fc01c5fcfc2457fed`。Python/Windows/Blender実機結果は各ジョブ完了後にこの節へ追記する。`[skip ci]`文書コミットは同SHAのテスト結果として扱わない。
+- **部分実装を維持**：出力GLBの部品はBlenderで個別に選択・非表示可能となる想定だが、元の対応部品を自動で結び付ける機能、同期カメラ、未測定領域の厳密表示、512三角形を超えるデータは未対応。安全なローカル比較と公開GitHubへの非公開モデル混入防止を優先。
