@@ -80,15 +80,18 @@ def _read_glb_json(path: str | Path) -> tuple[dict, list[GLBChunk], int]:
             if payload_end > size:
                 raise GLBInspectionError("GLB chunk extends beyond file length")
             chunks.append(GLBChunk(chunk_type, chunk_length, payload_offset))
-            payload = stream.read(chunk_length)
-            if len(payload) != chunk_length:
-                raise GLBInspectionError("Truncated GLB chunk payload")
             if chunk_type == JSON_CHUNK_TYPE:
                 if json_payload is not None:
                     raise GLBInspectionError("GLB contains multiple JSON chunks")
                 if chunk_length > MAX_JSON_BYTES:
                     raise GLBInspectionError("GLB JSON chunk exceeds safe size limit")
-                json_payload = payload
+                json_payload = stream.read(chunk_length)
+                if len(json_payload) != chunk_length:
+                    raise GLBInspectionError("Truncated GLB JSON chunk payload")
+            else:
+                # Structure inspection does not need geometry/image payload bytes.
+                # The file length and chunk bounds were already validated above.
+                stream.seek(chunk_length, 1)
             offset = payload_end
 
         if json_payload is None:
@@ -231,6 +234,7 @@ def inspect_glb(path: str | Path) -> dict:
             "executed_embedded_content": False,
             "loaded_external_uris": False,
             "decoded_images": False,
+            "loaded_binary_payload": False,
             "blender_runtime_verified": False,
         },
     }
