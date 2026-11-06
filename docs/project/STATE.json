@@ -360,8 +360,8 @@
       "title": "生成→比較→改善の反復実験",
       "status": "partial",
       "verification": "blender_ci",
-      "source": "cbdk/glb_synthetic_progress.py",
-      "note": "CBDK合成3部品の固定中間ソケット開口1.24を追加し、GLB-020集計の双方向最大サンプリング距離で段階的改善を判定。試行1 narrow_mid_shiftedはボール悪化で棄却、試行2 narrow_midはソケットに観測距離が残る中間改善として採用、試行3 identicalは観測距離0・他部品悪化なしで採用停止。予算1/2で打切り未完成状態保持、旧basic/cross_partプロトコルも回帰維持。CIテスト対象コードSHA 44e15f8f6664fe29e06810fd06d8d73dda70bec6：Python 42307811087・Windows 42307810687・Blender3版 42307810797・Kit 42307810828・Handoff 42307811040・Chromium 42307810743 全6系統success。距離は全体のサンプル最大で部品別・厳密Hausdorffではなく、任意アドオンの原因・最適値・完全形状一致は未実装/未保証"
+      "source": "cbdk/glb_synthetic_grid.py",
+      "note": "GLB-022第4段階：CBDK自作の合成ソケットの固定範囲0.78..1.70から四分割の数値候補1.01/1.24/1.47/1.70を算術生成し、実BlenderでGLBを個別に新規生成→GLB-020比較→サンプル双方向最大距離と他部品分類数を見て採否/停止、ローカルJSON/日本語MD履歴。改善停滞は棄却、試行予算1/2/3は未完了を明示。過去basic/cross_part/progressiveはCIで維持。テスト対象コードSHA 23e9dec5d313468a70cc3bab7a5bb57fc090a8b3：Python 42309145079、Windows 42309145003、Blender3版 42309145076、Kit 42309145019、Handoff 42309145005、Chromium 42309145006全6系統success。固定格子生成であり適応探索・実アドオン修正・完全幾何等価性は未実装/未保証"
     }
   ],
   "known_issues": [
@@ -608,8 +608,8 @@
       "id": "NEXT-020",
       "priority": 20,
       "status": "in_progress",
-      "title": "GLB-022: 合成中間値1.24の段階的なサンプル距離改善を採用、他部品悪化を棄却。次は安全な一般化と人の確認",
-      "acceptance": "CBDK合成GLBをBlender3バージョンで毎試行生成・比較。narrow(0.78)からnarrow_mid_shifted(1.24+ボール移動)は他部品悪化で棄却、narrow_mid(1.24)は全体の双方向サンプル最大距離が減るため途中改善として採用、identical(1.70)で観測差分0のため採用/停止。予算1/2の場合は部分改善または未修復と記録し、既存basic/cross_part回帰維持。CIコードSHA 44e15f8fのPython/Windows/Blender3版/Kit/Handoff/Chromium6系統成功。実GLB・任意アドオン・部品別の厳密距離・最適化は未検証"
+      "title": "GLB-022: CBDK合成専用の4分割数値候補を算術生成し実Blender比較・採否・停止を6系統CI確認。次は適応探索の安全設計",
+      "acceptance": "CBDK合成ソケット0.78..1.70の4分割から1.01/1.24/1.47/1.70を算術生成。各候補をBlender3版で実際に新規GLB生成しGLB-020差分を再計測、双方向サンプル最大距離が改善し他部品の分類が悪化しないときのみ採用。停滞棄却、予算1..3時は未完成のまま停止、正常端点でサンプリング差分0停止。コードSHA 23e9dec5のPython/Windows/Blender3版/Kit/Handoff/Chromium全6CI成功。適応探索や任意実アドオンの最適設定・完全一致は未実装"
     }
   ],
   "decisions": [
@@ -847,6 +847,11 @@
       "id": "DEC-047",
       "decision": "GLB-022の合成中間改善は面色の件数に加え双方向サンプリング最大距離で判定し、他部品悪化の棄却を必須として段階的改善を保存する",
       "note": "既知固定合成開口0.78→1.24→1.70、ボール位置ずれ時の棄却を実Blender3バージョンCIで検証。最大距離はGLB-020の全体双方向サンプル最大値（部品別/正確なHausdorff距離ではない）で、完全形状一致や本当の原因の証明ではない。コードSHA 44e15f8fの全6系統CI success。実ユーザーアドオンや私有GLB実行・編集なし。GLB-022 partial、正式v0.17.0、v0.18ドラフトPR #25を維持"
+    },
+    {
+      "id": "DEC-048",
+      "decision": "GLB-022第4段階でCBDKの合成ソケットの安全な固定範囲だけを等分し数値候補を計算生成する。採否はサンプル双方向最大距離と他部品の退行防止、未完了の正確な記録を両立",
+      "note": "合成直径0.78から既知正常1.70の間を算術4等分して候補1.01/1.24/1.47/1.70を生成。実Blenderで4候補のGLBをそれぞれ作り直し評価、ルール外の値・任意のユーザーアドオン・既存出力上書きを拒否。テスト対象コードSHA 23e9dec5の6系統CI成功。固定格子であって測定に応じた探索方針変更はない。全体最大距離は厳密Hausdorffではなく、GLB-022 partial、正式v0.17.0とv0.18ドラフトPRを維持"
     }
   ],
   "last_verified": {
