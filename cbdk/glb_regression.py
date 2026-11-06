@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .glb_compare import write_scene_comparison
 from .glb_inspector import write_glb_inspection
+from .glb_diagnose import write_diagnosis
 from .glb_render import render_glb_preview
 
 
@@ -44,6 +45,8 @@ def run_glb_regression(
         scene_rel_tol=scene_rel_tol,
         silhouette_iou_min=silhouette_iou_min,
     )
+    diagnosis_path = root / "diagnosis.json"
+    diagnosis = write_diagnosis(comparison_path, diagnosis_path)
     return {
         "kind": "cbdk_glb_regression",
         "passed": report["passed"],
@@ -51,5 +54,7 @@ def run_glb_regression(
         "reference_preview": str(ref_dir),
         "candidate_preview": str(cand_dir),
         "comparison": str(comparison_path),
+        "diagnosis": str(diagnosis_path),
         "summary": report["summary"],
+        "diagnostic_hypotheses": diagnosis["hypothesis_count"],
     }
