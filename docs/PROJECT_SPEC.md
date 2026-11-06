@@ -208,3 +208,9 @@ GLB-008の属性名参照証拠はBlenderプロパティとの結び付きを一
 `same_class_reference_review`の判定は**構文上の関連ヒント**であって、レシーバーが実際にプロパティ所有インスタンスであることや、Blenderへ登録されたこと、ジオメトリへの効果や動作確認を意味しない。クラス名が匿名化された場合は誤関連を避けて一致候補から除外する。外部ソースのimport/execや設定の自動適用、私有ソースのアップロードは行わない。
 
 テストは `tests/test_glb_property_binding.py` とBlender3版の合成fixtureで行う。詳細は `docs/GLB_PROPERTY_MAPPING.md`。
+
+## v0.18 GLB-011 — モディファイア設定への候補経路
+
+GLB-010の直線的ASTデータフローに、Boolean/Bevel/Solidify関連で使われ得る `width`/`thickness`/`operation`/`object`/`segments`/`levels` 等の属性代入、および複合代入を追加する。宣言された `self.<プロパティ>` や検証範囲内のローカル別名からその値が代入式に現れる場合のみ `possible_modifier_setting_assignment` として報告。別オブジェクト由来、関数内共起のみ、分岐/ループ/ネストなどは因果経路と認定しない。
+
+Python任意オブジェクトの同名属性でも候補になるため、`modifier` の本当の型、Blenderモディファイア設定が適用されたこと、実ジオメトリに効果があったことは**一切未証明**。自動修正やコード実行はしない。詳細・利用上の制約は `docs/GLB_PROPERTY_MAPPING.md` に記録。
