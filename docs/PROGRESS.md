@@ -547,3 +547,15 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - 原本GLBの自動編集、アドオンコード修正、許可やマージは行わない。私有GLBの公開GitHubへのアップロードも行わない。
 
 **検証状態**：追加19件のCI実走とBlender実機・Windowsでの現在のPR headの成功は未確認。合格記録は以前の実測release v0.17.0を維持（GLB-005: not_tested）。
+
+### v0.18 GLB-005 — 実測CI検証結果（2026-11-06）
+
+PR #25の実装コミット `e971b784e5f6694252e924c0b8183dd393aa3860` に対するGitHub Actionsで次を確認。
+
+- Python 3.11/3.12/3.13: 全ジョブ成功（run [42202420004](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202420004)）。GLB数値診断の追加19回帰テストを含む。
+- Windows PowerShell 3.11/3.13: 全ジョブ成功（run [42202419886](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419886)）。
+- Blender 4.4.3/4.5.15/5.2.1: 全ジョブ成功（run [42202419874](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419874)）。形状差分fixtureの診断レポートについて対象視点・最悪IoU・error件数と非自動承認をCIで検証した。
+- Windowsキット生成: 成功（run [42202419926](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419926)）。
+- 永続引き継ぎチェック: 成功（run [42202419869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419869)）。
+
+**境界**：これは上記コミットの実測。検証記録を追記する後続のドキュメント変更やユーザー個別GLBの再現率まで保証しない。PR #25はドラフト、mainに統合していない。`last_verified`の正式v0.17.0は変更しない。
