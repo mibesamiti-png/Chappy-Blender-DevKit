@@ -39,6 +39,9 @@ on:
       - 'tests/test_glb_property_usage.py'
       - 'scripts/blender_glb_render.py'
       - 'scripts/blender_make_glb_fixture.py'
+      - 'scripts/blender_parameter_experiment_smoke.py'
+      - 'fixtures/cbdk_parameter_experiment.py'
+      - 'tests/test_glb_parameter_experiment.py'
       - 'tests/test_glb_inspector.py'
       - '.github/workflows/blender-smoke.yml'
 
@@ -196,6 +199,68 @@ jobs:
           Path('reports/ci/audit_scaling.json').write_text(json.dumps(data, indent=2) + '\n')
           PY
           echo "Real Blender guarded audit scaling and mutation-free over-limit reject PASSED." >> "$GITHUB_STEP_SUMMARY"
+      - name: Experiment with trusted addon property changes and real GLB roundtrip
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci/parameter_experiment
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_parameter_experiment_smoke.py \
+            -- reports/ci/parameter_experiment \
+            2>&1 | tee reports/ci/parameter_experiment.log
+          grep -F 'CBDK_PARAMETER_EXPERIMENT_PASS ' reports/ci/parameter_experiment.log
+          for variant in baseline sphere_radius_changed bevel_width_changed; do
+            python -m cbdk glb-inspect "reports/ci/parameter_experiment/${variant}.glb" \
+              --output "reports/ci/parameter_experiment/${variant}_structure.json"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/parameter_experiment')
+          result = json.loads((root / 'parameter_experiment.json').read_text())
+          assert result['kind'] == 'cbdk_trusted_blender_parameter_experiment', result
+          assert result['source_fixture'] == 'cbdk_authored_only', result
+          assert len(result['variants']) == 3, result
+          assert all(result['controls'].values()), result
+          assert all(v is False for v in result['safety'].values()), result
+          for variant in ('baseline', 'sphere_radius_changed', 'bevel_width_changed'):
+              assert (root / f'{variant}.glb').stat().st_size > 100
+              data = json.loads((root / f'{variant}_structure.json').read_text())
+              assert data['kind'] == 'cbdk_glb_static_inspection', data
+              assert data['counts']['meshes'] == 2, data
+          PY
+          if [ "$BLENDER_VERSION" = "4.5.15" ]; then
+            set +e
+            python -m cbdk glb-regression \
+              reports/ci/parameter_experiment/baseline.glb \
+              reports/ci/parameter_experiment/sphere_radius_changed.glb \
+              --blender "$BLENDER_PATH" \
+              --output reports/ci/parameter_experiment/radius_regression \
+              --resolution 256 --timeout 180 \
+              --scene-rel-tol 0.02 --dimension-rel-tol 0.10 --center-rel-tol 0.02 \
+              --silhouette-iou-min 0.90
+            status=$?
+            set -e
+            test "$status" -eq 1
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/parameter_experiment/radius_regression')
+          comparison = json.loads((root / 'comparison.json').read_text())
+          diagnosis = json.loads((root / 'diagnosis.json').read_text())
+          repair = json.loads((root / 'repair_plan.json').read_text())
+          codes = {x['code'] for x in comparison['differences']
+                   if x['severity'] == 'error'}
+          assert not comparison['passed'], comparison
+          assert 'object_dimensions' in codes, comparison
+          assert any(x['category'] == 'part_size_parameter'
+                     for x in diagnosis['hypotheses']), diagnosis
+          assert repair['recommendation_count'] > 0, repair
+          assert repair['safety']['applies_parameters'] is False, repair
+          PY
+          fi
+          echo "Trusted additive parameter GLB generation and roundtrip controls passed." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
         run: |
