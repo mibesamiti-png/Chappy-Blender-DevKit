@@ -422,3 +422,11 @@ CBDK自作のソケットの開口直径0.78〜1.70を4等分し、**1.01・1.24
 テスト対象コード SHA `23e9dec5d313468a70cc3bab7a5bb57fc090a8b3`：[Python 42309145079](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145079)、[Windows 42309145003](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145003)、[Blender4.4.3/4.5.15/5.2.1 42309145076](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145076)、[Windows kit 42309145019](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145019)、[引き継ぎ 42309145005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145005)、[Chromium 42309145006](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145006) **全6系統success**。
 
 値はCBDK合成モデルの安全範囲に固定。測定に適応して値を決める一般探索や、ユーザーのアドオンの実行/自動修正ではない。GLB-022はpartial、v0.18ドラフトPR #25維持。[詳細](GLB022_GENERATED_GRID.md)。
+
+## GLB-022 第5段階：合成モデルの適応型二分探索（2026-11-07）
+
+CBDK自作ソケットだけで0.78〜1.70を0.01刻みで二分し、GLB-020で実際に測った全体双方向サンプル最大距離が**試験専用の目標0.12**を満たしたかによって次候補を増減。固定の4候補を順番に試す方式から、**測定値で次候補が変わる方式**へ拡張。最大4回、他部品の悪化防止、未知数値や偽の履歴を拒否。各候補GLBをBlenderで新規生成し、ソースのSHA256不変を確認。
+
+テスト対象コードSHA `37ee124aabb44df5ad9cb246342712bd9e0eb2ef`：[Python 42311608904](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608904)、[Windows 42311608916](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608916)、[Blender4.4.3/4.5.15/5.2.1 42311608910](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608910)、[Windows Kit 42311609353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609353)、[引き継ぎ 42311609070](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609070)、[Chromium 42311609211](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609211) **全6系統success**。
+
+**実ユーザー向けの最適寸法推薦・コード修正・実物の公差確認ではない**。モデル全体のサンプリング最大距離は厳密Hausdorffではない。GLB-022はpartial、正式版v0.17.0、ドラフトPR #25を維持。[実験仕様](GLB022_ADAPTIVE_SYNTHETIC.md)。
