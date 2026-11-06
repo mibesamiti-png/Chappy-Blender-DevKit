@@ -13,6 +13,7 @@ from pathlib import Path
 
 from .glb_diff_colors import COLOR_RGBA, summarize_anonymous_parts
 from .glb_surface_distance import _validated_triangles
+from .glb_part_match import suggest_spatial_part_matches
 
 TEMPLATE = Path(__file__).with_name("glb_diff_viewer_template.html")
 MARKER = "__CBDK_VIEWER_DATA__"
@@ -65,6 +66,9 @@ def render_local_diff_viewer(
         "candidate": right,
         "unobserved_regions_verified": False,
         "cross_file_part_identity_proven": False,
+        "part_suggestions": suggest_spatial_part_matches(
+            reference, candidate, reference_counts, candidate_counts,
+        ),
         "auto_apply": False,
     }
     # The payload is entirely made from validated numbers, fixed keys and
