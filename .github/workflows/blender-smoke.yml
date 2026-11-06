@@ -411,6 +411,51 @@ jobs:
           PY
           echo "GLB-019 imported local pair pipeline, exact source privacy and review-only caps passed." >> "$GITHUB_STEP_SUMMARY"
 
+      - name: GLB-020 review-only colored 3D difference exports and reimport
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_distance
+          python -m cbdk glb-diff-visualize \
+            "$root/filled_main.glb" "$root/with_open_hole.glb" \
+            --blender "$BLENDER_PATH" --output "$root/diff_colors" \
+            --timeout 180
+          python -m cbdk glb-diff-visualize \
+            "$root/filled_main.glb" "$root/filled_other.glb" \
+            --blender "$BLENDER_PATH" --output "$root/diff_same" \
+            --timeout 180
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/surface_distance')
+          hole = json.loads((root / 'diff_colors/review.json').read_text())
+          same = json.loads((root / 'diff_same/review.json').read_text())
+          for row, folder in ((hole, 'diff_colors'), (same, 'diff_same')):
+              assert row['kind'] == 'cbdk_glb_diff_visualization'
+              assert row['status'] == 'review_only'
+              assert row['sampled_only'] is True
+              assert row['complete_surface_equivalence_proven'] is False
+              assert row['auto_apply'] is False
+              assert all(not flag for flag in row['safety'].values())
+              for key in ('reference', 'candidate'):
+                  assert 1 <= sum(row[key].values()) <= 512
+              for name in row['outputs']:
+                  p = root / folder / name
+                  assert p.exists() and p.stat().st_size > 100
+              assert 'filled_main' not in str(row)
+          assert same['reference']['low'] == sum(same['reference'].values())
+          assert same['candidate']['low'] == sum(same['candidate'].values())
+          assert (hole['reference']['high'] + hole['reference']['medium'] +
+                  hole['candidate']['high'] + hole['candidate']['medium']) >= 1
+          PY
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_verify_glb_diff_visualize.py -- \
+            "$root/diff_colors/reference_diff.glb" "$root/diff_colors/candidate_diff.glb" \
+            2>&1 | tee "$root/glb_diff_reimport.log"
+          grep -F 'CBDK_GLB_DIFF_VISUALIZATION_REIMPORT_PASS' "$root/glb_diff_reimport.log"
+          echo "GLB-020 directional colored GLB outputs and Blender reimport passed." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
         run: |
