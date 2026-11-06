@@ -284,3 +284,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - Maintain the initial 24-sample color classification independently: secondary probes may set a Boolean visual outline and only aggregate counts in `review.json`, never automatically change addon code/parameters or escalate color classifications without a separate reviewed specification.
 - Preserve per-source anonymous part alignment, up-to-512 triangle and 64-part caps, disabled Blender auto-execution and local-only derived GLB/HTML. `review.json` must not include original coordinates, source paths, per-face flags or private names.
 - Differentiate Python tests, real Blender synthetic import tests, Chromium GUI checks, and real-user file validation. Passing those synthetic tests is not a proof of full geometric equivalence.
+
+## GLB-020 coordinate-welded edge incidence safety
+
+- The per-part boundary edge incidence is an **approximate observation**, not a proof of holes, watertightness, correct winding, enclosed cavity identity, or a matching addon parameter.
+- Normalize only anonymous per-part, bounded world coordinates; retain 512 triangles / 64 part caps. Do not store raw source vertices, edges, paths or original part names in public-safe JSON. Private HTML and colored GLBs still contain derived geometry and must remain local.
+- A mismatch in observed boundary/nonmanifold status *demotes* a spatial part pairing to **ambiguous**. It never approves a new corresponding part, edits Blender data or applies an addon parameter.
+- Synthetic closed/uncapped tetra tests (Python and real Blender GLBs) are evidence for these cases only. Arbitrary models, T-junctions, floating-point welding errors and internal cavities remain out of scope.
