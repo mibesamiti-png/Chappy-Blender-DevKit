@@ -317,3 +317,9 @@ Python側に12件のpreflight/安全ランナー/報告/スキップテストと
 - **赤/黄/灰の元色は変更しない**。紫枠は追加プローブで差の増加が実際に観測された事実のみを意味する。紫でない面は「全域を検証済み」ではない。
 - 匿名部品ごとの紫枠対象面数と全体件数は集計JSONに、個別の面フラグは私有形状を含むローカルHTMLにのみ保存。元GLBやユーザーのアドオンを実行・変更・アップロードしない。
 - 完全形状一致・内部空洞一致・未サンプル領域の自動特定・実ユーザーモデルの性能・GLB-021設定原因同定は未検証。BlenderとChromiumの合成CIはその試験範囲内の証拠として扱う。
+
+### GLB-020 第5段階の検証結果（2026-11-07）
+
+コードSHA `38057b1da49eeb61020664c4923ced2b2bad8406`： [Python 42279824321](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824321)、[Windows 42279824307](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824307)、[Blender 4.4.3/4.5.15/5.2.1 42279824378](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824378)、[Windows kit 42279824398](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824398)、[引き継ぎ 42279824427](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824427)、[Chromium GUI 42279824304](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824304) **全6系統success**。
+
+テストで紫枠オン/オフを確認した合成ブラウザ画面のフラグはUI試験専用に明示的に注入しており、「実物の小穴を新手法が検出した」とは主張しない。数値監査の追加点はPythonテストで別途検証。無印の面は依然として部分サンプルのみ。
