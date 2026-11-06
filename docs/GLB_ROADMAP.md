@@ -123,3 +123,10 @@
 - 3つの固定合成ケース（ソケット口を0.78に狭める、0.78のままボールを移動、元の1.70に戻して再生成）を、匿名部品の観測差分集計と安全フラグでJSON/日本語Markdownに記録。
 - テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
 - **合成モデル内の効果の差**を確認するものであり、元アドオン設定の実行時の依存性・正しい変更量は未確認。次は許可済み合成GLB-022への段階的な接続を検討するが、GLB-021 partial・GLB-022未実装を維持。[受け入れと残課題](GLB021_TRIAL_HISTORY.md)。
+
+### GLB-022 第1段階：固定合成GLBの反復生成・比較・採否・停止
+
+- CBDKの固定ソケットモデルだけで、初期の狭窄状態をBlenderで生成→差分測定→関係ないボール移動を**棄却**→既知正常値へ復帰して**採用**→観測異常面0で停止まで自動試行。候補は毎回実際にBlenderでGLB生成。最大2試行、実ユーザーモデルは投入しない。
+- `cbdk/glb_synthetic_iteration.py`、`scripts/run_glb022_synthetic_iteration.py`を追加し、JSON＋日本語Markdownに匿名部品別の観測異常面数・採否・停止理由を記録。元GLB/合成ジェネレーターSHA-256不変と不正試験拒否をテスト。
+- テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`：[Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)・[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)・[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)・[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)・[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)・[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+- **GLB-022は一部実装（合成ループMVP）**。自由な値の探索、任意のアドオン実行・コード編集、正しい補正値の自動提案、完全な幾何一致は未達。GLB-020のMVP凍結は維持。[詳細](GLB022_SYNTHETIC_ITERATION.md)。
