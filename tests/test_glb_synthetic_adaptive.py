@@ -100,7 +100,7 @@ class AdaptiveSyntheticTests(unittest.TestCase):
         self.assertEqual(h["best_observed_trial_id"],"adaptive_147")
         self.assertEqual(h["sampled_target_status"],"target_feasible_in_sampled_test")
         self.assertEqual(h["stop_reason"],"attempt_budget_exhausted")
-        self.assertFalse(h["safety"]["proves_real_addon_causality"])
+        self.assertFalse(h["safety"]["real_addon_causality_proven"])
         md=render_adaptive_history(h)
         self.assertIn("より小さい値へ",md)
         self.assertIn("より大きい値へ",md)
@@ -166,7 +166,7 @@ class AdaptiveSyntheticTests(unittest.TestCase):
             lambda a:a["steps"][0].__setitem__("progress_reason","forged"),
             lambda a:a["steps"][1].__setitem__("sampled_max",0.23),
             lambda a:a["steps"][1].__setitem__("bracket_after",[1.24,1.70]),
-            lambda a:a["safety"].__setitem__("proves_real_addon_causality",True),
+            lambda a:a["safety"].__setitem__("real_addon_causality_proven",True),
             lambda a:a.__setitem__("sampled_target_status","verified_for_user"),
         ):
             modified=copy.deepcopy(h)
