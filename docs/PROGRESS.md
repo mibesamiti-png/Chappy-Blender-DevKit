@@ -519,3 +519,12 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - Blender 4.4.3/4.5.15/5.2.1すべてでsynthetic GLBからschema 3 metadataの`world_bounds`を生成し、`glb-compare`による自己比較まで成功。
 - GLB-003を実装済み/Blender CI検証済みに更新。ただしboundsが同じ別輪郭・穴・内部形状は完全判定できないためLIM-008は継続。
 - NEXT-008全体（アドオン生成→出力GLB→自動修正ループ）はまだ進行中。比較エンジンが最初の基盤として完成。
+
+
+## v0.18 開発中 — シルエットIoU回帰（2026-11-06）
+
+- Blender import後の実メッシュを正射影し、32x32のbinary silhouette bitsetをscene metadata schema 4へ保存する。
+- 全体は7方向、各部品はfront/right/top/isoの4方向。最大32部品、1回のsignatureは25万三角形を安全上限にする。
+- `glb-compare` は同方向bitsetのIoUを計算し、既定0.90未満を`scene_silhouette` / `object_silhouette`エラーとして記録する。部品差分では対象部品名と方向も出す。
+- boundsが同じでも輪郭が違うケースを検出するPython回帰テストを追加。小さな穴やサブピクセル細部は32x32量子化で見逃しうる。
+- 現時点では実装保存のみ。Python/Windows/Blender CI成功はまだ確認していない。
