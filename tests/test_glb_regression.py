@@ -78,8 +78,8 @@ class GLBRegressionTests(unittest.TestCase):
             root = Path(tmp)
             comparison = {
                 "kind": "cbdk_glb_scene_comparison",
-                "passed": False,
-                "summary": {"errors": 1},
+                "passed": True,
+                "summary": {"errors": 0},
                 "differences": [],
             }
             with patch("cbdk.glb_regression.write_glb_inspection"), \
@@ -95,7 +95,9 @@ class GLBRegressionTests(unittest.TestCase):
                 result = run_glb_regression(
                     root / "blender", root / "a.glb", root / "b.glb",
                     root / "out", surface_review=True)
-            self.assertFalse(result["passed"])
+            self.assertTrue(result["passed"])
+            self.assertTrue(result["passed_is_metadata_only"])
+            self.assertTrue(result["surface_does_not_auto_approve"])
             self.assertEqual(result["surface_status"], "skipped")
             self.assertEqual(result["surface_observation"], "not_measured")
 
