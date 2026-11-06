@@ -54,6 +54,7 @@ class GLBInspectorTests(unittest.TestCase):
         self.assertEqual([x["type"] for x in report["chunks"]], ["JSON", "BIN"])
         self.assertTrue(report["safety"]["static_only"])
         self.assertFalse(report["safety"]["loaded_external_uris"])
+        self.assertFalse(report["safety"]["loaded_binary_payload"])
 
     def test_writes_deterministic_json(self):
         source = self.root / "a.glb"
