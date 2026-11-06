@@ -277,3 +277,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - Viewer candidate navigation requires an explicit user click. Never mutate user addon settings, meshes or original GLB files in this workflow.
 - \`review.json\` may include only anonymous candidate IDs and bounded dimensionless scores, **not raw geometry or source object names**. \`compare_viewer.html\` itself contains derived geometry: private user HTML must not enter public logs, GitHub, Notion, or uploaded CI artifacts.
 - The browser CI uses CBDK-authored synthetic 3D geometry only. A passing headless Chromium interaction smoke does not certify arbitrary private GLBs or exact geometric identity.
+
+## GLB-020 second-pass sampling audit guardrails
+
+- The second-pass Halton samples are a bounded **sensitivity probe**, not a full coverage map or a true Hausdorff bound. Do not claim purple outlines detect all holes or that absence of purple proves similarity.
+- Maintain the initial 24-sample color classification independently: secondary probes may set a Boolean visual outline and only aggregate counts in `review.json`, never automatically change addon code/parameters or escalate color classifications without a separate reviewed specification.
+- Preserve per-source anonymous part alignment, up-to-512 triangle and 64-part caps, disabled Blender auto-execution and local-only derived GLB/HTML. `review.json` must not include original coordinates, source paths, per-face flags or private names.
+- Differentiate Python tests, real Blender synthetic import tests, Chromium GUI checks, and real-user file validation. Passing those synthetic tests is not a proof of full geometric equivalence.
