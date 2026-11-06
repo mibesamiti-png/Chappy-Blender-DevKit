@@ -323,3 +323,11 @@ Python側に12件のpreflight/安全ランナー/報告/スキップテストと
 コードSHA `38057b1da49eeb61020664c4923ced2b2bad8406`： [Python 42279824321](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824321)、[Windows 42279824307](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824307)、[Blender 4.4.3/4.5.15/5.2.1 42279824378](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824378)、[Windows kit 42279824398](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824398)、[引き継ぎ 42279824427](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824427)、[Chromium GUI 42279824304](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824304) **全6系統success**。
 
 テストで紫枠オン/オフを確認した合成ブラウザ画面のフラグはUI試験専用に明示的に注入しており、「実物の小穴を新手法が検出した」とは主張しない。数値監査の追加点はPythonテストで別途検証。無印の面は依然として部分サンプルのみ。
+
+## GLB-020 第6段階：境界エッジの観測と部品候補の慎重化
+
+各匿名メッシュ部品の三角面を世界座標で近接統合し、1面しか接しない境界辺、2面で共有される辺、3面以上の非多様体辺を集計する。`world_space_quantized_triangle_edge_incidence_v1`、相対統合許容差`1e-7`、最小`1e-9`。実データでは表示や境界状態が座標精度・面の分割方法の影響を受けることを明記し、完全な多様体・穴無し・内部空洞無しの証明とはしない。
+
+JSONは匿名部品別・全体の**件数のみ**、元頂点/名前/元GLBパスは出さない。ローカルの比較HTMLに部品別境界数を表示し、境界の有無・非多様体候補が異なる部品対応候補はレビュー対象に格下げする（`topology_review_required=true`）。自動コード修正、元GLB上書き、対応確定は行わない。
+
+合成GLBの閉四面体（4面）と1面取り除いた四面体（3面）を各Blender CIで実読込し、境界数0と3、部品候補は`ambiguous`になることを検証。詳細は`docs/GLB_BOUNDARY_AUDIT.md`。GLB-020は一部実装、GLB-021/022は未実装。
