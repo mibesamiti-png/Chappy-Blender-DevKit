@@ -29,6 +29,7 @@ from .glb_diff_visualize import run_glb_diff_visualize
 from .glb_diagnose import write_diagnosis
 from .glb_repair_plan import plan_from_comparison
 from .glb_property_map import map_properties_from_file
+from .glb_visual_property_review import review_visual_file
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -239,6 +240,18 @@ def main(argv=None) -> int:
     glb_map_cmd.add_argument('repair_plan', help='Local repair_plan.json (never executes addon source)')
     glb_map_cmd.add_argument('--source', action='append', required=True, help='Explicit local .py source file; repeat for multiple files')
     glb_map_cmd.add_argument('--output', default='reports/latest/glb_property_mapping.json', help='Fresh ignored reports/latest/*.json only')
+
+    visual_review_cmd = sub.add_parser(
+        'glb-visual-property-review',
+        help='GLB-021: anonymous GLB-020 evidence plus explicit AST-only addon settings review',
+    )
+    visual_review_cmd.add_argument('review', help='Local GLB-020 review.json (aggregate only)')
+    visual_review_cmd.add_argument('--source', action='append', required=True,
+                                   help='Explicit private Python source to statically inspect; repeat for up to 16 files')
+    visual_review_cmd.add_argument('--role', action='append', default=[],
+                                   help='Optional human-declared candidate part role, e.g. part_003=socket')
+    visual_review_cmd.add_argument('--output', default='reports/latest/glb_visual_property_review.json',
+                                   help='Fresh private JSON under ignored reports/latest only')
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -465,6 +478,18 @@ def main(argv=None) -> int:
         if args.command == 'glb-diagnose':
             report = write_diagnosis(args.comparison, args.output)
             print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'glb-visual-property-review':
+            result = review_visual_file(args.review, args.source, args.output,
+                                        role_labels=args.role)
+            # Do not print candidate source names, AST symbols or role labels.
+            print(json.dumps({
+                'kind': result['kind'], 'status': result['status'],
+                'link_kind': result['link_kind'],
+                'recommendation_count': result['recommendation_count'],
+                'cause_and_effect_proven': False, 'source_executed': False,
+                'output': 'reports/latest/ (private local JSON)',
+            }, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'glb-map-properties':
             report = map_properties_from_file(args.repair_plan, args.source, args.output)
