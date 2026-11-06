@@ -123,3 +123,25 @@ Blender 4.4.3 / 4.5.15 / 5.2.1での実CI結果を確認するまでは、実機
 - 部品単独サムネイルは最大32 Mesh Object。超過分はmetadataでtruncatedとして記録する。
 - hidden/internal geometry、アニメーション途中の状態、Geometry Nodesの生成意図までは自動理解できない。
 - 実レンダリングが成功しても、元アドオンの操作感や機構の物理的可動性を自動証明するものではない。
+
+
+## 4. Reference / Candidate 形状比較（v0.18）
+
+Blender previewで生成した2つの `scene_metadata.json` を比較する。
+
+```bash
+python -m cbdk glb-compare reference/scene_metadata.json candidate/scene_metadata.json \
+  --profile shape --output reports/latest/glb_compare.json
+```
+
+`shape` はworld-spaceの全体bounds・各部品bounds・配置を主に比較し、トポロジー差は情報として残す。名前が一致しない部品は寸法と位置の近さでfallback matchingする。`strict` は名前fallbackや頂点/辺/面数の差も失敗にする。
+
+GLBファイルから一括で行う場合:
+
+```bash
+python -m cbdk glb-regression reference.glb candidate.glb \
+  --blender "/path/to/blender" \
+  --output reports/latest/glb_regression
+```
+
+出力にはreference/candidateそれぞれの構造JSON・7方向画像・部品単独画像・scene metadataと、`comparison.json` が含まれる。初期比較は外接bounds中心なので、同じboundsで輪郭や穴だけが違うケースは見逃しうる。画像証拠を併用し、完全一致判定として扱わない。
