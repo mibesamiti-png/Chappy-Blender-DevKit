@@ -110,3 +110,9 @@ Markdownには候補プロパティ名、匿名部品ID、元ファイルの**�
 これは**「原因らしさ」「成功率」「修正すべき優先度」のランキングではない**。構文上の経路があっても実際に実行・登録・形状変更されているかは不明。順序を変えても、個別の候補名・AST宣言・行番号・人手チェック項目は保持し、正しい設定値を自動推測しない。未変更の部品は引き続き候補0件。
 
 コードは `cbdk/glb_visual_review_markdown.py`、回帰テストは `tests/test_glb_visual_property_review.py`。ユーザーの私有ソースやレポートをGitHubへコミットせず、出力は `reports/latest/*.md` に新規作成するローカル文書のみ。CI結果はテスト対象SHAとRun IDを分けて記録する。
+
+### 第2・3段階のCI結果：日本語レビューシートと確認順（2026-11-07）
+
+コードSHA `af8e873a613b6b3075448db11f8f26c860dba2a4`：[Python 42296654049](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654049)、[Windows 42296653825](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653825)、[Blender 4.4.3/4.5.15/5.2.1 42296654171](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654171)、[Windows Kit 42296653959](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653959)、[引き継ぎ 42296653876](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653876)、[Chromium 42296653807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653807) **全6系統成功**。
+
+`--markdown`で作る非公開チェックシートでは、形状処理への構文上の経路あり→属性参照あり→宣言名のみの順に設定候補を並べる。これは**人が確認しやすい順序**であり、原因の確率・修正の効果・設定値の正しさを意味しない。正常な合成GLBでは候補0件。Python回帰テストで順序・注意書き・私有パス遮断を確認し、Blender3版CIでは合成GLB→AST照合→Markdown生成を検証。実ユーザーの私有ソース、GLB、実際の因果関係は未検証。
