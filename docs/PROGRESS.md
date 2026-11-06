@@ -511,3 +511,11 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - `python -m cbdk glb-regression reference.glb candidate.glb --blender <path>`: 両GLBをfactory-startup Blenderで別々に7方向レンダリングし、比較JSONまで一括生成する。
 - 初期版はbounds中心のため、同一外接寸法で輪郭/内部形状だけ異なるケースは完全検出できない。7方向画像を併用し、将来シルエット/表面距離へ拡張する。
 - 新規Python/Blender CI結果はまだ未確認。last_verifiedはv0.17.0を維持。
+
+
+### v0.18 GLB shape regression CI成功 — 2026-11-06
+
+- PR #23でPython **343/343** を3.11/3.12/3.13すべて成功。Windows PowerShell 3.11/3.13、Windows kit、durable handoffも成功。
+- Blender 4.4.3/4.5.15/5.2.1すべてでsynthetic GLBからschema 3 metadataの`world_bounds`を生成し、`glb-compare`による自己比較まで成功。
+- GLB-003を実装済み/Blender CI検証済みに更新。ただしboundsが同じ別輪郭・穴・内部形状は完全判定できないためLIM-008は継続。
+- NEXT-008全体（アドオン生成→出力GLB→自動修正ループ）はまだ進行中。比較エンジンが最初の基盤として完成。
