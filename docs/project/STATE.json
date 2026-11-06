@@ -342,10 +342,10 @@
     {
       "id": "GLB-020",
       "title": "形状差分の3D可視化",
-      "status": "not_implemented",
-      "verification": "not_tested",
-      "source": "docs/GLB_ROADMAP.md",
-      "note": "予定: 比較結果のズレを3Dモデル上で赤/黄などの色と数値・部品・位置で可視化。未解析箇所を明示し、完全一致や自動修正は主張しない"
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_diff_visualize.py",
+      "note": "オプトインのglb-diff-visualizeで参照/生成の各GLBを赤/黄/灰で三角面ごとに可視化。24点BVHサンプル/統計JSON/512面上限/元ソース非実行。実装SHA 01fff174、Blender3版CI run 42264143956成功。元オブジェクト選択・カメラ連動・未知領域の明示は未実装。Windows修正後の最新CIも確認"
     },
     {
       "id": "GLB-021",
@@ -428,6 +428,14 @@
       "title": "32x32シルエット比較でも小さな穴・内部形状・サブグリッド細部は見逃しうる",
       "workaround": "world bounds＋全体7方向＋部品4方向シルエットIoUを併用し、必要なら次段階で表面距離/ボクセル比較を追加する。シルエット一致だけで完全な形状同一を主張しない",
       "related_requirement": "GLB-003"
+    },
+    {
+      "id": "LIM-009",
+      "severity": "medium",
+      "status": "open",
+      "title": "GLB-020初版は三角面の粗い24点サンプル色で部品別/未測定領域/連動UIを表示しない",
+      "workaround": "2つの着色GLBをローカルで別々にレビューし、色やゼロ誤差を完全一致の根拠にしない。未対応機能を次の段階で拡充",
+      "related_requirement": "GLB-020"
     }
   ],
   "next_actions": [
@@ -553,9 +561,9 @@
     {
       "id": "NEXT-018",
       "priority": 18,
-      "status": "todo",
-      "title": "GLB-020: 形状差分の3D可視化を実装",
-      "acceptance": "誤差の位置/規模を数値と色で示し、未解析箇所を区別。合成GLBの正負対照をBlender3版CIで検証する"
+      "status": "in_progress",
+      "title": "GLB-020: 形状差分3D可視化の試作完了・レビューUIと未測定領域を拡張",
+      "acceptance": "ローカル着色GLB2件と集計はBlender3版CI成功。次は元部品別対応・誤差レイヤー/未知領域の表示、比較カメラ連動と実データ検証を進める"
     },
     {
       "id": "NEXT-019",
@@ -732,6 +740,11 @@
       "id": "DEC-032",
       "decision": "GLB-019完了の次はGLB-020可視化→GLB-021設定候補連携→GLB-022合成反復実験の順で進める",
       "note": "ユーザー提示ロードマップを継承。020〜022は計画・未検証。019は合成GLB CI完了、実ユーザーGLBの一般的精度は未検証。私有アドオンの実行/書換や自動修正には別審査を要する"
+    },
+    {
+      "id": "DEC-033",
+      "decision": "GLB-020の色付きGLBはレビュー用の局所可視化であり誤差色から因果関係や完全一致を認定しない",
+      "note": "参照/生成の両方向、共有AABBの1%/5%しきい値、24点/面BVHサンプル、512三角面上限。出力GLBはローカル派生ジオメトリを含むため公開せず、集計JSONに生座標や元パスを含めない。オブジェクト別/連動UIは未完成"
     }
   ],
   "last_verified": {
