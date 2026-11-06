@@ -14,7 +14,7 @@ from pathlib import Path
 from .glb_diff_colors import COLOR_RGBA, summarize_anonymous_parts
 from .glb_surface_distance import _validated_triangles
 from .glb_part_match import suggest_spatial_part_matches
-from .glb_boundary_audit import boundary_audit
+from .glb_boundary_audit import boundary_audit, local_boundary_segments
 
 TEMPLATE = Path(__file__).with_name("glb_diff_viewer_template.html")
 MARKER = "__CBDK_VIEWER_DATA__"
@@ -85,6 +85,12 @@ def render_local_diff_viewer(
         "sampling_sensitivity_is_full_coverage": False,
         "unobserved_regions_verified": False,
         "cross_file_part_identity_proven": False,
+        "boundary_overlay": {
+            "reference": local_boundary_segments(reference, reference_counts),
+            "candidate": local_boundary_segments(candidate, candidate_counts),
+        },
+        "boundary_overlay_approximate": True,
+        "boundary_location_proven": False,
         "boundary_observations": {
             "reference": boundary_audit(reference, reference_counts)["parts"],
             "candidate": boundary_audit(candidate, candidate_counts)["parts"],
