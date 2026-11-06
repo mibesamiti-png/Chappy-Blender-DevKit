@@ -14,7 +14,7 @@ def make_glb(path: Path, doc: dict, binary: bytes = b""):
     raw += b" " * ((4 - len(raw) % 4) % 4)
     chunks = [struct.pack("<II", len(raw), 0x4E4F534A) + raw]
     if binary:
-        binary += b"\\x00" * ((4 - len(binary) % 4) % 4)
+        binary += b"\x00" * ((4 - len(binary) % 4) % 4)
         chunks.append(struct.pack("<II", len(binary), 0x004E4942) + binary)
     body = b"".join(chunks)
     path.write_bytes(struct.pack("<4sII", b"glTF", 2, 12 + len(body)) + body)
