@@ -62,3 +62,17 @@ python -m cbdk glb-map-properties \
 `context.scene.ball_diameter` と `self.ball_diameter`、`another_object.ball_diameter` は同じ文字列でも**別物かもしれない**。単純な属性名一致だけでは、その宣言に結びつくとは判断できない。動的 `getattr`、辞書経由、外部モジュール、実行時生成の属性も確実には追えない。
 
 ソースを実行せず `ast.parse` のみで調べる。関数名・クラス名は私有ソース由来の情報なので、**レポートは引き続きGit無視対象 `reports/latest/` にのみ保存**し公開しない。コード本文、値、元ファイル名、絶対パスは含めない。実際の形状への影響や設定値の自動変更はしていない。
+
+## v0.18 追加：宣言クラス自身からの参照と別オブジェクト参照の区別（GLB-009）
+
+`glb-map-properties` の `exact_name_matches[].same_class_reference_review` に、静的な関連度の手がかりを追加。
+
+- `possible_same_source_class_self_count`：宣言されたプロパティと**匿名ソースラベル・クラス名**が同じ範囲で `self.<property>` を参照した箇所の件数
+- `possible_access_counts`：上記のうち、`read` / `write` / `read_write` / `delete` の分類別件数
+- `other_or_unresolved_attribute_reference_count`：他クラス/別ファイル/別オブジェクトなどにある、同名属性への参照件数
+- `classification`：同じクラスの `self` 参照構文があるかどうかの**未確認な仮説**
+- `actual_receiver_binding_verified: false`、`registered_in_blender_verified: false`、`geometry_effect_verified: false`：いずれも未検証
+
+同一クラス・同じ `self` という表記でも、実際のインスタンスがそのプロパティに結び付くとは限らない。参照例の保存は従来どおり最大16件だが、分類別の合計は保存例に関係なく**全件で集計**する。長すぎるクラス名の匿名化による誤一致は安全側で除外する。
+
+これにより、明らかに別オブジェクトの参照を優先候補に昇格させず、人が調べる箇所を絞る。コード本文・既定値・秘密ファイルのパスは引き続き出力しない。Blender実機でプロパティを使ったこと、ジオメトリを変更したこと、適切な修正値が判明したことは意味しない。
