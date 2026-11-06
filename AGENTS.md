@@ -334,3 +334,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - The two candidate steps are intentionally fixed (unrelated ball move **reject**, known synthetic socket restoration **accept**). Strict observed reduction in sampled socket error without new sampled errors elsewhere is required. Stop at observed zero or maximum attempts. Neither this metric nor static AST mapping proves physical function, complete geometry, or real code causality.
 - Keep trial history and colored/geometry-bearing outputs local; share only aggregate CI outcomes and the tested commit SHA. Do not auto-edit user code, change source GLBs, merge PR #25 or release v0.18 without authorization.
 - GLB-022 is partial (bounded synthetic MVP) until independently validated for wider opt-in workflows; avoid claiming general automatic parameter optimization.
+
+## GLB-022 allowlisted synthetic iteration safety
+
+- Iterative generator accepts **only** the repo-owned fixed synthetic Blender fixture script and 2 candidate IDs: `narrow_placebo` (expected rejection) and `identical` (expected acceptance). No arbitrary source path, user addon import or execution; no inferred repair parameter value for real models.
+- Compare **freshly regenerated** GLBs under strict input SHA-256 checks. Stop at 2 attempts or observed sampled yellow/red count zero without new other-part regressions. Rejection must leave accepted baseline unchanged.
+- Synthetic local JSON/Markdown records anonymous sampled face counts and accept/reject reasons; never publish derived geometry, private input GLB, AST property mappings, source paths or user code to GitHub/Notion.
+- CI synthetic success is not proof of watertightness, 100% surface equivalence, true part correspondence, or user addon optimization. GLB-022 remains `partial` until broader explicit permission and tests. Formal release v0.17.0 and draft PR #25 unchanged.
