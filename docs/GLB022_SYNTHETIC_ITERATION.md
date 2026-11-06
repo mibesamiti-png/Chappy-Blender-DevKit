@@ -33,3 +33,11 @@ GLB-021で確認した「候補設定名の静的レビュー」と「固定の�
 Blender 4.4.3/4.5.15/5.2.1の実CIでは、固定合成GLBを**試行ごとに作成**し、その都度GLB-020比較器を起動する。これは**キャッシュ済みレポートを単に再集計するGLB-021履歴とは別**の工程である。成功の証拠はテスト対象コードSHAとGitHub Actions runを確認してから追記する。
 
 **この第1段階の未保証事項**：任意のユーザーアドオンの生成/実行/設定変更、動的なパラメータ探索、メッシュ全領域の差分、内部空洞の完全一致、候補が本当に問題を修正する因果、最適な値の発見、物理的ジョイントの安全性。正式リリースはv0.17.0のまま、v0.18のPR #25はドラフトを維持。
+
+## 第1段階のCI確認結果（2026-11-07）
+
+テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`：[Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)・[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)・[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)・[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)・[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)・[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+
+CBDK自作のソケットとボール/軸から、基準`narrow`のGLBを実生成し、`narrow_placebo`（無関係なボール移動）と`identical`（既知の正常ソケットへ復帰）を**その都度Blenderで新規書き出し→GLB-020で比較**した。無関係な変更は採用されず、正常復帰だけ採用、観測上の対象・他部品の異常面数0で停止。各試行・採否・停止理由をローカル`synthetic_iteration_history.json`と`.md`に記録。比較用の生成済み合成GLBとソース管理の合成ジェネレーターのSHA-256が変わっていないことをコードで検証。
+
+`tests/test_glb_synthetic_iteration.py`は不正レポート、故意の誤採用、偽の因果宣言、未許可の試験ID、既存ファイルの上書きを拒否することを検証した。**注意**：GLB-022のこの実装は固定2試行の合成用MVPであり、ユーザーアドオン一般でのパラメータ最適化やコード変更、連続探索はまだ実装していない。GLB-022全体の状態は`partial`とする。
