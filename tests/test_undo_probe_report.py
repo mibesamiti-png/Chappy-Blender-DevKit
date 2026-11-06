@@ -90,6 +90,8 @@ class UndoProbeReportTests(unittest.TestCase):
         self.assertIn("bpy.ops.ed.redo.poll()", script)
         self.assertIn("bpy.ops.cbdk.modular_vertex_nudge(", script)
         self.assertIn("--factory-startup", workflow)
+        self.assertIn("SCRIPT_DIR = Path(__file__).resolve().parent", script)
+        self.assertIn("sys.path.insert(0, str(SCRIPT_DIR))", script)
 
 
 if __name__ == "__main__":
