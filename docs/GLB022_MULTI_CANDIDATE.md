@@ -36,3 +36,9 @@ BlenderでCBDK自作の3部品モデルを毎回再生成し、GLB-020の匿名�
 GLB-022はまだ**一部実装**。任意アドオンの自動修正、ユーザーの非公開GLBでの検証、連続数値の最適化、完全形状の保証は未達。次の段階も明示的に許可された合成データから拡張する。
 
 CI成功の記録は、実際に全テストが完了したコードSHAとrun IDに限定する。
+
+## 検証結果（2026-11-07）
+
+コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
+
+Blender3版で合成GLBを毎試行再生成し、**改善なし**と**他部品の悪化**の2種類の棄却、その後の既知正常状態の採用・観測差分0停止を確認。Python単体テストでは1/2試行の予算打切りで未修復のまま正直に終了し、偽の採用・不正な試験名・非公開情報を拒否。前段の2候補プロトコルもそのままCIで合格。これは合成モデル・固定候補での確認で、実ユーザーのアドオンの正しい補正値を見つけた証拠ではない。
