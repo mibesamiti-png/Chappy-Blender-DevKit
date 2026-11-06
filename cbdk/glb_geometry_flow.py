@@ -157,7 +157,7 @@ def _trace_method(cls: str, node: ast.FunctionDef | ast.AsyncFunctionDef,
 
         # Explicit object transforms are a potential geometry path only when
         # their assigned expression is itself property-dependent.
-        if isinstance(statement, (ast.Assign, ast.AnnAssign)):
+        if isinstance(statement, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
             targets = statement.targets if isinstance(statement, ast.Assign) else [statement.target]
             deps = _dependencies(expression, declared, locals_)
             for target in targets:
@@ -175,18 +175,16 @@ def _trace_method(cls: str, node: ast.FunctionDef | ast.AsyncFunctionDef,
             # Invalidate old aliases on reassignment; only simple local names
             # are tracked, never attributes, indexing, destructuring or scopes.
             for target in targets:
-                if isinstance(target, ast.Name):
-                    if deps:
-                        locals_[target.id] = set(deps)
-                    else:
-                        locals_.pop(target.id, None)
-        elif isinstance(statement, ast.AugAssign) and isinstance(statement.target, ast.Name):
-            deps = _dependencies(expression, declared, locals_)
-            aliases = set(deps) | locals_.get(statement.target.id, set())
-            if aliases:
-                locals_[statement.target.id] = aliases
-            else:
-                locals_.pop(statement.target.id, None)
+                if not isinstance(target, ast.Name):
+                    continue
+                if isinstance(statement, ast.AugAssign):
+                    aliases = set(deps) | locals_.get(target.id, set())
+                else:
+                    aliases = set(deps)
+                if aliases:
+                    locals_[target.id] = aliases
+                else:
+                    locals_.pop(target.id, None)
     return hits, skipped
 
 
