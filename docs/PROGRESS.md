@@ -830,3 +830,18 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - 正本STATE.json/PROJECT_HANDOFF.mdにGLB-019、DEC-031、NEXT-017を登録。利用手順と制限は`docs/GLB_SURFACE_PIPELINE.md`へ保存。
 
 **未検証境界:** GitHub CIの本head結果を観測するまでGLB-019を部分実装/未検証とする。512面超の実GLB、個別オブジェクト名対応、未知GLBのBlender輸入リスクゼロ化、内部空洞などは未対応。ユーザーの非公開GLBを公開GitHub/CIに含めない。v0.18 PR #25はドラフト・正式last_verified v0.17.0を保持。
+
+### GLB-019 実GLB比較の統合検証（2026-11-07）
+
+**実装コミット `ec13972f45f73617536d718491eee57f98a21e26` で観測した結果:**
+
+- Python 3.11/3.12/3.13: [run 42257317519](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317519) **成功**。12件の新しいpreflight/レポート/サブプロセス安全回帰テストと、3件の既存回帰への任意統合テストを含む。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42257317535](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317535) **3版すべて成功**。CBDK製の実GLB `filled_main` vs `with_open_hole`で`sampled_difference_detected`、`filled_main` vs `filled_other`で`no_difference_observed_at_samples`を新CLIから確認。元の`glb-regression --surface-review`との共存もBlender4.5.15で検証した。
+- Windows kit: [run 42257317475](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317475) **成功**。
+- GitHub durable handoff: [run 42257317601](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317601) **成功**。
+- Windows PowerShell: [run 42257317637](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317637) は後続コミットによる新たなCI起動で**cancelled**となり、上記コミット単体での成功は未確認。先行するWindowsテストのパス区切り問題はプラットフォーム非依存な`Path(...).name`チェックに修正した。
+
+`glb-surface-review` は非公開モデルをネットワークへ送らず、Blenderの局所読み込みで比較する。外部URI・過大入力を拒否し、512面超は`skipped`、完全一致の証明はしない。集計結果のみJSONへ残す。
+
+この証拠に基づきSTATE/HANDOFFのGLB-019を**implemented / blender_ci**、NEXT-017を**done**に更新。後続の記録更新HEADのCI結果とは区別する。正式release last_verified v0.17.0維持、PR #25はドラフト。
+
