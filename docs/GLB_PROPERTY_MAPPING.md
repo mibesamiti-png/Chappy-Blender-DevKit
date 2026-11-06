@@ -48,3 +48,17 @@ python -m cbdk glb-map-properties \
 今回の照合は第一段階（GLB-007/NEXT-009）。次は、人手で承認したプロパティと機能・実際の編集結果を結びつけて、**出典と検証を残したうえで**提案の品質を上げる。
 
 未知のアドオンを自動実行しない。私有コードやGLBをGitHubにコミットしない。設定値の自動適用・自動修正は行わない。
+
+## v0.18 追加：プロパティが参照される場所の静的追跡（GLB-008）
+
+`glb-map-properties` で名前が完全一致した宣言には、`possible_code_references` を追加している。
+
+- `possible_reference_count`: その識別子と同名の `object.property` アクセスをASTで見つけた数
+- `access_counts`: `read`（読み取り）、`write`（単純な代入）、`read_write`（`+=`など）、`delete`（`del`）
+- `examples`: 匿名の `source_1.py`、クラス・関数名、行番号、アクセス種別、受け手が `self` かその他かの粗い分類を最大16件
+- `examples_truncated`: 16件を超えた場合はtrue。合計件数は保持し、1ファイル4096参照を超えると安全上の理由で拒否する
+- `receiver_binding_verified: false` / `runtime_effect_verified: false`: どちらも実証していない
+
+`context.scene.ball_diameter` と `self.ball_diameter`、`another_object.ball_diameter` は同じ文字列でも**別物かもしれない**。単純な属性名一致だけでは、その宣言に結びつくとは判断できない。動的 `getattr`、辞書経由、外部モジュール、実行時生成の属性も確実には追えない。
+
+ソースを実行せず `ast.parse` のみで調べる。関数名・クラス名は私有ソース由来の情報なので、**レポートは引き続きGit無視対象 `reports/latest/` にのみ保存**し公開しない。コード本文、値、元ファイル名、絶対パスは含めない。実際の形状への影響や設定値の自動変更はしていない。
