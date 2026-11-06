@@ -883,3 +883,11 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 
 - 実装・テストSHA `b5d1d27f5e7834fa22faeefb02792091c1ac87d0`：Python [42268089086](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268089086)、Windows [42268088883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088883)、Blender 4.4.3/4.5.15/5.2.1 [42268088779](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088779)、Windowsキット [42268088823](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088823)、引き継ぎ [42268088869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088869) **全成功**。これはHTML生成とJS構文のCIであり、ブラウザ実機の操作試験ではない。
 - `compare_viewer.html`はローカルでの2画面比較用。**ブラウザ操作・表示の正確さ・任意実ユーザーGLBの検証は未実施**。`GLB-020`は引き続き一部実装、v0.18 PR #25はドラフト。
+
+## 2026-11-07 GLB-020 — 空間的な部品対応候補とChromium実操作CI（第4段階）
+
+- \`cbdk/glb_part_match.py\`：各GLBの匿名部品のワールド座標AABB中心・寸法・三角形数から、参照→生成の**部品対応候補**をヒューリスティックに推定。相互最近傍・距離上限・第2候補との差の閾値を満たすものだけ\`suggested\`、同位置等の区別不能は\`ambiguous\`、遠すぎれば\`unmatched\`。同一部品の確定、コード修正、自動パラメータ調整は禁止。
+- 既存のローカルHTML比較画面に「候補を右側に表示」ボタンを追加。ユーザーが押した場合にだけ右側の部品表示が切り替わり、曖昧な場合は無効。JSONには候補の匿名ID・集計スコアのみを記録し、生座標・元部品名・私有パスは含めない。
+- \`tests/test_glb_part_match.py\` に部品の順番入替、同位置の曖昧性、未対応部品、軽微移動、異常データの回帰テストを追加。既存の\`tests/test_glb_diff_visualize.py\`も候補表示・安全フラグを確認。
+- \`scripts/glb_viewer_browser_fixture.py\` でCBDK自作の入替2部品モデルからテストHTMLを生成。Playwright/Chromiumによる\`scripts/glb_viewer_browser_smoke.mjs\`で左右のカメラ連動、ズーム、候補ボタン、灰色面表示、HTTP通信禁止をチェックするCIを追加。Ubuntu 26.04非対応のPlaywrightブラウザインストーラ問題を避けるため、ブラウザCIランナーをUbuntu 24.04に固定。
+- **開発中・リリースはまだv0.17.0。** ブラウザでの実操作検証とBlender3版CIの最新版SHAの結果が出たら、状態台帳・Notionに正確な成功/失敗を追記。部品の因果・一致判定、未知領域、大規模GLBは未解決。
