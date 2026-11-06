@@ -298,3 +298,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - The canvas overlay draws observed boundary segments in cyan after approximate face rendering (X-ray-like). It does NOT provide reliable occlusion, physical hole localization, watertightness or a verified model discrepancy.
 - Maintain source non-modification, anonymous per-part alignment, maximum 512 triangles / 64 parts, disabled Blender auto-execution, private artifact locality, and the existing sample/part-identity caveats.
 - Check synthetic closed-versus-open tetrahedron in Python and Blender 3-version CI. Use headless Chromium to verify both overlay toggles without permitting any network traffic. CI success must be attributed to its exact tested SHA.
+
+## GLB-020 MVP scope freeze after synthetic joint regression
+
+- The review-only MVP acceptance suite is `scripts/blender_make_glb_joint_mvp_fixtures.py` and `scripts/verify_glb_joint_mvp.py`, run in the Blender 3-version CI matrix. Validate an identical control, socket mouth narrowing, ball displacement, and socket lip cap removal; unchanged parts must not be falsely flagged.
+- The baseline synthetic shaft must be capped at both ends; an uncapped baseline was a real fixture bug found by the initial gate. Do not suppress this result by weakening diagnostics.
+- Keep the original input GLBs unchanged (SHA-256) and private derived GLBs/HTML local. JSON must not include raw geometry, input names or source addon code.
+- GLB-020 review MVP is accepted but the full requirement is `partial`. **Stop adding optional GLB-020 enhancements for now**; prioritize GLB-021 human-review parameter hints, then GLB-022 allowlisted synthetic iterations. Do not claim perfect geometry recognition, private-user test coverage, or arbitrary addon execution.
