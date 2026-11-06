@@ -294,3 +294,11 @@ Python側に12件のpreflight/安全ランナー/報告/スキップテストと
 実装テストSHA `b5d1d27`：Python [42268089086](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268089086)、Windows [42268088883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088883)、Blender3版 [42268088779](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088779)、kit [42268088823](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088823)、handoff [42268088869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088869) 全成功。
 
 実ブラウザ操作・正確な遮蔽判定・別GLB間の部品対応・未観測面の確定、512面超は今後の開発タスク。GLB-020は一部実装、正式v0.17.0/ドラフトPR #25を維持。
+
+## GLB-020 第4段階：匿名部品の対応候補（非確定）・Chromium GUI検証
+
+参照/生成GLB間の匿名メッシュ部品について、世界座標バウンディングボックスの中心・寸法・三角面数を相対スコア化して相互の候補を表示する。相互最近傍・分離マージンを満たせば\`suggested\`、重複/近接で曖昧なら\`ambiguous\`、弱い関連は\`unmatched\`。**どの場合も「同一部品である証明」ではない。** ローカルHTMLの候補ボタンはユーザーが押すまで表示を切り替えず、元GLBやアドオン設定は変更しない。
+
+新CI \`.github/workflows/glb-viewer-browser.yml\` では本物のヘッドレスChromiumを用い、CBDK自作の入替2部品モデルをローカルHTMLで表示し、回転/ズーム・候補選択・面フィルタ・通信なし・JS実行例外なしを検証する。外部ブラウザ試験環境の導入時にはUbuntu 24.04を固定する。テスト成功と実ユーザーGLBの形状認識精度を混同しない。
+
+正式リリースv0.17.0とドラフトPR #25は維持。Python、Blender、WindowsおよびブラウザのCIは、それぞれ実際に確認されたコミットSHAと結果を別に記録する。
