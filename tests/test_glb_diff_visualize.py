@@ -49,6 +49,17 @@ def report():
         "part_id_scheme": "anonymous_sequential_by_imported_object_name",
         "cross_file_part_identity_proven": False,
         "part_match_candidates": suggest_spatial_part_matches(TRI, TRI, [1], [1]),
+        "sampling_sensitivity_audit": {
+            "method": "extra_halton_24_probe_sensitivity_v1",
+            "initial_samples_per_triangle": 24,
+            "additional_samples_per_triangle": 24,
+            "sensitivity_rule": "increase_gt_0.5pct_scene_diagonal_or_color_threshold_crossing",
+            "unobserved_regions_verified": False,
+            "complete_surface_equivalence_proven": False,
+            "reference": {"sensitive_faces": 0, "face_count": 1, "max_observed_increase": 0.0},
+            "candidate": {"sensitive_faces": 0, "face_count": 1, "max_observed_increase": 0.0},
+            "per_part_sensitive_faces": {"reference": [0], "candidate": [0]},
+        },
         "parts": {
             "reference": [
                 {"part_id": "part_001", "triangle_count": 1,
@@ -183,8 +194,22 @@ class OfflineLinkedViewerTests(unittest.TestCase):
         self.assertFalse(data["auto_apply"])
         self.assertEqual(data["part_suggestions"]["reference_parts"][0]["status"], "suggested")
         self.assertFalse(data["part_suggestions"]["cross_file_part_identity_proven"])
+        self.assertEqual(data["sampling_sensitivity_flags"]["reference"], [0, 0])
+        self.assertFalse(data["sampling_sensitivity_is_full_coverage"])
         self.assertNotIn("name", content)
         self.assertNotIn("private", content)
+
+    def test_viewer_rejects_unaligned_or_non_boolean_sample_flags(self):
+        for flags in ({"reference": [False], "candidate": []},
+                      {"reference": [1], "candidate": [False]},
+                      {"reference": [False]},
+                      {"reference": [False], "candidate": [False], "other": []}):
+            with self.subTest(flags=flags):
+                with self.assertRaises(ValueError):
+                    render_local_diff_viewer(
+                        TRI, TRI, ["low"], ["low"], [1], [1],
+                        sampling_flags=flags,
+                    )
 
     def test_invalid_or_excessive_geometry_does_not_generate_html(self):
         for faces, categories, counts in (
