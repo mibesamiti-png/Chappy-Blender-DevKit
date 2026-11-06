@@ -262,3 +262,11 @@ Blender CIには幅0.44の開口を持つ新しい合成GLBを追加。従来24�
 GLB-017の追加探索を「面積上位2面」のみに固定せず、最大1面を特徴候補の上位から選び、もう1面は従来の面積ベース探索として必ず保持する。候補ヒントはメッシュの境界辺（外寸内側かどうかは投影的な簡易近似）、共有辺の面法線変化、三角面積中央値比、共通頂点の近傍数、共有辺の過剰接続。粗い8点で実際の差を見つけた面は従来どおり優先し、既存のサンプリング・BVH・512面上限は変更しない。
 
 面積探索のみの`feature_aware=False`と比較するPython専用回帰テストを13件追加し、Blender4.4.3/4.5.15/5.2.1の公開CIではCBDK自作の合成GLBを7→9種へ拡張。大型板に囲まれた小さな開口を新方式が発見できるか検証する。境界・鋭角・細かさ・密集はレビュー候補であって、欠陥・穴・閉じた空洞の存在は認証しない。詳細は`docs/GLB_SURFACE_DISTANCE.md`。
+
+## v0.18 GLB-019 — 実GLB入力からの表面距離レビューを既存パイプラインに統合
+
+`cbdk/glb_surface_pipeline.py` と `scripts/blender_glb_surface_review.py` を追加し、ローカルの参照GLBと生成GLBを読み込む明示コマンド `python -m cbdk glb-surface-review reference.glb generated.glb --blender <trusted blender>` を実装。静的glb_inspectorで外部URI禁止・入力24MiB以下・頂点参照概数10万以下を確認し、信頼済みスクリプトのみを`--factory-startup --disable-autoexec`で起動。全メッシュのワールド座標三角形を一時メモリ上で比較し、固定24点BVH表面距離と特徴優先多解像度の結果を集計JSONに出力する。**三角面512超は間引かずにskipped**とする。生頂点座標/絶対入力パスは報告に保存せず、元GLBとPythonアドオンは変更・実行しない。
+
+既存の`glb-regression --surface-review`で従来の比較・診断・修正候補JSONに`surface_review.json`を任意で追加できる。未指定なら従来の振る舞いを維持。`passed`は従来のメタデータ比較専用と明記し、表面距離0を立体一致の証拠として扱わない。
+
+Python側に12件のpreflight/安全ランナー/報告/スキップテストと3件の回帰統合テストを追加。Blender 4.4.3/4.5.15/5.2.1 CIでは**CBDK自作GLB**を使用し、同じ面の異三角分割と同外寸の開口差を新CLIで実読込比較する。一般ユーザーGLBでの性能や部品マッピングは未検証。詳細は`docs/GLB_SURFACE_PIPELINE.md`。
