@@ -321,7 +321,13 @@ jobs:
 
               def alter_profile(self):
                   self.profile_shape += 0.1
+                  self.profile_shape = 1.0
+                  self.boolean_cutter += 0.1
+                  self.boolean_cutter = 1.0
+                  self.visible_profile += 0.1
                   self.visible_profile = 1.2
+                  self.part_arrangement += 0.1
+                  self.part_arrangement = 1.0
           PY
           python -m cbdk glb-map-properties \
             reports/ci/glb_drift_repair_plan.json \
@@ -337,7 +343,7 @@ jobs:
                   for match in rec['exact_name_matches']]
           assert hits, m
           assert all(match['match'] == 'exact_declaration_name_only' for match in hits), m
-          assert m['static_possible_attribute_references_found'] == 4, m
+          assert m['static_possible_attribute_references_found'] == 10, m
           assert any(x['possible_code_references']['possible_reference_count'] > 0
                      and x['possible_code_references']['access_counts']['read'] > 0
                      for x in hits), m
