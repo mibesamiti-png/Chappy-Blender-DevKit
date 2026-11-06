@@ -484,3 +484,19 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - GLB Visual Inspectorは3つのBlender版で合成Cube+Sphere GLBをimportし、構造JSON、scene metadata、front/back/right/left/top/bottom/iso、部品単独サムネイルの生成に成功。
 - 背景Blender Undo/Redoプローブは3版で実行。`undo.poll()`不可は `unavailable_in_background` として正常に区別し、GUI Ctrl+Z成功とは扱わない。
 - PR #18/#20の旧失敗workflowもpublic化後に再実行し、下位開発スタックの再検証を開始。mainの正式 `last_verified` は統合前なのでv0.15.0のまま維持。
+
+
+## v0.17.0 正式化 — 2026-11-06
+
+- PR #18 → #20 → #21 の順でmainへ通常mergeし、v0.16監査改善、v0.17 Undo/Redo証拠分離・登録ワークフロー、GLB Visual Inspectorを統合。
+- `release/v0.17.0` をmainから作成。`pyproject.toml` とSTATEのcurrentを0.17.0へ更新し、次予定を0.18.0へ進める。
+- 正式な `last_verified` はこのrelease PRのPython/Windows/Blender CIが成功した後に更新する。GUI Ctrl+Z/操作感は対象外。
+- 次段階として `NEXT-008` に「参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ」を登録。
+
+
+### v0.17.0 release gate 成功 — 2026-11-06
+
+- PR #22 head `804956cf56eafce1c34d1fe1d80d95e54a95fd4c` でPython **334/334**を3.11/3.12/3.13すべて成功。
+- Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windows kit、durable handoffが全成功。
+- Blender 3版すべてで7部品、6レシピ、監査スケーリング、背景Undo/Redoプローブ、GLB 7方向＋部品単独レンダリングfixtureを成功。
+- `last_verified` をv0.17.0へ更新。GUI Ctrl+Z/操作感と個別ユーザーGLBのBlender実レンダリングは別検証として残す。

@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - 'pyproject.toml'
+      - 'docs/project/STATE.json'
       - 'scripts/windows_run_blender_tests.ps1'
       - 'run_blender_tests_windows.bat'
       - 'tests/**'
