@@ -162,3 +162,8 @@ CI must use only the CBDK-authored synthetic GLB fixture. Do not upload private 
 Shape mode compares world-space scene/object bounds and placement and may geometrically match renamed parts. Do not claim exact shape equivalence from bounds alone: different silhouettes, cavities, or internal details can share the same AABB. Strict mode additionally checks names and topology counts but still is not a physical-fit or GUI-usability proof.
 
 When a comparison fails, use its structured diagnostics to guide a reviewed code change, then rerun Python/Windows/Blender CI. Never create an autonomous accept/merge loop based only on comparison score or a green GLB regression.
+
+
+## v0.18 — silhouette regression evidence
+
+Silhouette signatures are deterministic Blender-derived evidence, not AI-generated reconstruction. Keep the grid bounded (32x32 by default), enforce triangle limits before expensive rasterization, and record unavailable signatures explicitly. IoU below threshold is a diagnostic failure; IoU above threshold is not proof of exact geometry, watertightness, mechanical fit, or internal cavities. Never auto-approve/merge code from silhouette score alone.
