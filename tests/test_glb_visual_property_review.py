@@ -69,6 +69,7 @@ def sample_review(*, scenario="narrow"):
         "parts": {"reference": left, "candidate": right},
         **labels,
         "boundary_edge_audit": {
+            "method": "world_space_quantized_triangle_edge_incidence_v1",
             "fully_watertight_proven": False,
             "hole_locations_verified": False,
             "internal_voids_verified": False,
@@ -79,6 +80,11 @@ def sample_review(*, scenario="narrow"):
                     for p in right
                 ],
             },
+        },
+        "sampling_sensitivity_audit": {
+            "method": "extra_halton_24_probe_sensitivity_v1",
+            "unobserved_regions_verified": False,
+            "complete_surface_equivalence_proven": False,
         },
         "part_match_candidates": {
             "status": "review_only",
