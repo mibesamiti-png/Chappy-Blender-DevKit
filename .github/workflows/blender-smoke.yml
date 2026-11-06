@@ -284,6 +284,22 @@ jobs:
           assert d['evidence_summary']['errors'] >= 1, d
           assert d['safety']['auto_approves'] is False, d
           PY
+          python -m cbdk glb-repair-plan reports/ci/glb_drift_compare.json \
+            --output reports/ci/glb_drift_repair_plan.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('reports/ci/glb_drift_repair_plan.json').read_text())
+          assert p['kind'] == 'cbdk_glb_repair_plan', p
+          assert p['status'] == 'review_only', p
+          assert p['recommendation_count'] >= 1, p
+          assert any(x['worst_iou'] is not None and x['worst_iou'] < 0.90
+                     and x['affected_views']
+                     and x['requires_human_parameter_mapping']
+                     for x in p['recommendations']), p
+          assert p['safety']['edits_code'] is False, p
+          assert p['safety']['applies_parameters'] is False, p
+          PY
 
           if [ "$BLENDER_VERSION" = "4.5.15" ]; then
             set +e
@@ -298,6 +314,7 @@ jobs:
             set -e
             test "$regression_status" -eq 1
             test -f reports/ci/glb_regression_e2e/diagnosis.json
+            test -f reports/ci/glb_regression_e2e/repair_plan.json
           fi
           echo "GLB views, silhouettes, self-compare, same-bounds silhouette drift detection and e2e regression behavior PASSED." >> "$GITHUB_STEP_SUMMARY"
 
