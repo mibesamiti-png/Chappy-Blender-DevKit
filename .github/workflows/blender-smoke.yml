@@ -334,6 +334,10 @@ jobs:
                   radius = self.boolean_cutter / 2
                   bpy.ops.mesh.primitive_uv_sphere_add(radius=radius)
                   bpy.ops.mesh.primitive_cube_add(size=self.profile_shape)
+
+              def configure_modifiers(self, modifier):
+                  modifier.width = self.profile_shape
+                  modifier.thickness = self.boolean_cutter
           PY
           python -m cbdk glb-map-properties \
             reports/ci/glb_drift_repair_plan.json \
@@ -349,12 +353,16 @@ jobs:
                   for match in rec['exact_name_matches']]
           assert hits, m
           assert all(match['match'] == 'exact_declaration_name_only' for match in hits), m
-          assert m['static_possible_attribute_references_found'] == 12, m
+          assert m['static_possible_attribute_references_found'] == 14, m
           assert m['static_possible_geometry_paths_found'] >= 2, m
           linked = [hit for hit in hits
                     if hit['possible_geometry_dataflow']['possible_path_count'] > 0]
           assert linked, m
           assert any(site['geometry_operation_category'] == 'mesh_primitive'
+                     for hit in linked
+                     for site in hit['possible_geometry_dataflow']['examples']), m
+          assert any(site['geometry_operation_category'] == 'possible_modifier_setting_assignment'
+                     and site['recognized_api'] in ('modifier.width', 'modifier.thickness')
                      for hit in linked
                      for site in hit['possible_geometry_dataflow']['examples']), m
           assert all(hit['possible_geometry_dataflow']['receiver_binding_verified'] is False
