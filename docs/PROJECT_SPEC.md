@@ -172,3 +172,13 @@ GLB scene metadata schema 4では、Blender実メッシュを固定正射影し�
 正常性判定は比較側の`passed`（bool）・`summary.errors`と`differences`の重大度集計が一致する場合だけ受け付ける。未知のコードも捨てずに`unsupported_difference_codes`に記録し、警告や情報だけでもレビュー対象とみなす。重複JSONキー、非有限/負の指標、0..1域外のIoU・体積割合、異常なサイズの証拠は拒否する。
 
 生成されたレポートは**原因候補であり、元形状との完全一致の証明ではない**。32x32シルエットは細穴・内部空間・サブグリッドの差分を見逃し得る。結果を根拠にコードを自動変更/承認/マージする機能は作らず、ユーザーのGLBデータはGitHubに上げない。v0.18 PR #25のコードcommit e971b784で、Python 3版・Windows 2版・Blender 3版のGitHub CIが実測成功したためGLB-005は実装済・Blender CI検証として管理する。ただしPRは未マージ、最後の正式リリースはv0.17.0であり、実ユーザーGLBでの同等性証明も別課題。
+
+## v0.18 開発中：GLB診断→アドオン設定候補のレビュー計画（GLB-006）
+
+`python -m cbdk glb-repair-plan reports/latest/glb_compare.json --output reports/latest/glb_repair_plan.json` は、既存の比較結果を厳密に検証して診断を再構築し、`cbdk_glb_repair_plan` JSONを出力する。既存の `glb-regression` は比較・診断に加え `repair_plan.json` を生成する。
+
+対象部品・原因カテゴリ・比較数値から、存在しそうな設定**候補群**、確認チェックリスト、該当視点、最悪IoU、観測差分の代表軸を提示する。Ball/Socket/Hingeの名前は弱いロール推測としてのみ扱い、そのアドオンの実際のプロパティ名・設定値とは断定しない。実数値からの自動設定や補正はしない。`unit=unknown_from_comparison`を明示し、参考と候補GLBの値は証拠であって修正指示ではない。
+
+原因仮説に未知カテゴリが含まれたら人手確認、比較差分に未対応コードが含まれたら`unmapped_difference_codes`として残す。設定候補のない状況でも「根拠がない」と正直に示す。レビューが必要な場合は「確認→人手で1箇所修正→GLB再生成→比較→Python/Windows/Blender CI」というチェック手順を提示する。
+
+新たな20 Python回帰テストと3版Blenderの合成GLB CIを追加。未知の元アドオン実行、コード修正、自動承認、GitHubへの私有GLBアップロードは禁止。正式リリースv0.17.0の`last_verified`は、v0.18の正式リリースまで変更しない。
