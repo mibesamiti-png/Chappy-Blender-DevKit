@@ -121,6 +121,25 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
             for k in ("combined_aabb_diagonal", "medium_from", "high_from")
         ):
             raise ValueError("Invalid error thresholds")
+        if (report.get("viewer") != "compare_viewer.html"
+                or report.get("viewer_contains_derived_geometry") is not True
+                or report.get("viewer_local_only") is not True
+                or report.get("viewer_shared_camera") is not True
+                or report.get("viewer_browser_interaction_verified") is not False
+                or report.get("unobserved_regions_verified") is not False):
+            raise ValueError("Unsafe or missing offline viewer declaration")
+        viewer_path = target / "compare_viewer.html"
+        if (viewer_path.is_symlink() or not viewer_path.is_file()
+                or not 1000 < viewer_path.stat().st_size <= 2 * 1024 * 1024):
+            raise ValueError("Missing, linked or oversized local viewer")
+        html = viewer_path.read_text(encoding="utf-8")
+        if (html.count('id="cbdk-viewer-data"') != 1
+                or "Content-Security-Policy" not in html
+                or '"cbdk_local_diff_viewer"' not in html
+                or "__CBDK_VIEWER_DATA__" in html
+                or 'id="canvas-reference"' not in html
+                or 'id="canvas-candidate"' not in html):
+            raise ValueError("Invalid or incomplete local comparison viewer")
         for filename in EXPECTED_FILES:
             output = target / filename
             if (output.is_symlink() or not output.is_file()
