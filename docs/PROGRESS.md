@@ -456,3 +456,10 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - GLBの内容を画像生成AIだけで「再現した画像」は元データの正確なプレビューとして扱わない。
 - 今後の形状理解は `front/right/top/iso PNG → scene_metadata.json → structure.json → ユーザースクリーンショット` を主要根拠とする。
 - GLBはModifier、Edit Mode選択、BlenderアドオンPropertyを完全保存しないため、内部構造デバッグでは.blend/Blender実機を引き続き併用する。
+
+
+### PR #21 CI観測（2026-11-06）
+- GLB Visual Inspector用ドラフトPR #21を `feature/v0.17-undo-redo-probe` 向けに作成。
+- GitHub ActionsはPython、Windows、Blender 4.4.3 / 4.5.15 / 5.2.1、durable handoffの全実行ジョブで失敗表示となったが、API上はすべて `steps=null` / `logs_url=null`。リポジトリコードや新しいGLBテストへ到達した証拠がない。
+- 実行ID: Python `42172631874`、Windows `42172632052`、Blender `42172631906`、handoff `42172631812`。
+- 既存Issue #19へ同じランナー割当症状の再現として記録。**GLB実装のBlender runtime failureとは判定せず、未検証を維持する。**
