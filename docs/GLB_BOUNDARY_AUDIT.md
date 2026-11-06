@@ -55,3 +55,9 @@ Blender3版の全ジョブで新しい合成四面体（閉じた状態／1面�
 ### 検証計画
 
 Pythonでは閉じた四面体の境界線0本、面を1枚除いた四面体の境界線3本が欠けた面を囲むことを確認。Blender 3版CIでは合成GLBの再読み込みによって出力HTMLの線分数（参照0・生成3）と非公開風部品名の非漏出をチェック。Chromium実操作CIでは左右の水色線の表示切替によるキャンバス画像変化を調べる。**テストが完了したコミットSHAとrun IDだけを成功実績として追記する。**
+
+### 第7段階・実測CI結果（2026-11-07）
+
+テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
+
+合成の閉/開四面体GLBから生成されたローカルHTMLの推定線分数は参照0本・生成3本と一致。Chromium実操作試験で左右の水色線の表示切替に伴う描画変化を確認。初回GUIテストの注意文言のアサーション不一致を修正し、修正版SHAの全CI成功を確認。**未観測の穴や内壁の完全検出、正確な遮蔽、任意の私有GLBでの性能は未検証**。
