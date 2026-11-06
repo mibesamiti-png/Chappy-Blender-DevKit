@@ -345,7 +345,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/glb_diff_visualize.py",
-      "note": "オプトインのglb-diff-visualizeで参照/生成の各GLBを赤/黄/灰で三角面ごとに可視化。24点BVHサンプル/統計JSON/512面上限/元ソース非実行。実装SHA 01fff174、Blender3版CI run 42264143956成功。元オブジェクト選択・カメラ連動・未知領域の明示は未実装。Windows修正後の最新CIも確認"
+      "note": "参照/生成GLBの面別赤黄灰のローカル着色出力（24点BVHサンプル・統計JSON・各512面上限・元ソース非実行）を実装。試作として一部実装。コード/テストSHA 91e8b6a2でPython 42264413533・Windows 42264413685・Blender3版 42264413844・Kit 42264413982・handoff 42264413923 全成功。部品個別選択、連動ビュー、未測定領域の明示、実ユーザーGLBは未実装/未検証"
     },
     {
       "id": "GLB-021",
