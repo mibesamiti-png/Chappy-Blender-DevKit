@@ -72,3 +72,9 @@ After running the command above, open **`compare_viewer.html`** from the newly g
 - This initial viewer only uses previously validated triangles (512/GLB and 64 parts/GLB). The embedded coordinates are **private model geometry**; `review.json` remains aggregates-only. Keep all generated outputs local and exclude private viewer files from GitHub, Notion and CI upload artifacts.
 - The HTML is static code from CBDK plus sanitized numeric-only shape data. It does not execute source addon Python or require network access.
 - A successful Python test/Node syntax check/Blender file-generation CI **does not prove actual browser interaction works**. Browser GUI tests and additional compatibility review are still pending.
+
+## Linked-view CI evidence (2026-11-07)
+
+実装・テストSHA `b5d1d27f5e7834fa22faeefb02792091c1ac87d0`：Python [42268089086](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268089086)、Windows [42268088883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088883)、Blender 4.4.3/4.5.15/5.2.1 [42268088779](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088779)、Windowsキット [42268088823](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088823)、引き継ぎ [42268088869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088869) **全成功**。これはHTML生成とJS構文のCIであり、ブラウザ実機の操作試験ではない。
+
+ブラウザGUIでの操作試験、WebGL相当の精度保証、別GLB間の部品対応や内部未測定部分の表示は未完了。HTMLの派生三角形は機密扱いし、`review.json`の集計データとの違いを維持する。
