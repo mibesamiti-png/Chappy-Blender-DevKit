@@ -262,3 +262,11 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - The material colors are based on sampled per-face distance relative to the combined world-space bounding-box diagonal, not exact surface correspondence. Low/error-zero does NOT prove exact shape, closed cavities or volumetric identity.
 - Preserve static GLB preflight, 512-triangle cap, disabled autoexec, factory startup, new-output-directory overwrite protection and source non-modification. Do not execute addon Python or automatically apply proposed fixes.
 - Keep GLB-020 partial until linked-view/object-specific/unknown-region requirements are implemented and verified. Formal release stays v0.17.0 until separately reviewed.
+
+
+## GLB-020 offline linked 3D viewer privacy and test boundary
+
+- The generated `compare_viewer.html` is intentionally **derived private geometry** (two numeric triangle arrays in a self-contained HTML page), unlike the aggregate-only `review.json`. It is local-only and must never be committed, uploaded to Notion or attached to public CI artifacts for real user data.
+- The viewer HTML template is trusted CBDK-owned static markup/script. Populate only finite bounded validated coordinates and anonymous integer part/color data. Keep Content-Security-Policy and no remote dependencies/network connections.
+- A software Canvas 2D triangle painter is an approximate 3D view (imperfect depth ordering); never present it as an exact geometric comparison, GUI-verified result, proof of correspondence or auto-repair.
+- Python tests and Node syntax checks do not establish end-user browser interaction. Real browser GUI checks and GLB-020 completion criteria remain outstanding.
