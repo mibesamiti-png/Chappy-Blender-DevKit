@@ -308,3 +308,12 @@ Python側に12件のpreflight/安全ランナー/報告/スキップテストと
 コードSHA `72e9bd4e4ad2cb9b9716ee0cb5ea10de60cd779e` では、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183982)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184368)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184086)・[Windowsキット](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184021)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183990)・[Chromium実ブラウザ操作](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183979)が**全6系統success**。
 
 各テストはCBDKが作った合成データのみ。HTML表示・操作の成功は、3D形状の完全一致や本当の部品同一性、特定のアドオン設定の原因特定の証明ではない。
+
+## GLB-020 第5段階：追加サンプリング感度の表示
+
+2つのGLBの面について、基本の24点/面の測定とは異なる24点を追加で測り、追加点の観測誤差が大きく増えたり従来の色閾値を越えたりした面を**紫の輪郭**で示す。ローカル比較HTML内で紫枠の表示を切り替えられる。
+
+- 指標は`extra_halton_24_probe_sensitivity_v1`。追加の点と元の点はHalton列の異なる区間を使用。増大基準は共有AABB対角線の0.5%以上、または既存の1%/5%色閾値横断。
+- **赤/黄/灰の元色は変更しない**。紫枠は追加プローブで差の増加が実際に観測された事実のみを意味する。紫でない面は「全域を検証済み」ではない。
+- 匿名部品ごとの紫枠対象面数と全体件数は集計JSONに、個別の面フラグは私有形状を含むローカルHTMLにのみ保存。元GLBやユーザーのアドオンを実行・変更・アップロードしない。
+- 完全形状一致・内部空洞一致・未サンプル領域の自動特定・実ユーザーモデルの性能・GLB-021設定原因同定は未検証。BlenderとChromiumの合成CIはその試験範囲内の証拠として扱う。
