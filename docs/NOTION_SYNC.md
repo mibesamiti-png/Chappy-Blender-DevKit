@@ -123,6 +123,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`： [Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)、[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)、[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)、[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)、[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)、[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
 - GLB-022 is **partial / blender_ci**, not implemented for arbitrary user addons or optimizers. GLB-021 partial, GLB-020 review MVP accepted/frozen; formal v0.17.0 unchanged and v0.18 PR #25 draft. Avoid uploading private derived GLB/HTML or user AST output to Notion.
 
+## GLB-022 cross-part three-candidate synthetic experiment (2026-11-07)
+
+- CBDK-owned synthetic three-part models are freshly generated for 3 candidate trials. `narrow_placebo` rejected because socket does not improve; `shifted` rejected because the ball gets worse despite socket improvement; `identical` accepted with sampled zero and no other-part regression. Legacy 2-candidate test remains running.
+- Fail-closed 1/2 iteration budgets, strict candidate IDs and no forged or private history data; JSON and Markdown remain local. No actual user addon code or private GLB is run or changed.
+- コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
+- GLB-022 remains partial: this is a three-candidate synthetic test, not an arbitrary optimizer. Preserve GLB-021 partial, GLB-020 MVP frozen, formal v0.17.0 and draft PR #25.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
