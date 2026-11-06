@@ -1011,3 +1011,11 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - 既存の2候補`--protocol basic`は維持し、`--protocol cross_part`を追加。試行予算1/2/3、変造された採否履歴、不正な安全フラグと試験名、ローカル上書き防止をPythonで検証。
 - コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
 - GLB-022は`partial`のまま。**任意の私有アドオンの自動修正ではなく、CBDK合成3部品の固定3候補**だけを試した。細かな誤差の連続的最適化や形状の完全一致は未検証。[合成3候補の仕様](GLB022_MULTI_CANDIDATE.md)。
+
+## 2026-11-07 GLB-022 第3段階：中間改善を数値で採用
+
+- CBDK合成ソケットの中間開口直径1.24と、ボール移動を組み合わせた対照ケースを追加。GLB-020の全体双方向最大サンプル距離を利用し、**0.78→1.24で距離が減る（ただし差分は残る）状態を途中改善として採用**。
+- 同時に、ボール位置が悪化する候補は距離の改善とは関係なく棄却。最後はCBDK既知正常の1.70で観測距離0のため採用・停止。`basic`/`cross_part`の既存プロトコルも維持。
+- 最大3試行、予算1/2での未完成打切り、欠損レビュー/不正数値/安全フラグの拒否、ユーザー非公開データを出力しないことをPythonとBlender実GLBで検証。
+- テスト対象コードSHA `44e15f8f6664fe29e06810fd06d8d73dda70bec6`：[Python 42307811087](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811087)、[Windows 42307810687](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810687)、[Blender4.4.3/4.5.15/5.2.1 42307810797](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810797)、[Windows Kit 42307810828](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810828)、[Handoff 42307811040](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811040)、[Chromium 42307810743](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810743) **全6系統成功**。
+- GLB-022は`partial`。全体サンプリング最大値は厳密な部品別誤差・完全幾何一致ではない。実ユーザーアドオンの原因/適切な設定値は依然未検証。[詳細](GLB022_PROGRESSIVE_SYNTHETIC.md)。
