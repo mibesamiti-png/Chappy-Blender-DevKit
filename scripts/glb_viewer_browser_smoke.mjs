@@ -16,7 +16,7 @@ async function run() {
       if (/^https?:/i.test(req.url())) network.push(req.url());
     });
     await page.goto(pathToFileURL(resolve(process.argv[2])).href, { waitUntil: "load" });
-    await page.locator("#status").getByText("連動視点を使用中", { exact: false }).waitFor();
+    await page.waitForFunction(() => document.getElementById("status")?.textContent.includes("連動視点を使用中"));
     assert.equal(await page.locator("#part-reference option").count(), 3);
     assert.equal(await page.locator("#part-candidate option").count(), 3);
     assert.equal(await page.locator("#jump-candidate").isDisabled(), true);
