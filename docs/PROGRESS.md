@@ -796,3 +796,13 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - Durable handoff: [run 42244257445](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257445)。
 
 本成果は**限られた合成モデル**における見逃しを改善した実測であり、完全な穴の網羅性、密閉空洞やトポロジ正しさは保証しない。精査しなかった面にある異常は依然見逃し得る。GLB-017をimplemented/blender_ci、NEXT-015をdoneとしてSTATE/HANDOFFに記録した。これは4c7248c8のCI結果であり、後続の記録更新コミットのCIは別途観測。PR #25はドラフト、正式v0.17.0のlast_verifiedは変更なし。
+
+## v0.18 開発中 — GLB-018: 幾何ヒントを使った精査の優先順位
+
+- `cbdk/glb_feature_priority.py`を追加。メッシュ内の境界/外寸内にある境界、面同士の折れ角、面積が相対的に小さい領域、共通頂点が多い領域、非多様体の疑いを**確認候補**として抽出。
+- `cbdk/glb_multires_surface.py`で、粗8点で差が出た面は最優先のまま、追加探索2面のうち1面を上記ヒントから、1面を面積順から選ぶ。旧方式`feature_aware=False`も維持。精査48点、BVH、上限512面は継続。
+- `tests/test_glb_feature_priority.py`に新規13件の回帰テスト追加。大きな板に埋もれた小部品の穴、鋭角・外寸内部の境界、細かい三角形、別三角分割・頂点順、実行/公開/自動承認なしを検証。
+- Blender合成GLBに`panels_filled.glb`/`panels_narrow_hole.glb`を追加し9種を実出力/再読込するCIを追加。旧面積方式と新特徴方式を同一入力で比較する。
+- 正本STATE.jsonにGLB-018/DEC-030/NEXT-016を登録して、PROJECT_HANDOFFを同期。
+
+**境界:** 幾何特徴は優先候補であり欠陥の確定ではない。新方式は小部品を優先できても、未選択領域の穴を見逃し得る。公開CIにユーザーの非公開GLB・アドオンは入れず、自動修正もしない。最新headの実CIを確認するまではGLB-018は部分実装/未検証。v0.18ドラフト、正式v0.17.0維持。
