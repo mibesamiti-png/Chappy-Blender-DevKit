@@ -15,8 +15,10 @@ class GLBRegressionTests(unittest.TestCase):
             ref = root / "ref.glb"; cand = root / "cand.glb"
             ref.write_bytes(b"x"); cand.write_bytes(b"y")
             comparison = {
+                "kind": "cbdk_glb_scene_comparison",
                 "passed": True,
                 "summary": {"errors": 0},
+                "differences": [],
             }
             with patch("cbdk.glb_regression.write_glb_inspection") as inspect, \
                  patch("cbdk.glb_regression.render_glb_preview") as render, \
