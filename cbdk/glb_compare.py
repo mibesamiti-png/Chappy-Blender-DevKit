@@ -132,8 +132,65 @@ def _objects(data: dict, label: str) -> list[dict]:
             "edges": row.get("edges"),
             "polygons": row.get("polygons"),
             "legacy_bounds_fallback": "world_bounds" not in row,
+            "silhouettes": _silhouette_map(row.get("silhouettes"), f"{label}.objects[{i}].silhouettes"),
         })
     return result
+
+
+
+def _silhouette_signature(value: Any, label: str) -> dict | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise SceneComparisonError(f"{label} must be an object")
+    available = value.get("available")
+    if not isinstance(available, bool):
+        raise SceneComparisonError(f"{label}.available must be boolean")
+    if not available:
+        return {"available": False, "reason": value.get("reason")}
+    grid = value.get("grid_size")
+    bits_hex = value.get("bits_hex")
+    filled = value.get("filled_cells")
+    if not isinstance(grid, int) or isinstance(grid, bool) or not 8 <= grid <= 128:
+        raise SceneComparisonError(f"{label}.grid_size is invalid")
+    if not isinstance(bits_hex, str):
+        raise SceneComparisonError(f"{label}.bits_hex must be a string")
+    expected_bytes = (grid * grid + 7) // 8
+    if len(bits_hex) != expected_bytes * 2:
+        raise SceneComparisonError(f"{label}.bits_hex length does not match grid")
+    try:
+        bits = bytes.fromhex(bits_hex)
+    except ValueError as exc:
+        raise SceneComparisonError(f"{label}.bits_hex is not valid hex") from exc
+    if not isinstance(filled, int) or isinstance(filled, bool) or not 0 <= filled <= grid * grid:
+        raise SceneComparisonError(f"{label}.filled_cells is invalid")
+    return {"available": True, "grid_size": grid, "bits": bits, "filled_cells": filled}
+
+
+def _silhouette_map(value: Any, label: str) -> dict[str, dict | None]:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise SceneComparisonError(f"{label} must be an object")
+    result = {}
+    for key, signature in value.items():
+        if not isinstance(key, str) or not key:
+            raise SceneComparisonError(f"{label} contains an invalid view name")
+        result[key] = _silhouette_signature(signature, f"{label}.{key}")
+    return result
+
+
+def _silhouette_iou(left: dict, right: dict) -> float:
+    if not left.get("available") or not right.get("available"):
+        return 1.0
+    if left["grid_size"] != right["grid_size"]:
+        raise SceneComparisonError("Silhouette grid sizes differ")
+    intersection = 0
+    union = 0
+    for a, b in zip(left["bits"], right["bits"]):
+        intersection += (a & b).bit_count()
+        union += (a | b).bit_count()
+    return 1.0 if union == 0 else intersection / union
 
 
 def _topology_value(value: Any, label: str) -> int:
@@ -192,6 +249,7 @@ def compare_scene_metadata(
     scene_rel_tol: float = 0.05,
     fallback_match_limit: float = 0.60,
     minor_volume_fraction: float = 0.01,
+    silhouette_iou_min: float = 0.90,
 ) -> dict:
     if profile not in PROFILES:
         raise SceneComparisonError(f"Unknown comparison profile: {profile}")
@@ -201,6 +259,7 @@ def compare_scene_metadata(
         ("scene_rel_tol", scene_rel_tol),
         ("fallback_match_limit", fallback_match_limit),
         ("minor_volume_fraction", minor_volume_fraction),
+        ("silhouette_iou_min", silhouette_iou_min),
     ):
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(float(value)) or value < 0:
             raise SceneComparisonError(f"{name} must be a non-negative finite number")
@@ -209,6 +268,8 @@ def compare_scene_metadata(
     cand_scene = _bounds(candidate.get("bounds"), "candidate.bounds")
     ref_objects = _objects(reference, "reference")
     cand_objects = _objects(candidate, "candidate")
+    ref_silhouettes = _silhouette_map(reference.get("silhouettes"), "reference.silhouettes")
+    cand_silhouettes = _silhouette_map(candidate.get("silhouettes"), "candidate.silhouettes")
 
     diagonal = max(_norm(ref_scene["size"]), 1e-9)
     differences = []
@@ -232,6 +293,25 @@ def compare_scene_metadata(
             relative_error=scene_center_error, tolerance=center_rel_tol,
             reference=ref_scene["center"], candidate=cand_scene["center"])
 
+
+    scene_silhouette_scores = {}
+    for view in sorted(set(ref_silhouettes) & set(cand_silhouettes)):
+        left = ref_silhouettes[view]
+        right = cand_silhouettes[view]
+        if not left or not right or not left.get("available") or not right.get("available"):
+            continue
+        score = _silhouette_iou(left, right)
+        scene_silhouette_scores[view] = score
+        if score < silhouette_iou_min:
+            add(
+                "scene_silhouette",
+                "error",
+                f"Scene silhouette differs in {view}",
+                view=view,
+                iou=score,
+                minimum=silhouette_iou_min,
+            )
+
     pairs, missing, extra = _match_objects(
         ref_objects, cand_objects, diagonal, float(fallback_match_limit)
     )
@@ -249,6 +329,28 @@ def compare_scene_metadata(
             "center_rel_error": center_error,
         }
         pair_rows.append(row)
+
+        silhouette_scores = {}
+        for view in sorted(set(ref["silhouettes"]) & set(cand["silhouettes"])):
+            left = ref["silhouettes"][view]
+            right = cand["silhouettes"][view]
+            if not left or not right or not left.get("available") or not right.get("available"):
+                continue
+            score = _silhouette_iou(left, right)
+            silhouette_scores[view] = score
+            if score < silhouette_iou_min:
+                add(
+                    "object_silhouette",
+                    "error",
+                    f"Silhouette differs for {ref['name']} in {view}",
+                    reference_object=ref["name"],
+                    candidate_object=cand["name"],
+                    view=view,
+                    iou=score,
+                    minimum=silhouette_iou_min,
+                )
+        if silhouette_scores:
+            row["silhouette_iou"] = silhouette_scores
         if dim_error > dimension_rel_tol:
             add("object_dimensions", "error", f"Dimensions differ for {ref['name']}",
                 reference_object=ref["name"], candidate_object=cand["name"],
@@ -319,6 +421,7 @@ def compare_scene_metadata(
             "infos": infos,
             "scene_dimension_rel_error": scene_dim_error,
             "scene_center_rel_error": scene_center_error,
+            "scene_silhouette_iou": scene_silhouette_scores,
         },
         "tolerances": {
             "dimension_rel_tol": float(dimension_rel_tol),
@@ -326,12 +429,15 @@ def compare_scene_metadata(
             "scene_rel_tol": float(scene_rel_tol),
             "fallback_match_limit": float(fallback_match_limit),
             "minor_volume_fraction": float(minor_volume_fraction),
+            "silhouette_iou_min": float(silhouette_iou_min),
         },
         "matches": pair_rows,
         "differences": differences,
         "evidence": {
             "uses_world_bounds": all(not x["legacy_bounds_fallback"] for x in ref_objects + cand_objects),
             "topology_is_shape_requirement": profile == "strict",
+            "scene_silhouettes_compared": bool(scene_silhouette_scores),
+            "object_silhouettes_available": any(bool(x["silhouettes"]) for x in ref_objects + cand_objects),
         },
     }
 
