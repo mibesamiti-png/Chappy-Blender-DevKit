@@ -130,6 +130,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
 - GLB-022 remains partial: this is a three-candidate synthetic test, not an arbitrary optimizer. Preserve GLB-021 partial, GLB-020 MVP frozen, formal v0.17.0 and draft PR #25.
 
+## GLB-022 progressive synthetic sampled-distance acceptance (2026-11-07)
+
+- A new allowlisted mid socket diameter 1.24 is tested between defect 0.78 and known-restored 1.70; a mid-with-displaced-ball negative control is rejected for other-part regression. Mid alone is accepted as **partial progress** based on the aggregated two-way sampled maximum distance, then restored synthetic geometry reaches sampled zero and stops.
+- This is a global sampled maximum, not an exact Hausdorff metric, not a per-part distance, not a real-user parameter recommendation. Private GLB/HTML, user code and reports never leave local CI workspace.
+- テスト対象コードSHA `44e15f8f6664fe29e06810fd06d8d73dda70bec6`：[Python 42307811087](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811087)、[Windows 42307810687](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810687)、[Blender4.4.3/4.5.15/5.2.1 42307810797](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810797)、[Windows Kit 42307810828](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810828)、[Handoff 42307811040](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811040)、[Chromium 42307810743](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810743) **全6系統成功**。
+- GLB-022 remains `partial`/Blender CI; GLB-021 partial; GLB-020 MVP freeze and v0.17.0 current release, v0.18 PR #25 draft remain unchanged.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
