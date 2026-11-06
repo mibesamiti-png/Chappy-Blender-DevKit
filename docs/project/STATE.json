@@ -329,6 +329,14 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_feature_priority.py",
       "note": "特徴ヒント（外寸内の境界・鋭角・細面・頂点近傍・非多様体疑い）で追加探索2枠中1枠を選び、残りは面積上位を調べる。旧area-onlyとの比較で、大型板2枚＋小部品の幅0.44の穴が旧方式では最大距離0、新方式で0.0657466。Blender4.4.3/4.5.15/5.2.1にて自作合成9 GLBの書出/再読込実CI成功（commit 676e92f8, run 42246918883）。Python3版/Windows2版/kit/handoff含む全5ワークフロー成功。どの境界が実際の穴か・閉じた空洞・一般GLB最適化は未証明"
+    },
+    {
+      "id": "GLB-019",
+      "title": "ローカル2GLBを安全に読み込みBVH表面距離と特徴優先多解像度の比較を既存パイプラインに統合",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/glb_surface_pipeline.py",
+      "note": "新CLI glb-surface-review: 静的GLB preflight（ローカルのみ/外部URI禁止/24MiB/頂点参照10万）、factory-startup + disable-autoexec Blender trusted runnerで共通world-space三角面を読込、固定24点BVH表面距離+特徴優先粗8精48の集計JSONを保存。512面/GLB超はskipped明記、未実測を合格にしない。既存glb-regression --surface-reviewは任意追加で、元のpassedはメタデータ専用と注記。Pythonユニット/Blender3版で既存自作合成GLB実読込テストを追加したがCI結果待ち。ユーザーデータは公開CI未投入"
     }
   ],
   "known_issues": [
@@ -509,6 +517,13 @@
       "status": "done",
       "title": "特徴優先で大型板に埋もれた小さい開口を見つける合成GLB比較を検証",
       "acceptance": "Python13回帰テストとBlender4.4.3/4.5.15/5.2.1合成9 GLBの実生成・再読込成功。大型板に囲まれた小部品でarea-only最大誤差0／feature-aware 0.0657466（run 42246918883）。旧GLB-017見逃し検出と512面BVH CIは維持、実ユーザーソース実行なし"
+    },
+    {
+      "id": "NEXT-017",
+      "priority": 17,
+      "status": "in_progress",
+      "title": "本物の2つのGLB入力から表面誤差を出力し既存glb-regressionにopt-in統合",
+      "acceptance": "Blender 4.4.3/4.5.15/5.2.1で自作合成GLB2組を新CLIで読み込んで表面差有無を計測。glb-regression --surface-reviewが従来の比較/診断/プランと集計surface_review.jsonを共存させる。preflight/上限/スキップ/プライバシー検証のPythonテスト成功。privateユーザーGLBをCI投入しない"
     }
   ],
   "decisions": [
@@ -661,6 +676,11 @@
       "id": "DEC-030",
       "decision": "幾何学的な優先候補は欠陥の確定ではなくレビュー用ヒントとし、面積探索枠を必ず残す",
       "note": "原点/外寸を利用した内部候補境界、隣接三角形法線の鋭角差、面積中央値比、共頂点近傍の多さ、非多様体疑いで候補を比較。同名頂点座標による局所接続は厳密なメッシュ位相の証明にならず、境界は外周・切れ目かもしれない。精査枠2面のうち最大1面を特徴優先、1面を面積探索に保持し、従来area-only切替も維持。私有幾何をレポート出力せず、自動修正しない"
+    },
+    {
+      "id": "DEC-031",
+      "decision": "GLB表面解析はローカル明示オプトイン・静的preflight・512三角形上限・集計値のみ保存とし、メタデータの合否と分離する",
+      "note": "GLB自体はBlender輸入時に実データとして読み込むため、未知ファイルのリスクはゼロではない。既定オフの明示コマンド/--surface-reviewだけで実行し、外部URI・大容量・大量頂点参照を事前拒否。オブジェクト単位の差分や同一性は推定しない。三角形の多すぎるモデルはskippedを明示。メタデータpassedを表面一致の保証として扱わない。元アドオンのPythonコードは実行せず、非公開GLBは外部にアップロードしない"
     }
   ],
   "last_verified": {
@@ -737,6 +757,7 @@
     "surface_bvh": "2026-11-06: GLB-015 code/docs SHA bcef8572994065f73d05e2e9c37245d64a13035e: Python 42238115233, Windows 42238115886, Blender3-version 42238114860, kit 42238115035, handoff 42238115141 all SUCCESS. Blender 4.5.15 256-face GLB observed 1,572,864 brute vs 49,152 BVH exact triangle computations (32x fewer), 0 distance. GLB-015 implemented/blender_ci; NEXT-013 done. Formal v0.17.0 unchanged; PR draft.",
     "surface_benchmark": "2026-11-07: GLB-016 implementation+docs SHA ca9ad5076fb911bc8337bc525c163b1b069c6bcb all 5 workflows SUCCESS: Python 42241396452, Windows PowerShell 42241396094, Blender 3-version 42241395979, Windows kit 42241396296, durable handoff 42241396289. Synthetic 64-face BVH/brute median ms by Blender version: 4.4.3 35.510505/161.156313, 4.5.15 19.356758/86.027068, 5.2.1 32.467850/149.716417; synthetic 512-face BVH-only median ms 352.050953/192.798623/321.247609. No portable speedup promise; GLB-016 implemented/blender_ci, NEXT-014 done; v0.17.0 formal release remains.",
     "multires_surface": "2026-11-07: GLB-017 SHA 4c7248c853047b1f21088e01441a6c5fed9ca4b2 all CI SUCCESS: Blender 4.4.3/4.5.15/5.2.1 42244257499 (narrow hole legacy24=0, coarse8=0, selected48=0.0657466), Python3-version 42244257474 (13 new tests), Windows PowerShell 42244257438, Windows kit 42244257461, durable handoff 42244257445. GLB-017 implemented/blender_ci, NEXT-015 done. General coverage and enclosed cavities not proven. PR draft, release last_verified 0.17.0 preserved.",
-    "feature_priority": "2026-11-07 GLB-018 code/docs SHA 676e92f8cc4ad48774ea6e0702710576fe97a286 all five GitHub CI SUCCESS: Python3 42246918798, Windows PowerShell 2 42246918818, Blender4.4.3/4.5.15/5.2.1 42246918883, Windows kit 42246918868, durable handoff 42246918953. Real synthetic 9-GLB: large panels with narrow small-part opening area-only max 0.0 vs feature-aware max 0.0657466 all Blender versions; review-only false defect-equivalence/auto-apply flags. GLB-018 implemented/blender_ci, NEXT-016 done. PR draft; formal v0.17.0 preserved."
+    "feature_priority": "2026-11-07 GLB-018 code/docs SHA 676e92f8cc4ad48774ea6e0702710576fe97a286 all five GitHub CI SUCCESS: Python3 42246918798, Windows PowerShell 2 42246918818, Blender4.4.3/4.5.15/5.2.1 42246918883, Windows kit 42246918868, durable handoff 42246918953. Real synthetic 9-GLB: large panels with narrow small-part opening area-only max 0.0 vs feature-aware max 0.0657466 all Blender versions; review-only false defect-equivalence/auto-apply flags. GLB-018 implemented/blender_ci, NEXT-016 done. PR draft; formal v0.17.0 preserved.",
+    "real_glb_surface_bridge": "2026-11-07 GLB-019 local opt-in real GLB surface pipeline, trusted Blender runner, static preflight/no external URI/24 MiB/512 faces, output aggregates, regression --surface-review, 12 launcher safety + 3 regression tests, 3 Blender-version CI synthetic end-to-end. Pending observed current SHA CI. Official last_verified v0.17.0; PR #25 draft."
   }
 }
