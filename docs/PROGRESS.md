@@ -675,3 +675,13 @@ GLB-007は実装済/Blender CI確認済みとして記録。正式バージョ�
 - 引き継ぎ： [42220053158](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053158)。
 
 GLB-012を実装済/Blender CI検証、NEXT-010をdoneとしてSTATE/HANDOFFに記録した。証拠はこの**実装コミット**の結果であり、後続の文書更新のCIとは分ける。PR #25はドラフトで、正式v0.17.0の`last_verified`は維持。任意GLBの表面距離や他者アドオンの効果は未検証。
+
+## v0.18 開発中 — 2026-11-06（GLB-013 設定値上下の実測）
+
+- `cbdk/parameter_direction.py`追加。固定された参考形状に対する基準・増加・減少の距離からレビュー専用`increase/decrease/inconclusive`を判定。不正値、同点、差が小さい状況は修正方向を断定せず、数値設定値と自動適用は返さない。
+- `scripts/blender_parameter_experiment_smoke.py`のCBDK製合成アドオン実験を3→7 GLBへ拡張。球半径とBevel幅の既知参考値に対し、基準より増加プローブが近く、減少プローブが遠いことを、生成直後・GLB再読み込み後に比較。
+- 両方向プローブについて無関係の部品の頂点変化件数が0であることを独立チェック。出力は距離集計のみで頂点XYZ生配列は保存しない。
+- `tests/test_parameter_direction.py`に純Python回帰テスト11件追加。3版Blender CIで7 GLBの実出力と方向・無変更対照・非自動承認フラグをチェック。
+- 要件GLB-013・設計判断DEC-025・タスクNEXT-011をSTATE.json/HANDOFFで管理。
+
+**検証境界:** 最新PR headのCIを見てからGLB-013の検証状態を更新する。これは合成メッシュの局所頂点距離による実験であり、一般GLBの表面一致や実ユーザーアドオンの最適設定値の証明ではない。PRはドラフト、正式last_verified v0.17.0維持。
