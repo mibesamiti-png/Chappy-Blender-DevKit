@@ -349,3 +349,12 @@ JSONは匿名部品別・全体の**件数のみ**、元頂点/名前/元GLBパ�
 テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
 
 GUI試験は合成モデルのみ。水色境界線は近接統合とCanvas2D X-ray表示による推定であり、実モデルの穴や閉曲面の証明ではない。
+
+## GLB-020レビューMVP受け入れ・次段階への移行（2026-11-07）
+
+[GLB-020 MVP受け入れテスト仕様](GLB020_MVP_ACCEPTANCE.md)に従い、CBDK自作の3部品GLBで同一モデル・開口縮小・ボール移動・リップ面欠損の4条件をBlender 4.4.3/4.5.15/5.2.1で実テスト。最初の正常モデルに軸の開放端があることを発見し、合成モデルを閉鎖したうえで再検証。
+
+最終テスト対象コード SHA `db33ce4242bbe98b3c5f9ac43d89bf21c3657089`：
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898364)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898499)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898512)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898604)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898325)・[Chromium実GUI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898701) **全6系統成功**。
+
+**GLB-020のMVPは合格**だが、正確な実モデルの穴・内部空間・完全一致や大規模メッシュは未保証。状態は`partial`、詳細機能追加は凍結。次は`GLB-021`を開始予定（この時点では未実装）。ユーザー私有アドオンの無断実行/編集なし、v0.18ドラフトPRを維持。
