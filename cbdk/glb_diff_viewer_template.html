@@ -64,6 +64,7 @@
     ドラッグ＝両モデルを同時回転 ／ Shift＋ドラッグ＝同時移動 ／ ホイール＝同時ズーム。
     部品表示は左右独立。参照と生成の同じ部品番号は<strong>同一部品を保証しません</strong>。
     「候補を右側に表示」も形状と位置による推定であり、本人による確認が必要です。
+    境界エッジの件数は、近い座標の頂点をまとめた暫定値です。<strong>境界ゼロでも穴や内壁の完全性は保証されません</strong>。
     色は各三角面24点のサンプル測定による目安です。灰色・誤差ゼロも完全一致を証明せず、
     小穴や内部空間などの未測定部分は判定できない場合があります。
     紫の枠は追加24点の測定で誤差が増えた面を示すだけで、<strong>紫の枠がない部分も完全に測定済みではありません</strong>。
@@ -88,6 +89,7 @@
     let showSensitive = true;
     const sensitivity = data.sampling_sensitivity_flags || { reference: [], candidate: [] };
     const matches = data.part_suggestions && data.part_suggestions.reference_parts || [];
+    const boundary = data.boundary_observations || { reference: [], candidate: [] };
     const candidateJump = document.getElementById("jump-candidate");
     let dragging = null;
     function project(x, y, z, width, height) {
@@ -161,7 +163,7 @@
       if (!row || row.status === "unmatched") {
         hint.textContent = "対応候補なし：形状・位置や配置を手動確認してください";
       } else if (row.status === "ambiguous") {
-        hint.textContent = "候補が曖昧です：" +
+        hint.textContent = (row.topology_review_required ? "境界状態が違うため要確認：" : "候補が曖昧です：") +
           (row.candidate_part_ids.join(" / ") || "複数候補") +
           "。自動で結び付けません";
       } else if (row.status === "suggested" && row.candidate_part_ids.length === 1) {
@@ -190,8 +192,10 @@
       data[side].parts.forEach(function (part, index) {
         const opt = document.createElement("option");
         opt.value = String(index + 1);
+        const edge = boundary[side][index];
         opt.textContent = "Part " + String(index + 1).padStart(3, "0") +
-          " （赤" + part.high + " 黄" + part.medium + " 灰" + part.low + "）";
+          " （赤" + part.high + " 黄" + part.medium + " 灰" + part.low +
+          "・境界辺" + (edge ? edge.boundary_edges : "?") + "）";
         selector.appendChild(opt);
       });
       selector.addEventListener("change", function () {
