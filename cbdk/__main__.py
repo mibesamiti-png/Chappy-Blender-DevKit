@@ -24,6 +24,7 @@ from .glb_render import render_glb_preview
 from .glb_quick_render import quick_render_glb
 from .glb_compare import write_scene_comparison
 from .glb_regression import run_glb_regression
+from .glb_surface_pipeline import run_glb_surface_review
 from .glb_diagnose import write_diagnosis
 from .glb_repair_plan import plan_from_comparison
 from .glb_property_map import map_properties_from_file
@@ -202,6 +203,18 @@ def main(argv=None) -> int:
     glb_regression_cmd.add_argument('--center-rel-tol', type=float, default=0.03)
     glb_regression_cmd.add_argument('--scene-rel-tol', type=float, default=0.05)
     glb_regression_cmd.add_argument('--silhouette-iou-min', type=float, default=0.90)
+    glb_regression_cmd.add_argument('--surface-review', action='store_true',
+                                    help='Opt in to bounded local 3D surface diagnostics (512 triangles per GLB)')
+
+    glb_surface_cmd = sub.add_parser(
+        'glb-surface-review',
+        help='Compare two local .glb files using bounded Blender 3D surface sampling (review only)',
+    )
+    glb_surface_cmd.add_argument('reference', help='Local reference .glb')
+    glb_surface_cmd.add_argument('candidate', help='Local generated .glb')
+    glb_surface_cmd.add_argument('--blender', required=True, help='Trusted local Blender executable path')
+    glb_surface_cmd.add_argument('--output', default='reports/latest/glb_surface_review.json')
+    glb_surface_cmd.add_argument('--timeout', type=int, default=180)
 
     glb_diagnose_cmd = sub.add_parser('glb-diagnose', help='Turn GLB comparison differences into review-only diagnostic hypotheses')
     glb_diagnose_cmd.add_argument('comparison')
@@ -403,9 +416,25 @@ def main(argv=None) -> int:
                 center_rel_tol=args.center_rel_tol,
                 scene_rel_tol=args.scene_rel_tol,
                 silhouette_iou_min=args.silhouette_iou_min,
+                surface_review=args.surface_review,
             )
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0 if report['passed'] else 1
+        if args.command == 'glb-surface-review':
+            report = run_glb_surface_review(
+                args.blender, args.reference, args.candidate, args.output,
+                timeout=args.timeout,
+            )
+            print(json.dumps({
+                'kind': report['kind'],
+                'status': report['status'],
+                'surface_observation': report.get('surface_observation'),
+                'reference_triangles': report['reference_triangles'],
+                'candidate_triangles': report['candidate_triangles'],
+                'output': str(Path(args.output)),
+                'complete_surface_equivalence_proven': False,
+            }, ensure_ascii=False, indent=2))
+            return 0 if report['status'] == 'review_only' else 2
         if args.command == 'glb-diagnose':
             report = write_diagnosis(args.comparison, args.output)
             print(json.dumps(report, ensure_ascii=False, indent=2))
