@@ -537,6 +537,51 @@ jobs:
           grep -F 'CBDK_GLB_DIFF_VISUALIZATION_REIMPORT_PASS' "$root/glb_diff_parts_reimport.log"
           echo "GLB-020 anonymous 2-part material/reimport checks passed without publishing private sources." >> "$GITHUB_STEP_SUMMARY"
 
+      - name: GLB-020 synthetic closed versus uncapped tetrahedron boundary audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_distance
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_make_glb_boundary_fixture.py -- \
+            "$root/boundary_inputs" \
+            2>&1 | tee "$root/boundary_fixture.log"
+          grep -F 'CBDK_BOUNDARY_GLBS_GENERATED_PASS' "$root/boundary_fixture.log"
+          python -m cbdk glb-diff-visualize \
+            "$root/boundary_inputs/closed_tetra.glb" \
+            "$root/boundary_inputs/open_tetra.glb" \
+            --blender "$BLENDER_PATH" --output "$root/boundary_review" \
+            --timeout 180
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path(
+              'reports/ci/surface_distance/boundary_review/review.json'
+          ).read_text())
+          audit = report['boundary_edge_audit']
+          assert audit['method'] == 'world_space_quantized_triangle_edge_incidence_v1'
+          assert audit['fully_watertight_proven'] is False
+          assert audit['internal_voids_verified'] is False
+          assert audit['coordinate_welding_is_approximate'] is True
+          assert audit['reference']['triangle_count'] == 4
+          assert audit['candidate']['triangle_count'] == 3
+          assert audit['reference']['boundary_edges'] == 0
+          assert audit['candidate']['boundary_edges'] == 3
+          matches = report['part_match_candidates']
+          assert matches['cross_file_part_identity_proven'] is False
+          row = matches['reference_parts'][0]
+          assert row['status'] == 'ambiguous'
+          assert row['topology_review_required'] is True
+          assert 'SYNTHETIC_BOUNDARY_TEST' not in str(report)
+          assert 'closed_tetra.glb' not in str(report)
+          assert 'open_tetra.glb' not in str(report)
+          assert all(Path('reports/ci/surface_distance/boundary_review', name).exists()
+                     for name in ('reference_diff.glb', 'candidate_diff.glb',
+                                  'compare_viewer.html'))
+          PY
+          echo "GLB-020 closed/open triangle edge warnings remain review-only." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
         run: |
