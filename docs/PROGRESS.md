@@ -761,3 +761,17 @@ STATE/HANDOFFのGLB-015を`implemented/blender_ci`、NEXT-013を`done`へ更新�
 - 正本STATE.jsonにGLB-016、DEC-028、NEXT-014を追加してPROJECT_HANDOFFと同期。実測CIの合否は現在のコミットが完了した後に記録する。
 
 **検証境界:** CPU・Blender・ランナー負荷が異なるとミリ秒や速度比は変わる。計算回数32分の1と実行時間32倍速は別概念。512面は一般的な高密度メッシュへの実用性を保証しない。PRはドラフト、正式v0.17.0は保持。
+
+### GLB-016 実時間比較結果（実装コミット 9581ab20、2026-11-06）
+
+CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlender 4.4.3・4.5.15・5.2.1のCI [run 42240589340](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240589340) はすべて**成功**。64面の共通入力でBVHと総当たりのウォームアップ後3回の実行時間中央値（ms）を測った。512面ではBVHの時間のみを計測。
+
+| Blender | 64面BVH | 64面総当たり | 512面BVH |
+|---|---:|---:|---:|
+| 4.4.3 | 35.510505ms | 161.156313ms | 352.050953ms |
+| 4.5.15 | 19.356758ms | 86.027068ms | 192.798623ms |
+| 5.2.1 | 32.467850ms | 149.716417ms | 321.247609ms |
+
+両方式は64面の表面誤差について同じ数値を返し、512面合成GLB同士のサンプル距離は0。既存の256面での精密三角形距離回数削減と、中央開口・高さ変位の検査も維持。Python [run 42240590020](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240590020)・Windows kit [42240588950](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588950)・handoff [42240588940](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588940) も成功。Windows PowerShell [42240588999](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588999) は記録時点で実行待ち。
+
+3バージョンでBVHの64面処理時間が総当たりより短いことを**観測**した。ただしCIランナーのCPU/負荷に依存して数値が変動し、全PCへの性能保証や実製品用大規模GLBの処理能力は意味しない。速度比をCIの合否閾値にはしていない。正本STATE/HANDOFFでGLB-016をimplemented/blender_ci、NEXT-014をdoneへ更新。v0.18ドラフトPR #25内の作業で、正式v0.17.0のlast_verifiedは変更なし。
