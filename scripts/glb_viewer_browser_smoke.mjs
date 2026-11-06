@@ -63,7 +63,7 @@ async function run() {
     assert.notEqual(boundariesOn[1], boundariesOff[1],
                     "Observed boundary line overlay did not toggle on candidate");
     await page.locator("#show-boundaries").check();
-    assert.match(await page.locator(".note").innerText(), /境界ゼロでも穴や内壁/);
+    assert.match(await page.locator(".note").innerText(), /線がない部分でも穴や内壁の完全性は保証されず/);
 
     // Confirm a flagged synthetic face really toggles its purple outline.
     await page.locator("#part-reference").selectOption("all");
