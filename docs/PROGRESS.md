@@ -610,4 +610,11 @@ GLB-007は実装済/Blender CI確認済みとして記録。正式バージョ�
 - Blender 3バージョンの合成fixtureを拡張し、静的参照読み書き・未検証フラグをCLIから検証するワークフローを追加。
 - 引き継ぎ仕様の`GLB-008` / `DEC-020` と `NEXT-009` の進捗記録を追加。
 
-**検証状況**：最新コミットのCI成功は実際のジョブ結果を確認してから記録する。コード修正や設定値適用、私有アドオンの実行はしていない。正式リリース`last_verified=v0.17.0`を維持。
+**実測CI検証（GLB-008）**：実装コミット `c640ad06e5f55bf5a4112ba3bb5635751f2023a7` について、次のGitHub Actionsで全成功を確認。
+
+- [Python run 42208333161](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333161)：3.11 / 3.12 / 3.13。新規23回帰テストを含む。
+- [Windows run 42208333343](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333343)：PowerShell 3.11 / 3.13。
+- [Blender run 42208333010](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333010)：Blender 4.4.3 / 4.5.15 / 5.2.1。合成GLBから作った修正候補と合成PythonのAST読み書きを照合して成功。
+- [Windows kit run 42208333310](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333310) と [引き継ぎ run 42208332987](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208332987) も成功。
+
+**未検証範囲**：ユーザー私有アドオンの実際のBlender登録、プロパティの受信元オブジェクトとの結びつき、メッシュ形状への効果。上記は実装コミットに対する実測であり、後続ドキュメント更新のコード実行結果とは区別する。PRはドラフト、正式版`last_verified=v0.17.0`を保持。
