@@ -43,6 +43,10 @@
       <div class="panelhead"><h2>参照モデル</h2><label class="muted">部品 <select id="part-reference" aria-label="参照部品"></select></label></div>
       <canvas id="canvas-reference" tabindex="0" aria-label="参照モデルの3D表示"></canvas>
       <div class="panelhead muted" id="count-reference"></div>
+      <div class="panelhead">
+        <span class="muted" id="match-hint">対応候補は目安であり、同一部品の証明ではありません</span>
+        <button id="jump-candidate" type="button" disabled>候補を右側に表示</button>
+      </div>
     </section>
     <section class="panel" aria-label="生成モデル">
       <div class="panelhead"><h2>生成モデル</h2><label class="muted">部品 <select id="part-candidate" aria-label="生成部品"></select></label></div>
@@ -58,6 +62,7 @@
   <div class="note">
     ドラッグ＝両モデルを同時回転 ／ Shift＋ドラッグ＝同時移動 ／ ホイール＝同時ズーム。
     部品表示は左右独立。参照と生成の同じ部品番号は<strong>同一部品を保証しません</strong>。
+    「候補を右側に表示」も形状と位置による推定であり、本人による確認が必要です。
     色は各三角面24点のサンプル測定による目安です。灰色・誤差ゼロも完全一致を証明せず、
     小穴や内部空間などの未測定部分は判定できない場合があります。
     このHTMLには派生した3D形状データが含まれます。元モデルと同様に非公開で保管してください。
@@ -78,6 +83,8 @@
     const selectors = {};
     const canvases = {};
     let hideLow = false;
+    const matches = data.part_suggestions && data.part_suggestions.reference_parts || [];
+    const candidateJump = document.getElementById("jump-candidate");
     let dragging = null;
     function project(x, y, z, width, height) {
       const px = x - data.center[0];
@@ -136,6 +143,36 @@
         " 三角面を表示（" + data[side].parts.length + " 部品）";
     }
     function redraw() { for (const side of sides) drawOne(side); }
+    function updateMatchHint() {
+      const selection = selectors.reference.value;
+      const hint = document.getElementById("match-hint");
+      candidateJump.disabled = true;
+      candidateJump.dataset.candidate = "";
+      if (selection === "all") {
+        hint.textContent = "左の部品を選ぶと空間的な対応候補を表示します（自動確定ではありません）";
+        return;
+      }
+      const row = matches[Number(selection) - 1];
+      if (!row || row.status === "unmatched") {
+        hint.textContent = "対応候補なし：形状・位置や配置を手動確認してください";
+      } else if (row.status === "ambiguous") {
+        hint.textContent = "候補が曖昧です：" +
+          (row.candidate_part_ids.join(" / ") || "複数候補") +
+          "。自動で結び付けません";
+      } else if (row.status === "suggested" && row.candidate_part_ids.length === 1) {
+        const id = row.candidate_part_ids[0];
+        hint.textContent = "空間的な推定候補：" + id + "（同一部品の保証なし）";
+        candidateJump.disabled = false;
+        candidateJump.dataset.candidate = String(Number(id.slice(5)));
+      } else {
+        hint.textContent = "この部品の対応関係は未確認です";
+      }
+    }
+    candidateJump.addEventListener("click", function () {
+      if (candidateJump.disabled || !candidateJump.dataset.candidate) return;
+      selectors.candidate.value = candidateJump.dataset.candidate;
+      redraw();
+    });
     for (const side of sides) {
       const canvas = document.getElementById("canvas-" + side);
       const selector = document.getElementById("part-" + side);
@@ -152,7 +189,10 @@
           " （赤" + part.high + " 黄" + part.medium + " 灰" + part.low + "）";
         selector.appendChild(opt);
       });
-      selector.addEventListener("change", redraw);
+      selector.addEventListener("change", function () {
+        if (side === "reference") updateMatchHint();
+        redraw();
+      });
       canvas.addEventListener("pointerdown", function (event) {
         if (event.button !== 0) return;
         canvas.setPointerCapture(event.pointerId);
@@ -207,6 +247,7 @@
       redraw();
     });
     window.addEventListener("resize", redraw);
+    updateMatchHint();
     document.getElementById("status").textContent =
       "連動視点を使用中｜完全一致・部品対応の証明ではありません｜通信なし";
     redraw();
