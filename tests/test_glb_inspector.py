@@ -33,24 +33,36 @@ class GLBInspectorTests(unittest.TestCase):
             "asset": {"version": "2.0", "generator": "CBDK test"},
             "scene": 0,
             "scenes": [{"name": "Main", "nodes": [0]}],
-            "nodes": [{"name": "PartA", "mesh": 0}],
+            "nodes": [
+                {"name": "Root", "children": [1]},
+                {"name": "PartA", "mesh": 0},
+            ],
             "meshes": [{"name": "MeshA", "primitives": [{
                 "attributes": {"POSITION": 0}, "indices": 1, "material": 0
             }]}],
-            "accessors": [{"count": 4}, {"count": 6}],
+            "accessors": [
+                {"count": 4, "min": [-1, -2, -3], "max": [1, 2, 3]},
+                {"count": 6},
+            ],
             "materials": [{"name": "Gray"}],
         }
 
-    def test_reads_names_counts_and_chunk_safety(self):
+    def test_reads_names_counts_hierarchy_bounds_and_chunk_safety(self):
         path = self.root / "a.glb"
         make_glb(path, self._doc(), b"1234")
         report = inspect_glb(path)
-        self.assertEqual(report["counts"]["nodes"], 1)
+        self.assertEqual(report["schema_version"], 2)
+        self.assertEqual(report["counts"]["nodes"], 2)
         self.assertEqual(report["counts"]["meshes"], 1)
         self.assertEqual(report["counts"]["approximate_vertex_references"], 4)
         self.assertEqual(report["counts"]["approximate_index_references"], 6)
-        self.assertEqual(report["nodes"][0]["name"], "PartA")
-        self.assertEqual(report["meshes"][0]["name"], "MeshA")
+        self.assertEqual(report["root_nodes"], [0])
+        self.assertEqual(report["nodes"][0]["children"], [1])
+        self.assertEqual(report["nodes"][1]["parents"], [0])
+        self.assertEqual(report["nodes"][1]["mesh_name"], "MeshA")
+        primitive = report["meshes"][0]["primitives"][0]
+        self.assertEqual(primitive["position_min"], [-1.0, -2.0, -3.0])
+        self.assertEqual(primitive["position_max"], [1.0, 2.0, 3.0])
         self.assertEqual([x["type"] for x in report["chunks"]], ["JSON", "BIN"])
         self.assertTrue(report["safety"]["static_only"])
         self.assertFalse(report["safety"]["loaded_external_uris"])
@@ -95,20 +107,43 @@ class GLBInspectorTests(unittest.TestCase):
         with self.assertRaises(GLBInspectionError):
             inspect_glb(path)
 
-    def test_rejects_invalid_children(self):
+    def test_rejects_invalid_children_type(self):
         path = self.root / "bad.glb"
         doc = self._doc(); doc["nodes"][0]["children"] = ["x"]
         make_glb(path, doc)
         with self.assertRaises(GLBInspectionError):
             inspect_glb(path)
 
+    def test_rejects_missing_child_reference(self):
+        path = self.root / "bad.glb"
+        doc = self._doc(); doc["nodes"][0]["children"] = [99]
+        make_glb(path, doc)
+        with self.assertRaisesRegex(GLBInspectionError, "missing node"):
+            inspect_glb(path)
+
+    def test_rejects_missing_mesh_reference(self):
+        path = self.root / "bad.glb"
+        doc = self._doc(); doc["nodes"][1]["mesh"] = 99
+        make_glb(path, doc)
+        with self.assertRaisesRegex(GLBInspectionError, "missing mesh"):
+            inspect_glb(path)
+
+    def test_rejects_node_cycle(self):
+        path = self.root / "bad.glb"
+        doc = self._doc()
+        doc["nodes"][1]["children"] = [0]
+        make_glb(path, doc)
+        with self.assertRaisesRegex(GLBInspectionError, "cycle"):
+            inspect_glb(path)
+
     def test_missing_names_get_stable_fallbacks(self):
         path = self.root / "a.glb"
-        doc = self._doc(); doc["nodes"][0].pop("name"); doc["meshes"][0].pop("name")
+        doc = self._doc(); doc["nodes"][1].pop("name"); doc["meshes"][0].pop("name")
         make_glb(path, doc)
         report = inspect_glb(path)
-        self.assertEqual(report["nodes"][0]["name"], "Node_0")
+        self.assertEqual(report["nodes"][1]["name"], "Node_1")
         self.assertEqual(report["meshes"][0]["name"], "Mesh_0")
+        self.assertEqual(report["nodes"][1]["mesh_name"], "Mesh_0")
 
 
 if __name__ == "__main__":
