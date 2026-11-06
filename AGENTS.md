@@ -312,3 +312,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - `--source` is a user-specified local Python file parsed with AST. `--role part_003=socket` is a **manual assertion**, not semantic part recognition. A syntactic declaration/name/reference/geometry path remains unverified without separately reviewed Blender execution evidence.
 - The output AST property hints may be private: write only new, untracked `reports/latest/*.json` files; no overwrite, no user source content/defaults/paths in stdout, GitHub or Notion. Never commit user's private code or actual GLB/derived HTML.
 - Real Blender 3-version CI uses only CBDK-owned synthetic joint GLBs and synthetic Python property declarations; the automation does not register user addons. GLB-021 is `partial`, GLB-022 remains unimplemented. Proceed toward human-review accuracy, not optional GLB-020 scope expansion.
+
+## GLB-021 private Markdown review-sheet rules
+
+- `glb-visual-property-review --markdown` writes a companion human-readable Japanese Markdown into ignored, local `reports/latest` only. The document contains AST candidate names/class labels and is **private**; do not upload user-derived .md/.json, source code, GLBs or offline HTML to public GitHub/Notion or CI artifacts.
+- Always separate observed surface/boundary differences, syntactic name/reference hints, and unverified causal hypotheses. Never present AST declarations, possible geometry paths, a manually supplied part role or a zero-difference result as proof of cause, effect or exact equivalence.
+- Refuse unsafe flags, nonanonymous part IDs, existing destination files, symlink escapes, or output outside ignored directories. The original addon is not executed or modified; do not infer numeric parameter changes.
+- Keep GLB-020 review MVP scope frozen, GLB-021 partial, GLB-022 unimplemented until an explicitly allowlisted synthetic experiment is built and verified.
