@@ -17,7 +17,7 @@ def verify(root):
             encoding="utf-8"))
         for mode in ("identical", "narrow", "shifted", "uncapped")
     }
-    reference_part_sizes = [8, 24, 96]  # Ball, Shaft, Socket; 12-sided ring
+    reference_part_sizes = [8, 48, 96]  # Ball, capped Shaft, Socket; 12-sided ring
     for mode, report in reports.items():
         assert report["kind"] == "cbdk_glb_diff_visualization", mode
         assert report["status"] == "review_only", mode
@@ -78,16 +78,27 @@ def verify(root):
         socket = narrow["parts"][side][2]
         assert socket["high"] + socket["medium"] > 0, (side, "narrowed lip unnoticed")
         assert narrow["boundary_edge_audit"][side]["boundary_edges"] == 0
+    # Unmodified parts in the narrowed-mouth scenario must remain low,
+    # rather than being accidentally attributed to a different part.
+    for side in ("reference", "candidate"):
+        assert all(row["medium"] == row["high"] == 0
+                   for row in narrow["parts"][side][:2]), side
     assert narrow["parts"]["candidate"][2]["triangle_count"] == 96
 
     # Displace only the faceted ball: its sampled surface must change.
     shifted = reports["shifted"]
     assert shifted["parts"]["reference"][0]["high"] + shifted["parts"]["reference"][0]["medium"] > 0
     assert shifted["parts"]["candidate"][0]["high"] + shifted["parts"]["candidate"][0]["medium"] > 0
+    for side in ("reference", "candidate"):
+        assert all(row["medium"] == row["high"] == 0
+                   for row in shifted["parts"][side][1:]), side
     assert shifted["parts"]["candidate"][0]["triangle_count"] == 8
 
     # Remove exactly one top-lip quad: open boundary warning and two fewer triangles.
     uncapped = reports["uncapped"]
+    for side in ("reference", "candidate"):
+        assert all(row["medium"] == row["high"] == 0
+                   for row in uncapped["parts"][side][:2]), side
     assert uncapped["parts"]["candidate"][2]["triangle_count"] == 94
     assert uncapped["boundary_edge_audit"]["reference"]["boundary_edges"] == 0
     assert uncapped["boundary_edge_audit"]["candidate"]["boundary_edges"] == 4
