@@ -62,6 +62,12 @@ Last handoff: 2026-11-07 JST.
 
 GitHub is the technical source of truth; the Notion GLB-020 task remains 'in progress' and GLB-021/022 remain unimplemented. This evidence is limited to synthetic Blender tetrahedron cases and test harnesses, not arbitrary private user data.
 
+## GLB-020 phase 7 — local-only cyan 3D boundary overlay
+
+- Approximate world-space observed open-edge segments are shown in cyan in the synchronized local HTML viewer. Per-side and per-part toggle is available. **The derived line coordinates never enter review.json or Notion**; private HTML and GLBs stay local.
+- テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
+- Synthetic Blender tetra checks and headless Chromium overlay toggle are confirmed for the tested code SHA. These do not certify real-world hole detection, internal cavity equivalence, part identity, true occlusion or private GLB performance. Keep GLB-020 partial and GLB-021/022 not implemented.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
