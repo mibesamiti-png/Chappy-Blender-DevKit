@@ -866,5 +866,6 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - `cbdk/glb_diff_colors.py`: `summarize_anonymous_parts` を追加。部品ごとの赤/黄/灰の面数と三角形数を集計し、入力順・合計・最大64部品の整合を検証。部品名・元頂点座標・私有ファイルパスはJSONに保存しない。
 - `cbdk/glb_diff_visualize.py`: 返却JSONの部品ID順、面数、集計合計、匿名化フラグ・64部品制限をチェック。`cross_file_part_identity_proven=false` を固定して、双方の同じ番号が対応部品だと誤認しない。
 - `tests/test_glb_diff_visualize.py`: 部品集計や不正な部品構造のPythonテスト。`scripts/blender_make_glb_diff_parts_fixture.py` で意図的に非公開風の名前を持つ2部品の合成GLBを生成し、`scripts/blender_verify_glb_diff_visualize.py` で別部品・色付け・元名称の非継承を実機再読込で確認するCIを追加。
-- CI対象: コード・テストSHA `7365828b287e08046d66d62fc01c5fcfc2457fed`。Python/Windows/Blender実機結果は各ジョブ完了後にこの節へ追記する。`[skip ci]`文書コミットは同SHAのテスト結果として扱わない。
+- CI対象: コード・テストSHA `7365828b287e08046d66d62fc01c5fcfc2457fed`。Python/Windows/Blender実機は全5系統成功を確認。`[skip ci]`文書コミットは同SHAのテスト結果として扱わない。
+- Code SHA `7365828b287e08046d66d62fc01c5fcfc2457fed`: [Python 42265921528](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921528), [Windows 42265921533](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921533), [Blender 4.4.3/4.5.15/5.2.1 42265921506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921506), [kit 42265921516](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921516), [handoff 42265921493](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921493): **all five completed/success**.
 - **部分実装を維持**：出力GLBの部品はBlenderで個別に選択・非表示可能となる想定だが、元の対応部品を自動で結び付ける機能、同期カメラ、未測定領域の厳密表示、512三角形を超えるデータは未対応。安全なローカル比較と公開GitHubへの非公開モデル混入防止を優先。
