@@ -301,10 +301,10 @@
     {
       "id": "GLB-015",
       "title": "三角面の最近接距離をBVHで高速化し安全上限を512面へ拡張",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/glb_surface_distance.py",
-      "note": "三角形AABBの決定的な中央値分割BVHで近傍候補を絞り、サンプル点から三角面への正確な最近接距離の計算回数を計数。128→512面/mesh。Python新規10回帰テスト（総当たり比較、400/512面、異分割・不正入力）、Blender合成256面を含む5 GLB実機CIを追加。実測CIの成功確認待ち。単位時間での高速化と実大規模モデルへの適用は未検証"
+      "note": "決定的な三角形AABB-BVHの枝刈りで精密点→三角面距離の候補計算を削減し128→512面/meshへ拡張。Python総当たり照合含む新規10回帰テスト成功。PR #25 commit bcef8572でPython3版、Windows2版、Blender4.4.3/4.5.15/5.2.1、kit/handoff CI全成功。256面GLB（Blender4.5.15）の精密三角形距離計算は総当たり1,572,864回→BVH49,152回（32分の1）。実測実行時間の改善と実大規模GLBの処理は未検証"
     }
   ],
   "known_issues": [
@@ -461,9 +461,9 @@
     {
       "id": "NEXT-013",
       "priority": 13,
-      "status": "in_progress",
+      "status": "done",
       "title": "BVHで256面GLBの比較計算を削減し512面まで回帰検証",
-      "acceptance": "PythonでBVH結果が総当たり距離と一致することを確認。400/512面の入力許容と比較回数の削減を検証し、Blender 4.4.3/4.5.15/5.2.1で合成256面GLB実出力・再読込後も誤差0と4倍以上の精密距離計算削減を確認"
+      "acceptance": "総当たりとBVHの距離結果一致、400/512面比較・過大入力拒否をPython CIで確認。256面合成GLBのBlender4.4.3/4.5.15/5.2.1実再読込比較は距離0・4倍以上の精密距離計算削減で成功（commit bcef8572）。Blender4.5.15の計算回数1,572,864→49,152"
     }
   ],
   "decisions": [
@@ -674,6 +674,6 @@
     "trusted_parameter_displacement": "2026-11-06: GLB-012 PR #25実装コミット04526f1ddd9f336df16d2841ccafc278cd8edf4fで全成功: Python 42220053230, Windows 42220053331, Blender3版 42220053332, kit 42220053222, handoff 42220053158。GLB-012 implemented/blender_ci。PRドラフト・正式last_verified v0.17.0維持",
     "trusted_parameter_direction": "2026-11-06: GLB-013 code/CI commit e73f7eba0cd0bd5ceafacab53b64c397a7bd45a4; Python (42223468580), Windows (42223468045), Blender3 version (42223468513), kit (42223468046), handoff (42223468069) all SUCCESS. Includes 11 direction plus 5 radial metric regression tests. Direction from synthetic GLB scores only; GLB-013 implemented/blender_ci, NEXT-011 done. PR draft; last_verified 0.17.0 unchanged.",
     "surface_distance": "2026-11-06 GLB-014 code+docs SHA f7e9e114e3484da650044737189ae20395a53e74: Python 42235161491, Windows 42235161515, Blender 42235161529 (4.4.3/4.5.15/5.2.1), kit 42235161511, handoff 42235161506 all SUCCESS. 13 new tests, sampled bidirectional surface distance, open-hole and alternate triangulation synthetic roundtrip. GLB-014 implemented/blender_ci, NEXT-012 done; PR draft and formal last_verified 0.17.0 unchanged.",
-    "surface_bvh": "2026-11-06 GLB-015: deterministic median-split AABB-BVH nearest triangle search, triangle count max 512, precision check vs brute, new 10 Python tests and Blender 256-face fifth GLB CI. Code/tests committed to PR #25. Requires observed full CI before changing status. Formal last_verified 0.17.0 unchanged."
+    "surface_bvh": "2026-11-06: GLB-015 code/docs SHA bcef8572994065f73d05e2e9c37245d64a13035e: Python 42238115233, Windows 42238115886, Blender3-version 42238114860, kit 42238115035, handoff 42238115141 all SUCCESS. Blender 4.5.15 256-face GLB observed 1,572,864 brute vs 49,152 BVH exact triangle computations (32x fewer), 0 distance. GLB-015 implemented/blender_ci; NEXT-013 done. Formal v0.17.0 unchanged; PR draft."
   }
 }
