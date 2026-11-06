@@ -73,6 +73,12 @@ def diagnose_comparison(report:dict)->dict:
             "safety":{"edits_code":False,"auto_approves":False,"auto_merges":False,"private_geometry_required":False}}
 
 def diagnose_comparison_file(path): return diagnose_comparison(_load(path))
+def write_diagnosis_report(report, output):
+    if not isinstance(report, dict) or report.get("kind") != "cbdk_glb_diagnosis":
+        raise DiagnosticError("Expected cbdk_glb_diagnosis report")
+    target=Path(output); target.parent.mkdir(parents=True,exist_ok=True)
+    target.write_text(json.dumps(report,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8")
+    return report
+
 def write_diagnosis(path,output):
-    report=diagnose_comparison_file(path); target=Path(output); target.parent.mkdir(parents=True,exist_ok=True)
-    target.write_text(json.dumps(report,ensure_ascii=False,indent=2,sort_keys=True)+"\n",encoding="utf-8"); return report
+    return write_diagnosis_report(diagnose_comparison_file(path), output)
