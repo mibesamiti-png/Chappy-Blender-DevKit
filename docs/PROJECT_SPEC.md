@@ -270,3 +270,11 @@ GLB-017の追加探索を「面積上位2面」のみに固定せず、最大1�
 既存の`glb-regression --surface-review`で従来の比較・診断・修正候補JSONに`surface_review.json`を任意で追加できる。未指定なら従来の振る舞いを維持。`passed`は従来のメタデータ比較専用と明記し、表面距離0を立体一致の証拠として扱わない。
 
 Python側に12件のpreflight/安全ランナー/報告/スキップテストと3件の回帰統合テストを追加。Blender 4.4.3/4.5.15/5.2.1 CIでは**CBDK自作GLB**を使用し、同じ面の異三角分割と同外寸の開口差を新CLIで実読込比較する。一般ユーザーGLBでの性能や部品マッピングは未検証。詳細は`docs/GLB_SURFACE_PIPELINE.md`。
+
+## GLB-020（試作）: 双方向の形状差分を色付き3Dモデルで出力
+
+- 新CLI: `python -m cbdk glb-diff-visualize reference.glb generated.glb --blender <trusted_blender> --output reports/latest/glb_diff_visualization`。明示実行のみ。出力先は存在しない新規ディレクトリに限定。
+- 各GLBの世界座標三角形について、相手側の三角面BVHへの固定24点サンプル距離を評価。参照側・生成側を**別々**に灰色（対角線比1%未満）/黄色（1〜5%）/赤（5%以上）で表示するローカル`reference_diff.glb`/`candidate_diff.glb`を生成する。しきい値・各色の面数・サンプル最大距離を`review.json`へ記録。
+- 入力の静的preflight、外部URI拒否、各512三角形上限、24MiB上限、固定Blenderスクリプト・`--factory-startup --disable-autoexec`、元アドオンコード非実行、ネットワークアップロード禁止、元GLB不変を維持。派生GLBには元の形状座標が含まれるためローカル保存専用。
+- **検証**: Python単体テスト、3版Blenderで自作合成GLBの差分/同等分割を比較して色付きGLBを出力し、Blenderへ再インポートするCIを追加。テスト成功はSHAに紐づけて記録する。
+- **未完了**: 元オブジェクトの識別/選択、複数モデル同時ビュー・カメラ連動、未知領域の独立色、細部の検出率向上、大型GLB。灰色/誤差0は幾何完全一致や内部空洞無しの証明ではない。新しい手動修正候補の自動適用も行わない。詳細: `docs/GLB_DIFF_VISUALIZATION.md`。
