@@ -13,8 +13,8 @@
 ## 最新の開発状況
 
 - 現在のバージョン: `0.17.0`
-- 開発段階: public_repository_verified
-- 最新の節目: v0.17.0 release PR #22でPython 334件×3版、Windows PowerShell 2版、Blender 4.4.3/4.5.15/5.2.1、Windowsキット、引き継ぎCIが全成功。GLB 7方向＋部品単独レンダリングも3版成功
+- 開発段階: public_repository_v0.18_development
+- 最新の節目: v0.17.0を検証済みmainとして確定。v0.18開発でGLB world bounds比較とreference→candidate自動回帰オーケストレーションを実装中
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -47,6 +47,7 @@
 | `REG-003` | 読み取り専用・メッシュ編集で未完成テストの内容を切替 | 一部実装 | Pythonテスト | --behavior read_only/mesh_editを明示指定。共通項目に不変性・Undo・選択範囲・復元を追加。PR #21のPython 3版CIで回帰テスト成功 |
 | `GLB-001` | GLB静的構造解析とBlender多方向プレビュー | 実装済 | Blender CI | schema v2静的解析＋Blender本命7方向PNG＋最大32部品単独サムネイル＋neutral clay/Workbench。PR #21のBlender 4.4.3/4.5.15/5.2.1で合成GLB fixtureの構造JSON・scene metadata・全画像生成が成功 |
 | `GLB-002` | BlenderなしGLB Quick Preview fallback | 実装済 | Pythonテスト | 任意依存trimesh+matplotlibで7方向PNGと最大32部品単独サムネイルを生成。外部URIを事前拒否し、50万頂点/25万面の安全上限。ユーザーGLB(7 mesh)で7方向+7部品画像をローカル生成確認。本命のBlender実レンダリングより低精度であることを明示 |
+| `GLB-003` | 参考GLBと生成GLBのworld-space形状回帰比較 | 一部実装 | 未検証 | scene_metadataの全体bounds・部品world bounds・配置を比較し、名前一致＋寸法/位置fallbackで差分JSONを生成。strictではトポロジーも必須。新規Python/Blender CIは未確認 |
 
 ## 既知の問題・制約
 
@@ -59,6 +60,7 @@
 | `LIM-005` | low | open | 大規模メッシュは監査20万要素上限を超えると操作しない。回避策: 小さなメッシュに分割するか、必要に応じ監査上限を再設計する。安全を確認せず上限を解除しない |
 | `LIM-006` | low | fixed | 非公開時のGitHub Actionsランナー未割当(steps=null)は公開化で解消。回避策: 2026-11-06にリポジトリをpublicへ変更後、同じPRワークフローで実ランナー・steps・logsが生成され全CIが実行可能になった。Issue #19は解決としてclose |
 | `LIM-007` | low | fixed | GLB多方向プレビューの実機CI未実行問題は解消。回避策: PR #21のBlender 4.4.3/4.5.15/5.2.1で7方向画像と部品単独画像を含むfixtureテストが成功。実ユーザーGLBのBlenderレンダリングは引き続き必要時に個別確認 |
+| `LIM-008` | medium | open | v0.18初期の形状比較はworld bounds中心で、同じ外接寸法でも内部/輪郭が異なる形状を見逃しうる。回避策: 7方向レンダリングと部品サムネイルを人/AIの補助証拠として併用し、次段階でシルエットまたは表面距離比較を追加する。bounds比較だけで完全一致を主張しない |
 
 ## 次にやること（優先順）
 
@@ -69,7 +71,7 @@
 5. `NEXT-004` **GitHubからBlenderへ直接インストール・更新** (deferred)。完了条件: ユーザーがUI確認の必要性を示すまで作らない
 6. `NEXT-001` **v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断** (done)。完了条件: メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない
 7. `NEXT-007` **GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認** (in_progress)。完了条件: 合成fixtureの3バージョンBlender CIは完了。実ユーザーGLBでも必要に応じBlender Previewを生成し、Quick Previewとの部品対応と形状を照合する
-8. `NEXT-008` **参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ** (todo)。完了条件: 参照GLB/画像を入力として生成アドオンをBlender CIで実行し、出力GLBの構造・7方向画像・部品単独画像を期待形状と比較して失敗理由を機械可読に記録する
+8. `NEXT-008` **参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ** (in_progress)。完了条件: 参照GLB/生成GLBをBlenderで別々に実レンダリングし、world-space bounds・部品対応・7方向画像・構造を比較して、ズレの種類と対象部品を機械可読JSONへ記録する。boundsだけでは判別できない形状差は次段階で画像/表面距離比較を追加する
 
 ## 前回、実際に確認されたテスト
 
@@ -98,6 +100,7 @@
 - `DEC-013` Blender不能時は任意依存Quick Previewをfallbackとして使う。trimesh+matplotlib画像は実GLB形状から生成するが描画精度はBlenderより低い。外部URIを拒否し、Blender実レンダリングが利用可能ならそちらを優先する
 - `DEC-014` 公開リポジトリではGitHub Actionsを実機デバッグ基盤として積極利用する。2026-11-06のpublic化でprivate時のランナー未割当が解消。追跡済み内容は公開情報になるため、ユーザーGLB・私有元アドオン・生成private report・秘密情報は今後もコミットしない
 - `DEC-015` 積み上げPRは下位からmainへ順次統合し、正式バージョンは専用release PRのCIで確定する。v0.17では#18→#20→#21を通常mergeで履歴保持。release/v0.17.0でpyprojectと状態台帳を揃え、成功CI観測後にlast_verifiedを更新する
+- `DEC-016` 形状差分は修正判断の証拠であり、比較結果だけでアドオンコードを自動採用・承認しない。v0.18のglb-compare/glb-regressionはズレを機械可読化する。修正は通常のコードレビュー・Python/Windows/Blender CIを再度通し、ユーザー私有GLBは公開GitHubへ保存しない
 
 ## 更新・プライバシールール
 
