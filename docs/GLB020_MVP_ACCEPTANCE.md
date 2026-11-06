@@ -54,3 +54,15 @@ MVPの範囲をすり替えて単に閾値を緩めたり、失敗する正例�
 残る\`GLB-020\`の本格精度向上（複雑な内部空洞、小穴の網羅、T字接続、正確な遮蔽/深度バッファ、512三角形超、任意ユーザーGLB、完全な部品一致）は**後日別タスクとして維持**する。合成CI成功をこれらの達成・実ユーザーファイルの合格と混同しない。
 
 \`GLB-021\` と \`GLB-022\` はこの時点では未実装。設定の原因特定、元アドオンの無断実行/変更、自動パラメータ適用も行わない。
+
+## MVP受け入れ結果（2026-11-07）
+
+**合格：レビュー用MVPの受け入れ条件を満たした。** 最終テスト対象コード SHA `db33ce4242bbe98b3c5f9ac43d89bf21c3657089`：
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898364)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898499)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898512)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898604)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898325)・[Chromium実GUI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898701) **全6系統成功**。
+
+- 初回総合テストでは「正常モデルで開放境界が出た」ため不合格。原因を追うと**合成テスト用の軸が上下未閉鎖だった**。検査器の閾値を緩めず、モデル生成コードに軸の端面を追加し、正常モデルが3部品とも閉じた形になるよう修正。
+- 再実行で、同一形状比較は128面→**152面**の全三角面で `low` を確認。狭めたソケット口とずらしたボールは、それぞれ変更した部品だけに誤差を検出。リップ2面欠損は境界エッジの増加を確認。
+- CIで**合成入力GLBのSHA-256一致**も検証し、ツール実行による元モデルの書き換えがないことを確認。
+- 集計JSONに元形状・部品名・元ファイルパスが混入しないことを確認。派生HTML/GLBはローカルの合成CIワークスペースに限る。
+- **範囲外**：任意の実ユーザーGLBでの正確性、細穴/内壁/体積の完全一致、512三角面超、全モデル間の部品同一性、Canvas2Dの厳密な遮蔽。これらは次バージョンのバックログとして維持。
+- `GLB-020`の管理状態は`partial`（高精度化未完了）を維持し、**`NEXT-018`「GLB-020レビューMVP受け入れ」を`done`**に変更。次の実装優先は`GLB-021`、その後`GLB-022`。この節の成功記録は後続の文書のみのコミットではなく、上記コードSHAを参照する。
