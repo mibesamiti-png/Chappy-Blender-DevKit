@@ -42,3 +42,9 @@ CBDK自作のソケット・ボール・軸の3部品に限り、ソケット開
 ## 未実装
 
 この候補生成は**4分割の固定格子探索**であり、結果を使って次の候補値の生成規則を変える適応的最適化ではない。また、実ユーザーアドオンの操作、実際の印刷部品の機械公差評価、部品ごとの厳密な幾何誤差計算、任意の連続値の探索は未対応。次の開発では、固定格子で安全性とテストを確認したあと、許可済み合成モデルの範囲内で実測に応じた探索順や打ち切りの変更を検証する。
+
+## 第4段階のCI実測結果（2026-11-07）
+
+テスト対象コード SHA `23e9dec5d313468a70cc3bab7a5bb57fc090a8b3`：[Python 42309145079](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145079)、[Windows 42309145003](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145003)、[Blender4.4.3/4.5.15/5.2.1 42309145076](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145076)、[Windows kit 42309145019](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145019)、[引き継ぎ 42309145005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145005)、[Chromium 42309145006](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145006) **全6系統success**。
+
+CBDKの合成3部品について、算術格子候補1.01/1.24/1.47/1.70をBlender3バージョンで実際にGLB再生成しGLB-020で比較、採否・停止・匿名履歴を検証。Python回帰は数値算出、試行予算打切り、観測停滞の棄却、他部品悪化、不正数値・偽安全フラグ・元データの保護を確認。**候補は固定範囲から算出した格子であり、測定結果に応じた適応的な値探索ではない。** 実ユーザーのアドオンと私有GLBは操作しない。GLB-022は一部実装。正式版v0.17.0/v0.18ドラフトPR #25維持。
