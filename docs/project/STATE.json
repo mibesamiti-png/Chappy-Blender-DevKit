@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.17.0を検証済みmainとして維持しつつ、v0.18 PR #23でGLB world-space形状回帰比較を実装。Python 343件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功"
+    "milestone": "v0.18 shape regression基盤をmainへ統合済み。次段階としてBlender内32x32シルエット指紋とIoU比較を実装中"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -209,6 +209,14 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_compare.py",
       "note": "scene metadata schema 3のworld bounds、shape/strict比較、geometry fallback matching、glb-regression CLIを実装。PR #23でPython 343件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1のsynthetic GLB metadata self-comparisonが全成功。bounds同一の輪郭差はLIM-008として継続"
+    },
+    {
+      "id": "GLB-004",
+      "title": "7方向・部品別シルエットIoU回帰比較",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "scripts/blender_glb_render.py",
+      "note": "Blender内で32x32の投影シルエットbitsetを生成し、全体7方向＋最大32部品のfront/right/top/isoをscene metadataへ保存。glb-compareでIoU閾値判定する実装を追加したがCI未確認"
     }
   ],
   "known_issues": [
@@ -273,7 +281,7 @@
       "status": "open",
       "severity": "medium",
       "title": "v0.18初期の形状比較はworld bounds中心で、同じ外接寸法でも内部/輪郭が異なる形状を見逃しうる",
-      "workaround": "7方向レンダリングと部品サムネイルを人/AIの補助証拠として併用し、次段階でシルエットまたは表面距離比較を追加する。bounds比較だけで完全一致を主張しない",
+      "workaround": "32x32シルエットIoUを追加して外接bounds同一の輪郭差を補足する。小さな穴・32px未満の細部・奥行き内部形状はなお見逃しうるため、必要なら将来表面距離/ボクセル比較を追加する",
       "related_requirement": "GLB-003"
     }
   ],
@@ -476,6 +484,7 @@
     "registration_draft": "2026-11-06: REG-001の回帰テストはPR #21のPython 3.11/3.12/3.13で成功。自動承認・自動登録は引き続き行わない",
     "registration_scaffold": "2026-11-06: REG-002回帰テストはPR #21のPython/Windows CIで成功。Windows hosted runnerの8.3短縮パス差を修正",
     "registration_behavior": "2026-11-06: REG-003回帰テストはPR #21のPython 3版CIで成功。behavior申告は実機安全性の自動証明ではない",
-    "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま"
+    "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま",
+    "v018_silhouette_regression": "2026-11-06: feature/v0.18-silhouette-regressionでscene 7方向＋部品4方向の32x32 bitset silhouetteを追加。IoU比較をglb-compare/glb-regressionへ接続。Python/Windows/Blender CI未確認なのでGLB-004はpartialのまま"
   }
 }
