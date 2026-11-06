@@ -18,6 +18,7 @@ import bpy
 SEGMENTS = 12
 SOCKET_OPENING_REFERENCE = 1.70
 SOCKET_OPENING_DEFECT = 0.78
+SOCKET_OPENING_INTERMEDIATE = 1.24
 
 
 def _mesh(name, coords, triangles):
@@ -39,7 +40,8 @@ def _ring(*, socket_opening_diameter=SOCKET_OPENING_REFERENCE,
     """
     if (type(socket_opening_diameter) not in (float, int) or
             socket_opening_diameter not in (SOCKET_OPENING_REFERENCE,
-                                            SOCKET_OPENING_DEFECT)):
+                                            SOCKET_OPENING_DEFECT,
+                                            SOCKET_OPENING_INTERMEDIATE)):
         raise ValueError("Synthetic socket experiment value is not allowlisted")
     outer, inner = 1.30, float(socket_opening_diameter) / 2.0
     levels = [(outer, -0.60), (inner, -0.60),
@@ -106,14 +108,16 @@ def _shaft():
 
 
 def export(target, variant):
-    if variant not in {"reference", "identical", "narrow", "shifted", "uncapped", "narrow_placebo"}:
+    if variant not in {"reference", "identical", "narrow", "shifted", "uncapped", "narrow_placebo",
+                       "narrow_mid", "narrow_mid_shifted"}:
         raise RuntimeError("Invalid fixture variant")
     bpy.ops.wm.read_factory_settings(use_empty=True)
     ring = _ring(socket_opening_diameter=(
         SOCKET_OPENING_DEFECT if variant in {"narrow", "narrow_placebo"}
+        else SOCKET_OPENING_INTERMEDIATE if variant in {"narrow_mid", "narrow_mid_shifted"}
         else SOCKET_OPENING_REFERENCE
     ), missing_face=variant == "uncapped")
-    ball = _ball(shifted=variant in {"shifted", "narrow_placebo"})
+    ball = _ball(shifted=variant in {"shifted", "narrow_placebo", "narrow_mid_shifted"})
     _mesh("CBDK_SYNTH_Ball", *ball)
     _mesh("CBDK_SYNTH_Shaft", *_shaft())
     _mesh("CBDK_SYNTH_Socket", *ring)
@@ -132,7 +136,7 @@ def main():
         raise RuntimeError("Expected trusted fixture output directory")
     args = sys.argv[sys.argv.index("--") + 1:]
     allowlist = ("reference", "identical", "narrow", "shifted", "uncapped",
-                 "narrow_placebo")
+                 "narrow_placebo", "narrow_mid", "narrow_mid_shifted")
     if len(args) == 1:
         variants = allowlist
     elif len(args) == 3 and args[1] == "--single" and args[2] in allowlist:
