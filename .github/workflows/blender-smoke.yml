@@ -615,6 +615,7 @@ jobs:
               --output "$root/review_$mode" --timeout 180
           done
           python scripts/verify_glb_joint_mvp.py "$root"
+          python scripts/verify_glb021_joint_review.py "$root"
           sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
 
