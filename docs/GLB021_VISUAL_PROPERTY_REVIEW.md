@@ -116,3 +116,11 @@ Markdownには候補プロパティ名、匿名部品ID、元ファイルの**�
 コードSHA `af8e873a613b6b3075448db11f8f26c860dba2a4`：[Python 42296654049](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654049)、[Windows 42296653825](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653825)、[Blender 4.4.3/4.5.15/5.2.1 42296654171](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654171)、[Windows Kit 42296653959](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653959)、[引き継ぎ 42296653876](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653876)、[Chromium 42296653807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653807) **全6系統成功**。
 
 `--markdown`で作る非公開チェックシートでは、形状処理への構文上の経路あり→属性参照あり→宣言名のみの順に設定候補を並べる。これは**人が確認しやすい順序**であり、原因の確率・修正の効果・設定値の正しさを意味しない。正常な合成GLBでは候補0件。Python回帰テストで順序・注意書き・私有パス遮断を確認し、Blender3版CIでは合成GLB→AST照合→Markdown生成を検証。実ユーザーの私有ソース、GLB、実際の因果関係は未検証。
+
+## 第4段階：固定値の合成モデルでの変更・無関係対照実験
+
+ASTで候補宣言を見つけただけでは、実際に形状へ作用する証拠にはならない。そのため、ユーザーのアドオンではなくCBDK内部の固定パラメータだけを用いて、ソケット口を意図的に縮小→再び元値に復帰してGLB差分を測定する実験を追加。関係ないボール移動だけの対照ケースでも、ソケットの誤差は残る必要がある。
+
+テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
+
+**合成ジェネレーターで設定と形状の因果が確認できても、実アドオンでの登録や実行時の効果は未確認**。正しい修正値の自動提案・GLB-022の一般的な反復実験・ユーザー私有ソースの実行は引き続き行わない。詳細：[GLB-021合成設定実験](GLB021_SYNTHETIC_INTERVENTION.md)。
