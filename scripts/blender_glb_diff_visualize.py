@@ -22,6 +22,7 @@ from cbdk.glb_diff_colors import (  # noqa: E402
 from cbdk.glb_surface_distance import MAX_TRIANGLES  # noqa: E402
 from cbdk.glb_diff_viewer import render_local_diff_viewer  # noqa: E402
 from cbdk.glb_part_match import suggest_spatial_part_matches  # noqa: E402
+from cbdk.glb_sampling_audit import probe_sampling_sensitivity, counts_by_part  # noqa: E402
 
 MARKER = "CBDK_GLB_DIFF_VISUALIZE_PASS "
 
@@ -129,6 +130,10 @@ def main():
     result = classify_faces(ref_faces, cand_faces)
     ref_parts = summarize_anonymous_parts(result["reference_labels"], ref_counts)
     cand_parts = summarize_anonymous_parts(result["candidate_labels"], cand_counts)
+    audit = probe_sampling_sensitivity(
+        ref_faces, cand_faces, result["thresholds"]["medium_from"],
+        result["thresholds"]["high_from"],
+    )
     _write_overlay(
         ref_faces, result["reference_labels"], ref_counts,
         output_dir / "reference_diff.glb", role="Reference",
@@ -143,6 +148,10 @@ def main():
     html = render_local_diff_viewer(
         ref_faces, cand_faces, result["reference_labels"],
         result["candidate_labels"], ref_counts, cand_counts,
+        sampling_flags={
+            "reference": audit["reference_flags"],
+            "candidate": audit["candidate_flags"],
+        },
     )
     (output_dir / "compare_viewer.html").write_text(html, encoding="utf-8")
 
@@ -170,6 +179,20 @@ def main():
         "part_id_scheme": "anonymous_sequential_by_imported_object_name",
         "cross_file_part_identity_proven": False,
         "part_match_candidates": part_matches,
+        "sampling_sensitivity_audit": {
+            "method": audit["method"],
+            "initial_samples_per_triangle": audit["initial_samples_per_triangle"],
+            "additional_samples_per_triangle": audit["additional_samples_per_triangle"],
+            "sensitivity_rule": audit["sensitivity_rule"],
+            "unobserved_regions_verified": False,
+            "complete_surface_equivalence_proven": False,
+            "reference": audit["reference_summary"],
+            "candidate": audit["candidate_summary"],
+            "per_part_sensitive_faces": {
+                "reference": counts_by_part(audit["reference_flags"], ref_counts),
+                "candidate": counts_by_part(audit["candidate_flags"], cand_counts),
+            },
+        },
         "reference_sampled_max": result["reference_sampled_max"],
         "candidate_sampled_max": result["candidate_sampled_max"],
         "thresholds": result["thresholds"],
@@ -188,6 +211,7 @@ def main():
             "Anonymous part indexes identify meshes within one GLB only",
             "Same part index across files is NOT verified object correspondence",
             "Spatial part candidates are uncertain heuristics, not verified identity",
+            "Additional probes reveal sample-sensitive faces, not all unmeasured regions",
             "Unmeasured regions are not localized or uniquely colored",
             "Only local derived GLBs contain private geometry; JSON is aggregate-only",
             "Source and candidate must share a coordinate system and units",
