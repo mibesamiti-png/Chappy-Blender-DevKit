@@ -51,6 +51,14 @@ async function run() {
     await page.locator("#jump-candidate").click();
     assert.equal(await page.locator("#part-candidate").inputValue(), "2");
 
+    // Confirm a flagged synthetic face really toggles its purple outline.
+    await page.locator("#part-reference").selectOption("all");
+    const sensitivityOn = await images();
+    await page.locator("#show-sensitive").uncheck();
+    const sensitivityOff = await images();
+    assert.notEqual(sensitivityOn[0], sensitivityOff[0], "Sensitivity outline did not toggle");
+    await page.locator("#show-sensitive").check();
+
     // Red/grey filtering and reset must work without console exceptions.
     const countBefore = await page.locator("#count-reference").innerText();
     await page.locator("#hide-low").check();
