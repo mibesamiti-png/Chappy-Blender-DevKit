@@ -253,10 +253,10 @@
     {
       "id": "GLB-009",
       "title": "プロパティ宣言と同クラスself参照を別オブジェクトの参照から区別",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/glb_property_map.py",
-      "note": "匿名ソースIDと宣言クラス名が一致するself属性参照候補を、他クラス/別オブジェクト由来から分離して全件集計（例示上限16件とは独立）。同一受信実体とBlender登録・形状影響は未証明。新規14回帰テストと3版Blender合成CIを追加、最新headの実測確認待ち"
+      "note": "匿名ソース/同クラスself参照と別クラス・別オブジェクト参照をAST上区別しread/write等を全件集計。PR #25の実装commit 2c000dadでPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・kit・handoff CI全成功。宣言プロパティの実体同一/登録・ジオメトリ効果は未検証"
     }
   ],
   "known_issues": [
@@ -562,6 +562,6 @@
     "glb_repair_plan": "2026-11-06: PR #25 code SHA d9c5c92590759faac158824d84e4f8ca94c7c5bb; Python 42204425313, Windows 42204425351, Blender3版 42204425335, kit 42204425475, handoff 42204425288 の5ワークフロー全成功。GLB-006 implemented/blender_ci。PRはドラフト、mainと正式last_verified v0.17.0は不変",
     "glb_property_mapping": "2026-11-06: PR #25 code HEAD c36350754770e54ed30695b63661382bf815682c で5ワークフロー全成功: Python 42206398064 (3版), Windows 42206398098 (2版), Blender 42206398080 (4.4.3/4.5.15/5.2.1), kit 42206398068, handoff 42206398078。GLB-007 implemented/blender_ci。ただし正式release v0.17.0は維持しユーザー実アドオンは未実測",
     "glb_property_usage": "2026-11-06: PR #25 c640ad06e5f55bf5a4112ba3bb5635751f2023a7 に対するPython 42208333161、Windows 42208333343、Blender3版 42208333010、kit 42208333310、handoff 42208332987 の全ワークフローsuccessを確認。GLB-008 implemented/blender_ci、PRドラフト・last_verified v0.17.0を保持",
-    "glb_binding_hints": "2026-11-06: GLB-009 同クラスself参照と未解決参照の静的区別、14回帰テストとBlender合成fixture CIをPR #25に追加。未実測段階では partial/not_tested を保ち、last_verified=v0.17.0を変更しない"
+    "glb_binding_hints": "2026-11-06: PR #25 code SHA 2c000dad0980ee76562576ba63c0e7b568284748の全CI成功: Python 42210546730、Windows 42210546742、Blender3版 42210546751、kit 42210546861、handoff 42210546734。GLB-009 implemented/blender_ci。PR draftのまま正式v0.17.0 last_verified変更なし"
   }
 }
