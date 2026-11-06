@@ -343,3 +343,9 @@ JSONは匿名部品別・全体の**件数のみ**、元頂点/名前/元GLBパ�
 匿名部品の`boundary_edge_audit`で観測された境界線を、**ローカル`compare_viewer.html`の左右3Dビューへ水色線として重ね描き**する。チェックボックスで表示を切り替え、独立の部品セレクターと同期カメラに追従。
 
 `boundary_overlay`は匿名部品番号＋線分両端の数値座標（7要素/本）を含み、**公開可能な集計`review.json`へ保存してはならない**。近接統合の数値誤差とCanvas2DのX-ray的な重ね描きを説明し、実際の穴・完全閉曲面・精密な遮蔽・部品同一性を確定しない。外部通信・ユーザーコード実行・元GLB改変は引き続き禁止。詳細：`docs/GLB_BOUNDARY_AUDIT.md`。
+
+### GLB-020 第7段階・確認済みテスト（2026-11-07）
+
+テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
+
+GUI試験は合成モデルのみ。水色境界線は近接統合とCanvas2D X-ray表示による推定であり、実モデルの穴や閉曲面の証明ではない。
