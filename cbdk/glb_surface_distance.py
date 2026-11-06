@@ -11,7 +11,7 @@ from __future__ import annotations
 import math
 
 MAX_TRIANGLES = 128
-SAMPLES_PER_TRIANGLE = 12
+SAMPLES_PER_TRIANGLE = 24
 MAX_COORDINATE = 1_000_000.0
 MIN_DOUBLE_AREA = 1e-10
 
@@ -113,13 +113,22 @@ def _closest_distance_squared(p, face):
     return _norm2(_sub(p, q))
 
 
+def _radical_inverse(index, base):
+    factor, value = 1.0 / base, 0.0
+    while index:
+        value += (index % base) * factor
+        index //= base
+        factor /= base
+    return value
+
+
 def _sample(face):
     a, b, c = face
     for i in range(1, SAMPLES_PER_TRIANGLE + 1):
-        # Deterministic low-discrepancy interior barycentric points. Does not
-        # read random state, and sample coordinates are never returned.
-        u = (i * 0.6180339887498949) % 1.0
-        v = (i * 0.7548776662466927) % 1.0
+        # Base-2/base-3 Halton points avoid the strongly correlated 2D sample
+        # sequence that previously missed the synthetic square's center hole.
+        # Samples are deterministic and are never included in JSON reports.
+        u, v = _radical_inverse(i, 2), _radical_inverse(i, 3)
         root = math.sqrt(u)
         alpha, beta, gamma = 1.0 - root, root * (1.0 - v), root * v
         yield tuple(alpha * a[j] + beta * b[j] + gamma * c[j] for j in range(3))
