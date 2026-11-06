@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import math
 from pathlib import Path
 import struct
 from typing import Any
@@ -89,8 +90,7 @@ def _read_glb_json(path: str | Path) -> tuple[dict, list[GLBChunk], int]:
                 if len(json_payload) != chunk_length:
                     raise GLBInspectionError("Truncated GLB JSON chunk payload")
             else:
-                # Structure inspection does not need geometry/image payload bytes.
-                # The file length and chunk bounds were already validated above.
+                # Structure inspection never loads geometry/image payload bytes.
                 stream.seek(chunk_length, 1)
             offset = payload_end
 
@@ -112,14 +112,91 @@ def _read_glb_json(path: str | Path) -> tuple[dict, list[GLBChunk], int]:
     return document, chunks, size
 
 
-def _accessor_count(accessors: list, index: Any) -> int | None:
+def _accessor_entry(accessors: list, index: Any) -> dict | None:
     if not isinstance(index, int) or index < 0 or index >= len(accessors):
         return None
     entry = accessors[index]
-    if not isinstance(entry, dict):
+    return entry if isinstance(entry, dict) else None
+
+
+def _accessor_count(accessors: list, index: Any) -> int | None:
+    entry = _accessor_entry(accessors, index)
+    if entry is None:
         return None
     count = entry.get("count")
     return count if isinstance(count, int) and count >= 0 else None
+
+
+def _vec3(value: Any) -> list[float] | None:
+    if not isinstance(value, list) or len(value) != 3:
+        return None
+    result = []
+    for item in value:
+        if isinstance(item, bool) or not isinstance(item, (int, float)) or not math.isfinite(float(item)):
+            return None
+        result.append(float(item))
+    return result
+
+
+def _position_bounds(accessors: list, index: Any) -> tuple[list[float] | None, list[float] | None]:
+    entry = _accessor_entry(accessors, index)
+    if entry is None:
+        return None, None
+    return _vec3(entry.get("min")), _vec3(entry.get("max"))
+
+
+def _validate_graph(nodes: list, meshes: list, scenes: list) -> tuple[list[list[int]], list[list[int]]]:
+    parents: list[list[int]] = [[] for _ in nodes]
+    children_rows: list[list[int]] = []
+
+    for i, node in enumerate(nodes):
+        if not isinstance(node, dict):
+            raise GLBInspectionError(f"nodes[{i}] must be an object")
+        mesh_index = node.get("mesh")
+        if mesh_index is not None:
+            if not isinstance(mesh_index, int) or isinstance(mesh_index, bool):
+                raise GLBInspectionError(f"nodes[{i}].mesh must be an integer index")
+            if mesh_index < 0 or mesh_index >= len(meshes):
+                raise GLBInspectionError(f"nodes[{i}].mesh references a missing mesh")
+        children = node.get("children") or []
+        if not isinstance(children, list) or any(
+            not isinstance(v, int) or isinstance(v, bool) for v in children
+        ):
+            raise GLBInspectionError(f"nodes[{i}].children must contain integer indices")
+        for child in children:
+            if child < 0 or child >= len(nodes):
+                raise GLBInspectionError(f"nodes[{i}].children references a missing node")
+            parents[child].append(i)
+        children_rows.append(list(children))
+
+    for i, scene in enumerate(scenes):
+        if not isinstance(scene, dict):
+            raise GLBInspectionError(f"scenes[{i}] must be an object")
+        roots = scene.get("nodes") or []
+        if not isinstance(roots, list) or any(
+            not isinstance(v, int) or isinstance(v, bool) for v in roots
+        ):
+            raise GLBInspectionError(f"scenes[{i}].nodes must contain integer indices")
+        if any(root < 0 or root >= len(nodes) for root in roots):
+            raise GLBInspectionError(f"scenes[{i}].nodes references a missing node")
+
+    # A GLB node graph must not contain cycles. Detect them without evaluating transforms.
+    state = [0] * len(nodes)
+
+    def visit(index: int) -> None:
+        if state[index] == 1:
+            raise GLBInspectionError("GLB node graph contains a cycle")
+        if state[index] == 2:
+            return
+        state[index] = 1
+        for child in children_rows[index]:
+            visit(child)
+        state[index] = 2
+
+    for index in range(len(nodes)):
+        visit(index)
+
+    return parents, children_rows
 
 
 def inspect_glb(path: str | Path) -> dict:
@@ -136,6 +213,8 @@ def inspect_glb(path: str | Path) -> dict:
     skins = _safe_list(document.get("skins"), "skins")
     cameras = _safe_list(document.get("cameras"), "cameras")
 
+    parents, children_rows = _validate_graph(nodes, meshes, scenes)
+
     mesh_rows = []
     total_primitives = approximate_vertex_refs = approximate_index_refs = 0
     for i, mesh in enumerate(meshes):
@@ -149,8 +228,10 @@ def inspect_glb(path: str | Path) -> dict:
             attributes = primitive.get("attributes") or {}
             if not isinstance(attributes, dict):
                 raise GLBInspectionError(f"meshes[{i}].primitives[{j}].attributes must be an object")
-            vertex_count = _accessor_count(accessors, attributes.get("POSITION"))
+            position_accessor = attributes.get("POSITION")
+            vertex_count = _accessor_count(accessors, position_accessor)
             index_count = _accessor_count(accessors, primitive.get("indices"))
+            position_min, position_max = _position_bounds(accessors, position_accessor)
             total_primitives += 1
             approximate_vertex_refs += vertex_count or 0
             approximate_index_refs += index_count or 0
@@ -158,9 +239,11 @@ def inspect_glb(path: str | Path) -> dict:
                 "primitive_index": j,
                 "mode": primitive.get("mode", 4),
                 "material": primitive.get("material"),
-                "position_accessor": attributes.get("POSITION"),
+                "position_accessor": position_accessor,
                 "vertex_count": vertex_count,
                 "index_count": index_count,
+                "position_min": position_min,
+                "position_max": position_max,
                 "attributes": sorted(str(k) for k in attributes),
             })
         mesh_rows.append({
@@ -172,16 +255,14 @@ def inspect_glb(path: str | Path) -> dict:
 
     node_rows = []
     for i, node in enumerate(nodes):
-        if not isinstance(node, dict):
-            raise GLBInspectionError(f"nodes[{i}] must be an object")
-        children = node.get("children") or []
-        if not isinstance(children, list) or any(not isinstance(v, int) for v in children):
-            raise GLBInspectionError(f"nodes[{i}].children must contain integer indices")
+        mesh_index = node.get("mesh")
         node_rows.append({
             "index": i,
             "name": _name(node.get("name"), f"Node_{i}"),
-            "mesh": node.get("mesh"),
-            "children": children,
+            "mesh": mesh_index,
+            "mesh_name": mesh_rows[mesh_index]["name"] if isinstance(mesh_index, int) else None,
+            "parents": parents[i],
+            "children": children_rows[i],
             "translation": node.get("translation"),
             "rotation": node.get("rotation"),
             "scale": node.get("scale"),
@@ -190,15 +271,17 @@ def inspect_glb(path: str | Path) -> dict:
 
     scene_rows = []
     for i, scene in enumerate(scenes):
-        if not isinstance(scene, dict):
-            raise GLBInspectionError(f"scenes[{i}] must be an object")
         roots = scene.get("nodes") or []
-        if not isinstance(roots, list) or any(not isinstance(v, int) for v in roots):
-            raise GLBInspectionError(f"scenes[{i}].nodes must contain integer indices")
-        scene_rows.append({"index": i, "name": _name(scene.get("name"), f"Scene_{i}"), "nodes": roots})
+        scene_rows.append({
+            "index": i,
+            "name": _name(scene.get("name"), f"Scene_{i}"),
+            "nodes": roots,
+        })
+
+    root_nodes = [i for i, parent_list in enumerate(parents) if not parent_list]
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "cbdk_glb_static_inspection",
         "source_name": Path(path).name,
         "file_size_bytes": file_size,
@@ -208,6 +291,7 @@ def inspect_glb(path: str | Path) -> dict:
             "copyright": document.get("asset", {}).get("copyright"),
         },
         "default_scene": document.get("scene"),
+        "root_nodes": root_nodes,
         "counts": {
             "scenes": len(scenes), "nodes": len(nodes), "meshes": len(meshes),
             "materials": len(materials), "accessors": len(accessors),
@@ -244,5 +328,8 @@ def write_glb_inspection(path: str | Path, output: str | Path) -> dict:
     report = inspect_glb(path)
     target = Path(output)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    target.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     return report
