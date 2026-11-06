@@ -711,3 +711,17 @@ Blender4.5.15の実測例（生成・再読込とも同じ値）：球半径は�
 - `docs/GLB_SURFACE_DISTANCE.md`を作成。GLB-014/DEC-026/NEXT-012をSTATE/HANDOFFへ記録。
 
 **制限:** 現時点は小規模でレビュー専用の合成モデル検証。小さな穴・内部空洞や大規模実モデルの比較を保証しない。Blender実機CIの成功を実測するまではGLB-014は一部実装/未検証。PRドラフト、正式v0.17.0維持。
+
+### GLB-014 実測CI（2026-11-06）
+
+変更コード/仕様書コミット `f7e9e114e3484da650044737189ae20395a53e74` に対し、次の全ワークフロー成功を観測した。
+
+- Python 3.11/3.12/3.13: [run 42235161491](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161491)、新規13件の表面比較テストを含む。
+- Windows PowerShell 3.11/3.13: [run 42235161515](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161515)。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42235161529](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161529)、合成4 GLBを実生成・再読込して計測。4.5.15で別三角分割の対称距離0、中央開口0.0081329、Z方向0.25差0.25を観測。各3版のテストは成功。
+- Windows kit: [run 42235161511](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161511)。
+- Durable handoff: [run 42235161506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161506)。
+
+初期サンプリング12点/面は中心開口を見逃してPython CIで失敗。原因を確認し、相関の少ないHalton24点/面へ変更した後に3版Pythonと3版Blenderで成功。この実測からGLB-014はimplemented/blender_ci、NEXT-012はdoneとしてSTATE/HANDOFFへ反映した。これは実装/仕様書コードコミット`f7e9e114`の観測であり、後続の記録更新HEADのCIとは別に扱う。
+
+**検証の限界:** 0のスコアは形状が数学的に完全一致する証明ではなく、小さな穴・内部空洞や大規模な実ユーザーGLBの形状比較は未検証。サンプル距離の最大値は真のHausdorff値ではない。PR #25はドラフト、正式リリースlast_verified v0.17.0のまま。
