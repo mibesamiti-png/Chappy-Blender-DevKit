@@ -192,7 +192,15 @@
       "status": "partial",
       "verification": "not_tested",
       "source": "cbdk/glb_inspector.py",
-      "note": "GLB 2.0のJSONチャンクを外部URI/画像/BIN payloadを読まず解析し、信頼済みBlenderでfront/right/top/iso PNGとscene metadataを生成する実装を追加。ローカルPython13件成功。PR #21 CIはsteps/logs生成前に失敗し実機未検証"
+      "note": "GLB静的解析をschema v2へ拡張し、node親子/mesh対応/POSITION bounds/外部URI参照を記録。Blender本命プレビューは7方向+最大32部品単独サムネイル+neutral clayへ拡張。ローカルではユーザーGLBを7 node/7 meshとして静的解析成功。GitHub Actionsはsteps=nullで実行前失敗のためBlender実機は未検証"
+    },
+    {
+      "id": "GLB-002",
+      "title": "BlenderなしGLB Quick Preview fallback",
+      "status": "implemented",
+      "verification": "python",
+      "source": "cbdk/glb_quick_render.py",
+      "note": "任意依存trimesh+matplotlibで7方向PNGと最大32部品単独サムネイルを生成。外部URIを事前拒否し、50万頂点/25万面の安全上限。ユーザーGLB(7 mesh)で7方向+7部品画像をローカル生成確認。本命のBlender実レンダリングより低精度であることを明示"
     }
   ],
   "known_issues": [
@@ -301,7 +309,7 @@
       "priority": 7,
       "status": "in_progress",
       "title": "GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認",
-      "acceptance": "テストGLBから構造JSON・scene metadata・front/right/top/iso PNGが4.4.3/4.5.15/5.2.1で生成され、実際のユーザーGLBでもオブジェクト名と形状ビューを取り違えず確認できる"
+      "acceptance": "テストGLBから構造JSON・scene metadata・7方向PNG・部品単独サムネイルが4.4.3/4.5.15/5.2.1で生成され、ユーザーGLBではQuick Preview/Blender Previewの両方で部品構成を取り違えず確認できる"
     }
   ],
   "decisions": [
@@ -364,6 +372,11 @@
       "id": "DEC-012",
       "decision": "GLB形状理解は構造JSONとBlender実レンダリングを根拠にする",
       "note": "画像生成AIによる再構成を元GLBの正確な表示として扱わず、生成画像は説明図・設計案に限定する"
+    },
+    {
+      "id": "DEC-013",
+      "decision": "Blender不能時は任意依存Quick Previewをfallbackとして使う",
+      "note": "trimesh+matplotlib画像は実GLB形状から生成するが描画精度はBlenderより低い。外部URIを拒否し、Blender実レンダリングが利用可能ならそちらを優先する"
     }
   ],
   "last_verified": {
