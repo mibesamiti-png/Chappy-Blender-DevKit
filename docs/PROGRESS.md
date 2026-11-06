@@ -948,3 +948,12 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - 最終テスト対象コード SHA `db33ce4242bbe98b3c5f9ac43d89bf21c3657089`：
 [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898364)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898499)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898512)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898604)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898325)・[Chromium実GUI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898701) **全6系統成功**。
 - スコープ判断：`GLB-020`は**レビューMVPの受け入れ合格**として細かな機能増築を凍結。ただし実GLB・完全精度が未保証なので機能全体は`partial`を維持。`NEXT-018`を`done`、**次は`GLB-021`の改善候補レビュー連携**を優先し、その後`GLB-022`へ。詳細 [受け入れ条件](GLB020_MVP_ACCEPTANCE.md)。
+
+## 2026-11-07 GLB-021 第1段階 — 形状差分からASTプロパティ候補へ接続
+
+- `cbdk/glb_visual_property_review.py`と`glb-visual-property-review` CLIを追加。GLB-020の匿名部品別の赤/黄の観測数と境界エッジ数を、既存のASTプロパティ宣言・参照・形状フローと**レビュー専用で照合**。
+- 候補名は汎用設定ファミリに限定。使用者が`--role part_003=socket`などを明示した場合だけ、その役割に紐付く設定名を候補に含める。ソースの実行・修正、設定値の推測、原因や部品の真の対応の断定は禁止。
+- コマンド出力はignored `reports/latest/*.json` の新規ローカルファイルのみ。標準出力は匿名集計の概要に限定し、候補プロパティ名・元アドオンパス・設定値を漏らさない。
+- Pythonテストで悪意のある安全フラグ/異常なJSON/偽の部品役割/元ソース副作用の非実行/出力非上書きを検証。Blender3版ではCBDK合成の正常/ソケット狭窄/ボール移動/リップ欠損の4比較結果を実際にGLB-021へ入力する。
+- コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
+- **GLB-020のMVPスコープ凍結は維持**。GLB-021は`partial`、次の`NEXT-019`は`in_progress`、GLB-022は未実装、正式版v0.17.0は変更しない。詳細： [GLB-021仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。
