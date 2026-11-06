@@ -9,7 +9,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from cbdk.glb_diff_colors import classify_faces, COLOR_RGBA
+from cbdk.glb_diff_colors import (
+    classify_faces, COLOR_RGBA, summarize_anonymous_parts,
+)
 from cbdk.glb_diff_visualize import run_glb_diff_visualize
 from cbdk.glb_surface_pipeline import GLBSurfacePipelineError
 
@@ -35,6 +37,19 @@ def report():
         "source": "local_blender_import_color_overlay",
         "outputs": ["reference_diff.glb", "candidate_diff.glb"],
         "triangle_limit_per_scene": 512,
+        "part_count_limit_per_scene": 64,
+        "part_id_scheme": "anonymous_sequential_by_imported_object_name",
+        "cross_file_part_identity_proven": False,
+        "parts": {
+            "reference": [
+                {"part_id": "part_001", "triangle_count": 1,
+                 "low": 1, "medium": 0, "high": 0},
+            ],
+            "candidate": [
+                {"part_id": "part_001", "triangle_count": 1,
+                 "low": 1, "medium": 0, "high": 0},
+            ],
+        },
         "reference": {"low": 1, "medium": 0, "high": 0},
         "candidate": {"low": 1, "medium": 0, "high": 0},
         "sampled_only": True,
@@ -96,6 +111,33 @@ class ColorClassificationTests(unittest.TestCase):
                            values["thresholds"]["medium_from"])
         self.assertEqual(sum(values["reference_counts"].values()), 1)
         self.assertEqual(values["thresholds"]["samples_per_triangle"], 24)
+
+
+class AnonymizedPartGroupingTests(unittest.TestCase):
+    def test_parts_count_only_their_own_face_labels(self):
+        values = summarize_anonymous_parts(
+            ["low", "high", "medium", "low"], [1, 2, 1],
+        )
+        self.assertEqual([row["part_id"] for row in values],
+                         ["part_001", "part_002", "part_003"])
+        self.assertEqual(values[1]["triangle_count"], 2)
+        self.assertEqual(values[1]["medium"], 1)
+        self.assertEqual(values[1]["high"], 1)
+        self.assertNotIn("source_name", repr(values))
+        self.assertNotIn("object_name", repr(values))
+
+    def test_bounded_part_layouts_reject_mismatch_and_empty_parts(self):
+        for labels, counts in (
+            (["low"], [2]),
+            (["low"], [0, 1]),
+            (["low"], [True]),
+            (["low"], [1] * 65),
+            (["unknown"], [1]),
+            ([], []),
+        ):
+            with self.subTest(counts=counts, labels=labels):
+                with self.assertRaises(ValueError):
+                    summarize_anonymous_parts(labels, counts)
 
 
 class ColoredGLBLauncherTests(unittest.TestCase):
