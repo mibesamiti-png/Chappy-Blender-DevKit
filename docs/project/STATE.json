@@ -4,10 +4,10 @@
   "repository": "mibesamiti-png/Chappy-Blender-DevKit",
   "updated_on": "2026-11-06",
   "release": {
-    "current": "0.16.0",
-    "stage": "public_repository_development_preview",
-    "next_planned": "0.17.0",
-    "milestone": "リポジトリ公開化でGitHub Actionsのランナー未割当問題が解消。PR #21のPython 3版・Windows 2版・Blender 3版が全成功し、GLB 7方向＋部品単独レンダリングも実機CI成功。PR #18/#20も再検証中"
+    "current": "0.17.0",
+    "stage": "public_repository_release_candidate",
+    "next_planned": "0.18.0",
+    "milestone": "PR #18（v0.16監査）、#20（Undo/Redo・登録ワークフロー）、#21（GLB Visual Inspector）を順番にmainへ統合。v0.17.0正式化ブランチで最終CI待ち"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -265,7 +265,7 @@
     {
       "id": "NEXT-001",
       "priority": 6,
-      "status": "in_progress",
+      "status": "done",
       "title": "v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断",
       "acceptance": "メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない"
     },
@@ -300,9 +300,9 @@
     {
       "id": "NEXT-006",
       "priority": 1,
-      "status": "in_progress",
-      "title": "PR #18の公開リポジトリCI再検証とv0.16統合判断",
-      "acceptance": "公開化でランナー問題は解消済み。PR #18のPython/Windows/Blender/パッケージ再実行を完了し、結果を確認して安全ならv0.16統合へ進む"
+      "status": "done",
+      "title": "PR #18の公開リポジトリCI再検証とv0.16統合",
+      "acceptance": "公開化後にPython/Windows/Blender/パッケージ全CI成功を確認し、PR #18をmainへ統合済み"
     },
     {
       "id": "NEXT-007",
@@ -310,6 +310,13 @@
       "status": "in_progress",
       "title": "GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認",
       "acceptance": "合成fixtureの3バージョンBlender CIは完了。実ユーザーGLBでも必要に応じBlender Previewを生成し、Quick Previewとの部品対応と形状を照合する"
+    },
+    {
+      "id": "NEXT-008",
+      "priority": 8,
+      "status": "todo",
+      "title": "参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ",
+      "acceptance": "参照GLB/画像を入力として生成アドオンをBlender CIで実行し、出力GLBの構造・7方向画像・部品単独画像を期待形状と比較して失敗理由を機械可読に記録する"
     }
   ],
   "decisions": [
@@ -382,6 +389,11 @@
       "id": "DEC-014",
       "decision": "公開リポジトリではGitHub Actionsを実機デバッグ基盤として積極利用する",
       "note": "2026-11-06のpublic化でprivate時のランナー未割当が解消。追跡済み内容は公開情報になるため、ユーザーGLB・私有元アドオン・生成private report・秘密情報は今後もコミットしない"
+    },
+    {
+      "id": "DEC-015",
+      "decision": "積み上げPRは下位からmainへ順次統合し、正式バージョンは専用release PRのCIで確定する",
+      "note": "v0.17では#18→#20→#21を通常mergeで履歴保持。release/v0.17.0でpyprojectと状態台帳を揃え、成功CI観測後にlast_verifiedを更新する"
     }
   ],
   "last_verified": {
@@ -438,7 +450,7 @@
     "generated_handoff": "docs/PROJECT_HANDOFF.md",
     "ci_usage": "2026-11-06にリポジトリをpublic化し、private時のrunner未割当/steps=0問題を解消。PR単位concurrencyと重複抑制は維持し、公開リポジトリでも不要なCI実行を増やさない",
     "local_verification_note": "2026-11-06: PR #21 head b2579a4c0149657089c5e6109bed263a5d619dde でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。GLB 7方向＋部品単独レンダリングも3版成功。mainのlast_verifiedはv0.15のまま",
-    "v017_pending": "2026-11-06: PR #21でv0.17開発スタックのPython/Windows/Blender実機CIが成功。背景Undoはpoll不可をunavailableとして記録。GUI Ctrl+Zは未検証。PR #20単体も公開化後に再実行中",
+    "v017_pending": "2026-11-06: PR #18/#20/#21は順番にmainへ統合済み。release/v0.17.0で最終CIとlast_verified更新を行う。GUI Ctrl+Zは引き続き未検証",
     "recipe_matrix_pending": "2026-11-06: PR #21のPython 3版とBlender 3版でrecipe matrixを含む全体検証成功。正式統合は下位PR #18/#20の順序を維持して判断",
     "registration_draft": "2026-11-06: REG-001の回帰テストはPR #21のPython 3.11/3.12/3.13で成功。自動承認・自動登録は引き続き行わない",
     "registration_scaffold": "2026-11-06: REG-002回帰テストはPR #21のPython/Windows CIで成功。Windows hosted runnerの8.3短縮パス差を修正",
