@@ -20,6 +20,7 @@ def run_glb_regression(
     dimension_rel_tol: float = 0.05,
     center_rel_tol: float = 0.03,
     scene_rel_tol: float = 0.05,
+    silhouette_iou_min: float = 0.90,
 ) -> dict:
     root = Path(output_dir)
     ref_dir = root / "reference"
@@ -41,6 +42,7 @@ def run_glb_regression(
         dimension_rel_tol=dimension_rel_tol,
         center_rel_tol=center_rel_tol,
         scene_rel_tol=scene_rel_tol,
+        silhouette_iou_min=silhouette_iou_min,
     )
     return {
         "kind": "cbdk_glb_regression",
