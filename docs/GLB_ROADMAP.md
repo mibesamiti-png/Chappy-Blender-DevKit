@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | GLB-019 | 実際の参照GLBと生成GLBを読み込み、表面距離・開口差・特徴優先解析を既存比較へ統合 | **implemented / blender_ci** | 合成モデルでCI成功。実ユーザーGLB・512三角形超・個別部品対応は追加検証 | [タスク](https://app.notion.com/p/410948b7493781e888acd4392249365d) |
 | GLB-020 | **形状差分の3D可視化**。差の位置、部品、規模を赤/黄などの色と凡例で確認 | **partial / blender_ci** | 匿名部品別の色付きGLBと集計JSONに加え、オフラインHTMLで左右連動3Dビューを追加（Blender3版/JS構文CI成功）。実Chromium操作CI・空間的な部品候補表示に加え、追加24点で誤差増大を観測した面の紫枠表示も成功。未測定領域の完全把握、部品同一性の証明、実ユーザーGLBは残る。詳細 [仕様](GLB_DIFF_VISUALIZATION.md) | [タスク](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25) |
-| GLB-021 | **アドオン設定の改善候補と連携**。例: ソケットの開口差→該当しそうな設定候補を人がレビュー | **not_implemented / not_tested** | AST静的解析・差分診断と結び、不明な関連は推測として分離 | [タスク](https://app.notion.com/p/410948b7493781efb123c459b521312e) |
+| GLB-021 | **アドオン設定の改善候補と連携**。例: ソケットの開口差→該当しそうな設定候補を人がレビュー | **partial / blender_ci** | GLB-020集計差分と既存ASTプロパティ照合をレビュー専用で接続済み。原因・数値は未確定、実ユーザーソース未検証 | [タスク](https://app.notion.com/p/410948b7493781efb123c459b521312e) |
 | GLB-022 | **生成→比較→改善の反復実験**。許可済み合成アドオンのパラメータを変更してGLB再生成と改善測定 | **not_implemented / not_tested** | まずCBDK自作・allowlistの合成アドオンのみ。人手の確認・測定履歴を保持 | [タスク](https://app.notion.com/p/410948b74937811ea006d4d6bd55b1dc) |
 
 ## GLB-019 — 実装済みとの判断境界
@@ -98,3 +98,10 @@
 - 途中で「正常な軸に実際の開放端がある」ことが判明し、テスト用メッシュを正しく閉じて再検証。解析の判定閾値は緩めずに修正した。
 - **GLB-020はレビューMVP合格・高精度化はバックログ**として、機能ステータスは`partial`を維持。今後は余計な追加改良を止め、次に**GLB-021：問題→アドオン設定の改善候補**、次いでGLB-022の許可済み合成実験を優先。GLB-021/022はまだ未実装、PR #25はドラフト・正式版はv0.17.0のまま。
 - [GLB-020受け入れ基準と残課題](GLB020_MVP_ACCEPTANCE.md)
+
+### GLB-021 第1段階：形状差分→AST設定候補の静的照合（レビュー専用）
+
+- `glb-visual-property-review` CLIはGLB-020の匿名集計`review.json`から異常が観測された生成側の部品だけを対象に、利用者が指定したPythonソースの`bpy.props`宣言や構文上の使用箇所を**実行せず**に照合。設定名が完全一致しても「原因・修正量」は不明のまま。
+- `--role part_003=socket`等は手動の未確認ヒントであり、役割の自動識別を主張しない。候補宣言と行番号はignored `reports/latest`ローカル限定。元のアドオンやGLBを変更しない。
+- コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
+- GLB-021は**partial / blender_ci**、GLB-022は未実装。GLB-020レビューMVP合格による細かな機能追加凍結は維持。[詳細](GLB021_VISUAL_PROPERTY_REVIEW.md)。
