@@ -76,3 +76,11 @@ python -m cbdk glb-map-properties \
 同一クラス・同じ `self` という表記でも、実際のインスタンスがそのプロパティに結び付くとは限らない。参照例の保存は従来どおり最大16件だが、分類別の合計は保存例に関係なく**全件で集計**する。長すぎるクラス名の匿名化による誤一致は安全側で除外する。
 
 これにより、明らかに別オブジェクトの参照を優先候補に昇格させず、人が調べる箇所を絞る。コード本文・既定値・秘密ファイルのパスは引き続き出力しない。Blender実機でプロパティを使ったこと、ジオメトリを変更したこと、適切な修正値が判明したことは意味しない。
+
+## v0.18 追加：モディファイア設定への静的経路（GLB-011）
+
+`glb-map-properties` の `possible_geometry_dataflow` に、プロパティ由来の値が `modifier.width`、`modifier.thickness`、`modifier.operation`、`modifier.object`、`modifier.segments`、`modifier.levels` などの属性への直接・複合代入に現れたことを示す `possible_modifier_setting_assignment` を追加した。例えば Bevel 幅、Solidify 厚み、Boolean の操作・対象設定を人が調べるきっかけになる。
+
+**重要:** `modifier` という変数名や `width` という属性名があっても、それがBlenderモディファイアであることは証明されない。ASTはクラスメソッドの直線的な代入の構文しか確認せず、分岐・別関数間のデータフローや実行時型、生成されるメッシュへの影響を追わない。結果を実行時の証明、確定的な原因、最適なパラメータ値、修正操作に昇格させない。
+
+追加の `tests/test_glb_modifier_flow.py`（15件）は、直接/別名/複合代入、無関係変数、分岐・ネスト関数の拒否、機密データ非出力・非実行を回帰確認する。CIの合成プロパティ定義にも `width` と `thickness` の代入を設けた。元アドオンとユーザーGLBは引き続き公開しない。
