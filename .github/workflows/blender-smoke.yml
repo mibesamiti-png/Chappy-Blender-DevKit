@@ -607,6 +607,7 @@ jobs:
             --python scripts/blender_make_glb_joint_mvp_fixtures.py -- \
             "$root/inputs" 2>&1 | tee "reports/ci/joint_mvp_fixture.log"
           grep -F 'CBDK_JOINT_MVP_FIXTURES_PASS' "reports/ci/joint_mvp_fixture.log"
+          sha256sum "$root/inputs/"*.glb > "$root/source_sha256.txt"
           for mode in identical narrow shifted uncapped; do
             python -m cbdk glb-diff-visualize \
               "$root/inputs/reference.glb" "$root/inputs/$mode.glb" \
@@ -614,6 +615,7 @@ jobs:
               --output "$root/review_$mode" --timeout 180
           done
           python scripts/verify_glb_joint_mvp.py "$root"
+          sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create and render deterministic GLB visual-inspection fixture
