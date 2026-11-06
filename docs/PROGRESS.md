@@ -569,4 +569,12 @@ PR #25の実装コミット `e971b784e5f6694252e924c0b8183dd393aa3860` に対す
 - Blender 4.4.3 / 4.5.15 / 5.2.1 のGLB差分fixtureで`glb-repair-plan`を実行し、レビュー専用・未承認・影響視点・最悪IoUを検査するCIを追加。Blender 4.5.15ではe2eの`repair_plan.json`も検査する。
 - 正本STATE.json/引き継ぎの新要件`GLB-006`、新設計判断`DEC-018`、次タスク`NEXT-009`を登録。
 
-**検証境界:** コード・テスト・CI定義を追加した段階の情報。最新commitに対する実ジョブの合否を確認するまでGLB-006は「一部実装・未検証」。参照GLBと生成GLBの完全一致や、実際のアドオン設定と候補名の合致は未検証。
+**実測CI結果（2026-11-06）:** PR #25のコードHEAD `d9c5c92590759faac158824d84e4f8ca94c7c5bb` で、次のGitHub Actionsが全成功。
+
+- Python 3.11/3.12/3.13：[run 42204425313](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425313)。新規20回帰テストを含む。
+- Windows PowerShell 3.11/3.13：[run 42204425351](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425351)。
+- Blender 4.4.3/4.5.15/5.2.1：[run 42204425335](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425335)。GLBの同外寸・異輪郭fixtureから比較・診断・設定候補プランを生成し、安全フラグ・最悪IoU・対象視点を検証。
+- Windowsキット：[run 42204425475](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425475)。
+- 引き継ぎ検証：[run 42204425288](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425288)。
+
+これを根拠にGLB-006は実装済/Blender CI検証とする。参照GLBと生成GLBの完全一致、内部空洞、実アドオンの設定と候補名の合致は未検証。後続の記録更新コミットのCI成功とは区別する。PR #25は未マージ、正式last_verified=v0.17.0を維持。
