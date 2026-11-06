@@ -390,3 +390,11 @@ CBDK自作合成GLBに対してのみ、明示的に許可した`narrow`→`narr
 テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`：[Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)・[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)・[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)・[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)・[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)・[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
 
 安全性：元GLB/既存ファイルの上書き禁止、実ユーザーアドオンの自動実行・修正・公開禁止、合成入力のSHA-256不変、匿名集計のみローカルJSON/日本語Markdown履歴に記録。固定2試行の合成試験であり、任意値の探索・実GLBの完全一致・本物のユーザー製アドオンの因果特定は未実装。GLB-022`partial`。詳細は`docs/GLB022_SYNTHETIC_ITERATION.md`。
+
+## GLB-022 第1段階：許可済み合成モデルだけの2段階反復（2026-11-07）
+
+CBDK自作生成器の固定値だけでGLBを実際に再生成・比較し、無関係な変更は**棄却**、既知の正常形状復帰は**採用**、観測差分0または最大2試行で停止する試作を実装。入力GLB/ジェネレーターはSHA-256で不変を確認し、匿名の試行・採否・停止理由をローカルJSON/Markdownへ記録。
+
+テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`： [Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)、[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)、[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)、[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)、[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)、[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+
+**GLB-022はpartial**。合成モデル専用の固定2候補に限定し、実アドオンのパラメータを自由に探索・適用したものではない。実ユーザーデータ・因果関係・幾何の全域一致は未検証。GLB-020の追加機能は凍結を維持、GLB-021はpartial、v0.18はPR #25ドラフトのまま。[詳細](GLB022_ALLOWLISTED_ITERATION.md)。
