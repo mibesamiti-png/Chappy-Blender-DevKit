@@ -269,10 +269,10 @@
     {
       "id": "GLB-011",
       "title": "プロパティ値からBoolean/Bevel/Solidify等のモディファイア設定までAST上で追跡",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/glb_geometry_flow.py",
-      "note": "明示したソースの同クラスselfプロパティ/直線ローカル別名から、modifier.width/thickness/operation/object/segments等の代入/複合代入まで静的経路を報告。modifier実体は未検証であり形状への因果効果は主張しない。追加15回帰テストとBlender3版合成fixture、現head CI結果確認待ち"
+      "note": "直線的selfプロパティ/別名からmodifier.width/thickness/operation/object等の代入・複合代入までAST経路を検出。PR #25 commit b1a57e57のPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1合成fixture・kit・handoff CI全成功。実際のモディファイア実体・形状効果は未検証"
     }
   ],
   "known_issues": [
@@ -590,6 +590,6 @@
     "glb_property_usage": "2026-11-06: PR #25 c640ad06e5f55bf5a4112ba3bb5635751f2023a7 に対するPython 42208333161、Windows 42208333343、Blender3版 42208333010、kit 42208333310、handoff 42208332987 の全ワークフローsuccessを確認。GLB-008 implemented/blender_ci、PRドラフト・last_verified v0.17.0を保持",
     "glb_binding_hints": "2026-11-06: PR #25 code SHA 2c000dad0980ee76562576ba63c0e7b568284748の全CI成功: Python 42210546730、Windows 42210546742、Blender3版 42210546751、kit 42210546861、handoff 42210546734。GLB-009 implemented/blender_ci。PR draftのまま正式v0.17.0 last_verified変更なし",
     "glb_geometry_flow": "2026-11-06: PR #25 GLB-010 source glb_geometry_flow.py、20件の回帰テスト、3版Blender合成GLB fixtureを追加。メッシュ生成API引数までの静的経路は推測であり実行時因果は未検証。実ジョブの結果確認前は partial/not_tested。正式last_verified v0.17.0は保持",
-    "glb_modifier_flow": "2026-11-06: PR #25 GLB-011へモディファイアwidth/thickness/operation/object等の直接/複合代入AST検出を追加。新規15回帰テストと3版Blender合成fixture CIを追加。現head実測まではpartial/not_tested、last_verified=v0.17.0維持"
+    "glb_modifier_flow": "2026-11-06: PR #25 SHA b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 全5ワークフロー成功: Python 42214954563; Windows 42214954671; Blender 3版 42214954642; kit 42214954657; handoff 42214954600。GLB-011 implemented/blender_ci、PR draft、last_verified v0.17.0維持"
   }
 }
