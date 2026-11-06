@@ -145,3 +145,8 @@ python -m cbdk glb-regression reference.glb candidate.glb \
 ```
 
 出力にはreference/candidateそれぞれの構造JSON・7方向画像・部品単独画像・scene metadataと、`comparison.json` が含まれる。初期比較は外接bounds中心なので、同じboundsで輪郭や穴だけが違うケースは見逃しうる。画像証拠を併用し、完全一致判定として扱わない。
+
+
+### v0.18 初期比較の検証結果
+
+PR #23でPython 343件を3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で成功。synthetic GLBのworld-space bounds生成と同一metadata自己比較を3つのBlender版で確認した。これはboundsベース比較の実行経路を証明するが、異なる輪郭に対する完全な視覚一致検出までは証明しない。
