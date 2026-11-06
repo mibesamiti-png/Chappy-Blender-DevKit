@@ -16,9 +16,7 @@ import addon_utils
 import bmesh
 import bpy
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from cbdk.undo_probe_report import PREFIX, build_report
-from blender_modular_addon_smoke import PACKAGE, verify_zip
+SCRIPT_DIR = Path(__file__).resolve().parent\nREPO_ROOT = SCRIPT_DIR.parent\n# Blender does not guarantee the executed script directory is on sys.path.\n# Add both the repository root (for cbdk) and scripts/ (for the trusted sibling smoke helper).\nsys.path.insert(0, str(REPO_ROOT))\nsys.path.insert(0, str(SCRIPT_DIR))\nfrom cbdk.undo_probe_report import PREFIX, build_report\nfrom blender_modular_addon_smoke import PACKAGE, verify_zip
 
 OBJECT_NAME = "CBDK_Native_Undo_Probe"
 
