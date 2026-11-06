@@ -987,3 +987,12 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - 履歴出力はCIのローカル`synthetic_trial_history.json`と`synthetic_trial_history.md`のみ。個別GLB座標・元ソース・私有ファイルパスは含めない。入力・出力安全性と既存ファイル不変性をPython単体・Blender実GLB比較で検証。
 - テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
 - [詳細な受け入れ基準](GLB021_TRIAL_HISTORY.md)。GLB-021は引き続き一部実装。GLB-022の許可済み合成反復変更エンジンはまだ未実装、GLB-020 MVPの凍結も維持。
+
+## 2026-11-07 GLB-022 第1段階：Blender実再生成＋差分比較の2試行ループ
+
+- `scripts/blender_make_glb_joint_mvp_fixtures.py`に固定合成条件の`--single`書き出しを追加。既存フォルダ・モデルの上書きを拒否し、任意のアドオンコードや数値パラメータを受け付けない。
+- `scripts/run_glb022_synthetic_iteration.py`が許可済みスクリプトで基準GLBと候補GLBを**試行ごとに再生成**し、`cbdk/glb_diff_visualize.py`で実比較。`cbdk/glb_synthetic_iteration.py`の状態機械がソケットの観測誤差面数を厳密に減らし、他部品の観測悪化がない変更だけを採用。
+- 初期の狭窄モデル→無関係なボール移動（不採用）→合成モデルの既知正常寸法へ復帰（採用）の2試行に限定。サンプリングでの異常面が0になれば停止し、各試行・採否・理由・停止条件をローカル`synthetic_iteration_history.json`および日本語`.md`へ保存。ユーザーの実データやアドオンは使用しない。
+- 厳格な単体テストで誤採用、偽の因果断定、未許可試験、数値矛盾、上書きを拒否。合成GLBとジェネレーターのSHA-256不変も検証。
+- テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`：[Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)・[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)・[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)・[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)・[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)・[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+- GLB-022は**一部実装**。固定2試行の合成MVPが成立しただけで、任意パラメータ探索/実ユーザーアドオンでの動作は未保証。GLB-020レビューMVPとGLB-021レビュー機能の安全境界は維持。[詳しい仕様](GLB022_SYNTHETIC_ITERATION.md)。
