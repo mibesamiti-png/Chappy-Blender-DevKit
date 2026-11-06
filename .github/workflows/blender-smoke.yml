@@ -597,6 +597,25 @@ jobs:
           PY
           echo "GLB-020 closed/open triangle edge warnings remain review-only." >> "$GITHUB_STEP_SUMMARY"
 
+      - name: GLB-020 MVP joint-like 3-part end-to-end regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/joint_mvp
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_make_glb_joint_mvp_fixtures.py -- \
+            "$root/inputs" 2>&1 | tee "reports/ci/joint_mvp_fixture.log"
+          grep -F 'CBDK_JOINT_MVP_FIXTURES_PASS' "reports/ci/joint_mvp_fixture.log"
+          for mode in identical narrow shifted uncapped; do
+            python -m cbdk glb-diff-visualize \
+              "$root/inputs/reference.glb" "$root/inputs/$mode.glb" \
+              --blender "$BLENDER_PATH" \
+              --output "$root/review_$mode" --timeout 180
+          done
+          python scripts/verify_glb_joint_mvp.py "$root"
+          echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
         run: |
