@@ -775,3 +775,12 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 両方式は64面の表面誤差について同じ数値を返し、512面合成GLB同士のサンプル距離は0。既存の256面での精密三角形距離回数削減と、中央開口・高さ変位の検査も維持。Python [run 42240590020](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240590020)・Windows kit [42240588950](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588950)・handoff [42240588940](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588940) も成功。Windows PowerShell [42240588999](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588999) も成功。
 
 3バージョンでBVHの64面処理時間が総当たりより短いことを**観測**した。ただしCIランナーのCPU/負荷に依存して数値が変動し、全PCへの性能保証や実製品用大規模GLBの処理能力は意味しない。速度比をCIの合否閾値にはしていない。正本STATE/HANDOFFでGLB-016をimplemented/blender_ci、NEXT-014をdoneへ更新。v0.18ドラフトPR #25内の作業で、正式v0.17.0のlast_verifiedは変更なし。
+
+## v0.18 開発中 — GLB-017: 粗8点→選択面48点の多解像度比較
+
+- `cbdk/glb_multires_surface.py`新規。粗8 Halton点/面、差分の疑いがある最大8面＋面積上位の探索2面を48点まで増やし、両方向のサンプル距離を集計。BVHは再利用し、追加の精密距離評価回数と変更面数を出力。上限512面/メッシュを維持。
+- `tests/test_glb_multires_surface.py`に13回帰テストを追加。従来の固定24点では見逃す幅0.44の中央開口を、48点の選択精査が検出するケース、異三角分割・順序入替・高さ変位、探索枠、上限・非公開入力拒否を確認する。
+- `scripts/blender_surface_distance_smoke.py`へ`with_narrow_hole.glb`を追加し合成6→7 GLB。新旧方式の差をBlender4.4.3/4.5.15/5.2.1で実出力/再読込して検証するCIを追加。512面・BVH実時間テストは残す。
+- GLB-017 / DEC-029 / NEXT-015を正本STATE.jsonとPROJECT_HANDOFF.mdへ記録。
+
+**境界:** 完全形状一致の証明ではない。サンプルがない面や小穴・内部空洞はまだ見逃し得る。最新headのCI実測が揃うまで一部実装・未検証、PR #25ドラフト・正式last_verified v0.17.0維持。
