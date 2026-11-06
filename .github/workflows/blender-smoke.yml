@@ -353,6 +353,14 @@ jobs:
                      for x in hits), m
           assert all(x['possible_code_references']['runtime_effect_verified'] is False
                      for x in hits), m
+          # Same-class self references narrow the inspection scope, but are
+          # syntactic hints only, NOT proven Blender property usage.
+          assert any(x['same_class_reference_review']['possible_same_source_class_self_count'] > 0
+                     for x in hits), m
+          assert all(x['same_class_reference_review']['actual_receiver_binding_verified'] is False
+                     and x['same_class_reference_review']['registered_in_blender_verified'] is False
+                     and x['same_class_reference_review']['geometry_effect_verified'] is False
+                     for x in hits), m
           assert m['safety']['source_executed'] is False, m
           assert m['safety']['applies_parameters'] is False, m
           assert m['safety']['private_source_committed'] is False, m
