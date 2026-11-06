@@ -25,6 +25,7 @@ from .glb_quick_render import quick_render_glb
 from .glb_compare import write_scene_comparison
 from .glb_regression import run_glb_regression
 from .glb_diagnose import write_diagnosis
+from .glb_repair_plan import plan_from_comparison
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -204,6 +205,10 @@ def main(argv=None) -> int:
     glb_diagnose_cmd = sub.add_parser('glb-diagnose', help='Turn GLB comparison differences into review-only diagnostic hypotheses')
     glb_diagnose_cmd.add_argument('comparison')
     glb_diagnose_cmd.add_argument('--output', default='reports/latest/glb_diagnosis.json')
+
+    glb_repair_cmd = sub.add_parser('glb-repair-plan', help='Suggest review-only parameter families from GLB comparison JSON')
+    glb_repair_cmd.add_argument('comparison', help='Comparison JSON (no source addon execution)')
+    glb_repair_cmd.add_argument('--output', default='reports/latest/glb_repair_plan.json')
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -397,6 +402,10 @@ def main(argv=None) -> int:
             return 0 if report['passed'] else 1
         if args.command == 'glb-diagnose':
             report = write_diagnosis(args.comparison, args.output)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'glb-repair-plan':
+            report = plan_from_comparison(args.comparison, args.output)
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'feature-list':
