@@ -869,3 +869,12 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - CI対象: コード・テストSHA `7365828b287e08046d66d62fc01c5fcfc2457fed`。Python/Windows/Blender実機は全5系統成功を確認。`[skip ci]`文書コミットは同SHAのテスト結果として扱わない。
 - Code SHA `7365828b287e08046d66d62fc01c5fcfc2457fed`: [Python 42265921528](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921528), [Windows 42265921533](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921533), [Blender 4.4.3/4.5.15/5.2.1 42265921506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921506), [kit 42265921516](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921516), [handoff 42265921493](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921493): **all five completed/success**.
 - **部分実装を維持**：出力GLBの部品はBlenderで個別に選択・非表示可能となる想定だが、元の対応部品を自動で結び付ける機能、同期カメラ、未測定領域の厳密表示、512三角形を超えるデータは未対応。安全なローカル比較と公開GitHubへの非公開モデル混入防止を優先。
+
+
+## 2026-11-07 GLB-020 — ローカルHTMLの3D連動比較（第3段階・検証中）
+
+- `cbdk/glb_diff_viewer_template.html` に外部依存のない左右2画面を追加。マウスドラッグで両方の3D視点を同時回転、Shift+ドラッグで平行移動、ホイールでズーム。各画面は匿名部品を独立選択でき、灰色の面を隠せる。左右の共通中心・縮尺を維持し、位置ズレが自動正規化で隠れないようにする。
+- `cbdk/glb_diff_viewer.py` は有限・最大512三角面/GLBの**数値形状のみ**をHTMLに埋め込み。JSONレポートには生頂点や元部品名を含めず、HTML自体は非公開の派生ジオメトリを含むことを明示。
+- `scripts/blender_glb_diff_visualize.py` が従来の着色GLB2件・集計JSONに加えて`compare_viewer.html`を作成。`cbdk/glb_diff_visualize.py`が出力存在/フラグ/容量/テンプレートを検証、CLIに閲覧パスを表示。`pyproject.toml`でテンプレートをパッケージ化。
+- テスト: PythonでJSON埋め込みとプライバシー/安全上限・HTML構造を検証。Blender3版CIの合成2部品GLBでHTML生成とJSON安全フラグ、NodeでインラインJavaScript構文を確認する追加ゲートを用意。
+- **未完了**: ブラウザ実機での回転・部品切替・ズームの操作検証、Canvas 2Dの奥行き描画の正確さ、正確なクロスGLB部品対応、未解析領域の明示、大規模な実データ検証。完成扱いではなく一部実装を継続。正式v0.17.0/ドラフトPR #25は維持。
