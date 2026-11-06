@@ -27,6 +27,15 @@ Last handoff: 2026-11-07 JST.
 - NEXT-008 and NEXT-009 are in progress; separate release/CI decision remains outstanding.
 - Private Blender addon sources, private GLB files, secrets and local reports are not to be committed to the public repository or mirrored to Notion.
 
+## GLB roadmap restored from the prior chat on 2026-11-07
+
+- Source: [GLB-019 through GLB-022 roadmap](GLB_ROADMAP.md), canonical [STATE.json](project/STATE.json) and generated [PROJECT_HANDOFF.md](../PROJECT_HANDOFF.md).
+- [GLB-019](https://app.notion.com/p/410948b7493781e888acd4392249365d): implemented / Blender synthetic CI; real-world GLB scalability and full geometry identity are not proven.
+- [GLB-020](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25): not_implemented / not_tested; 3D visual differences, next candidate.
+- [GLB-021](https://app.notion.com/p/410948b7493781efb123c459b521312e): not_implemented / not_tested; relate difference categories to review-only property candidates.
+- [GLB-022](https://app.notion.com/p/410948b74937811ea006d4d6bd55b1dc): not_implemented / not_tested; iterative experiments using only allowlisted CBDK-owned synthetic addons.
+- Sequence: **GLB-020 → GLB-021 → GLB-022**. The roadmap is a plan, not a release or CI claim.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
