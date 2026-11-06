@@ -13,8 +13,8 @@
 ## 最新の開発状況
 
 - 現在のバージョン: `0.17.0`
-- 開発段階: public_repository_release_candidate
-- 最新の節目: PR #18（v0.16監査）、#20（Undo/Redo・登録ワークフロー）、#21（GLB Visual Inspector）を順番にmainへ統合。v0.17.0正式化ブランチで最終CI待ち
+- 開発段階: public_repository_verified
+- 最新の節目: v0.17.0 release PR #22でPython 334件×3版、Windows PowerShell 2版、Blender 4.4.3/4.5.15/5.2.1、Windowsキット、引き継ぎCIが全成功。GLB 7方向＋部品単独レンダリングも3版成功
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -73,13 +73,13 @@
 
 ## 前回、実際に確認されたテスト
 
-- 対象リリース: v0.15.0 / 2026-11-05
-- Python: 196件成功; 3.11, 3.12, 3.13 [実行記録](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366371)
-- Windows PowerShell: 3.11, 3.13 [実行記録](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366384)
-- Blender: 4.4.3, 4.5.15, 5.2.1; 共通部品 7件; 生成レシピ 6構成 [実行記録](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366369)
-- Windowsキット生成 [実行記録](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/41954366315)
-- 前回の[PR](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/16)
-- 注意: CIは環境別・変更コミット別の検証記録。以後の変更やGUIの操作感まで保証しない。
+- 対象リリース: v0.17.0 / 2026-11-06
+- Python: 334件成功; 3.11, 3.12, 3.13 [実行記録](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42183135653)
+- Windows PowerShell: 3.11, 3.13 [実行記録](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42183135667)
+- Blender: 4.4.3, 4.5.15, 5.2.1; 共通部品 7件; 生成レシピ 6構成 [実行記録](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42183135712)
+- Windowsキット生成 [実行記録](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42183135650)
+- 前回の[PR](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/22)
+- 注意: ヘッドレスCIはGUI Ctrl+Z/操作感を保証しない。GLB fixtureの実レンダリングは検証済みだが、個別のユーザーGLBは必要時に別途Blender Previewで確認する。
 
 ## 継続する設計判断
 
