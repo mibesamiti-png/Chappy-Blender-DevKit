@@ -144,9 +144,11 @@ Document every untested code change in STATE/HANDOFF. Until GitHub Actions Issue
 
 ## v0.17 draft — GLB visual inspection evidence boundaries
 
-When a user/reference GLB must be understood, do not treat an image-generation reconstruction as the original model. Prefer CBDK evidence in this order: Blender-rendered `front/right/top/iso` PNGs, `scene_metadata.json`, static `structure.json`, then user screenshots/descriptions.
+When a user/reference GLB must be understood, do not treat an image-generation reconstruction as the original model. Prefer CBDK evidence in this order: Blender-rendered isolated-object thumbnails and seven scene views, user-provided Blender screenshots, `scene_metadata.json`, optional Quick Preview evidence, then static `structure.json`.
 
 `cbdk.glb_inspector` may parse only the GLB header and JSON chunk for static inventory. It must not follow external URIs, decode images, execute embedded/project code, or load the BIN payload into memory just to list structure. User GLB files and derived private reports must remain local/ignored and must not be committed to GitHub.
+
+`glb-quick-preview` is an optional lower-fidelity fallback using trimesh/matplotlib. It must reject external URI references before invoking third-party GLB loading, enforce bounded geometry sizes, skip source materials, and never be described as Blender-exact evidence.
 
 `glb-preview` may launch only a user-supplied trusted Blender executable with `--background --factory-startup` and the repository-owned `scripts/blender_glb_render.py`. It must not open/save a user .blend project. A successful render proves only that this GLB imported and produced the requested evidence images in that Blender environment; it does not prove addon correctness, GUI usability, physical motion, or legal/redistribution approval.
 
