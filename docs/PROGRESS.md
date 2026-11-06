@@ -589,3 +589,15 @@ PR #25の実装コミット `e971b784e5f6694252e924c0b8183dd393aa3860` に対す
 - `docs/GLB_PROPERTY_MAPPING.md`を作成、STATE.jsonへ`GLB-007`、`DEC-019`と進行中タスク`NEXT-009`を記録し、引き継ぎを同期。
 
 **検証境界:** このコードの追加時点での静的記録。最新headのPython/Windows/Blender CIは実際の成功ジョブを見てから検証状態を更新する。GUI上の登録確認・実アドオンのジオメトリ変化・ユーザー私有GLBでの完全一致は未検証。正式v0.17.0のlast_verifiedは保持。
+
+### GLB-007の実測CI（2026-11-06）
+
+実装コミット `c36350754770e54ed30695b63661382bf815682c` に対して、次の5ワークフローが実際に全成功。
+
+- Python 3.11/3.12/3.13： [run 42206398064](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398064)。新規24回帰テストを含む。
+- Windows PowerShell 3.11/3.13： [run 42206398098](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398098)。
+- Blender 4.4.3 / 4.5.15 / 5.2.1： [run 42206398080](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398080)。合成GLBから得た原因候補と合成Pythonファイル内のBlenderプロパティをASTのみで照合し、名前一致・未実行・未適用の安全フラグを確認。
+- Windowsキット： [run 42206398068](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398068)。
+- 引き継ぎ： [run 42206398078](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398078)。
+
+GLB-007は実装済/Blender CI確認済みとして記録。正式バージョンはv0.17.0のまま、v0.18 PR #25はドラフト。**未検証:** 個人用アドオンに実際に登録されたプロパティか、その値が形状に影響するか、ユーザーのGLBが正確に再現できるか。元私有ソースはコミット・実行していない。
