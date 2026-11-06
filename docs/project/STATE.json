@@ -221,10 +221,10 @@
     {
       "id": "GLB-005",
       "title": "形状診断の数値根拠集約と矛盾データ拒否",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/glb_diagnose.py",
-      "note": "部品別/全体の複数視点IoU最悪値、相対誤差、欠落部品割合を集約。比較passedと差分件数の矛盾、異常数値、重複JSONキー等を拒否。新規19回帰テストは追加済み・実測前"
+      "note": "参考/候補GLBのscene・部品差分を影響視点、最悪IoU、相対誤差、体積割合、重大度別で集約し、異常JSON・矛盾カウンタを拒否。PR #25のコードcommit e971b784でPython3版/Windows2版/Blender3版の実機診断と回帰テスト成功。公開・実ユーザーGLB再現の保証なし"
     }
   ],
   "known_issues": [
@@ -499,6 +499,6 @@
     "registration_behavior": "2026-11-06: REG-003回帰テストはPR #21のPython 3版CIで成功。behavior申告は実機安全性の自動証明ではない",
     "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま",
     "v018_silhouette_regression": "2026-11-06: PR #24 head 2735aa974539ec95fde20e2c9f1de155f6687209 でPython 347件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windows kit、handoffが全成功。実Blenderでreference Cubeと同bounds八面体のsilhouette driftを3版すべて検出。GLB-004をimplementedへ昇格",
-    "glb_diagnosis_evidence": "2026-11-06: v0.18 PR #25 GLB診断の数値集約・fail-closed入力検証と19件の回帰テストを追加。現在のPR headでのPython/Windows/Blender CI成功確認前はGLB-005 not_tested、last_verifiedは維持する"
+    "glb_diagnosis_evidence": "2026-11-06: PR #25 e971b784e5f6694252e924c0b8183dd393aa3860 のPython(42202420004), Windows(42202419886), Blender3版(42202419874), Windows kit(42202419926), durable handoff(42202419869)で成功を観測。追加19テストを含む。PRはドラフトでmain未統合、last_verifiedはv0.17.0を維持"
   }
 }
