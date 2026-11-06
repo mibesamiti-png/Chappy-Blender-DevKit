@@ -308,6 +308,7 @@ jobs:
           PY
           # This is a synthetic fixture. The source is NEVER imported or run.
           cat > reports/ci/synthetic_property_declarations.py <<'PY'
+          import bpy
           from bpy.props import FloatProperty
 
           class CBDKFixtureProperties:
@@ -328,6 +329,11 @@ jobs:
                   self.visible_profile = 1.2
                   self.part_arrangement += 0.1
                   self.part_arrangement = 1.0
+
+              def build_geometry(self):
+                  radius = self.boolean_cutter / 2
+                  bpy.ops.mesh.primitive_uv_sphere_add(radius=radius)
+                  bpy.ops.mesh.primitive_cube_add(size=self.profile_shape)
           PY
           python -m cbdk glb-map-properties \
             reports/ci/glb_drift_repair_plan.json \
@@ -343,7 +349,17 @@ jobs:
                   for match in rec['exact_name_matches']]
           assert hits, m
           assert all(match['match'] == 'exact_declaration_name_only' for match in hits), m
-          assert m['static_possible_attribute_references_found'] == 10, m
+          assert m['static_possible_attribute_references_found'] == 12, m
+          assert m['static_possible_geometry_paths_found'] >= 2, m
+          linked = [hit for hit in hits
+                    if hit['possible_geometry_dataflow']['possible_path_count'] > 0]
+          assert linked, m
+          assert any(site['geometry_operation_category'] == 'mesh_primitive'
+                     for hit in linked
+                     for site in hit['possible_geometry_dataflow']['examples']), m
+          assert all(hit['possible_geometry_dataflow']['receiver_binding_verified'] is False
+                     and hit['possible_geometry_dataflow']['geometry_effect_verified'] is False
+                     for hit in hits), m
           assert any(x['possible_code_references']['possible_reference_count'] > 0
                      and x['possible_code_references']['access_counts']['read'] > 0
                      for x in hits), m
