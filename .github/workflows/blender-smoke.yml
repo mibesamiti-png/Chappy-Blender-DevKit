@@ -233,6 +233,9 @@ jobs:
                   assert score['increase_probe'] < score['baseline'] < score['decrease_probe'], evidence
                   assert all(count == 0 for count in evidence['unrelated_probe_changed_vertices'].values()), evidence
                   assert evidence['suggested_numeric_value'] is None
+                  assert evidence['score_metric'] == 'sorted_local_origin_radius_mean_absolute_difference'
+                  assert evidence['score_invariant_to_vertex_order'] is True
+                  assert evidence['general_geometry_equivalence_verified'] is False
                   assert evidence['auto_apply'] is False
                   assert evidence['verified_for_arbitrary_user_addons'] is False
           evidence = result['quantified_vertex_displacement']
