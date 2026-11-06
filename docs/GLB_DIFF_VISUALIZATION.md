@@ -21,6 +21,7 @@ The output directory **must not exist**. This avoids overwriting previous result
 - `reference_diff.glb` — each reference triangle is colored by its sampled distance to the candidate.
 - `candidate_diff.glb` — each candidate triangle is colored by its sampled distance to the reference.
 - `review.json` — aggregate face counts per color **and per anonymous imported mesh part**, sampled maximum distances, thresholds, and limits. **It contains no source mesh names, vertices, original input paths or user addon code.**
+- `compare_viewer.html` — **local-only, self-contained two-view 3D comparison**; both canvases share the same orbit, pan and zoom. Each side can filter anonymous parts independently and hide grey faces. The HTML deliberately embeds the derived mesh geometry (unlike the aggregate-only JSON), so never upload or send private versions.
 
 The two colored GLBs **do contain derived geometry by design** and must remain on the user's machine, not in the public repository/Notion/CI artifacts for private models. Inspect both views: a missing surface can be obvious in the reference direction even if the candidate direction is mostly grey.
 
@@ -39,7 +40,7 @@ Thresholds and units appear in `review.json`. The deterministic triangle-sample/
 - No network upload and no changes to the input GLBs. Output is an explicitly requested new directory. Report is restricted to aggregate statistics; only local GLB overlays contain geometry.
 - Blender importing untrusted 3D data cannot be guaranteed risk-free. Use only files you are willing to open locally in a patched Blender.
 - The latest iteration exports **a separate selectable object for each nonempty imported mesh**. Names such as `CBDK_Reference_Part_001` / `CBDK_Candidate_Part_001` are newly generated and anonymous; the original name is not copied. Each input is capped at **64 mesh objects**, 512 triangles, and its output contains the same number of nonempty parts.
-- **Part numbers do not establish correspondence across two GLBs.** `part_001` on the reference and `part_001` on the candidate may be unrelated. No code path in GLB-020 infers a matched part or automatically approves a repair. Linked camera view, true cross-file part matching, live side-by-side UI, unknown/unmeasured region highlighting, and large-mesh support remain TODO.
+- **Part numbers do not establish correspondence across two GLBs.** `part_001` on the reference and `part_001` on the candidate may be unrelated. No code path in GLB-020 infers a matched part or automatically approves a repair. A preliminary local HTML split viewer with synchronized 3D orbit/pan/zoom and independent part filters exists, **but real browser interaction testing, true cross-file part matching, unknown/unmeasured region highlighting, robust depth occlusion and large-mesh support remain TODO**.
 - Failure or skipped large data is not treated as an all-clear or geometry match. The feature must not promote any parameters to automatic fixes.
 
 ## Verification gates
@@ -58,3 +59,16 @@ Related: [GLB-019 to GLB-022 roadmap](GLB_ROADMAP.md), [project state](project/S
 4. Treat every grey triangle as **24 measured samples below the configured threshold**, not as a fully observed region. This version does not map unobserved areas into a separate color.
 
 The report explicitly sets `cross_file_part_identity_proven=false` and `part_id_scheme=anonymous_sequential_by_imported_object_name`. It records no source object labels or raw geometry. The exported GLBs do contain geometry and should remain private. A multi-part synthetic test with intentionally private-looking source labels checks both GLBs and their imported material colors in the CI matrix. Code SHA `7365828b287e08046d66d62fc01c5fcfc2457fed`: [Python 42265921528](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921528), [Windows 42265921533](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921533), [Blender 4.4.3/4.5.15/5.2.1 42265921506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921506), [kit 42265921516](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921516), [handoff 42265921493](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921493): **all five completed/success**. These test results apply to this SHA, not to later documentation-only commits.
+
+
+## Offline side-by-side viewer (GLB-020 development preview)
+
+After running the command above, open **`compare_viewer.html`** from the newly generated output directory in a modern desktop browser. It works as a standalone local file and does not fetch external scripts, libraries, assets or models. It has a Content-Security-Policy that disallows network connections.
+
+- Drag either canvas to rotate **both** 3D model views together; Shift+drag moves the pair, mouse wheel zooms the pair, Reset restores the initial view. Keyboard arrow keys rotate the focused canvas; both remain synchronized.
+- Use the separate **Part** dropdowns for each side; select the part independently. Hide grey faces to focus on the observed medium/high error.
+- Both models use a shared coordinate center and world-space scale, avoiding automatic separate model normalization that would disguise positional differences.
+- Each side is drawn with a bounded software triangle painter in Canvas 2D using a 3D camera projection, **not** a full WebGL depth buffer. Occlusion can be imperfect where triangles overlap; this is a review aid, not precision inspection.
+- This initial viewer only uses previously validated triangles (512/GLB and 64 parts/GLB). The embedded coordinates are **private model geometry**; `review.json` remains aggregates-only. Keep all generated outputs local and exclude private viewer files from GitHub, Notion and CI upload artifacts.
+- The HTML is static code from CBDK plus sanitized numeric-only shape data. It does not execute source addon Python or require network access.
+- A successful Python test/Node syntax check/Blender file-generation CI **does not prove actual browser interaction works**. Browser GUI tests and additional compatibility review are still pending.
