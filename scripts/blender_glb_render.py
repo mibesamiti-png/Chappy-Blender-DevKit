@@ -132,6 +132,17 @@ def _render_view(camera, center, points, radius, direction, output_path, resolut
     bpy.ops.render.render(write_still=True)
 
 
+def _object_world_bounds(obj):
+    points = [obj.matrix_world @ Vector(corner) for corner in obj.bound_box]
+    mins, maxs, center, size, _radius = _bounds(points)
+    return {
+        "min": [float(v) for v in mins],
+        "max": [float(v) for v in maxs],
+        "center": [float(v) for v in center],
+        "size": [float(v) for v in size],
+    }
+
+
 def _object_row(obj):
     mesh = obj.data
     return {
@@ -145,6 +156,7 @@ def _object_row(obj):
         "rotation_euler": [float(v) for v in obj.rotation_euler],
         "scale": [float(v) for v in obj.scale],
         "dimensions": [float(v) for v in obj.dimensions],
+        "world_bounds": _object_world_bounds(obj),
         "world_matrix": [[float(v) for v in row] for row in obj.matrix_world],
         "parent": obj.parent.name if obj.parent else None,
     }
@@ -241,7 +253,7 @@ def main():
     )
 
     metadata = {
-        "schema_version": 2,
+        "schema_version": 3,
         "kind": "cbdk_glb_blender_scene_metadata",
         "source_name": source.name,
         "blender_version": bpy.app.version_string,
