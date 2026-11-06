@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "kind": "cbdk_python_ci_observation",
-  "release": "0.16.0",
-  "python_tests_passed": 332,
+  "release": "0.17.0",
+  "python_tests_passed": 334,
   "python_version": "3.11.18",
-  "github_run_id": "42182738013",
-  "github_sha": "1c6452a2a4b58eb0276e0989832b9d16867e9327",
-  "observed_at_utc": "2026-11-06T07:43:34.465042+00:00",
+  "github_run_id": "42183768781",
+  "github_sha": "8e3d9c4a5f15b1d7147fcc8d3fa3074120a02904",
+  "observed_at_utc": "2026-11-06T07:52:56.885441+00:00",
   "status": "passed",
   "blender_runtime_verified_by_this_job": false,
   "note": "This job does not verify Blender GUI or legal code approval."
