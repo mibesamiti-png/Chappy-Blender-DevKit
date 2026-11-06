@@ -52,6 +52,19 @@ async function run() {
     await page.locator("#jump-candidate").click();
     assert.equal(await page.locator("#part-candidate").inputValue(), "2");
 
+    // Real Chromium must visibly draw local-only open boundary segments,
+    // allow the overlay to be hidden, and preserve anonymous part filters.
+    await page.locator("#part-reference").selectOption("all");
+    const boundariesOn = await images();
+    await page.locator("#show-boundaries").uncheck();
+    const boundariesOff = await images();
+    assert.notEqual(boundariesOn[0], boundariesOff[0],
+                    "Observed boundary line overlay did not toggle on reference");
+    assert.notEqual(boundariesOn[1], boundariesOff[1],
+                    "Observed boundary line overlay did not toggle on candidate");
+    await page.locator("#show-boundaries").check();
+    assert.match(await page.locator(".note").innerText(), /境界ゼロでも穴や内壁/);
+
     // Confirm a flagged synthetic face really toggles its purple outline.
     await page.locator("#part-reference").selectOption("all");
     const sensitivityOn = await images();
