@@ -145,7 +145,8 @@ CIブロッカー Issue #19 のため、この追加機能のPython/Windows/Blen
 参考モデルやアドオン生成物をGLBで受け取る場合、ファイル名・会話文・画像生成AIの再構成だけから形状を断定しない。
 
 - `glb-inspect` はGLB 2.0のJSON構造を静的に読み、node/mesh名とprimitive/accessor情報を記録する。
-- `glb-preview` は信頼済みBlenderをfactory-startupの別プロセスで起動し、front/right/top/iso PNGとimport後のscene metadataを生成する。
+- `glb-quick-preview` はBlenderが使えない環境向けの任意fallback。trimesh+matplotlibで実GLB形状から7方向/部品単独画像を生成するが、Blender実レンダリングより低精度と明記する。外部URI参照は事前拒否する。
+- `glb-preview` は信頼済みBlenderをfactory-startupの別プロセスで起動し、front/back/right/left/top/bottom/iso PNG、最大32個の部品単独画像、import後のscene metadataを生成する。
 - Blender実レンダリング画像とmetadataを、元GLBの形状理解の主要証拠とする。
 - 画像生成AIは設計説明図や提案の可視化には使えるが、元GLBを忠実に表示した証拠として扱わない。
 - ユーザーGLBや生成レポートはGitHubへ自動コミットしない。CIでは専用の自作fixtureだけを使う。
