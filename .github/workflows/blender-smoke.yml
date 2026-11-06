@@ -617,6 +617,32 @@ jobs:
           python scripts/verify_glb_joint_mvp.py "$root"
           python scripts/verify_glb021_joint_review.py "$root"
           python scripts/verify_glb021_synthetic_counterfactual.py "$root"
+          # GLB-022: actual staged re-generation and re-comparison, not a
+          # replay of cached JSON scores; only CBDK-owned fixed trial names.
+          python scripts/run_glb022_synthetic_iteration.py \
+            --blender "$BLENDER_PATH" \
+            --output reports/ci/glb022_iteration
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("reports/ci/glb022_iteration")
+          h = json.loads((root / "synthetic_iteration_history.json").read_text())
+          assert h["status"] == "synthetic_test_only"
+          assert h["attempts_executed"] == 2
+          assert [row["accepted"] for row in h["attempts"]] == [False, True]
+          assert h["stop_reason"] == "observed_zero_and_no_other_part_regression"
+          assert h["final_observations"] == {
+              "socket_sampled_affected_faces": 0,
+              "other_parts_sampled_affected_faces": 0,
+          }
+          md = (root / "synthetic_iteration_history.md").read_text()
+          assert "不採用" in md and "採用（合成実験のみ）" in md
+          assert not any(h["safety"].values())
+          for mode in ("narrow", "narrow_placebo", "identical"):
+              assert (root / ("review_" + mode) / "review.json").is_file()
+              assert (root / "synthetic_inputs" / mode / (mode + ".glb")).is_file()
+          assert (root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
+          PY
           sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
 
