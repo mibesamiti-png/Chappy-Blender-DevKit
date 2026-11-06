@@ -463,3 +463,14 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - GitHub ActionsはPython、Windows、Blender 4.4.3 / 4.5.15 / 5.2.1、durable handoffの全実行ジョブで失敗表示となったが、API上はすべて `steps=null` / `logs_url=null`。リポジトリコードや新しいGLBテストへ到達した証拠がない。
 - 実行ID: Python `42172631874`、Windows `42172632052`、Blender `42172631906`、handoff `42172631812`。
 - 既存Issue #19へ同じランナー割当症状の再現として記録。**GLB実装のBlender runtime failureとは判定せず、未検証を維持する。**
+
+
+## v0.17 GLB Visual Inspector — 7方向・部品単独・Quick Preview fallback
+
+- Blender本命レンダラーを4方向から**7方向（front/back/right/left/top/bottom/iso）**へ拡張。GLB内Mesh Objectを最大32個まで1個ずつ斜視レンダリングし、重なって隠れる部品を個別確認できるようにした。
+- 構造確認では元マテリアルの透明/発光に影響されないよう、Blender内だけで中立Clayへ一時置換。元マテリアル名はscene metadataに保持。
+- `glb_inspector.py` schema v2: nodeのparents/mesh_name、POSITION accessor min/max、壊れたnode/mesh参照、node cycleを検査。外部buffer/image URIは**参照だけ記録し読み込まない**。
+- `glb-quick-preview` を追加。任意依存 `trimesh + matplotlib + numpy` でBlenderなしでも7方向+部品単独画像を作る。外部URIはloader起動前に拒否、50万頂点/25万面を上限にする。
+- ユーザーの `うさぎとかえる - A5(1).glb` をローカル検証し、**7 node / 7 mesh**、足の甲・つま先・かかとA/B・円柱2個・BallJoint球を識別。Quick Previewで**7方向画像 + 7部品単独画像**を実生成できた。ユーザーデータはGitHubへコミットしていない。
+- Quick PreviewはMatplotlib 3D由来の低精度fallbackであり、Blender実レンダリングと同等の証拠にはしない。
+- 最新PR #21 workflowもPython/Blenderジョブが `steps=null` のまま実行前失敗。Blender 4.4.3/4.5.15/5.2.1実機検証は引き続き未確認。
