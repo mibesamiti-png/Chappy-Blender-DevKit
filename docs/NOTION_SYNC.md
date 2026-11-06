@@ -96,6 +96,12 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - コードSHA `af8e873a613b6b3075448db11f8f26c860dba2a4`：[Python 42296654049](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654049)、[Windows 42296653825](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653825)、[Blender 4.4.3/4.5.15/5.2.1 42296654171](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654171)、[Windows Kit 42296653959](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653959)、[引き継ぎ 42296653876](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653876)、[Chromium 42296653807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653807) **全6系統成功**。
 - GLB-021 remains partial; GLB-020 MVP is frozen and GLB-022 remains unimplemented. Private candidate/property declarations and derived data must never enter public GitHub/Notion.
 
+## GLB-021 fixed-synthetic-parameter counterfactual (2026-11-07)
+
+- Known CBDK-owned synthetic socket opening values 0.78 (observed defect) and 1.70 (restored) were compared against a decoy unrelated ball movement. The narrowed socket remains different under the decoy; restored synthetic socket has zero observed medium/high faces.
+- テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
+- This evidence proves only the controlled synthetic generator behavior and SHA-256 invariance. **It does not certify a real user's Blender addon parameter or advise them to set 1.70.** GLB-021 remains partial, GLB-022 not implemented, private data stay local.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
