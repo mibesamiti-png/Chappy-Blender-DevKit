@@ -203,3 +203,9 @@ Use 23 new Python regression cases plus the synthetic multi-version Blender fixt
 Distinguish same-anonymous-file + same-class `self.property` AST references from other/unresolved attribute uses. Maintain total counts independently of capped display examples, and separately count read/write/read_write/delete. Do NOT promote the syntactic correlation into verified receiver identity, Blender property registration, geometry effects or numeric correction advice. Prevent redacted/overlong class names from matching the real class.
 
 Tests must cover other receivers, other classes, same class names across files, declaration-only classes, counts beyond the example cap, nonexecution and private data suppression. Keep all reports ignored and never import/execute user-provided addon code. `docs/GLB_PROPERTY_MAPPING.md` describes the current evidence limitations.
+
+## v0.18 GLB-011 — modifier-like attributes are unverified hints
+
+GLB-010 geometry-flow may identify property-dependent assignments to common modifier-style fields (width, thickness, object, operation, segments, levels) as `possible_modifier_setting_assignment`. Names are not type evidence: any Python receiver may expose these attributes. Do not call such a result a verified Blender modifier or a proven Boolean/Bevel/Solidify geometric change. Compound assignment remains an AST hint, not runtime proof.
+
+Cover irrelevant expressions, overwritten aliases, nested functions and branches, and intentional nonexecution of private addons with tests. Keep source code, defaults, paths and private GLBs out of reports and public GitHub; do not change source or auto-approve parts. Track the actual CI outcomes in STATE/HANDOFF without changing the formally verified v0.17.0 release.
