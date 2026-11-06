@@ -996,3 +996,11 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - 厳格な単体テストで誤採用、偽の因果断定、未許可試験、数値矛盾、上書きを拒否。合成GLBとジェネレーターのSHA-256不変も検証。
 - テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`：[Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)・[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)・[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)・[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)・[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)・[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
 - GLB-022は**一部実装**。固定2試行の合成MVPが成立しただけで、任意パラメータ探索/実ユーザーアドオンでの動作は未保証。GLB-020レビューMVPとGLB-021レビュー機能の安全境界は維持。[詳しい仕様](GLB022_SYNTHETIC_ITERATION.md)。
+
+## 2026-11-07 GLB-022 第1段階 — 合成GLBの生成→比較→採否→自動停止
+
+- `cbdk/glb_synthetic_iteration.py`と`scripts/run_glb022_synthetic_iteration.py`を追加。元データを読み直すだけでなく、**CBDK合成の試験条件をBlenderで新しくGLB出力し、GLB-020で再計測して差分を判断**。
+- 初期：狭窄ソケット。試行1：無関係なボール位置移動（ソケット差分が残り棄却）。試行2：合成の既知正常状態へ復帰（観測差分0、他部品悪化0で採用・停止）。最大2試行の上限を設け、JSON/日本語Markdownに匿名の結果を保存。出力は`reports/ci`内の新規フォルダのみ。
+- 許可済みのリポジトリ自作生成スクリプトだけを実行。任意のユーザーアドオン、私有コード・GLBの無断実行/変更/公開はせず、合成GLBとジェネレーターのSHA256を比較。
+- テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`： [Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)、[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)、[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)、[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)、[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)、[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+- **GLB-022は一部実装（合成モデル限定）**であり、自由な最適値探索・実アドオンの自動修正・完全な形状同一性は未実装。GLB-021も一部実装。詳細：[第1段階検証仕様](GLB022_ALLOWLISTED_ITERATION.md)。
