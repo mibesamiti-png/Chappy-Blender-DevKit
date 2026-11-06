@@ -124,3 +124,11 @@ ASTで候補宣言を見つけただけでは、実際に形状へ作用する�
 テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
 
 **合成ジェネレーターで設定と形状の因果が確認できても、実アドオンでの登録や実行時の効果は未確認**。正しい修正値の自動提案・GLB-022の一般的な反復実験・ユーザー私有ソースの実行は引き続き行わない。詳細：[GLB-021合成設定実験](GLB021_SYNTHETIC_INTERVENTION.md)。
+
+## 第5段階：合成変更履歴との連携
+
+GLB-020の集計`review.json`を使い、固定の合成試験`narrow`／`narrow_placebo`／`identical`の結果を匿名部品単位で比較し、ローカルにJSONおよび日本語Markdownの変更履歴を保存できるようにした。これは**GLB-021のレビュー補助**であり、GLB-021の既存AST照合候補が実際のユーザーのコードを制御している証明ではない。
+
+テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
+
+変更前後の黄赤面数の減少と、無関係な変更では問題が残ることが観測された。数値は合成試験の固定設定値のみで、正しい修正値の自動推奨や、GLB-022の一般的な実行・自動探索は未実装。[合成履歴の仕様](GLB021_TRIAL_HISTORY.md)。
