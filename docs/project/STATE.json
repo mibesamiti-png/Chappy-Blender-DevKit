@@ -296,7 +296,7 @@
       "status": "partial",
       "verification": "not_tested",
       "source": "cbdk/glb_surface_distance.py",
-      "note": "純Pythonの面積重み付き双方向サンプル点→最近接三角形面距離（最大128面/mesh、12点/面）。頂点順/同一平面の異三角分割に非依存、同外寸の中央開口と0.25単位Zオフセットを検出する合成4 GLBの再読込CIを追加。離散サンプルで小穴を見逃し得て、最大は真のHausdorff距離でない。最新CI観測待ち"
+      "note": "面積重み付き双方向の表面サンプル→最近接三角形距離（最大128面/mesh、24 Halton点/面）を純Pythonで実装。頂点順と同面の三角分割に非依存。同外寸の中央穴/0.25 Z変位の合成4 GLB実機CI追加。初期の相関サンプリングで穴を見逃したためHalton列に変更。真のHausdorff/閉じた内部空洞検出の保証なし。最新CI確認待ち"
     }
   ],
   "known_issues": [
@@ -653,6 +653,6 @@
     "glb_modifier_flow": "2026-11-06: PR #25 SHA b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 全5ワークフロー成功: Python 42214954563; Windows 42214954671; Blender 3版 42214954642; kit 42214954657; handoff 42214954600。GLB-011 implemented/blender_ci、PR draft、last_verified v0.17.0維持",
     "trusted_parameter_displacement": "2026-11-06: GLB-012 PR #25実装コミット04526f1ddd9f336df16d2841ccafc278cd8edf4fで全成功: Python 42220053230, Windows 42220053331, Blender3版 42220053332, kit 42220053222, handoff 42220053158。GLB-012 implemented/blender_ci。PRドラフト・正式last_verified v0.17.0維持",
     "trusted_parameter_direction": "2026-11-06: GLB-013 code/CI commit e73f7eba0cd0bd5ceafacab53b64c397a7bd45a4; Python (42223468580), Windows (42223468045), Blender3 version (42223468513), kit (42223468046), handoff (42223468069) all SUCCESS. Includes 11 direction plus 5 radial metric regression tests. Direction from synthetic GLB scores only; GLB-013 implemented/blender_ci, NEXT-011 done. PR draft; last_verified 0.17.0 unchanged.",
-    "surface_distance": "2026-11-06: GLB-014 sampled bidirectional surface-to-triangle metric, 13 pure Python tests, and Blender 3-version 4-GLB synthetic roundtrip CI added in PR #25. Bounded at 128 faces, 12 samples per triangle. Current code SHA CI pending; retain partial/not_tested until observed; release last_verified=v0.17.0 unchanged."
+    "surface_distance": "2026-11-06: GLB-014 bounded bidirectional triangle surface sample metric using 24 low-discrepancy Halton samples per triangle, max 128 faces/mesh. 13 Python regression tests; real Blender 4-GLB open cutout/alternate triangulation/Z shift fixture on 3 Blender versions. Earlier correlated 12-point sample failed to detect the cutout; fixed and retested. Current CI status pending; formal v0.17.0 unchanged."
   }
 }
