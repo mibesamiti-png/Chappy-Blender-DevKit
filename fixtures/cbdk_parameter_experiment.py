@@ -20,12 +20,7 @@ class CBDKParameterExperimentSettings(bpy.types.PropertyGroup):
     )
 
 
-class CBDK_OT_parameter_experiment_build(bpy.types.Operator):
-    bl_idname = FIXTURE_OPERATOR
-    bl_label = "Build CBDK Synthetic Parameter Experiment"
-
-    def execute(self, context):
-        settings = context.scene.cbdk_parameter_experiment
+    def build_geometry(self):
         bpy.ops.mesh.primitive_uv_sphere_add(
             segments=24, ring_count=12, radius=settings.sphere_radius,
             location=(-2.0, 0.0, 0.0),
@@ -42,6 +37,15 @@ class CBDK_OT_parameter_experiment_build(bpy.types.Operator):
         # change vertex coordinates in the GLB rather than relying on exporter
         # modifier settings.
         bpy.ops.object.modifier_apply(modifier=bevel.name)
+
+
+class CBDK_OT_parameter_experiment_build(bpy.types.Operator):
+    bl_idname = FIXTURE_OPERATOR
+    bl_label = "Build CBDK Synthetic Parameter Experiment"
+
+    def execute(self, context):
+        settings = context.scene.cbdk_parameter_experiment
+        settings.build_geometry()
         return {"FINISHED"}
 
 
