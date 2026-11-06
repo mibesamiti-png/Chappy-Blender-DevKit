@@ -181,3 +181,11 @@ Each grouped hypothesis should carry the affected camera views, worst silhouette
 The `glb-regression` pipeline may produce `repair_plan.json` alongside comparison and diagnosis, but must never import untrusted addon source, set Blender properties, change any source code, auto-approve or auto-merge. Keep user-provided GLBs and derived reports local/ignored. Review stage is: inspect actual source manually, change one candidate in an isolated copy, regenerate GLB, recompare, and run full CI.
 
 Track GLB-006 under the canonical STATE.json and generated PROJECT_HANDOFF.md with factual CI verification. Do not update release last_verified until a separately verified release.
+
+## v0.18 — GLB repair property AST mapping (GLB-007)
+
+`glb-map-properties` inspects ONLY user-explicit local Python files via `ast.parse`, without importing/executing the user's addon, dynamic property registration, or Blender GUI. Recognize only syntactically explicit `bpy.props` constructor declarations at class scope; do not infer that a match is actually registered or geometrically relevant.
+
+Report exact declaration-name matches separately from unmatched candidates. Treat every match as requiring human review. Do not infer a numeric correction from GLB bounds, infer a source code change, or automatically apply settings. Strip source body, default values, local filenames and absolute paths from output; only anonymous source labels/class names/line numbers/property constructor metadata may be recorded. The report must stay exclusively under ignored `reports/latest/`, never overwritten and never published. Keep private user models and addons entirely out of the public repository.
+
+Synthetic fixtures in CI are repository-authored and are not user input. Document Python/Windows/Blender CI evidence accurately; retain official release last_verified at v0.17.0 until a verified release. Additional workflow details: `docs/GLB_PROPERTY_MAPPING.md`.
