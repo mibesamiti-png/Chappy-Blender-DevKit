@@ -28,3 +28,9 @@
 これは**合成ジェネレーター内部の限定的な因果実験**であり、実際のユーザー製アドオンの任意プロパティを変更して良くなると断定するものではない。また設定候補の順位、根拠の確信度、機構の物理強度、印刷公差、内部空洞の一致を証明しない。
 
 GLB-021はレビュー用`partial`を維持する。任意の実データ・プライベートコードについては別途ユーザーの許可とローカル検証が必要であり、GLB-022の反復的な自動変更を本実験の成功と取り違えない。
+
+## 合成実験の確認結果（2026-11-07）
+
+テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
+
+Blender3バージョンの合成GLB比較で、ソケット径0.78の差分は検出され、径1.70の参照設定に再生成したモデルは観測差分0。径0.78を維持したままボール位置だけ変更してもソケット差分は残り、ボールの差分も別途観測。入力GLBのSHA-256不変も確認。**ここで検証した因果関係はCBDKが固定値を使って生成する合成モデルのみ**。実際のユーザー製アドオンの設定値や原因を自動判定したわけではない。
