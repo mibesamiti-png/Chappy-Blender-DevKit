@@ -131,13 +131,25 @@ def main():
     if "--" not in sys.argv:
         raise RuntimeError("Expected trusted fixture output directory")
     args = sys.argv[sys.argv.index("--") + 1:]
-    if len(args) != 1:
-        raise RuntimeError("Expected one output directory")
-    out = Path(args[0]).resolve()
-    out.mkdir(parents=True, exist_ok=True)
-    for variant in ("reference", "identical", "narrow", "shifted", "uncapped",
-                    "narrow_placebo"):
-        export(out / (variant + ".glb"), variant)
+    allowlist = ("reference", "identical", "narrow", "shifted", "uncapped",
+                 "narrow_placebo")
+    if len(args) == 1:
+        variants = allowlist
+    elif len(args) == 3 and args[1] == "--single" and args[2] in allowlist:
+        # GLB-022's fixed trial runner regenerates each candidate in turn.
+        # Arbitrary source scripts / numeric values are not supported.
+        variants = (args[2],)
+    else:
+        raise RuntimeError("Only CBDK-owned allowlisted synthetic trial IDs accepted")
+    out = Path(args[0]).absolute()
+    if out.is_symlink() or out.exists():
+        raise RuntimeError("Synthetic output directory must be new")
+    out.mkdir(parents=True, exist_ok=False)
+    for variant in variants:
+        target = out / (variant + ".glb")
+        if target.exists() or target.is_symlink():
+            raise RuntimeError("Never overwrite source GLB")
+        export(target, variant)
     print("CBDK_JOINT_MVP_FIXTURES_PASS")
 
 
