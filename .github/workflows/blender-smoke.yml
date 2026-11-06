@@ -608,7 +608,7 @@ jobs:
             "$root/inputs" 2>&1 | tee "reports/ci/joint_mvp_fixture.log"
           grep -F 'CBDK_JOINT_MVP_FIXTURES_PASS' "reports/ci/joint_mvp_fixture.log"
           sha256sum "$root/inputs/"*.glb > "$root/source_sha256.txt"
-          for mode in identical narrow shifted uncapped; do
+          for mode in identical narrow shifted uncapped narrow_placebo; do
             python -m cbdk glb-diff-visualize \
               "$root/inputs/reference.glb" "$root/inputs/$mode.glb" \
               --blender "$BLENDER_PATH" \
@@ -616,6 +616,7 @@ jobs:
           done
           python scripts/verify_glb_joint_mvp.py "$root"
           python scripts/verify_glb021_joint_review.py "$root"
+          python scripts/verify_glb021_synthetic_counterfactual.py "$root"
           sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
 
