@@ -911,3 +911,12 @@ Chromium CIはUbuntu24.04でPlaywrightを導入し、CBDK自作の合成2部品�
 コードSHA `38057b1da49eeb61020664c4923ced2b2bad8406`： [Python 42279824321](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824321)、[Windows 42279824307](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824307)、[Blender 4.4.3/4.5.15/5.2.1 42279824378](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824378)、[Windows kit 42279824398](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824398)、[引き継ぎ 42279824427](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824427)、[Chromium GUI 42279824304](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824304) **全6系統success**。
 
 合成GLB上で追加24点の数値監査と匿名部品別統計の整合が確認できた。ヘッドレスChromiumで、人工的に感度フラグを付けた合成ビューの紫枠表示切替を実際に検証。**フラグなしを全域検証済みと主張しない**。私有大規模モデル/小穴・空洞の完全検出/真の部品同一性は未検証。GLB-020の一部実装を維持。
+
+## 2026-11-07 GLB-020 第6段階 — 境界エッジの補助解析
+
+- `cbdk/glb_boundary_audit.py` を追加。各匿名メッシュ部品の三角形を世界座標で近接統合し、1面だけが接する境界エッジ、2面が共有する辺、3面以上が共有する非多様体候補を**数値として観測**する（512面/64部品の上限維持）。
+- `cbdk/glb_part_match.py`：位置や大きさが似ていても境界の有無・非多様体の観測が食い違う場合、単独の対応候補を確定的に提示せず `ambiguous` に降格する。`topology_review_required`を明示し、候補が複数・不在の場合と区別する。
+- `scripts/blender_glb_diff_visualize.py` / `cbdk/glb_diff_visualize.py` / `cbdk/glb_diff_viewer.py`：参照・生成の匿名部品別エッジ集計を`review.json`に加え、ローカルHTMLの部品選択に境界数と注意表示を追加。JSONには元頂点、元部品名、パスは含めない。
+- `tests/test_glb_boundary_audit.py` / `tests/test_glb_part_match.py`：閉じた四面体0本、1面欠損の四面体3本、非多様体候補、近接頂点、部品不整合入力をテスト。
+- `scripts/blender_make_glb_boundary_fixture.py` と Blender CI：自作の閉/開四面体を実GLBとして書き出し、再読込して境界数と、対応候補を曖昧と判定することを検証。Chromium CIで部品セレクターの境界数表示も確認。
+- **注意**：境界エッジ0本は閉曲面や穴無しの証明ではない。近接座標の統合は数値近似であり、意図的な開口とバグは区別できない。対応部品の同一性・内部空洞・完全体積一致も未検証。正式v0.17.0、ドラフトPR #25、GLB-020一部実装を維持。詳しくは`docs/GLB_BOUNDARY_AUDIT.md`。
