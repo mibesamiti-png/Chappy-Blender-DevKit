@@ -56,6 +56,29 @@ class PartCandidatesTests(unittest.TestCase):
             [["part_002"], ["part_001"]],
         )
 
+    def test_closed_vs_open_part_cannot_be_a_confident_match(self):
+        a, b, c, d = ((0., 0., 0.), (1., 0., 0.),
+                       (0., 1., 0.), (0., 0., 1.))
+        closed = [[a, b, c], [a, d, b], [a, c, d], [b, d, c]]
+        open_part = closed[1:]
+        result = suggest_spatial_part_matches(
+            closed, open_part, [4], [3],
+        )
+        row = result["reference_parts"][0]
+        self.assertEqual(row["status"], "ambiguous")
+        self.assertTrue(row["topology_review_required"])
+        self.assertEqual(row["candidate_part_ids"], ["part_001"])
+        self.assertEqual(result["unpaired_candidate_part_ids"], ["part_001"])
+        self.assertFalse(result["cross_file_part_identity_proven"])
+
+    def test_equal_open_edge_states_do_not_block_spatial_candidate(self):
+        result = suggest_spatial_part_matches(
+            [triangle(0.)], [triangle(.03)], [1], [1],
+        )
+        row = result["reference_parts"][0]
+        self.assertEqual(row["status"], "suggested")
+        self.assertFalse(row["topology_review_required"])
+
     def test_rejects_invalid_parts_and_nonfinite_coordinates(self):
         faces = [triangle()]
         for a, b in (
