@@ -55,7 +55,7 @@
 | `GLB-008` | Blenderプロパティ候補の静的参照・書き込み追跡 | 実装済 | Blender CI | AST-onlyで同名属性へのread/write/read_write/deleteの可能性を匿名ソース、関数、行番号、件数で出力。PR #25実装commit c640ad06でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1の合成fixture・kit・引き継ぎCI全成功。受信オブジェクトの実体と実際の形状への影響は未検証 |
 | `GLB-009` | プロパティ宣言と同クラスself参照を別オブジェクトの参照から区別 | 実装済 | Blender CI | 匿名ソース/同クラスself参照と別クラス・別オブジェクト参照をAST上区別しread/write等を全件集計。PR #25の実装commit 2c000dadでPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・kit・handoff CI全成功。宣言プロパティの実体同一/登録・ジオメトリ効果は未検証 |
 | `GLB-010` | プロパティ式からメッシュ生成APIまでの構文上の経路を追跡 | 一部実装 | 未検証 | bpy.ops.meshのプリミティブ、bmesh.opsの一部、object寸法等へselfプロパティまたは直線的ローカル別名が引数として届くAST上の経路を検出。関数内共起のみでは判定しない。分岐/ループ/関数間は未追跡、実際の形状効果は未証明。新規20回帰テスト・Blender3版合成fixtureを追加、現head CI成功確認前 |
-| `GLB-011` | プロパティ値からBoolean/Bevel/Solidify等のモディファイア設定までAST上で追跡 | 一部実装 | 未検証 | 明示したソースの同クラスselfプロパティ/直線ローカル別名から、modifier.width/thickness/operation/object/segments等の代入/複合代入まで静的経路を報告。modifier実体は未検証であり形状への因果効果は主張しない。追加15回帰テストとBlender3版合成fixture、現head CI結果確認待ち |
+| `GLB-011` | プロパティ値からBoolean/Bevel/Solidify等のモディファイア設定までAST上で追跡 | 実装済 | Blender CI | 直線的selfプロパティ/別名からmodifier.width/thickness/operation/object等の代入・複合代入までAST経路を検出。PR #25 commit b1a57e57のPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1合成fixture・kit・handoff CI全成功。実際のモディファイア実体・形状効果は未検証 |
 
 ## 既知の問題・制約
 
