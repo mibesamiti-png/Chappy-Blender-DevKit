@@ -164,3 +164,11 @@ CIブロッカー Issue #19 のため、この追加機能のPython/Windows/Blen
 ### Silhouette regression
 
 GLB scene metadata schema 4では、Blender実メッシュを固定正射影して32x32 binary silhouette signatureを記録する。sceneは7方向、部品はfront/right/top/isoを対象とする。`glb-compare` はIoUを計算し、既定0.90未満を形状差として扱う。signatureは証拠用であり、画像生成AIの推測ではない。三角形数上限を超えたsignatureは`available=false`として明示し、成功扱いにすり替えない。
+
+## v0.18 GLB形状診断：量的な根拠と未対応データの扱い
+
+`glb-diagnose` は `glb-compare`/ `glb-regression` の比較JSONだけを入力とする**レビュー用原因仮説**。シーンの複数方向に現れたシルエット差分を一つの全体候補へ集約し、部品の輪郭差は部品ID/名前ごとに区別する。`hypotheses[].evidence_summary` に影響視点、最悪IoU、最大相対誤差、欠落部品の相対体積割合、各severityの差分件数を出力する。
+
+正常性判定は比較側の`passed`（bool）・`summary.errors`と`differences`の重大度集計が一致する場合だけ受け付ける。未知のコードも捨てずに`unsupported_difference_codes`に記録し、警告や情報だけでもレビュー対象とみなす。重複JSONキー、非有限/負の指標、0..1域外のIoU・体積割合、異常なサイズの証拠は拒否する。
+
+生成されたレポートは**原因候補であり、元形状との完全一致の証明ではない**。32x32シルエットは細穴・内部空間・サブグリッドの差分を見逃し得る。結果を根拠にコードを自動変更/承認/マージする機能は作らず、ユーザーのGLBデータはGitHubに上げない。v0.18 PR #25のCI検証中はGLB-005を部分実装・未検証として記録する。
