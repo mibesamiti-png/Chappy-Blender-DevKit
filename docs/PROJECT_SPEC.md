@@ -358,3 +358,11 @@ GUI試験は合成モデルのみ。水色境界線は近接統合とCanvas2D X-
 [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898364)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898499)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898512)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898604)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898325)・[Chromium実GUI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898701) **全6系統成功**。
 
 **GLB-020のMVPは合格**だが、正確な実モデルの穴・内部空間・完全一致や大規模メッシュは未保証。状態は`partial`、詳細機能追加は凍結。次は`GLB-021`を開始予定（この時点では未実装）。ユーザー私有アドオンの無断実行/編集なし、v0.18ドラフトPRを維持。
+
+## GLB-021 第1段階：GLB-020観測から設定候補レビューへ（2026-11-07）
+
+GLB-020の匿名部品ごとの集計JSON（赤/黄の観測面数・開放境界数）を、既存の`glb_property_map.py` / ASTによる構文参照・形状フロー照合へ接続。利用者の明示的な`--source` PythonファイルのみをASTで構文解析し、**ソースコードを実行しない**。任意の`--role part_003=socket`は**人手で付けた未認証の部品役割**であり、GLBメッシュ名から推測しない。
+
+候補の設定名・宣言行・構文的な使用箇所はレビュー用の**非公開ローカルJSON**に限定し、CLI標準出力やGitHub/Notionに元ソース本文/パス/既定値を送らない。原因・真の部品対応・正しい修正値・Blender登録状態の自動確定はしない。コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
+
+状態はGLB-021`partial`/BlenderCI、GLB-022`not_implemented`。GLB-020の高精度化は凍結を維持し、次のGLB-021の人間レビューと許可済み合成検証を優先。[仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。
