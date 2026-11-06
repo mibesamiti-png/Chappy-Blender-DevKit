@@ -182,3 +182,13 @@ GLB scene metadata schema 4では、Blender実メッシュを固定正射影し�
 原因仮説に未知カテゴリが含まれたら人手確認、比較差分に未対応コードが含まれたら`unmapped_difference_codes`として残す。設定候補のない状況でも「根拠がない」と正直に示す。レビューが必要な場合は「確認→人手で1箇所修正→GLB再生成→比較→Python/Windows/Blender CI」というチェック手順を提示する。
 
 新たな20 Python回帰テストと3版Blenderの合成GLB CIを追加。未知の元アドオン実行、コード修正、自動承認、GitHubへの私有GLBアップロードは禁止。正式リリースv0.17.0の`last_verified`は、v0.18の正式リリースまで変更しない。
+
+## v0.18 開発中：GLB修正候補と実アドオンのAST静的プロパティ照合（GLB-007）
+
+`python -m cbdk glb-map-properties <repair_plan.json> --source <local.py> --output reports/latest/glb_property_mapping.json` を追加。GLB-006の原因別設定候補群について、**ユーザーが明示指定したローカルPythonファイル**だけを`ast.parse`で構文解析し、Blender `bpy.props` のクラスレベル宣言を照合する。最大16ファイル、各1MiB。ディレクトリ全自動走査や元アドオンのimport/exec、Blenderでの未確認コード実行は禁止。
+
+照合は候補名と宣言プロパティ名が**完全一致**した場合だけ`exact_declaration_name_only`と記録。別名importと`bpy.props`形式にも対応。報告には匿名ファイルラベル（`source_1.py`）、クラス名・行番号・Property種別を付け、コード本文、デフォルト値、ソース絶対パス・実ファイル名は記録しない。名前が一致しても実際のBlender登録やジオメトリへの影響、正しい修正値を保証しない（`registered_in_blender: not_checked`、`validated_geometry_effect: false`）。見つからなくても設定がないとは断定しない。
+
+レポート保存先はGit管理対象外の`reports/latest/`のみ。絶対出力パス・上位参照・既存ファイル上書き・symlink外部出力を拒否。現在のプランが改ざんされている場合、承認済み偽装フラグや不正な候補名・巨大ソースを拒否する。私有ソース本文/値は公開GitHubにコミットしない。
+
+`tests/test_glb_property_map.py`の24件回帰テストと、3版Blenderの合成GLBから生成した修正プランに**合成**Blenderプロパティ宣言を照合するCIを追加。詳細は`docs/GLB_PROPERTY_MAPPING.md`。次タスクは人手でレビュー済みの宣言と実際の形状への影響を確認することであり、自動変更ではない。
