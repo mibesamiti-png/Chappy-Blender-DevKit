@@ -21,6 +21,7 @@ from cbdk.glb_diff_colors import (  # noqa: E402
 )
 from cbdk.glb_surface_distance import MAX_TRIANGLES  # noqa: E402
 from cbdk.glb_diff_viewer import render_local_diff_viewer  # noqa: E402
+from cbdk.glb_part_match import suggest_spatial_part_matches  # noqa: E402
 
 MARKER = "CBDK_GLB_DIFF_VISUALIZE_PASS "
 
@@ -145,6 +146,9 @@ def main():
     )
     (output_dir / "compare_viewer.html").write_text(html, encoding="utf-8")
 
+    part_matches = suggest_spatial_part_matches(
+        ref_faces, cand_faces, ref_counts, cand_counts,
+    )
     report = {
         "schema_version": 1,
         "kind": "cbdk_glb_diff_visualization",
@@ -165,6 +169,7 @@ def main():
         "parts": {"reference": ref_parts, "candidate": cand_parts},
         "part_id_scheme": "anonymous_sequential_by_imported_object_name",
         "cross_file_part_identity_proven": False,
+        "part_match_candidates": part_matches,
         "reference_sampled_max": result["reference_sampled_max"],
         "candidate_sampled_max": result["candidate_sampled_max"],
         "thresholds": result["thresholds"],
@@ -182,6 +187,7 @@ def main():
             "Face colors measure 24 sparse samples, not an exact or complete surface",
             "Anonymous part indexes identify meshes within one GLB only",
             "Same part index across files is NOT verified object correspondence",
+            "Spatial part candidates are uncertain heuristics, not verified identity",
             "Unmeasured regions are not localized or uniquely colored",
             "Only local derived GLBs contain private geometry; JSON is aggregate-only",
             "Source and candidate must share a coordinate system and units",
