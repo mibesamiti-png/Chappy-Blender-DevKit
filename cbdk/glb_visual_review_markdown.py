@@ -84,7 +84,7 @@ def render_review_markdown(report: dict) -> str:
         part = row.get("target")
         obs = row.get("visual_observation")
         if (not isinstance(part, str) or not _PART.fullmatch(part)
-                or part == "part_000" or part in seen
+                or not 1 <= int(part[5:]) <= 64 or part in seen
                 or not isinstance(obs, dict)
                 or obs.get("candidate_part_id") != part
                 or obs.get("reference_candidate_identity_proven") is not False
