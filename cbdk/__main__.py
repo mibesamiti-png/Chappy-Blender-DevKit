@@ -21,6 +21,7 @@ from .registration_draft import propose_registration, write_draft
 from .registration_scaffold import scaffold_from_saved_draft
 from .glb_inspector import write_glb_inspection
 from .glb_render import render_glb_preview
+from .glb_quick_render import quick_render_glb
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -147,6 +148,15 @@ def main(argv=None) -> int:
         default='reports/latest/glb_structure.json',
         help='Static structure JSON output',
     )
+
+
+    glb_quick_cmd = sub.add_parser(
+        'glb-quick-preview',
+        help='Render a lower-fidelity GLB preview without Blender (optional dependencies)',
+    )
+    glb_quick_cmd.add_argument('source', help='Local .glb file')
+    glb_quick_cmd.add_argument('--output', default='reports/latest/glb_quick_preview')
+    glb_quick_cmd.add_argument('--resolution', type=int, default=640)
 
     glb_preview_cmd = sub.add_parser(
         'glb-preview',
@@ -287,6 +297,15 @@ def main(argv=None) -> int:
                 'output': str(Path(args.output)),
                 'rendered': False,
             }, ensure_ascii=False, indent=2))
+            return 0
+
+        if args.command == 'glb-quick-preview':
+            report = quick_render_glb(
+                args.source,
+                args.output,
+                resolution=args.resolution,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'glb-preview':
             output = Path(args.output)
