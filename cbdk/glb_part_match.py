@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 
 from .glb_diff_colors import MAX_PARTS
+from .glb_boundary_audit import boundary_audit
 from .glb_surface_distance import _validated_triangles
 
 METHOD = "anonymous_spatial_centroid_extent_triangle_heuristic_v1"
@@ -22,6 +23,7 @@ def _features(faces, counts):
             or sum(counts) != len(faces)):
         raise ValueError("Invalid original per-part face layout")
     result = []
+    edge_parts = boundary_audit(faces, counts)["parts"]
     start = 0
     for n in counts:
         pts = [p for f in faces[start:start + n] for p in f]
@@ -31,6 +33,9 @@ def _features(faces, counts):
             "center": tuple((lower[k] + upper[k]) / 2.0 for k in range(3)),
             "size": tuple(upper[k] - lower[k] for k in range(3)),
             "triangles": n,
+            "observed_boundary": edge_parts[len(result)]["observed_boundary"],
+            "observed_nonmanifold_edge": edge_parts[len(result)]["observed_nonmanifold_edge"],
+            "weld_collapsed_triangles": edge_parts[len(result)]["weld_collapsed_triangles"],
         })
         start += n
     return result
@@ -88,7 +93,13 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
             and ref_margin >= MIN_MARGIN
             and reverse_margin >= MIN_MARGIN
         )
-        if strong:
+        topo_review = (
+            ref[i]["observed_boundary"] != cand[best_j]["observed_boundary"]
+            or ref[i]["observed_nonmanifold_edge"] != cand[best_j]["observed_nonmanifold_edge"]
+            or ref[i]["weld_collapsed_triangles"] > 0
+            or cand[best_j]["weld_collapsed_triangles"] > 0
+        )
+        if strong and not topo_review:
             used.add(best_j)
             status = "suggested"
             suggestions = [f"part_{best_j + 1:03d}"]
@@ -108,6 +119,7 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
             "status": status,
             "candidate_part_ids": suggestions,
             "normalized_score": round(best, 6),
+            "topology_review_required": bool(topo_review),
         })
     return {
         "method": METHOD,
@@ -115,6 +127,7 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
         "shared_coordinate_frame_required": True,
         "cross_file_part_identity_proven": False,
         "auto_apply": False,
+        "topology_guard": "observed_boundary_nonmanifold_disagreement_demotes_suggestion",
         "thresholds": {"max_normalized_score": MAX_SCORE, "min_margin": MIN_MARGIN},
         "reference_parts": rows,
         "unpaired_candidate_part_ids": [
