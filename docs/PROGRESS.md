@@ -850,3 +850,12 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 実装と記録のコミット`5b6196a59f86318128c768507fea53237e3a6e11`では、**全5ワークフローがsuccess**：Python3版 [42258076642](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076642)、Windows PowerShell2版 [42258076781](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076781)、Blender4.4.3/4.5.15/5.2.1 [42258076658](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076658)、Windows kit [42258076681](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076681)、引き継ぎ [42258076822](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076822)。旧Windows専用テストのパス区切り前提は修正済み。
 
 `glb-surface-review`の2種類の実GLBペアで、開口の検出と同じ形の別三角分割に差がないことを確認。GLB-019は実装済/Blender CI確認済み。報告の`status=review_only`は「観測した形状差のサンプル結果」であり、0も完全一致・内部空洞なし・安全な自動修正を意味しない。512面超はskippedであり大規模GLBの自動解析は今後の課題。これはコミット5b6196a5の実測であり、後続の文書記録コミットのCIとは区別する。PR #25ドラフト/正式v0.17.0維持。
+
+## 2026-11-07 GLB-020 — 形状差分の3D可視化（試作実装）
+
+- `cbdk/glb_diff_colors.py`: 既存の安全制限付きBVH距離測定により、元の三角面順を保って参照→生成／生成→参照の方向ごとに24点サンプル最大誤差を集計。共有AABB対角線1%未満=灰、1〜5%=黄、5%以上=赤。サンプル密度・見逃し制約を明示。
+- `cbdk/glb_diff_visualize.py`, `scripts/blender_glb_diff_visualize.py`: オプトインの`glb-diff-visualize`CLIから、固定Blenderスクリプトだけを実行し2つの着色GLBと生座標なし`review.json`をローカル新規フォルダに生成。元GLB・私有アドオンは変更せず、レビュー専用。
+- `tests/test_glb_diff_visualize.py`: 同一形状／位置ずれ／面順／無効入力／プライバシー／上書き防止／ランナー検証のテストを追加。Windowsパス区切りのテスト差異を修正。
+- `.github/workflows/blender-smoke.yml`: CBDK自作の合成2組のGLBを色分け、統計検証後、着色出力をBlenderへ再インポートして材料を確認。既存GLB-019の計測と併走。
+- 実装コードのテストSHA `01fff17403b931390c1813dcce4577363eb9077f` で[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143616) / [Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143956) / [Windows kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143564) / [handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143732) **成功**。Windowsテストは同SHAでパス区切り差異により失敗（[run 42264143652](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143652)）。その後コミット `91e8b6a2` でテストのパス扱いを修正し、最新HEADのCI再確認を行う。
+- **ステータスは一部実装**。色付きGLB書き出しは動いたが、オブジェクト別選択・連動比較ビュー・未測定部の表示・より大きな実ユーザーGLBは未実装。正式リリースはv0.17.0、ドラフトPR #25維持。
