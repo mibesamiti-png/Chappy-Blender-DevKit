@@ -414,3 +414,11 @@ GLB-020の全体双方向最大サンプル距離を再利用し、CBDK自作合
 テスト対象コードSHA `44e15f8f6664fe29e06810fd06d8d73dda70bec6`：[Python 42307811087](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811087)、[Windows 42307810687](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810687)、[Blender4.4.3/4.5.15/5.2.1 42307810797](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810797)、[Windows Kit 42307810828](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810828)、[Handoff 42307811040](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811040)、[Chromium 42307810743](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810743) **全6系統成功**。
 
 **注意**：連続的な自由探索ではなくCBDK固定試験。距離はモデル全体のサンプル最大値で、厳密なHausdorff距離でもソケットだけの距離でもなく、実ユーザーアドオンの最適値は確定できない。GLB-022 partial、v0.18ドラフトPR #25維持。[検証仕様](GLB022_PROGRESSIVE_SYNTHETIC.md)。
+
+## GLB-022 第4段階：制限された範囲で数値候補を自動生成（2026-11-07）
+
+CBDK自作のソケットの開口直径0.78〜1.70を4等分し、**1.01・1.24・1.47・1.70**を数値として算術生成。BlenderでGLBを各候補ごとに新しく生成し、GLB-020の全体双方向最大サンプル距離と他部品の観測面数で改善を判断。試行回数上限・未完了状態・上書き禁止・元データSHA-256を検証。
+
+テスト対象コード SHA `23e9dec5d313468a70cc3bab7a5bb57fc090a8b3`：[Python 42309145079](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145079)、[Windows 42309145003](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145003)、[Blender4.4.3/4.5.15/5.2.1 42309145076](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145076)、[Windows kit 42309145019](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145019)、[引き継ぎ 42309145005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145005)、[Chromium 42309145006](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145006) **全6系統success**。
+
+値はCBDK合成モデルの安全範囲に固定。測定に適応して値を決める一般探索や、ユーザーのアドオンの実行/自動修正ではない。GLB-022はpartial、v0.18ドラフトPR #25維持。[詳細](GLB022_GENERATED_GRID.md)。
