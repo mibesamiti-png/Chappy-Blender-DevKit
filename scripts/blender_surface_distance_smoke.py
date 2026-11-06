@@ -1,6 +1,6 @@
 """Blender CI-only GLB roundtrip evidence for bounded triangle surface distance.
 
-This script constructs FOUR CBDK-authored planar meshes. Nothing in this script
+This script constructs FIVE CBDK-authored planar meshes. Nothing in this script
 opens, imports, evaluates, or runs any user-supplied addon or geometry.
 """
 from __future__ import annotations
@@ -46,6 +46,18 @@ def _mesh_fixture(variant):
             j = (i + 1) % 4
             faces.extend(((i, j, j + 4), (i, j + 4, i + 4)))
         return _outer(0.0) + inner, faces
+    if variant == "grid_256":
+        # 256 spatially separated triangles to test actual GLB import and
+        # BVH pruning. Not a production-sized user asset.
+        verts, faces = [], []
+        for y in range(16):
+            for x in range(16):
+                ox, oy = x * 2.75, y * 2.75
+                idx = len(verts)
+                verts.extend(((ox, oy, 0.0), (ox + 1.0, oy, 0.0),
+                              (ox, oy + 1.0, 0.0)))
+                faces.append((idx, idx + 1, idx + 2))
+        return verts, faces
     raise RuntimeError("Unknown CBDK-owned fixture")
 
 
@@ -96,7 +108,8 @@ def main():
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     surfaces = {}
-    names = ("filled_main", "filled_other", "with_open_hole", "raised")
+    names = ("filled_main", "filled_other", "with_open_hole", "raised",
+             "grid_256")
     for variant in names:
         _clear()
         _create(variant)
@@ -113,6 +126,16 @@ def main():
     same = compare_triangle_surfaces(baseline, surfaces["filled_other"])
     hole = compare_triangle_surfaces(surfaces["with_open_hole"], baseline)
     raised = compare_triangle_surfaces(baseline, surfaces["raised"])
+    grid = compare_triangle_surfaces(surfaces["grid_256"], surfaces["grid_256"])
+    exact_evaluations = grid["reference_to_candidate"]["triangle_distance_evaluations"]
+    brute_evaluations = grid["reference_to_candidate"]["brute_force_evaluations"]
+    if len(surfaces["grid_256"]) != 256:
+        raise AssertionError("Imported synthetic benchmark GLB lost its triangles")
+    if grid["symmetric_mean"] != 0.0 or grid["symmetric_sampled_max"] != 0.0:
+        raise AssertionError("256-face identical mesh must have zero sampled distance")
+    if not 0 < exact_evaluations < brute_evaluations // 4:
+        raise AssertionError("BVH did not reduce exact triangle checks by at least 4x")
+
 
     if same["symmetric_mean"] > 1e-6 or same["symmetric_sampled_max"] > 1e-6:
         raise AssertionError("Identical planar surface differs after alternate triangulation")
@@ -124,9 +147,9 @@ def main():
         raise AssertionError("Missing center region is too weakly represented")
     if not 0.249 <= raised["symmetric_mean"] <= 0.251:
         raise AssertionError("World-space Z displacement was not measured correctly")
-    if any(x["safety"]["auto_approves"] for x in (same, hole, raised)):
+    if any(x["safety"]["auto_approves"] for x in (same, hole, raised, grid)):
         raise AssertionError("Sampled distance must never auto-approve geometry")
-    if any(x["exact_surface_equivalence_verified"] for x in (same, hole, raised)):
+    if any(x["exact_surface_equivalence_verified"] for x in (same, hole, raised, grid)):
         raise AssertionError("Sampled comparison cannot prove exact equivalence")
 
     output = {
@@ -141,12 +164,15 @@ def main():
             "open_hole_same_outer_bounds_detected": True,
             "real_world_z_offset_detected": True,
             "all_four_glbs_roundtripped": True,
+            "all_five_glbs_roundtripped": True,
+            "bvh_256_face_glb_zero_and_pruned": True,
             "no_exact_surface_equivalence_claims": True,
         },
         "comparisons": {
             "alternate_triangulation": same,
             "open_hole": hole,
             "raised": raised,
+            "grid_256": grid,
         },
         "safety": {
             "user_addon_executed": False,
@@ -155,10 +181,10 @@ def main():
             "auto_approves": False,
         },
         "limitations": [
-            "Only four repository-authored planar GLBs were evaluated in Blender",
+            "Only five repository-authored planar GLBs were evaluated in Blender",
             "Open planar cutout detection is not enclosed-cavity or watertightness proof",
             "Sampled maximum is not an exact Hausdorff distance",
-            "Meshes are small: the bounded CPU comparator rejects >128 triangles",
+            "Bounded CPU comparator rejects >512 triangles; no large asset benchmark yet",
         ],
     }
     (root / "surface_distance_experiment.json").write_text(
@@ -170,6 +196,9 @@ def main():
         "alternate_mean": same["symmetric_mean"],
         "hole_mean": hole["symmetric_mean"],
         "offset_mean": raised["symmetric_mean"],
+        "bvh_grid_triangles": len(surfaces["grid_256"]),
+        "bvh_triangle_evaluations": exact_evaluations,
+        "brute_triangle_evaluations": brute_evaluations,
     }))
 
 
