@@ -257,11 +257,25 @@ def build_visual_property_review(
 def review_visual_file(review_path: str | Path, sources: list[str | Path],
                        output: str | Path = "reports/latest/glb_visual_property_review.json",
                        *, role_labels: list[str] | None = None,
-                       root: Path | None = None) -> dict:
+                       root: Path | None = None,
+                       markdown: bool = False) -> dict:
     roles = parse_role_labels(role_labels)
     # Existing reader rejects symlinks, oversized inputs, duplicate JSON keys,
     # nonfinite JSON constants, and does not execute input source.
     report = build_visual_property_review(_read_json(review_path), sources, roles=roles)
     kwargs = {} if root is None else {"root": root}
+    if type(markdown) is not bool:
+        raise PropertyMappingError("Markdown flag must be boolean")
+    if markdown:
+        # Validate and preflight the optional private sheet BEFORE writing JSON.
+        from .glb_visual_review_markdown import (
+            markdown_destination, render_review_markdown,
+            write_private_review_markdown,
+        )
+        md_path = Path(output).with_suffix(".md")
+        markdown_destination(md_path, **kwargs)
+        render_review_markdown(report)
     write_local_mapping(report, output, **kwargs)
+    if markdown:
+        write_private_review_markdown(report, md_path, **kwargs)
     return report
