@@ -366,3 +366,11 @@ GLB-020の匿名部品ごとの集計JSON（赤/黄の観測面数・開放境�
 候補の設定名・宣言行・構文的な使用箇所はレビュー用の**非公開ローカルJSON**に限定し、CLI標準出力やGitHub/Notionに元ソース本文/パス/既定値を送らない。原因・真の部品対応・正しい修正値・Blender登録状態の自動確定はしない。コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
 
 状態はGLB-021`partial`/BlenderCI、GLB-022`not_implemented`。GLB-020の高精度化は凍結を維持し、次のGLB-021の人間レビューと許可済み合成検証を優先。[仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。
+
+## GLB-021 第2段階：日本語のレビューチェックリスト（非公開）
+
+`glb-visual-property-review --markdown` により、従来のreview-only JSONと同じ名前のMarkdownをローカルの `reports/latest` に**新規作成のみ**で出力する。観測した黄/赤面数・境界辺数と、ASTで完全一致した候補名、クラス名・匿名化されたソースラベル・宣言行、構文的な参照/形状処理経路の件数を分離して表示し、人手での再確認事項を添える。
+
+コードの実行、値の変更、設定の因果判定や推奨数値の作成は行わない。「同じ名前のプロパティが存在する」と「これが原因」を同一視しない。Markdownは候補プロパティ名を含むため**プライベート**であり、公開GitHub/Notion、標準出力、成果物アップロードには使用しない。出力先のパストラバーサル、既存ファイル、外部へ解決されるシンボリックリンクは拒否する。
+
+GLB-021のステータスは一部実装のまま。詳細：[GLB-021仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。
