@@ -34,3 +34,11 @@ GLB-021はレビュー用`partial`を維持する。任意の実データ・プ�
 テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
 
 Blender3バージョンの合成GLB比較で、ソケット径0.78の差分は検出され、径1.70の参照設定に再生成したモデルは観測差分0。径0.78を維持したままボール位置だけ変更してもソケット差分は残り、ボールの差分も別途観測。入力GLBのSHA-256不変も確認。**ここで検証した因果関係はCBDKが固定値を使って生成する合成モデルのみ**。実際のユーザー製アドオンの設定値や原因を自動判定したわけではない。
+
+## 第5段階：ローカルでの合成変更履歴記録
+
+CBDK自作の合成GLBについて`cbdk/glb_synthetic_trial_history.py`を追加。固定試験`narrow`（狭窄）→`narrow_placebo`（無関係なボール移動）→`identical`（元の合成設定に復帰）を、**匿名部品ごとの観測黄赤面数・境界数**とともにローカルの`synthetic_trial_history.json`・`synthetic_trial_history.md`へ新規保存する。既存ファイルの上書きは拒否。意図しない試験名や嘘の因果保証、矛盾した数値なら出力しない。
+
+テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
+
+履歴の「改善」は**測定された面で差分が減った**という意味に限定し、メッシュ全体の正しさ、ユーザーの実際のアドオン設定の因果・適切な径を証明しない。ユーザーの元GLBやアドオンは読み込んだり実行しない。ローカルCIの履歴形式を汎用のGLB-022反復実験エンジンの実装完了と混同しない。詳細：[履歴とプライバシー仕様](GLB021_TRIAL_HISTORY.md)。
