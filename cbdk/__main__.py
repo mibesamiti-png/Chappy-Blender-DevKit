@@ -182,6 +182,7 @@ def main(argv=None) -> int:
     glb_compare_cmd.add_argument('--dimension-rel-tol', type=float, default=0.05)
     glb_compare_cmd.add_argument('--center-rel-tol', type=float, default=0.03)
     glb_compare_cmd.add_argument('--scene-rel-tol', type=float, default=0.05)
+    glb_compare_cmd.add_argument('--silhouette-iou-min', type=float, default=0.90)
 
     glb_regression_cmd = sub.add_parser(
         'glb-regression',
@@ -197,6 +198,7 @@ def main(argv=None) -> int:
     glb_regression_cmd.add_argument('--dimension-rel-tol', type=float, default=0.05)
     glb_regression_cmd.add_argument('--center-rel-tol', type=float, default=0.03)
     glb_regression_cmd.add_argument('--scene-rel-tol', type=float, default=0.05)
+    glb_regression_cmd.add_argument('--silhouette-iou-min', type=float, default=0.90)
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -368,6 +370,7 @@ def main(argv=None) -> int:
                 dimension_rel_tol=args.dimension_rel_tol,
                 center_rel_tol=args.center_rel_tol,
                 scene_rel_tol=args.scene_rel_tol,
+                silhouette_iou_min=args.silhouette_iou_min,
             )
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0 if report['passed'] else 1
@@ -383,6 +386,7 @@ def main(argv=None) -> int:
                 dimension_rel_tol=args.dimension_rel_tol,
                 center_rel_tol=args.center_rel_tol,
                 scene_rel_tol=args.scene_rel_tol,
+                silhouette_iou_min=args.silhouette_iou_min,
             )
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0 if report['passed'] else 1
