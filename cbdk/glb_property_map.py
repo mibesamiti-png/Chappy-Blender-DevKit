@@ -166,6 +166,10 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
     indexed: dict[str, list[dict]] = {}
     for prop in declarations:
         indexed.setdefault(prop["property"], []).append(prop)
+    # Read-only AST name traces complement declaration evidence but do not
+    # establish that a receiver points to that Blender property.
+    from .glb_property_usage import trace_property_references
+    traced = trace_property_references(sources, set(indexed))
     mapped = []
     for rec in recommendations:
         found, absent = [], []
@@ -176,6 +180,7 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
                     "candidate_family": candidate,
                     "match": "exact_declaration_name_only",
                     "declarations": hit,
+                    "possible_code_references": traced[candidate],
                     "requires_human_review": True,
                 })
             else:
@@ -194,6 +199,8 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
         "status": "review_only",
         "source_files_scanned": len(sources),
         "static_property_declarations_found": len(declarations),
+        "static_possible_attribute_references_found": sum(
+            evidence["possible_reference_count"] for evidence in traced.values()),
         "recommendation_count": len(mapped),
         "recommendations": mapped,
         "unmapped_difference_codes": plan.get("unmapped_difference_codes", []),
@@ -202,6 +209,7 @@ def map_repair_plan_properties(plan: dict, sources: list[str | Path]) -> dict:
             "Exact AST name matches do not prove property registration or geometry effect",
             "Unmatched families may be renamed, derived, dynamically registered or elsewhere",
             "No source snippets, default values or absolute paths are included",
+            "Attribute references are text matches: receiver binding and geometry effect are unverified",
         ],
         "safety": {
             "source_executed": False, "source_modified": False,
