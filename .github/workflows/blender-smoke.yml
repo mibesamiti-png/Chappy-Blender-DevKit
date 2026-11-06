@@ -289,6 +289,42 @@ jobs:
           fi
           echo "Trusted additive parameter GLB generation and roundtrip controls passed." >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Compare order-independent 3D surfaces and an open hole after synthetic GLB roundtrip
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci/surface_distance
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_surface_distance_smoke.py \
+            -- reports/ci/surface_distance \
+            2>&1 | tee reports/ci/surface_distance.log
+          grep -F 'CBDK_SURFACE_DISTANCE_PASS ' reports/ci/surface_distance.log
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/surface_distance')
+          report = json.loads((root / 'surface_distance_experiment.json').read_text())
+          assert report['kind'] == 'cbdk_trusted_glb_surface_distance_experiment', report
+          assert report['source'] == 'repository_authored_synthetic_only', report
+          assert len(report['variants']) == 4, report
+          assert all(report['checks'].values()), report
+          assert all(v is False for v in report['safety'].values()), report
+          a = report['comparisons']['alternate_triangulation']
+          h = report['comparisons']['open_hole']
+          t = report['comparisons']['raised']
+          assert a['symmetric_mean'] < 1e-6, a
+          assert h['candidate_to_reference']['mean'] > .01, h
+          assert h['symmetric_sampled_max'] > .10, h
+          assert 0.249 <= t['symmetric_mean'] <= 0.251, t
+          assert all(not v['exact_surface_equivalence_verified']
+                     and not v['watertight_solid_equivalence_verified']
+                     and not v['safety']['auto_approves']
+                     for v in (a, h, t)), report
+          for variant in report['variants']:
+              assert (root / (variant + '.glb')).stat().st_size > 100
+          PY
+          echo "Synthetic four-GLB surface-distance and planar-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
         run: |
