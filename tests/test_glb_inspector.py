@@ -145,6 +145,24 @@ class GLBInspectorTests(unittest.TestCase):
         self.assertEqual(report["meshes"][0]["name"], "Mesh_0")
         self.assertEqual(report["nodes"][1]["mesh_name"], "Mesh_0")
 
+    def test_reports_external_uri_references_without_loading_them(self):
+        path = self.root / "external.glb"
+        doc = self._doc()
+        doc["buffers"] = [
+            {"byteLength": 16, "uri": "geometry.bin"},
+            {"byteLength": 4, "uri": "data:application/octet-stream;base64,AAAA"},
+        ]
+        doc["images"] = [{"uri": "textures/diffuse.png"}]
+        make_glb(path, doc)
+        report = inspect_glb(path)
+        self.assertEqual(report["counts"]["buffers"], 2)
+        self.assertEqual(report["external_uris"], [
+            {"kind": "buffer", "index": 0, "uri": "geometry.bin"},
+            {"kind": "image", "index": 0, "uri": "textures/diffuse.png"},
+        ])
+        self.assertTrue(report["safety"]["external_uris_present"])
+        self.assertFalse(report["safety"]["loaded_external_uris"])
+
 
 if __name__ == "__main__":
     unittest.main()
