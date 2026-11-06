@@ -38,15 +38,18 @@ def _mesh(name, coords, triangles):
 
 
 def _ring(*, socket_opening_diameter=SOCKET_OPENING_REFERENCE,
-          missing_face=False, grid_only=False):
+          missing_face=False, grid_only=False, adaptive_only=False):
     """Four concentric 12-vertex rings form an annular hollow socket.
 
     Only the CBDK-owned explicit 0.78/1.70 synthetic control values are
     accepted; never take or execute arbitrary addon settings as fixture code.
     """
-    allowed = ((SOCKET_OPENING_REFERENCE, SOCKET_OPENING_DEFECT,
-                SOCKET_OPENING_INTERMEDIATE) if not grid_only
-               else tuple(float(v) for v in _generated_grid_values()))
+    if grid_only and adaptive_only:
+        raise ValueError("Synthetic fixture modes are mutually exclusive")
+    allowed = (tuple(v / 100 for v in range(79, 171)) if adaptive_only else
+               tuple(float(v) for v in _generated_grid_values()) if grid_only else
+               (SOCKET_OPENING_REFERENCE, SOCKET_OPENING_DEFECT,
+                SOCKET_OPENING_INTERMEDIATE))
     if (type(socket_opening_diameter) not in (float, int) or
             socket_opening_diameter not in allowed):
         raise ValueError("Synthetic socket experiment value is not allowlisted")
@@ -116,17 +119,18 @@ def _shaft():
 
 def export(target, variant, *, grid_diameter=None):
     if variant not in {"reference", "identical", "narrow", "shifted", "uncapped", "narrow_placebo",
-                       "narrow_mid", "narrow_mid_shifted", "grid_candidate"}:
+                       "narrow_mid", "narrow_mid_shifted", "grid_candidate", "adaptive_candidate"}:
         raise RuntimeError("Invalid fixture variant")
-    if (variant == "grid_candidate") != (grid_diameter is not None):
-        raise RuntimeError("Grid value is required only for grid_candidate")
+    if (variant in {"grid_candidate", "adaptive_candidate"}) != (grid_diameter is not None):
+        raise RuntimeError("Numeric value is required only for a test candidate")
     bpy.ops.wm.read_factory_settings(use_empty=True)
     ring = _ring(socket_opening_diameter=(
-        grid_diameter if variant == "grid_candidate" else
+        grid_diameter if variant in {"grid_candidate", "adaptive_candidate"} else
         SOCKET_OPENING_DEFECT if variant in {"narrow", "narrow_placebo"}
         else SOCKET_OPENING_INTERMEDIATE if variant in {"narrow_mid", "narrow_mid_shifted"}
         else SOCKET_OPENING_REFERENCE
-    ), missing_face=variant == "uncapped", grid_only=variant == "grid_candidate")
+    ), missing_face=variant == "uncapped", grid_only=variant == "grid_candidate",
+        adaptive_only=variant == "adaptive_candidate")
     ball = _ball(shifted=variant in {"shifted", "narrow_placebo", "narrow_mid_shifted"})
     _mesh("CBDK_SYNTH_Ball", *ball)
     _mesh("CBDK_SYNTH_Shaft", *_shaft())
@@ -154,8 +158,8 @@ def main():
         # GLB-022's fixed trial runner regenerates each candidate in turn.
         # Arbitrary source scripts / numeric values are not supported.
         variants = (args[2],)
-    elif (len(args) == 5 and args[1:4] ==
-          ["--single", "grid_candidate", "--socket-diameter"]):
+    elif (len(args) == 5 and args[1:3] ==
+          ["--single", "grid_candidate"] and args[3] == "--socket-diameter"):
         # This is a bounded test fixture, not a free-form numeric input API.
         try:
             raw = Decimal(args[4])
@@ -165,6 +169,18 @@ def main():
             raise RuntimeError("Out-of-grid synthetic socket value refused")
         grid_diameter = float(raw)
         variants = ("grid_candidate",)
+    elif (len(args) == 5 and args[1:4] ==
+          ["--single", "adaptive_candidate", "--socket-diameter"]):
+        try:
+            raw = Decimal(args[4])
+        except (InvalidOperation, ValueError):
+            raise RuntimeError("Invalid synthetic adaptive value") from None
+        if (not raw.is_finite() or
+                raw not in tuple(Decimal(v) / 100 for v in range(79, 171)) or
+                args[4] != f"{raw:.2f}"):
+            raise RuntimeError("Out-of-range or non-cent synthetic value refused")
+        grid_diameter = float(raw)
+        variants = ("adaptive_candidate",)
     else:
         raise RuntimeError("Only CBDK-owned allowlisted synthetic trial IDs accepted")
     out = Path(args[0]).absolute()
