@@ -374,3 +374,11 @@ GLB-020の匿名部品ごとの集計JSON（赤/黄の観測面数・開放境�
 コードの実行、値の変更、設定の因果判定や推奨数値の作成は行わない。「同じ名前のプロパティが存在する」と「これが原因」を同一視しない。Markdownは候補プロパティ名を含むため**プライベート**であり、公開GitHub/Notion、標準出力、成果物アップロードには使用しない。出力先のパストラバーサル、既存ファイル、外部へ解決されるシンボリックリンクは拒否する。
 
 GLB-021のステータスは一部実装のまま。詳細：[GLB-021仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。
+
+## GLB-021 第5段階：合成モデル変更履歴
+
+CBDK自作の合成3部品GLBに限り、**狭窄0.78、無関係なボール移動、既知正常1.70への復帰**の固定試験を匿名部品の差分集計としてJSON＋日本語Markdownに記録。入力は既存GLB-020のレビュー集計のみで、任意のユーザーアドオンの実行・値変更を禁止する。
+
+テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
+
+機能全体は`GLB-021 partial`を維持。変更効果の履歴はサンプリングした面の集計であって、実アドオン設定の原因・正しい設定値・完全な幾何一致は証明しない。GLB-022の汎用反復実験は未実装。[第5段階の仕様](GLB021_TRIAL_HISTORY.md)。
