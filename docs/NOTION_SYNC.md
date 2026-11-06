@@ -83,6 +83,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
 - GLB-021 is now **partial / blender_ci**, next action `NEXT-019=in_progress`; GLB-020 remains partial with MVP accepted/frozen, GLB-022 remains not implemented, and v0.18 PR #25 remains draft. This synthetic CI does not validate arbitrary real user GLBs/addons.
 
+## GLB-021 second-stage human review sheet (2026-11-07)
+
+- The opt-in `--markdown` command creates a private Japanese decision checklist next to its AST matching JSON. The sheet separates GLB-020 sampled observations from AST declaration/reference hints and states causal and numeric uncertainty explicitly.
+- Both JSON and Markdown stay under local untracked `reports/latest`; no addon source code, original paths, default values or derived geometry may be committed or mirrored to Notion. Local candidate identifiers and line numbers are potentially private even without source text.
+- Synthetic identical/narrowed/moved/uncapped joint CI now checks the Markdown report, and Python tests reject unsafe flags and path/overwrite attacks. Record exact successful workflow SHA and run IDs only after verification.
+- GLB-021 stays partial, GLB-022 not implemented, and GLB-020 has MVP accepted/frozen.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
