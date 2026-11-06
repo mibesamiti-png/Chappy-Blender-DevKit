@@ -972,3 +972,10 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - `tests/test_glb_visual_property_review.py`に順序の回帰テストを追加。元ソース/非公開JSON/MDのプライバシーを維持し、設定値・因果関係を自動決定しない。
 - コードSHA `af8e873a613b6b3075448db11f8f26c860dba2a4`：[Python 42296654049](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654049)、[Windows 42296653825](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653825)、[Blender 4.4.3/4.5.15/5.2.1 42296654171](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654171)、[Windows Kit 42296653959](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653959)、[引き継ぎ 42296653876](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653876)、[Chromium 42296653807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653807) **全6系統成功**。
 - GLB-021は`partial`のまま。次は許可された合成検証で本当の因果関係の可能性を調べ、実ユーザーデータは事前許可のない実行や公開をしない。
+
+## 2026-11-07 GLB-021 第4段階：固定合成設定の因果・無関係対照テスト
+
+- CBDK独自生成の3部品モデルで、**ソケット開口径0.78→1.70**に戻したときの差分消失を確認するケースと、**ソケット0.78のままボール位置だけ変えてもソケット差分が残る**反証ケースを追加。
+- 数値は合成専用の明示的allowlist。ユーザーアドオンのAST静的設定候補が本当に形状へ影響するかの証明ではない。入力GLBはSHA-256が一致し、元コード変更なし。
+- テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
+- GLB-021は`partial`のまま、NEXT-019は進行中。GLB-020 MVP凍結を維持し、GLB-022の一般的な自動反復は未実装。
