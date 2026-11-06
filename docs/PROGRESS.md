@@ -784,3 +784,15 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - GLB-017 / DEC-029 / NEXT-015を正本STATE.jsonとPROJECT_HANDOFF.mdへ記録。
 
 **境界:** 完全形状一致の証明ではない。サンプルがない面や小穴・内部空洞はまだ見逃し得る。最新headのCI実測が揃うまで一部実装・未検証、PR #25ドラフト・正式last_verified v0.17.0維持。
+
+### GLB-017 多解像度表面比較・実測CI成功（2026-11-06）
+
+実装・仕様書コミット `4c7248c853047b1f21088e01441a6c5fed9ca4b2` の5ワークフロー全成功を観測した。
+
+- Python 3.11/3.12/3.13: [run 42244257474](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257474) — 13件の新規多解像度回帰テストを含む。
+- Windows PowerShell 3.11/3.13: [run 42244257438](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257438)。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42244257499](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257499) — 自作合成GLB7種を実生成・再読込。**幅0.44の中央開口**で従来固定24点/面のサンプル最大距離0、新方式粗8点/面も0、精査で選んだ面を48点/面まで増やすと最大距離**0.0657466**。3版すべて同値。
+- Windows kit: [run 42244257461](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257461)。
+- Durable handoff: [run 42244257445](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257445)。
+
+本成果は**限られた合成モデル**における見逃しを改善した実測であり、完全な穴の網羅性、密閉空洞やトポロジ正しさは保証しない。精査しなかった面にある異常は依然見逃し得る。GLB-017をimplemented/blender_ci、NEXT-015をdoneとしてSTATE/HANDOFFに記録した。これは4c7248c8のCI結果であり、後続の記録更新コミットのCIは別途観測。PR #25はドラフト、正式v0.17.0のlast_verifiedは変更なし。
