@@ -223,6 +223,17 @@ jobs:
           assert len(result['variants']) == 3, result
           assert all(result['controls'].values()), result
           assert all(v is False for v in result['safety'].values()), result
+          evidence = result['quantified_vertex_displacement']
+          sphere = 'CBDK_Param_Sphere'
+          cube = 'CBDK_Param_BevelCube'
+          for stage in ('generated', 'imported'):
+              assert evidence[stage]['sphere_radius_changed'][sphere]['max_local_displacement'] > .2
+              assert evidence[stage]['sphere_radius_changed'][cube]['changed_vertex_count'] == 0
+              assert evidence[stage]['bevel_width_changed'][cube]['max_local_displacement'] > .01
+              assert evidence[stage]['bevel_width_changed'][sphere]['changed_vertex_count'] == 0
+              assert all(not row['valid_for_arbitrary_glb']
+                         for variant in evidence[stage].values()
+                         for row in variant.values())
           for variant in ('baseline', 'sphere_radius_changed', 'bevel_width_changed'):
               assert (root / f'{variant}.glb').stat().st_size > 100
               data = json.loads((root / f'{variant}_structure.json').read_text())
