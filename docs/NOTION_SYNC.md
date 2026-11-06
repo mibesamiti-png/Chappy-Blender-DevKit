@@ -90,6 +90,12 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - Synthetic identical/narrowed/moved/uncapped joint CI now checks the Markdown report, and Python tests reject unsafe flags and path/overwrite attacks. Record exact successful workflow SHA and run IDs only after verification.
 - GLB-021 stays partial, GLB-022 not implemented, and GLB-020 has MVP accepted/frozen.
 
+## GLB-021 review Markdown evidence ordering (2026-11-07)
+
+- `--markdown` creates a **private local** Japanese human-review sheet. Candidate display order is checkability (syntactic geometry route → attribute reference → declaration only), never proven cause probability or recommendation strength.
+- コードSHA `af8e873a613b6b3075448db11f8f26c860dba2a4`：[Python 42296654049](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654049)、[Windows 42296653825](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653825)、[Blender 4.4.3/4.5.15/5.2.1 42296654171](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654171)、[Windows Kit 42296653959](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653959)、[引き継ぎ 42296653876](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653876)、[Chromium 42296653807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653807) **全6系統成功**。
+- GLB-021 remains partial; GLB-020 MVP is frozen and GLB-022 remains unimplemented. Private candidate/property declarations and derived data must never enter public GitHub/Notion.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
