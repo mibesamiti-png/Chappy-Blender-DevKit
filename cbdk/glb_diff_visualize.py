@@ -154,6 +154,41 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
                 unpaired != [p["part_id"] for p in parts["candidate"]
                              if p["part_id"] not in suggested]):
             raise ValueError("Unpaired candidate IDs do not match suggestions")
+        audit = report.get("sampling_sensitivity_audit")
+        if (not isinstance(audit, dict) or
+                audit.get("method") != "extra_halton_24_probe_sensitivity_v1" or
+                audit.get("initial_samples_per_triangle") != 24 or
+                audit.get("additional_samples_per_triangle") != 24 or
+                audit.get("sensitivity_rule") !=
+                "increase_gt_0.5pct_scene_diagonal_or_color_threshold_crossing" or
+                audit.get("unobserved_regions_verified") is not False or
+                audit.get("complete_surface_equivalence_proven") is not False):
+            raise ValueError("Missing conservative second-pass sampling audit")
+        per_part = audit.get("per_part_sensitive_faces")
+        if not isinstance(per_part, dict) or set(per_part) != {"reference", "candidate"}:
+            raise ValueError("Missing aggregate per-part sensitivity counts")
+        for field in ("reference", "candidate"):
+            summary = audit.get(field)
+            if not isinstance(summary, dict) or set(summary) != {
+                "sensitive_faces", "face_count", "max_observed_increase"}:
+                raise ValueError("Invalid sensitivity summary")
+            if (type(summary["sensitive_faces"]) is not int or
+                    type(summary["face_count"]) is not int or
+                    summary["face_count"] != sum(report[field].values()) or
+                    not 0 <= summary["sensitive_faces"] <= summary["face_count"]):
+                raise ValueError("Invalid sensitivity face counts")
+            gain = summary["max_observed_increase"]
+            if (type(gain) not in (int, float) or
+                    not math.isfinite(gain) or gain < 0):
+                raise ValueError("Invalid sensitivity gain")
+            counts = per_part[field]
+            if (not isinstance(counts, list) or len(counts) != len(parts[field])
+                    or any(type(n) is not int or n < 0
+                           for n in counts)
+                    or any(n > part["triangle_count"]
+                           for n, part in zip(counts, parts[field]))
+                    or sum(counts) != summary["sensitive_faces"]):
+                raise ValueError("Part sensitivity counts do not reconcile")
         threshold = report.get("thresholds")
         if not isinstance(threshold, dict) or any(
             isinstance(threshold.get(k), bool)
