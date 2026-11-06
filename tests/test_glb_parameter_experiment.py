@@ -88,12 +88,25 @@ class TrustedParameterExperimentASTTests(unittest.TestCase):
                     for target in node.targets)
         )
         values = ast.literal_eval(variants)
-        self.assertEqual([row[0] for row in values],
-                         ["baseline", "sphere_radius_changed", "bevel_width_changed"])
-        self.assertEqual(values[0][2], values[1][2])
-        self.assertEqual(values[0][1], values[2][1])
-        self.assertNotEqual(values[0][1], values[1][1])
-        self.assertNotEqual(values[0][2], values[2][2])
+        self.assertEqual([row[0] for row in values], [
+            "baseline", "sphere_radius_changed", "bevel_width_changed",
+            "sphere_probe_up", "sphere_probe_down",
+            "bevel_probe_up", "bevel_probe_down",
+        ])
+        names = {row[0]: (row[1], row[2]) for row in values}
+        base = names["baseline"]
+        sphere_reference = names["sphere_radius_changed"]
+        bevel_reference = names["bevel_width_changed"]
+        for name in ("sphere_radius_changed", "sphere_probe_up", "sphere_probe_down"):
+            self.assertEqual(names[name][1], base[1], name)
+        for name in ("bevel_width_changed", "bevel_probe_up", "bevel_probe_down"):
+            self.assertEqual(names[name][0], base[0], name)
+        self.assertLess(names["sphere_probe_down"][0], base[0])
+        self.assertLess(base[0], names["sphere_probe_up"][0])
+        self.assertLess(names["sphere_probe_up"][0], sphere_reference[0])
+        self.assertLess(names["bevel_probe_down"][1], base[1])
+        self.assertLess(base[1], names["bevel_probe_up"][1])
+        self.assertLess(names["bevel_probe_up"][1], bevel_reference[1])
 
 
 if __name__ == "__main__":
