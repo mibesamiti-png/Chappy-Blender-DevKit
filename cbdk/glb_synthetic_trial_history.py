@@ -130,6 +130,87 @@ def render_synthetic_trial_history(history: dict) -> str:
                 "parameter_value_recommended_to_user",
                 "complete_surface_equivalence_proven"))):
         raise ValueError("History cannot assert unsupported safety claims")
+    if (history.get("schema_version") != 1
+            or set(history) != {
+                "kind", "schema_version", "status", "experiment_order",
+                "trials", "comparison", "safety"
+            }
+            or safety.get("fixture_generator_is_allowlisted") is not True
+            or any(type(value) is not bool for value in safety.values())):
+        raise ValueError("Invalid or unapproved synthetic history structure")
+    required_conditions = (
+        ("narrow", "deliberately_narrow_socket", 0.78, False),
+        ("narrow_placebo", "unrelated_ball_move_does_not_fix_socket",
+         0.78, True),
+        ("identical", "restore_known_synthetic_control", 1.70, False),
+    )
+    for index, (trial, expected) in enumerate(zip(history["trials"],
+                                                   required_conditions)):
+        if not isinstance(trial, dict) or set(trial) != {
+            "trial_id", "condition", "allowlisted_fixture_controls",
+            "parts", "sampled_affected_faces_total",
+            "exact_surface_equivalence_proven"
+        }:
+            raise ValueError("Invalid synthetic trial record")
+        control = trial.get("allowlisted_fixture_controls")
+        if (trial.get("trial_id") != expected[0]
+                or trial.get("condition") != expected[1]
+                or not isinstance(control, dict)
+                or set(control) != {"socket_opening_diameter", "ball_shifted"}
+                or type(control["socket_opening_diameter"]) not in (float, int)
+                or control["socket_opening_diameter"] != expected[2]
+                or type(control["ball_shifted"]) is not bool
+                or control["ball_shifted"] != expected[3]
+                or trial.get("exact_surface_equivalence_proven") is not False):
+            raise ValueError("Unapproved synthetic intervention")
+        parts = trial.get("parts")
+        if not isinstance(parts, list) or len(parts) != len(EXPECTED_SIZES):
+            raise ValueError("Missing synthetic part aggregates")
+        for j, part in enumerate(parts):
+            if (not isinstance(part, dict)
+                    or set(part) != {
+                        "part_id", "medium_faces", "high_faces", "affected_faces",
+                        "observed_boundary_edges"}
+                    or part["part_id"] != f"part_{j+1:03d}"
+                    or any(type(part[k]) is not int or part[k] < 0
+                           for k in ("medium_faces", "high_faces",
+                                     "affected_faces", "observed_boundary_edges"))
+                    or part["affected_faces"] !=
+                       part["medium_faces"] + part["high_faces"]
+                    or part["affected_faces"] > EXPECTED_SIZES[j]
+                    or part["observed_boundary_edges"] != 0):
+                raise ValueError("Unsafe synthetic per-part score")
+        if type(trial["sampled_affected_faces_total"]) is not int or (
+                trial["sampled_affected_faces_total"] !=
+                sum(part["affected_faces"] for part in parts)):
+            raise ValueError("Synthetic trial counts do not reconcile")
+    comparisons = history.get("comparison")
+    if (not isinstance(comparisons, dict)
+            or set(comparisons) != {
+                "socket_affected_faces_before",
+                "socket_affected_faces_after_restoration",
+                "socket_affected_faces_after_unrelated_change",
+                "observed_socket_reduction_after_restoration",
+                "unrelated_change_did_not_fix_socket",
+                "restoration_has_no_observed_regressions_in_other_parts"}):
+        raise ValueError("Missing comparison evidence")
+    defect, decoy, restored = (trial["parts"] for trial in history["trials"])
+    if (any(comparisons.get(key) != observed for key, observed in (
+            ("socket_affected_faces_before", defect[2]["affected_faces"]),
+            ("socket_affected_faces_after_restoration",
+             restored[2]["affected_faces"]),
+            ("socket_affected_faces_after_unrelated_change",
+             decoy[2]["affected_faces"]),
+            ("observed_socket_reduction_after_restoration",
+             defect[2]["affected_faces"] - restored[2]["affected_faces"])))
+            or comparisons["unrelated_change_did_not_fix_socket"] is not True
+            or comparisons["restoration_has_no_observed_regressions_in_other_parts"] is not True
+            or defect[2]["affected_faces"] < 1
+            or decoy[2]["affected_faces"] < 1
+            or decoy[0]["affected_faces"] < 1
+            or restored[2]["affected_faces"] != 0
+            or any(restored[i]["affected_faces"] != 0 for i in (0, 1))):
+        raise ValueError("Unsafe or inconsistent comparison conclusion")
     lines = [
         "# GLB-021 固定合成モデルの変更履歴（自作テスト専用）",
         "",
