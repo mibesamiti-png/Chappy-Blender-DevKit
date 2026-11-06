@@ -735,3 +735,19 @@ Blender4.5.15の実測例（生成・再読込とも同じ値）：球半径は�
 - GLB-015 / DEC-027 / NEXT-013をSTATE.json/HANDOFFに記録。手引き文書をBVH・上限512・5GLBに更新。
 
 **状態:** 最新コミットの実CIの成功を確認するまで一部実装・未検証。512面は初期の128面から4倍の上限だが、一般的な大規模モデルへの適用能力を保証しない。PRドラフト、正式v0.17.0を維持。
+
+### GLB-015 BVH高速化・実測CI成功（2026-11-06）
+
+実装・仕様書コミット `bcef8572994065f73d05e2e9c37245d64a13035e` に対して、次のGitHub Actions 5ワークフローすべてがsuccess。
+
+- Python 3.11/3.12/3.13: [run 42238115233](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238115233) — BVH/総当たりの結果一致、400/512面の上限、別順序、非承認など新規10件を含む。
+- Windows PowerShell 3.11/3.13: [run 42238115886](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238115886)。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42238114860](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238114860) — 合成GLB5種類を生成・再読込し、256面の`grid_256.glb`を使って誤差0と総当たり比較回数25%未満を全バージョンで検証。
+- Windows kit: [run 42238115035](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238115035)。
+- Durable handoff: [run 42238115141](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238115141)。
+
+Blender4.5.15の`CBDK_SURFACE_DISTANCE_PASS`実機ログにて、**256面、総当たりの精密距離計算1,572,864回→BVH方式49,152回（32分の1、96.875%削減）**、同一表面距離0を観測。他の合成条件も従来同様、別三角分割誤差0、開口誤差0.0081329、Z+0.25誤差0.25を維持。
+
+これは**精密三角形距離の計算回数**の削減を示すもので、ウォールクロック時間での32倍速・大規模実GLBの完全対応を証明しない。表面サンプリングの粗さ、密閉空洞、真のHausdorff距離、ユーザー私有GLBなどは未検証。
+
+STATE/HANDOFFのGLB-015を`implemented/blender_ci`、NEXT-013を`done`へ更新。上記は実装/文書コミットのCIであり、その後の記録更新コミットは別CIで検証する。PR #25ドラフト、正式v0.17.0維持。
