@@ -36,3 +36,11 @@
 結果はCIのローカルJSONと日本語Markdownへ新規出力し、形状データや元ソースをGitHub/Notionへ自動アップロードしない。入力GLBと自作ジェネレーターはSHA-256で変更されないことを確認。あくまでCBDK合成モデル固定条件での数値実験で、**任意ユーザーアドオンの修正値・最適化・完全な形状一致を保証しない**。GLB-022は `partial` のまま、GLB-020の詳細機能追加凍結を維持。
 
 最終CI成功のコードSHA・実際のRun IDは検証完了後に追記する。
+
+## CI結果（2026-11-07）
+
+テスト対象コードSHA `44e15f8f6664fe29e06810fd06d8d73dda70bec6`：[Python 42307811087](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811087)、[Windows 42307810687](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810687)、[Blender4.4.3/4.5.15/5.2.1 42307810797](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810797)、[Windows Kit 42307810828](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810828)、[Handoff 42307811040](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811040)、[Chromium 42307810743](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810743) **全6系統成功**。
+
+合成ソケット開口0.78から、1.24+ボール位置ずれは棄却、1.24+元のボール位置は観測距離がまだ正の値でも**中間改善として採用**、1.70の合成既知正常に復帰すると観測距離0で採用・停止。Blender3版で実際のGLB再生成とGLB-020比較を実施。Pythonでは色の異常面数が変わらないが最大サンプル距離だけ減る合成入力でも改善と判定できること、1/2試行の打切り、無効入力・偽の安全フラグ・私有出力禁止を確認。
+
+**測定値は全体の双方向サンプリング最大距離**。ソケット固有の距離でも厳密なHausdorff距離でもないため、実ユーザーモデルの最適値や完全一致を結論づけない。GLB-022は`partial`を維持し、正式版v0.17.0・v0.18ドラフトPR #25のまま。
