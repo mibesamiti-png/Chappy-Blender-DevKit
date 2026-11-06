@@ -456,6 +456,55 @@ jobs:
           grep -F 'CBDK_GLB_DIFF_VISUALIZATION_REIMPORT_PASS' "$root/glb_diff_reimport.log"
           echo "GLB-020 directional colored GLB outputs and Blender reimport passed." >> "$GITHUB_STEP_SUMMARY"
 
+      - name: GLB-020 preserve private multipart mesh grouping in colored exports
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_distance
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_make_glb_diff_parts_fixture.py -- \
+            "$root/multipart_inputs" \
+            2>&1 | tee "$root/glb_diff_parts_fixture.log"
+          grep -F 'CBDK_GLB_DIFF_PARTS_FIXTURE_PASS' "$root/glb_diff_parts_fixture.log"
+          python -m cbdk glb-diff-visualize \
+            "$root/multipart_inputs/multipart_reference.glb" \
+            "$root/multipart_inputs/multipart_candidate.glb" \
+            --blender "$BLENDER_PATH" --output "$root/diff_multipart" \
+            --timeout 180
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          review = json.loads(Path('reports/ci/surface_distance/diff_multipart/review.json').read_text())
+          assert review['part_count_limit_per_scene'] == 64
+          assert review['cross_file_part_identity_proven'] is False
+          assert review['part_id_scheme'] == 'anonymous_sequential_by_imported_object_name'
+          assert review['sampled_only'] and not review['auto_apply']
+          assert not review['complete_surface_equivalence_proven']
+          assert len(review['parts']['reference']) == 2
+          assert len(review['parts']['candidate']) == 2
+          for side in ('reference', 'candidate'):
+              first, second = review['parts'][side]
+              assert first['part_id'] == 'part_001'
+              assert second['part_id'] == 'part_002'
+              assert first['triangle_count'] == second['triangle_count'] == 1
+              assert first['low'] == 1 and second['high'] == 1
+              assert all(sum(x[key] for x in review[side]) == review[side][key]
+                         for key in ('low', 'medium', 'high'))
+          # Private-looking *input* object names never enter the public-safe report.
+          assert 'PRIVATE_SOURCE' not in str(review)
+          assert 'multipart_reference.glb' not in str(review)
+          assert 'multipart_candidate.glb' not in str(review)
+          PY
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_verify_glb_diff_visualize.py -- \
+            "$root/diff_multipart/reference_diff.glb" \
+            "$root/diff_multipart/candidate_diff.glb" 2 \
+            2>&1 | tee "$root/glb_diff_parts_reimport.log"
+          grep -F 'CBDK_GLB_DIFF_VISUALIZATION_REIMPORT_PASS' "$root/glb_diff_parts_reimport.log"
+          echo "GLB-020 anonymous 2-part material/reimport checks passed without publishing private sources." >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
         run: |
