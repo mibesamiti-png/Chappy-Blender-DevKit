@@ -434,3 +434,25 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - `docs/REGISTRATION_DRAFT.md`、仕様書、進捗台帳、引き継ぎ、AGENTSを更新。要件ID `REG-003` / 設計判断ID `DEC-011`。
 
 **確認状況：** 上記13件はテストを追加しただけで、GitHub ActionsやBlender/Windows実機では成功を確認していない。PR #18/20はCIの実行前障害（Issue #19）で未マージ。検証済みの最新バージョンはv0.15.0。
+
+
+## v0.17 開発中 — 2026-11-06（GLB Visual Inspector）
+
+### 実装
+- `cbdk/glb_inspector.py`: GLB 2.0のヘッダとJSONチャンクだけを標準ライブラリで解析。scene/node/mesh/material、primitive、POSITION/index accessor件数をJSON化し、外部URI・画像・埋め込みデータを実行/デコードしない。
+- `python -m cbdk glb-inspect model.glb`: Blenderなしで `structure.json` 相当の構造レポートを出力。
+- `cbdk/glb_render.py` + `scripts/blender_glb_render.py`: 信頼済みBlenderを `--background --factory-startup` で起動し、GLBを実importして `front/right/top/iso` の4PNGと `scene_metadata.json` を生成。
+- `python -m cbdk glb-preview model.glb --blender <path>`: 静的構造JSONとBlender実レンダリングを一括生成。
+- `scripts/blender_make_glb_fixture.py`: CI専用にCube + Sphereの決定的GLBを作成。
+- Blender 3バージョンCIへ、fixture生成 → 静的解析 → 4方向レンダリング → オブジェクト名/枚数/metadata確認を追加。
+- `docs/GLB_VISUAL_INSPECTOR.md`: AIがGLB形状を判断する際は、画像生成AIの再構成ではなくBlender実レンダリングと構造JSONを優先するルールを記録。
+
+### 現時点の確認
+- GLB静的解析の単体テスト8件をローカルで成功。
+- ユーザー提供の実GLB `うさぎとかえる - A5(1).glb` を静的解析し、7 node / 7 meshを検出。node名として `足の甲.001`, `つま先.001`, `かかと.001_A`, `かかと.001_B`, `BallJoint_001_Ball` などを読み取れた。これはGitHubへ実データを保存したという意味ではなく、ローカル検証のみ。
+- Blender 4.4.3 / 4.5.15 / 5.2.1での新しいGLBレンダリングCIはまだ成功結果を確認していないため、実機検証済みとは記録しない。
+
+### 設計判断
+- GLBの内容を画像生成AIだけで「再現した画像」は元データの正確なプレビューとして扱わない。
+- 今後の形状理解は `front/right/top/iso PNG → scene_metadata.json → structure.json → ユーザースクリーンショット` を主要根拠とする。
+- GLBはModifier、Edit Mode選択、BlenderアドオンPropertyを完全保存しないため、内部構造デバッグでは.blend/Blender実機を引き続き併用する。
