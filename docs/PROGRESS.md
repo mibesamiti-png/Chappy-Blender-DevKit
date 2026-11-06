@@ -979,3 +979,11 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - 数値は合成専用の明示的allowlist。ユーザーアドオンのAST静的設定候補が本当に形状へ影響するかの証明ではない。入力GLBはSHA-256が一致し、元コード変更なし。
 - テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
 - GLB-021は`partial`のまま、NEXT-019は進行中。GLB-020 MVP凍結を維持し、GLB-022の一般的な自動反復は未実装。
+
+## 2026-11-07 GLB-021 第5段階：合成変更効果の履歴比較
+
+- CBDK合成試験`narrow`、`narrow_placebo`、`identical`について、匿名のボール/軸/ソケットの黄＋赤の観測面数を比較する**新しい履歴レジャー**`cbdk/glb_synthetic_trial_history.py`を追加。
+- **合成ソケットを既知の正常な1.70へ戻すと観測差分0、0.78のままボールだけ動かしてもソケットの差分は残る**ことを履歴形式に保存。ユーザーへの設定値推薦・実アドオンの因果保証はなし。
+- 履歴出力はCIのローカル`synthetic_trial_history.json`と`synthetic_trial_history.md`のみ。個別GLB座標・元ソース・私有ファイルパスは含めない。入力・出力安全性と既存ファイル不変性をPython単体・Blender実GLB比較で検証。
+- テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
+- [詳細な受け入れ基準](GLB021_TRIAL_HISTORY.md)。GLB-021は引き続き一部実装。GLB-022の許可済み合成反復変更エンジンはまだ未実装、GLB-020 MVPの凍結も維持。
