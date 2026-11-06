@@ -255,3 +255,10 @@ CI must demonstrate the prior area-only selection misses a tiny opening among tw
 `glb-regression --surface-review` is **opt-in** and must preserve the metadata/silhouette/diagnosis/repair outputs. Existing `passed` applies only to metadata evidence, not exact surface geometry. Report separate `surface_status`, `surface_observation` and `surface_review.json`. Fixed sampled BVH distances, feature-aware adaptive distances and the zero-score-not-equal caveat all remain review-only.
 
 Blender CI uses only repo-authored small synthetic GLBs to show actual new command end-to-end shape hole detection versus alternate triangulation equivalence. Do not claim arbitrary 3D user asset readiness; retain PR draft and last_verified v0.17.0 until separately released. See `docs/GLB_SURFACE_PIPELINE.md`.
+
+## GLB-020: reviewed local colored 3D difference outputs
+
+- `glb-diff-visualize` is opt-in and emits 2 **derived local GLBs** plus an aggregate-only JSON; **do not upload the derived GLBs from private users to public GitHub, Notion, or CI artifacts**. The JSON contains no original source paths or raw mesh vertices.
+- The material colors are based on sampled per-face distance relative to the combined world-space bounding-box diagonal, not exact surface correspondence. Low/error-zero does NOT prove exact shape, closed cavities or volumetric identity.
+- Preserve static GLB preflight, 512-triangle cap, disabled autoexec, factory startup, new-output-directory overwrite protection and source non-modification. Do not execute addon Python or automatically apply proposed fixes.
+- Keep GLB-020 partial until linked-view/object-specific/unknown-region requirements are implemented and verified. Formal release stays v0.17.0 until separately reviewed.
