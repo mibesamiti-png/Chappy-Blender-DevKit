@@ -18,7 +18,9 @@ if str(PROJECT) not in sys.path:
     sys.path.insert(0, str(PROJECT))
 
 from fixtures import cbdk_parameter_experiment as fixture  # noqa: E402
-from cbdk.parameter_experiment_metrics import vertex_displacement  # noqa: E402
+from cbdk.parameter_experiment_metrics import (  # noqa: E402
+    vertex_displacement, radial_distribution_error,
+)
 from cbdk.parameter_direction import choose_review_direction  # noqa: E402
 
 VARIANTS = (
@@ -158,9 +160,9 @@ def main() -> None:
         for prop, target, up, down, affected, unrelated in groups:
             ref = snapshots[target][affected]["local_vertices_for_trusted_fixture"]
             distances = {
-                label: vertex_displacement(
+                label: radial_distribution_error(
                     ref, snapshots[variant][affected]["local_vertices_for_trusted_fixture"]
-                )["mean_local_displacement"]
+                )["mean_sorted_radius_error"]
                 for label, variant in (("baseline", "baseline"),
                                        ("increase_probe", up),
                                        ("decrease_probe", down))
@@ -187,6 +189,9 @@ def main() -> None:
                 "unrelated_fixture_object": unrelated,
                 "unrelated_probe_changed_vertices": unchanged,
                 "known_reference_variant": target,
+                "score_metric": "sorted_local_origin_radius_mean_absolute_difference",
+                "score_invariant_to_vertex_order": True,
+                "general_geometry_equivalence_verified": False,
                 "no_user_addon_assumptions": True,
             }
 
@@ -239,6 +244,7 @@ def main() -> None:
             "This proves the fixture parameters change geometry, not arbitrary user-addon behavior",
             "Geometry coordinate hashes are test evidence, not equivalence proofs for real assets",
             "A one-step direction result is not an optimum numeric setting for arbitrary geometry",
+            "Sorted local-origin radial signatures are vertex-order invariant but not complete shape descriptors",
         ],
         "safety": {
             "user_addon_executed": False,
