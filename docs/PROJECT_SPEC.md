@@ -150,3 +150,12 @@ CIブロッカー Issue #19 のため、この追加機能のPython/Windows/Blen
 - Blender実レンダリング画像とmetadataを、元GLBの形状理解の主要証拠とする。
 - 画像生成AIは設計説明図や提案の可視化には使えるが、元GLBを忠実に表示した証拠として扱わない。
 - ユーザーGLBや生成レポートはGitHubへ自動コミットしない。CIでは専用の自作fixtureだけを使う。
+
+
+## v0.18 GLB shape regression
+
+- Blender scene metadataは各Mesh Objectのworld-space boundsを記録する。
+- `glb-compare` はreference/candidate metadataを読み、全体bounds、部品bounds、配置、任意のトポロジー差を構造化JSONで返す。
+- `shape` profileは見た目/機構の近似比較向けで、トポロジー差は非致命。`strict`は名前・トポロジーも一致条件にする。
+- `glb-regression` は2つのGLBを信頼済みBlenderで別々にpreviewし、そのmetadataを比較する。ユーザー私有GLB・生成previewはreports配下のローカル証拠として扱い、公開repoへコミットしない。
+- 比較失敗は自動コード採用を意味しない。差分は次の修正候補を決める証拠であり、修正後は通常のPython/Windows/Blender CIを再実行する。
