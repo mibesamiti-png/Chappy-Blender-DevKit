@@ -50,7 +50,7 @@
 | `GLB-003` | 参考GLBと生成GLBのworld-space形状回帰比較 | 実装済 | Blender CI | scene metadata schema 3のworld bounds、shape/strict比較、geometry fallback matching、glb-regression CLIを実装。PR #23でPython 343件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1のsynthetic GLB metadata self-comparisonが全成功。bounds同一の輪郭差はLIM-008として継続 |
 | `GLB-004` | 7方向・部品別シルエットIoU回帰比較 | 実装済 | Blender CI | scene metadata schema 4で32x32 binary silhouetteを全体7方向＋最大32部品のfront/right/top/isoへ保存。IoU比較をglb-compare/glb-regressionへ接続。PR #24でPython 347件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1が成功し、Cubeと同boundsの八面体をsilhouette差だけで失敗判定できることを実機確認 |
 | `GLB-005` | 形状診断の数値根拠集約と矛盾データ拒否 | 実装済 | Blender CI | 参考/候補GLBのscene・部品差分を影響視点、最悪IoU、相対誤差、体積割合、重大度別で集約し、異常JSON・矛盾カウンタを拒否。PR #25のコードcommit e971b784でPython3版/Windows2版/Blender3版の実機診断と回帰テスト成功。公開・実ユーザーGLB再現の保証なし |
-| `GLB-006` | GLB差分から確認すべきアドオン設定候補を提示 | 一部実装 | 未検証 | GLB診断の原因カテゴリ・対象部品名から、設定項目の候補群と確認順をレビュー専用JSONへ出力。部品名は未確認の推測であり実装内のパラメータ存在を保証しない。新規20回帰テスト・Blender実機CIは最新コミットの結果確認前 |
+| `GLB-006` | GLB差分から確認すべきアドオン設定候補を提示 | 実装済 | Blender CI | GLB診断から設定候補群・確認手順・最悪IoU・代表軸をレビュー専用JSONへ出力。PR #25のコードcommit d9c5c925でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・Windowsキット・引き継ぎCIが全成功。実アドオン内にその設定が存在することや完全形状一致は未検証 |
 
 ## 既知の問題・制約
 
