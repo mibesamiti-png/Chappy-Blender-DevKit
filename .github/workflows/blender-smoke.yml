@@ -638,6 +638,11 @@ jobs:
           python scripts/run_glb022_synthetic_grid.py \
             --blender "$BLENDER_PATH" \
             --output reports/ci/glb022_generated_grid
+          # GLB-022 stage 5: measured feedback determines the NEXT numeric
+          # candidate, within a CBDK-owned hard 0.78..1.70 test bracket.
+          python scripts/run_glb022_synthetic_adaptive.py \
+            --blender "$BLENDER_PATH" \
+            --output reports/ci/glb022_adaptive
           python - <<'PY'
           import json
           from pathlib import Path
@@ -723,6 +728,32 @@ jobs:
               assert (grid_root / "synthetic_inputs" / name / "grid_candidate.glb").is_file()
           assert (grid_root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
           assert (grid_root / "synthetic_inputs" / "narrow" / "narrow.glb").is_file()
+          adaptive_root = Path("reports/ci/glb022_adaptive")
+          adaptive = json.loads((adaptive_root / "synthetic_adaptive_history.json").read_text())
+          assert adaptive["kind"] == "cbdk_glb022_adaptive_synthetic_v1"
+          assert adaptive["status"] == "synthetic_test_only"
+          assert adaptive["target_sampled_max"] == 0.12
+          assert adaptive["target_is_real_tolerance"] is False
+          assert adaptive["attempts_executed"] == 4
+          assert [row["trial_id"] for row in adaptive["steps"]] == [
+              "adaptive_124", "adaptive_147", "adaptive_135", "adaptive_141",
+          ]
+          assert [row["target_met"] for row in adaptive["steps"]] == [
+              False, True, False, False,
+          ]
+          assert adaptive["final_bracket"] == [1.41, 1.47]
+          assert adaptive["measured_feasible_trial_id"] == "adaptive_147"
+          assert adaptive["stop_reason"] == "attempt_budget_exhausted"
+          assert adaptive["safety"]["only_cbdk_owned_synthetic_generator"] is True
+          assert not any(v for k, v in adaptive["safety"].items()
+                         if k != "only_cbdk_owned_synthetic_generator")
+          adaptive_md = (adaptive_root / "synthetic_adaptive_history.md").read_text()
+          assert "より小さい値へ" in adaptive_md
+          assert "より大きい値へ" in adaptive_md
+          for name in ("adaptive_124", "adaptive_147", "adaptive_135", "adaptive_141"):
+              assert (adaptive_root / ("review_" + name) / "review.json").is_file()
+              assert (adaptive_root / "synthetic_inputs" / name
+                      / "adaptive_candidate.glb").is_file()
           PY
           sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
