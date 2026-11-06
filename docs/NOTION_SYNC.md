@@ -68,6 +68,14 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
 - Synthetic Blender tetra checks and headless Chromium overlay toggle are confirmed for the tested code SHA. These do not certify real-world hole detection, internal cavity equivalence, part identity, true occlusion or private GLB performance. Keep GLB-020 partial and GLB-021/022 not implemented.
 
+## GLB-020 synthetic joint MVP acceptance — scope freeze (2026-11-07)
+
+- The GLB-020 **review MVP acceptance gate** passed a 3-mesh synthetic ball/socket/shaft regression covering identical, narrower opening, shifted ball, and deleted lip faces. First negative-control failure exposed an *actually uncapped synthetic shaft*; fixture caps were added without relaxing diagnostics.
+- 最終テスト対象コード SHA `db33ce4242bbe98b3c5f9ac43d89bf21c3657089`：
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898364)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898499)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898512)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898604)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898325)・[Chromium実GUI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898701) **全6系統成功**。
+- Synthetic source SHA-256 integrity, aggregate-only JSON, modified-part-only observations and bounded Blender3 versions were verified.
+- **GLB-020 remains `partial` for full precision scope, but `NEXT-018=done` for its MVP acceptance.** Freeze optional GLB-020 elaborations; prioritize GLB-021 then GLB-022. Both remain not implemented. No real user/private GLB has been tested. Derived HTML and GLBs are geometry-bearing and local-only.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
