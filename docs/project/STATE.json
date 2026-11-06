@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Chappy Blender DevKit (CBDK)",
   "repository": "mibesamiti-png/Chappy-Blender-DevKit",
-  "updated_on": "2026-11-06",
+  "updated_on": "2026-11-07",
   "release": {
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
@@ -15,7 +15,8 @@
     "docs/project/STATE.json",
     "docs/PROJECT_SPEC.md",
     "docs/PROGRESS.md",
-    "AGENTS.md"
+    "AGENTS.md",
+    "docs/GLB_ROADMAP.md"
   ],
   "requirements": [
     {
@@ -337,6 +338,30 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_surface_pipeline.py",
       "note": "ローカル2GLBを静的preflight後、factory-startup/disable-autoexecのBlender固定スクリプトでworld-space三角面を抽出し、固定BVH距離+特徴優先多解像度の集計を出すglb-surface-review CLIを実装。glb-regression --surface-review opt-inにも統合。512面超はskippedで合格扱いしない。合成GLBの開口検出/別三角分割をBlender4.4.3/4.5.15/5.2.1で実輸入して確認（実装SHA ec13972f, Blender run 42257317535成功）。Python3版 42257317519, kit 42257317475, handoff 42257317601成功。記録更新commit 5b6196a5のPython3版/Windows2版/Blender3版/kit/handoffの全5 CI成功（Windows run 42258076781）。実ユーザーGLB大規模/個別オブジェクト対応は未検証"
+    },
+    {
+      "id": "GLB-020",
+      "title": "形状差分の3D可視化",
+      "status": "not_implemented",
+      "verification": "not_tested",
+      "source": "docs/GLB_ROADMAP.md",
+      "note": "予定: 比較結果のズレを3Dモデル上で赤/黄などの色と数値・部品・位置で可視化。未解析箇所を明示し、完全一致や自動修正は主張しない"
+    },
+    {
+      "id": "GLB-021",
+      "title": "アドオン設定の改善候補と連携",
+      "status": "not_implemented",
+      "verification": "not_tested",
+      "source": "docs/GLB_ROADMAP.md",
+      "note": "予定: 穴幅等の差分を既存AST静的プロパティ候補と人手レビュー用に照合。真の因果関係、正しい数値、Blender登録状態は自動確定しない"
+    },
+    {
+      "id": "GLB-022",
+      "title": "生成→比較→改善の反復実験",
+      "status": "not_implemented",
+      "verification": "not_tested",
+      "source": "docs/GLB_ROADMAP.md",
+      "note": "予定: CBDK自作・明示許可済み合成アドオンで設定変更、GLB再生成、比較と履歴確認を反復。私有元コードや任意アドオンを自動実行・書換しない"
     }
   ],
   "known_issues": [
@@ -524,6 +549,27 @@
       "status": "done",
       "title": "本物の2つのGLB入力から表面誤差を出力し既存glb-regressionにopt-in統合",
       "acceptance": "Blender 4.4.3/4.5.15/5.2.1で自作合成GLB2組を新CLIに実読込し、中央開口は差分検出・同じ面の別分割は差分なしを確認。既存glb-regression --surface-reviewとの共存を実機(4.5.15)とモック回帰テストで確認（run 42257317535）。Pythonの12 launcher+3 regressionテスト成功。未解析/一致保証の混同なし"
+    },
+    {
+      "id": "NEXT-018",
+      "priority": 18,
+      "status": "todo",
+      "title": "GLB-020: 形状差分の3D可視化を実装",
+      "acceptance": "誤差の位置/規模を数値と色で示し、未解析箇所を区別。合成GLBの正負対照をBlender3版CIで検証する"
+    },
+    {
+      "id": "NEXT-019",
+      "priority": 19,
+      "status": "todo",
+      "title": "GLB-021: 形状差分と設定改善候補のレビュー連携",
+      "acceptance": "ソケット開口等の差からAST上の候補設定を根拠・不確実性付きで提示。実コードの無断実行・変更・自動承認はしない"
+    },
+    {
+      "id": "NEXT-020",
+      "priority": 20,
+      "status": "todo",
+      "title": "GLB-022: 許可済み合成アドオンの反復改善実験",
+      "acceptance": "明示allowlistの自作合成アドオンで設定変更→GLB再生成→比較を反復し、誤差・失敗・改善履歴を保持する"
     }
   ],
   "decisions": [
@@ -681,6 +727,11 @@
       "id": "DEC-031",
       "decision": "GLB表面解析はローカル明示オプトイン・静的preflight・512三角形上限・集計値のみ保存とし、メタデータの合否と分離する",
       "note": "GLB自体はBlender輸入時に実データとして読み込むため、未知ファイルのリスクはゼロではない。既定オフの明示コマンド/--surface-reviewだけで実行し、外部URI・大容量・大量頂点参照を事前拒否。オブジェクト単位の差分や同一性は推定しない。三角形の多すぎるモデルはskippedを明示。メタデータpassedを表面一致の保証として扱わない。元アドオンのPythonコードは実行せず、非公開GLBは外部にアップロードしない"
+    },
+    {
+      "id": "DEC-032",
+      "decision": "GLB-019完了の次はGLB-020可視化→GLB-021設定候補連携→GLB-022合成反復実験の順で進める",
+      "note": "ユーザー提示ロードマップを継承。020〜022は計画・未検証。019は合成GLB CI完了、実ユーザーGLBの一般的精度は未検証。私有アドオンの実行/書換や自動修正には別審査を要する"
     }
   ],
   "last_verified": {
