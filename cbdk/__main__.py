@@ -26,6 +26,7 @@ from .glb_compare import write_scene_comparison
 from .glb_regression import run_glb_regression
 from .glb_diagnose import write_diagnosis
 from .glb_repair_plan import plan_from_comparison
+from .glb_property_map import map_properties_from_file
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -209,6 +210,11 @@ def main(argv=None) -> int:
     glb_repair_cmd = sub.add_parser('glb-repair-plan', help='Suggest review-only parameter families from GLB comparison JSON')
     glb_repair_cmd.add_argument('comparison', help='Comparison JSON (no source addon execution)')
     glb_repair_cmd.add_argument('--output', default='reports/latest/glb_repair_plan.json')
+
+    glb_map_cmd = sub.add_parser('glb-map-properties', help='AST-only lookup of real property declarations against GLB repair candidates')
+    glb_map_cmd.add_argument('repair_plan', help='Local repair_plan.json (never executes addon source)')
+    glb_map_cmd.add_argument('--source', action='append', required=True, help='Explicit local .py source file; repeat for multiple files')
+    glb_map_cmd.add_argument('--output', default='reports/latest/glb_property_mapping.json', help='Fresh ignored reports/latest/*.json only')
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -402,6 +408,10 @@ def main(argv=None) -> int:
             return 0 if report['passed'] else 1
         if args.command == 'glb-diagnose':
             report = write_diagnosis(args.comparison, args.output)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'glb-map-properties':
+            report = map_properties_from_file(args.repair_plan, args.source, args.output)
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'glb-repair-plan':
