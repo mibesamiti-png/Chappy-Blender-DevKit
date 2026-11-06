@@ -319,3 +319,11 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - Always separate observed surface/boundary differences, syntactic name/reference hints, and unverified causal hypotheses. Never present AST declarations, possible geometry paths, a manually supplied part role or a zero-difference result as proof of cause, effect or exact equivalence.
 - Refuse unsafe flags, nonanonymous part IDs, existing destination files, symlink escapes, or output outside ignored directories. The original addon is not executed or modified; do not infer numeric parameter changes.
 - Keep GLB-020 review MVP scope frozen, GLB-021 partial, GLB-022 unimplemented until an explicitly allowlisted synthetic experiment is built and verified.
+
+## GLB-021 synthetic history privacy and claims guardrails
+
+- The history builder in `cbdk/glb_synthetic_trial_history.py` is **not an arbitrary addon runner or parameter optimizer**. It consumes aggregate GLB-020 reports for the three exact CBDK-owned tests only: `narrow`, `narrow_placebo`, `identical`.
+- Output local test history JSON and Markdown must never include private user coordinates, original addon source, file paths or claimed recommended values. Do not automatically upload generated histories, GLBs or geometry-bearing HTML to public GitHub/Notion.
+- A decrease in sampled yellow/red triangle counts is **not** proof of complete geometric equivalence. The fixed 0.78/1.70 socket values are exclusively synthetic control values, never recommendations for real joints.
+- Preserve fail-closed unknown trial names, contradictory scores and forged safety guarantees, input GLB SHA-256 invariance, local-only fresh files and the six-way CI evidence at its tested code SHA.
+- GLB-021 remains partial and GLB-022 remains unimplemented until an independently reviewed, allowlisted *iterative* runner is actually implemented and verified.
