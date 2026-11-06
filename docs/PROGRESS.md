@@ -537,3 +537,13 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - reference Cubeと、同じworld boundsを持つ八面体candidateを作り、bounds許容差を緩めても`scene_silhouette`または`object_silhouette`で失敗判定することを3版すべてで確認。
 - Blender 4.5.15では`glb-regression`のreference→candidate一括経路も意図どおりexit 1となり、比較レポートを生成。
 - GLB-004を実装済み/Blender CI検証済みに更新。小穴・内部形状・32x32未満細部は次段階の課題。
+
+## v0.18 開発中 — 2026-11-06（GLB診断の数値根拠とフェイルクローズ）
+
+- PR #25の `cbdk/glb_diagnose.py` を拡充。全体7視点のシルエット差分はscene単位で束ね、部品別の差分は個別に保持。`evidence_summary`へ、対象視点、最悪IoU、最大相対誤差、欠落部品の体積割合、重大度ごとの件数を集約。
+- 比較元の`passed`とerrors/差分数が矛盾する場合は診断を拒否。JSON重複キー・NaN/Infinity・不正なseverityや数値、過大な証拠データを拒否。
+- 警告/情報や未対応の差分コードだけが残っていても、`needs_review=true`とする。比較合格は指定許容差での判定に過ぎず、3D形状の完全一致・内部の空洞を保証しない。
+- `tests/test_glb_diagnose_evidence.py` に19件の回帰テストを追加。既存7件は残す。
+- 原本GLBの自動編集、アドオンコード修正、許可やマージは行わない。私有GLBの公開GitHubへのアップロードも行わない。
+
+**検証状態**：追加19件のCI実走とBlender実機・Windowsでの現在のPR headの成功は未確認。合格記録は以前の実測release v0.17.0を維持（GLB-005: not_tested）。
