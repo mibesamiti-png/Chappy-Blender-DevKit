@@ -115,6 +115,8 @@ def _replay(baseline: dict, trials: dict, *, budget=MAX_TRIALS) -> dict:
         "attempts_executed": len(steps),
         "steps": steps,
         "initial_bracket": [LOW_CENTI / 100, HIGH_CENTI / 100],
+        "initial_sampled_max": initial["sampled_max_distance"],
+        "initial_socket_affected_faces": initial["socket_sampled_affected_faces"],
         "final_bracket": [lo / 100, hi / 100],
         "best_observed_trial_id": current_best_id,
         "measured_feasible_trial_id": measured_feasible,
@@ -145,6 +147,7 @@ def render_adaptive_history(history: dict) -> str:
                 "kind", "schema_version", "status", "target_sampled_max",
                 "target_is_real_tolerance", "max_trials", "attempt_budget",
                 "attempts_executed", "steps", "initial_bracket", "final_bracket",
+                "initial_sampled_max", "initial_socket_affected_faces",
                 "best_observed_trial_id", "measured_feasible_trial_id",
                 "sampled_target_status", "stop_reason", "metric", "safety",
             }
@@ -165,7 +168,15 @@ def render_adaptive_history(history: dict) -> str:
             or not isinstance(history["steps"], list)
             or len(history["steps"]) != budget):
         raise ValueError("Invalid adaptive history budget")
+    initial_max = history["initial_sampled_max"]
+    initial_faces = history["initial_socket_affected_faces"]
+    if (type(initial_max) not in (int, float) or not TARGET_SAMPLED_MAX < initial_max <= 1e5
+            or type(initial_faces) is not int or not 1 <= initial_faces <= 96):
+        raise ValueError("Invalid adaptive initial observation")
     lo, hi = LOW_CENTI, HIGH_CENTI
+    best_metric = {"sampled_max_distance": initial_max,
+                   "socket_sampled_affected_faces": initial_faces,
+                   "other_parts_sampled_affected_faces": 0}
     best_id = "narrow"
     feasible = None
     lines = [
@@ -207,12 +218,23 @@ def render_adaptive_history(history: dict) -> str:
                     "no_meaningful_sampled_max_improvement",
                     "socket_classification_regression")):
             raise ValueError("Forged adaptive observation or score")
+        candidate_metric = {
+            "sampled_max_distance": value,
+            "socket_sampled_affected_faces": row["socket_affected_faces"],
+            "other_parts_sampled_affected_faces": 0,
+        }
+        valid_improvement, valid_reason = _decision(best_metric, candidate_metric)
+        if (row["accepted_as_measured_progress"] is not valid_improvement
+                or row["progress_reason"] != valid_reason):
+            raise ValueError("Forged sampled improvement claim")
+        if valid_improvement:
+            best_metric = candidate_metric
         meets = row["target_met"]
         if meets:
             hi, feasible = midpoint, trial_id(midpoint)
         else:
             lo = midpoint
-        if row["accepted_as_measured_progress"]:
+        if valid_improvement:
             best_id = trial_id(midpoint)
         if (row["bracket_after"] != [lo / 100, hi / 100]
                 or row["best_feasible_trial_after"] != feasible
