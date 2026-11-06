@@ -578,3 +578,14 @@ PR #25の実装コミット `e971b784e5f6694252e924c0b8183dd393aa3860` に対す
 - 引き継ぎ検証：[run 42204425288](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425288)。
 
 これを根拠にGLB-006は実装済/Blender CI検証とする。参照GLBと生成GLBの完全一致、内部空洞、実アドオンの設定と候補名の合致は未検証。後続の記録更新コミットのCI成功とは区別する。PR #25は未マージ、正式last_verified=v0.17.0を維持。
+
+## v0.18 開発中 — 2026-11-06（GLB-007: 静的プロパティ照合）
+
+- `cbdk/glb_property_map.py`を新規実装。`ast.parse`のみでBlender `bpy.props`のクラスレベル宣言を列挙し、GLB修正プランの候補群へ名前完全一致で対応付ける。import別名に対応。実際のBlenderアドオンをインポート・実行しない。
+- CLI `python -m cbdk glb-map-properties <repair_plan.json> --source <local-addon.py> --output reports/latest/glb_property_mapping.json` を追加。入力Pythonファイルは明示指定のみ（最大16、各1MiB）。プランJSONは安全フラグ/候補名/件数を照合する。
+- 出力は`cbdk_glb_property_mapping` JSON。完全一致した宣言と未一致候補を分離。匿名ファイルラベル、クラス、行、Property種別だけを出力し、私有コード本文・デフォルト値・実ファイル名・絶対パスは含めない。
+- `tests/test_glb_property_map.py`に24件の回帰テストを追加。AST注釈型/通常代入、import別名、偽のFloatProperty、関数ローカル変数の誤検出、トップレベル副作用の非実行、私有データ遮断、入力異常、symlink、無害な結果、CLIを検証する。
+- Blender CIへ合成プロパティ定義ファイルを作成するステップを追加し、GLB差分fixtureの`glb-repair-plan`に含まれる候補名へAST照合する。**合成ソースは実行しない**。
+- `docs/GLB_PROPERTY_MAPPING.md`を作成、STATE.jsonへ`GLB-007`、`DEC-019`と進行中タスク`NEXT-009`を記録し、引き継ぎを同期。
+
+**検証境界:** このコードの追加時点での静的記録。最新headのPython/Windows/Blender CIは実際の成功ジョブを見てから検証状態を更新する。GUI上の登録確認・実アドオンのジオメトリ変化・ユーザー私有GLBでの完全一致は未検証。正式v0.17.0のlast_verifiedは保持。
