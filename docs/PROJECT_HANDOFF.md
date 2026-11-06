@@ -52,7 +52,7 @@
 | `GLB-005` | 形状診断の数値根拠集約と矛盾データ拒否 | 実装済 | Blender CI | 参考/候補GLBのscene・部品差分を影響視点、最悪IoU、相対誤差、体積割合、重大度別で集約し、異常JSON・矛盾カウンタを拒否。PR #25のコードcommit e971b784でPython3版/Windows2版/Blender3版の実機診断と回帰テスト成功。公開・実ユーザーGLB再現の保証なし |
 | `GLB-006` | GLB差分から確認すべきアドオン設定候補を提示 | 実装済 | Blender CI | GLB診断から設定候補群・確認手順・最悪IoU・代表軸をレビュー専用JSONへ出力。PR #25のコードcommit d9c5c925でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・Windowsキット・引き継ぎCIが全成功。実アドオン内にその設定が存在することや完全形状一致は未検証 |
 | `GLB-007` | GLB修正候補とローカル自作アドオンのプロパティ宣言を静的照合 | 実装済 | Blender CI | 元アドオンを実行せず指定Pythonのbpy.props宣言とGLB修正候補を名前完全一致で照合。匿名ソース名/クラス/行/種類のみ出力。PR #25のコードcommit c3635075でPython3版、Windows2版、Blender3版の合成fixture、Windows kit、handoffが全成功。実アドオンでの登録と形状影響は未検証 |
-| `GLB-008` | Blenderプロパティ候補の静的参照・書き込み追跡 | 一部実装 | 未検証 | 指定済み元ソースのASTから宣言名と同名の属性参照(read/write/read_write/delete)を関数名・行番号・匿名ファイル名で追跡。受信オブジェクトの実体・プロパティとの対応、ジオメトリへの影響は断定しない。新規23回帰テスト・3版Blender合成fixtureの最新CIは検証前 |
+| `GLB-008` | Blenderプロパティ候補の静的参照・書き込み追跡 | 実装済 | Blender CI | AST-onlyで同名属性へのread/write/read_write/deleteの可能性を匿名ソース、関数、行番号、件数で出力。PR #25実装commit c640ad06でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1の合成fixture・kit・引き継ぎCI全成功。受信オブジェクトの実体と実際の形状への影響は未検証 |
 
 ## 既知の問題・制約
 
