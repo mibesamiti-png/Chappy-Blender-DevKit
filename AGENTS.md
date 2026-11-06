@@ -173,3 +173,11 @@ Silhouette signatures are deterministic Blender-derived evidence, not AI-generat
 Treat `glb-diagnose` as a review-only hypothesis generator for valid `cbdk_glb_scene_comparison` JSON. Validate boolean `passed`, error/warning/info counts, numeric and finite metrics, bounded difference arrays, duplicate JSON keys and input size *before* claiming a diagnosis. Do not promote unknown diagnostic codes to a clean bill of health: preserve their identity and flag review work.
 
 Each grouped hypothesis should carry the affected camera views, worst silhouette IoU and relevant relative/volume errors for reviewers. Neither an in-tolerance comparison nor a silhouette match proves identical solids, cavities or exact surface geometry. Do not run private source addons, rewrite code, auto-approve components or upload private GLB data to public GitHub. Keep `last_verified` at the last fully observed CI release until tests on the current PR head actually pass.
+
+## v0.18 — diagnosis-to-parameter review plans (GLB-006)
+
+`glb-repair-plan` maps validated GLB comparison evidence to static, review-only *possible parameter families*. Treat role hints from part names like Ball/Socket/Hinge as unverified guesses, not verified property identifiers; do not synthesize exact numeric fixes or units from bounding boxes alone. A suggested family does NOT mean that parameter exists in user code.
+
+The `glb-regression` pipeline may produce `repair_plan.json` alongside comparison and diagnosis, but must never import untrusted addon source, set Blender properties, change any source code, auto-approve or auto-merge. Keep user-provided GLBs and derived reports local/ignored. Review stage is: inspect actual source manually, change one candidate in an isolated copy, regenerate GLB, recompare, and run full CI.
+
+Track GLB-006 under the canonical STATE.json and generated PROJECT_HANDOFF.md with factual CI verification. Do not update release last_verified until a separately verified release.
