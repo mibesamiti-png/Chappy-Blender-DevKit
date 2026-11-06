@@ -38,7 +38,8 @@ def _read_world_triangles(source: Path):
     face_total = 0
     for obj in mesh_objects:
         mesh = obj.data
-        mesh.calc_loop_triangles()
+        if hasattr(mesh, "calc_loop_triangles"):
+            mesh.calc_loop_triangles()
         face_total += len(mesh.loop_triangles)
         if face_total > MAX_TRIANGLES:
             return None, face_total
