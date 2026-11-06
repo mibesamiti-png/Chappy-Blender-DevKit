@@ -13,6 +13,7 @@ from .glb_surface_distance import (
     SurfaceDistanceError, _validated_triangles, _build_bvh,
     _bvh_nearest_distance_squared, _radical_inverse,
 )
+from .glb_feature_priority import choose_exploration_faces
 
 COARSE_SAMPLES = 8
 FINE_SAMPLES = 48
@@ -30,7 +31,7 @@ def _sample_at(face, index):
                  for axis in range(3))
 
 
-def _directed_multires(source, target):
+def _directed_multires(source, target, *, feature_aware=True):
     tree = _build_bvh(target)
     per_face = []
     precise_checks = 0
@@ -55,10 +56,10 @@ def _directed_multires(source, target):
         key=lambda i: (-max(per_face[i]["distances"]), i),
     )[:MAX_SUSPECT_FACES]
     known = set(suspected)
-    exploration = sorted(
-        (i for i in range(len(source)) if i not in known),
-        key=lambda i: (-per_face[i]["area"], i),
-    )[:EXPLORATION_FACES]
+    exploration, exploration_reasons, feature_hints = choose_exploration_faces(
+        source, known, [r["distances"] for r in per_face],
+        max_faces=EXPLORATION_FACES, feature_aware=feature_aware,
+    )
     refined = set(suspected) | set(exploration)
 
     coarse_values = [tuple(row["distances"]) for row in per_face]
@@ -102,6 +103,21 @@ def _directed_multires(source, target):
         "refined_face_count": len(refined),
         "suspect_face_count": len(suspected),
         "exploration_face_count": len(exploration),
+        "feature_exploration_face_count": exploration_reasons.count(
+            "geometry_feature_hint"),
+        "area_fallback_face_count": exploration_reasons.count(
+            "area_coverage_fallback"),
+        "geometry_feature_hint_face_count": sum(
+            hint["priority"] > 1 for hint in feature_hints),
+        "selected_feature_hint_categories": {
+            flag: sum(bool(feature_hints[i]["flags"].get(flag, False))
+                      for i in exploration)
+            for flag in (
+                "bbox_interior_boundary_hint", "sharp_shared_edge_hint",
+                "small_triangle_hint", "high_vertex_neighbor_count_hint",
+                "open_boundary_hint", "nonmanifold_edge_hint")
+        },
+        "feature_selection_enabled": feature_aware,
         "unrefined_face_count": len(source) - len(refined),
         "triangle_distance_evaluations": precise_checks,
         "new_nonzero_sample_after_refinement": (
@@ -110,16 +126,18 @@ def _directed_multires(source, target):
     }
 
 
-def compare_multires_triangle_surfaces(reference: list, candidate: list) -> dict:
+def compare_multires_triangle_surfaces(reference: list, candidate: list, *, feature_aware: bool = True) -> dict:
     """Two-way bounded coarse/fine experiment, no GLB loading or auto edits.
 
     A zero result is only "no sampled difference at these points". Selective
     refinement can still miss localized differences on unvisited faces.
     """
+    if not isinstance(feature_aware, bool):
+        raise SurfaceDistanceError("feature_aware must be a boolean")
     ref = _validated_triangles(reference, "reference")
     cand = _validated_triangles(candidate, "candidate")
-    forward = _directed_multires(ref, cand)
-    backward = _directed_multires(cand, ref)
+    forward = _directed_multires(ref, cand, feature_aware=feature_aware)
+    backward = _directed_multires(cand, ref, feature_aware=feature_aware)
     return {
         "schema_version": 1,
         "kind": "cbdk_multires_sampled_surface_distance",
@@ -143,6 +161,14 @@ def compare_multires_triangle_surfaces(reference: list, candidate: list) -> dict
         "fine_samples_per_selected_triangle": FINE_SAMPLES,
         "maximum_suspect_faces_per_direction": MAX_SUSPECT_FACES,
         "exploration_faces_per_direction": EXPLORATION_FACES,
+        "geometry_feature_prioritization_enabled": feature_aware,
+        "geometry_feature_heuristics": [
+            "bbox_interior_boundary_hint_not_proven_hole",
+            "sharp_shared_edge_hint_not_proven_damage",
+            "small_triangle_hint_for_fine_detail",
+            "shared_vertex_neighbor_proxy_for_dense_detail",
+            "coarse_distance_spread_tiebreaker_not_uncertainty_calibration",
+        ],
         "reference_triangles": len(ref),
         "candidate_triangles": len(cand),
         "vertex_correspondence_required": False,
@@ -153,6 +179,8 @@ def compare_multires_triangle_surfaces(reference: list, candidate: list) -> dict
         "limitations": [
             "Unselected triangles are tested only at coarse sample resolution",
             "A narrow defect may be missed by both sample budgets",
+            "Feature-aware exploration and area fallback do not ensure defect coverage",
+            "Boundary and crease hints are not verified openings or geometric faults",
             "Area-biased exploration is not uniform coverage or an error bound",
             "A zero sampled distance never proves identical surfaces or solids",
             "Scores are not guaranteed monotonic when sampling density varies",
