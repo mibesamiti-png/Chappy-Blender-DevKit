@@ -22,6 +22,8 @@ from .registration_scaffold import scaffold_from_saved_draft
 from .glb_inspector import write_glb_inspection
 from .glb_render import render_glb_preview
 from .glb_quick_render import quick_render_glb
+from .glb_compare import write_scene_comparison
+from .glb_regression import run_glb_regression
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -167,6 +169,34 @@ def main(argv=None) -> int:
     glb_preview_cmd.add_argument('--output', default='reports/latest/glb_preview')
     glb_preview_cmd.add_argument('--resolution', type=int, default=768)
     glb_preview_cmd.add_argument('--timeout', type=int, default=180)
+
+
+    glb_compare_cmd = sub.add_parser(
+        'glb-compare',
+        help='Compare two CBDK Blender scene_metadata.json files for shape regression',
+    )
+    glb_compare_cmd.add_argument('reference', help='Reference scene_metadata.json')
+    glb_compare_cmd.add_argument('candidate', help='Candidate scene_metadata.json')
+    glb_compare_cmd.add_argument('--output', default='reports/latest/glb_compare.json')
+    glb_compare_cmd.add_argument('--profile', choices=('shape', 'strict'), default='shape')
+    glb_compare_cmd.add_argument('--dimension-rel-tol', type=float, default=0.05)
+    glb_compare_cmd.add_argument('--center-rel-tol', type=float, default=0.03)
+    glb_compare_cmd.add_argument('--scene-rel-tol', type=float, default=0.05)
+
+    glb_regression_cmd = sub.add_parser(
+        'glb-regression',
+        help='Render reference/candidate GLBs in trusted Blender and compare world-space shape evidence',
+    )
+    glb_regression_cmd.add_argument('reference', help='Reference .glb')
+    glb_regression_cmd.add_argument('candidate', help='Candidate .glb')
+    glb_regression_cmd.add_argument('--blender', required=True, help='Trusted Blender executable path')
+    glb_regression_cmd.add_argument('--output', default='reports/latest/glb_regression')
+    glb_regression_cmd.add_argument('--profile', choices=('shape', 'strict'), default='shape')
+    glb_regression_cmd.add_argument('--resolution', type=int, default=384)
+    glb_regression_cmd.add_argument('--timeout', type=int, default=180)
+    glb_regression_cmd.add_argument('--dimension-rel-tol', type=float, default=0.05)
+    glb_regression_cmd.add_argument('--center-rel-tol', type=float, default=0.03)
+    glb_regression_cmd.add_argument('--scene-rel-tol', type=float, default=0.05)
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -328,6 +358,34 @@ def main(argv=None) -> int:
                 'blender_version': render_report['blender_version'],
             }, ensure_ascii=False, indent=2))
             return 0
+
+        if args.command == 'glb-compare':
+            report = write_scene_comparison(
+                args.reference,
+                args.candidate,
+                args.output,
+                profile=args.profile,
+                dimension_rel_tol=args.dimension_rel_tol,
+                center_rel_tol=args.center_rel_tol,
+                scene_rel_tol=args.scene_rel_tol,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report['passed'] else 1
+        if args.command == 'glb-regression':
+            report = run_glb_regression(
+                args.blender,
+                args.reference,
+                args.candidate,
+                args.output,
+                resolution=args.resolution,
+                timeout=args.timeout,
+                profile=args.profile,
+                dimension_rel_tol=args.dimension_rel_tol,
+                center_rel_tol=args.center_rel_tol,
+                scene_rel_tol=args.scene_rel_tol,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report['passed'] else 1
         if args.command == 'feature-list':
             catalog = load_feature_catalog(root=Path(__file__).resolve().parent.parent)
             report = {'schema_version': 1, 'kind': 'trusted_preview_features',

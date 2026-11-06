@@ -5,9 +5,9 @@
   "updated_on": "2026-11-06",
   "release": {
     "current": "0.17.0",
-    "stage": "public_repository_verified",
+    "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.17.0 release PR #22でPython 334件×3版、Windows PowerShell 2版、Blender 4.4.3/4.5.15/5.2.1、Windowsキット、引き継ぎCIが全成功。GLB 7方向＋部品単独レンダリングも3版成功"
+    "milestone": "v0.17.0を検証済みmainとして維持しつつ、v0.18 PR #23でGLB world-space形状回帰比較を実装。Python 343件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -201,6 +201,14 @@
       "verification": "python",
       "source": "cbdk/glb_quick_render.py",
       "note": "任意依存trimesh+matplotlibで7方向PNGと最大32部品単独サムネイルを生成。外部URIを事前拒否し、50万頂点/25万面の安全上限。ユーザーGLB(7 mesh)で7方向+7部品画像をローカル生成確認。本命のBlender実レンダリングより低精度であることを明示"
+    },
+    {
+      "id": "GLB-003",
+      "title": "参考GLBと生成GLBのworld-space形状回帰比較",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_compare.py",
+      "note": "scene metadata schema 3のworld bounds、shape/strict比較、geometry fallback matching、glb-regression CLIを実装。PR #23でPython 343件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1のsynthetic GLB metadata self-comparisonが全成功。bounds同一の輪郭差はLIM-008として継続"
     }
   ],
   "known_issues": [
@@ -259,6 +267,14 @@
       "title": "GLB多方向プレビューの実機CI未実行問題は解消",
       "workaround": "PR #21のBlender 4.4.3/4.5.15/5.2.1で7方向画像と部品単独画像を含むfixtureテストが成功。実ユーザーGLBのBlenderレンダリングは引き続き必要時に個別確認",
       "related_requirement": "GLB-001"
+    },
+    {
+      "id": "LIM-008",
+      "status": "open",
+      "severity": "medium",
+      "title": "v0.18初期の形状比較はworld bounds中心で、同じ外接寸法でも内部/輪郭が異なる形状を見逃しうる",
+      "workaround": "7方向レンダリングと部品サムネイルを人/AIの補助証拠として併用し、次段階でシルエットまたは表面距離比較を追加する。bounds比較だけで完全一致を主張しない",
+      "related_requirement": "GLB-003"
     }
   ],
   "next_actions": [
@@ -314,9 +330,9 @@
     {
       "id": "NEXT-008",
       "priority": 8,
-      "status": "todo",
+      "status": "in_progress",
       "title": "参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ",
-      "acceptance": "参照GLB/画像を入力として生成アドオンをBlender CIで実行し、出力GLBの構造・7方向画像・部品単独画像を期待形状と比較して失敗理由を機械可読に記録する"
+      "acceptance": "参照GLB/生成GLBをBlenderで別々に実レンダリングし、world-space bounds・部品対応・7方向画像・構造を比較して、ズレの種類と対象部品を機械可読JSONへ記録する。boundsだけでは判別できない形状差は次段階で画像/表面距離比較を追加する"
     }
   ],
   "decisions": [
@@ -394,6 +410,11 @@
       "id": "DEC-015",
       "decision": "積み上げPRは下位からmainへ順次統合し、正式バージョンは専用release PRのCIで確定する",
       "note": "v0.17では#18→#20→#21を通常mergeで履歴保持。release/v0.17.0でpyprojectと状態台帳を揃え、成功CI観測後にlast_verifiedを更新する"
+    },
+    {
+      "id": "DEC-016",
+      "decision": "形状差分は修正判断の証拠であり、比較結果だけでアドオンコードを自動採用・承認しない",
+      "note": "v0.18のglb-compare/glb-regressionはズレを機械可読化する。修正は通常のコードレビュー・Python/Windows/Blender CIを再度通し、ユーザー私有GLBは公開GitHubへ保存しない"
     }
   ],
   "last_verified": {
@@ -454,6 +475,7 @@
     "recipe_matrix_pending": "2026-11-06: PR #21のPython 3版とBlender 3版でrecipe matrixを含む全体検証成功。正式統合は下位PR #18/#20の順序を維持して判断",
     "registration_draft": "2026-11-06: REG-001の回帰テストはPR #21のPython 3.11/3.12/3.13で成功。自動承認・自動登録は引き続き行わない",
     "registration_scaffold": "2026-11-06: REG-002回帰テストはPR #21のPython/Windows CIで成功。Windows hosted runnerの8.3短縮パス差を修正",
-    "registration_behavior": "2026-11-06: REG-003回帰テストはPR #21のPython 3版CIで成功。behavior申告は実機安全性の自動証明ではない"
+    "registration_behavior": "2026-11-06: REG-003回帰テストはPR #21のPython 3版CIで成功。behavior申告は実機安全性の自動証明ではない",
+    "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま"
   }
 }

@@ -25,6 +25,10 @@ on:
       - 'cbdk/undo_probe_report.py'
       - 'cbdk/glb_inspector.py'
       - 'cbdk/glb_render.py'
+      - 'tests/test_glb_regression.py'
+      - 'tests/test_glb_compare.py'
+      - 'cbdk/glb_regression.py'
+      - 'cbdk/glb_compare.py'
       - 'scripts/blender_glb_render.py'
       - 'scripts/blender_make_glb_fixture.py'
       - 'tests/test_glb_inspector.py'
@@ -223,7 +227,11 @@ jobs:
               'CBDK_Test_Cube', 'CBDK_Test_Sphere'
           }, scene['objects']
           PY
-          echo "GLB static structure + seven scene views + isolated object thumbnails PASSED." >> "$GITHUB_STEP_SUMMARY"
+          python -m cbdk glb-compare \
+            reports/ci/glb_preview/scene_metadata.json \
+            reports/ci/glb_preview/scene_metadata.json \
+            --output reports/ci/glb_self_compare.json
+          echo "GLB static structure + seven scene views + isolated object thumbnails + self-comparison PASSED." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload evidence and log even when Blender fails
         if: always()
