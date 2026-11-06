@@ -42,13 +42,26 @@ def _pack_faces(faces, labels, counts):
 
 def render_local_diff_viewer(
     reference, candidate, reference_labels, candidate_labels,
-    reference_counts, candidate_counts,
+    reference_counts, candidate_counts, *, sampling_flags=None,
 ):
     """Render an offline two-canvas 3D viewer; do not save/network it here.
 
     The returned string contains derived source geometry, so consumers must
     write it ONLY into a private/local user-requested directory.
     """
+    if sampling_flags is None:
+        sampling_flags = {
+            "reference": [False] * len(reference),
+            "candidate": [False] * len(candidate),
+        }
+    if (not isinstance(sampling_flags, dict)
+            or set(sampling_flags) != {"reference", "candidate"}
+            or any(not isinstance(sampling_flags[side], list)
+                   or len(sampling_flags[side]) != len(faces)
+                   or any(type(flag) is not bool for flag in sampling_flags[side])
+                   for side, faces in (
+                       ("reference", reference), ("candidate", candidate)))):
+        raise ValueError("Invalid per-face supplemental sample flags")
     left = _pack_faces(reference, reference_labels, reference_counts)
     right = _pack_faces(candidate, candidate_labels, candidate_counts)
     points = [vertex for face in reference + candidate for vertex in face]
@@ -64,6 +77,11 @@ def render_local_diff_viewer(
         "diagonal": diagonal,
         "reference": left,
         "candidate": right,
+        "sampling_sensitivity_flags": {
+            "reference": [int(v) for v in sampling_flags["reference"]],
+            "candidate": [int(v) for v in sampling_flags["candidate"]],
+        },
+        "sampling_sensitivity_is_full_coverage": False,
         "unobserved_regions_verified": False,
         "cross_file_part_identity_proven": False,
         "part_suggestions": suggest_spatial_part_matches(
