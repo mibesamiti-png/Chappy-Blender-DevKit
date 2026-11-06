@@ -352,8 +352,8 @@
       "title": "アドオン設定の改善候補と連携",
       "status": "partial",
       "verification": "blender_ci",
-      "source": "cbdk/glb_visual_property_review.py",
-      "note": "GLB-020の匿名部品ごとの色・境界の集計レポートを、既存AST静的プロパティ宣言/使用/形状フロー候補へ接続するレビュー専用CLIを実装。--roleは人の未検証ラベル、省略時は汎用候補のみ。元アドオン/GLB実行・変更なし、候補の因果関係/修正数値/真の部品対応は未確定。コードSHA 8c51a867415738dcca6616a4a197b62a105075e5：Python 42292708122、Windows 42292708128、Blender3版 42292708248（CBDK自作3部品の正常/開口狭窄/移動/リップ欠損）、Kit 42292708114、Handoff 42292708111、Chromium 42292708124 の全6系統success。実ユーザー非公開ソースは未検証"
+      "source": "cbdk/glb_visual_review_markdown.py",
+      "note": "GLB-020差分と既存AST候補照合に加え、ローカル専用日本語Markdownレビューシート（黄/赤/境界・宣言名・静的参照/形状経路・人手確認チェック）を実装。候補の表示順は構文上の形状経路→参照→宣言のみの『確認しやすさ』で、原因の確信度ではない。コードSHA af8e873a613b6b3075448db11f8f26c860dba2a4：Python 42296654049・Windows 42296653825・Blender3版 42296654171・Kit 42296653959・Handoff 42296653876・Chromium 42296653807の全6系統success。ソース非実行/非改変、私有JSON/MDはignored reports/latestへ新規保存。因果関係、適切な設定値、実ユーザーGLBは未検証"
     },
     {
       "id": "GLB-022",
@@ -601,8 +601,8 @@
       "id": "NEXT-019",
       "priority": 19,
       "status": "in_progress",
-      "title": "GLB-021: GLB-020集計差分→静的AST設定候補のレビュー連携を合成CI検証。因果確認とユーザー実データ検証は今後",
-      "acceptance": "合成3部品GLBの正常/狭窄/移動/欠損でレビュー専用候補と既存AST宣言を連携し、無変更時0件、匿名部品と候補属性、正常/異常の区別と元ソース不変をBlender3版/Python/Windows/Kit/Handoff/Chromium CIで確認済み。次は不確実性の人間向け表示、構文上の関連と実際の原因の区別、プライベートソース/実GLBでの手動検証（無許可実行なし）"
+      "title": "GLB-021: ローカル日本語レビューシートと根拠別確認順をCI検証。次は人による候補検証と合成因果実験",
+      "acceptance": "合成3部品GLBから生成した差分とAST宣言/参照/経路をJSON+ローカルMarkdownチェックシートで人がレビュー可能。形状フロー→属性参照→宣言名のみの順は確認しやすさであり原因の確度ではないと明示。Python/Windows/Blender3版/Kit/Handoff/Chromiumの6CI成功。残りは候補の実際の因果検証と実ユーザー私有GLB/アドオンの手動検証（無許可実行なし）"
     },
     {
       "id": "NEXT-020",
@@ -817,6 +817,11 @@
       "id": "DEC-041",
       "decision": "GLB-021は新規の推測エンジンを作らずGLB-020集計情報と既存のASTプロパティ宣言/参照/形状フロー解析をレビュー専用で結合する",
       "note": "コードSHA 8c51a867のPython/Windows/Blender3版/Kit/Handoff/Chromiumの6系統CI成功。roleは人間が付ける未認証の部品名ヒント。赤黄灰の差分だけで開口径や位置の具体的原因・補正値を断定しない。出力はignored reports/latestのみ新規作成、私有ソースはimport/exec/変更せず、レポートの候補宣言/行情報はローカルに限定。GLB-021全体はpartial、GLB-022未実装、v0.18ドラフトPR #25を維持"
+    },
+    {
+      "id": "DEC-042",
+      "decision": "GLB-021の日本語ローカルレビューシートは構文上の証拠で確認順を整えるが、因果確度ランキングや自動設定変更とは明確に区別する",
+      "note": "表示は構文上の形状処理経路あり→属性参照あり→宣言名のみ。人が調べやすい順序であって真の原因確率ではない。合成コードSHA af8e873aの6系統CI成功。ソース・プロパティ名・行番号を含むローカルJSON/MDは公開しない。GLB-021 partialとGLB-020 MVP凍結、GLB-022未実装を維持"
     }
   ],
   "last_verified": {
