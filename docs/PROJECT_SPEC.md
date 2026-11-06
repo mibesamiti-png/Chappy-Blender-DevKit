@@ -337,3 +337,9 @@ JSONは匿名部品別・全体の**件数のみ**、元頂点/名前/元GLBパ�
 コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
 
 今回の境界エッジ数は数値的近似による観測のみで、穴や内部形状の完全検出の意味ではない。対応候補を曖昧に降格しても因果関係の特定や補修は実行しない。
+
+## GLB-020 第7段階：境界エッジのローカル位置表示
+
+匿名部品の`boundary_edge_audit`で観測された境界線を、**ローカル`compare_viewer.html`の左右3Dビューへ水色線として重ね描き**する。チェックボックスで表示を切り替え、独立の部品セレクターと同期カメラに追従。
+
+`boundary_overlay`は匿名部品番号＋線分両端の数値座標（7要素/本）を含み、**公開可能な集計`review.json`へ保存してはならない**。近接統合の数値誤差とCanvas2DのX-ray的な重ね描きを説明し、実際の穴・完全閉曲面・精密な遮蔽・部品同一性を確定しない。外部通信・ユーザーコード実行・元GLB改変は引き続き禁止。詳細：`docs/GLB_BOUNDARY_AUDIT.md`。
