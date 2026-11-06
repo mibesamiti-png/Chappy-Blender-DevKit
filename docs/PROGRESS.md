@@ -663,3 +663,15 @@ GLB-007は実装済/Blender CI確認済みとして記録。正式バージョ�
 - 要件GLB-012、設計判断DEC-024、NEXT-010をSTATE.json/PROJECT_HANDOFF.mdへ追加。
 
 **状態:** 最新コミットのCI合否を観測するまでGLB-012は部分実装/未検証。PR #25ドラフト、正式版v0.17.0維持。実ユーザーアドオンを実行しない。
+
+### GLB-012 CI実測成功（2026-11-06）
+
+実装コミット `04526f1ddd9f336df16d2841ccafc278cd8edf4f` に対する次の5ワークフローがすべて成功した。
+
+- Python 3.11/3.12/3.13： [42220053230](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053230)（10件の新規定量測定テストを含む）。
+- Windows 2環境： [42220053331](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053331)。
+- Blender 4.4.3/4.5.15/5.2.1： [42220053332](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053332)。球の半径とBevel幅をそれぞれ変え、生成・GLB再読込後の頂点移動量と無変更対照を計測、すべて合格。
+- Windows kit： [42220053222](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053222)。
+- 引き継ぎ： [42220053158](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053158)。
+
+GLB-012を実装済/Blender CI検証、NEXT-010をdoneとしてSTATE/HANDOFFに記録した。証拠はこの**実装コミット**の結果であり、後続の文書更新のCIとは分ける。PR #25はドラフトで、正式v0.17.0の`last_verified`は維持。任意GLBの表面距離や他者アドオンの効果は未検証。
