@@ -2,7 +2,9 @@
 
 No user models, user addons, downloaded assets or Blender Python auto-execution.
 The three mesh parts are a hollow socket ring, a faceted ball and a shaft.
-Only one feature changes between the reference and each variant.
+Only one feature changes in each baseline test variant. The explicitly
+named narrow_placebo changes an unrelated ball position while deliberately
+keeping the narrow socket, exclusively for the GLB-021 controlled experiment.
 All synthetic files remain in the temporary CI workspace.
 """
 from __future__ import annotations
@@ -93,12 +95,12 @@ def _shaft():
 
 
 def export(target, variant):
-    if variant not in {"reference", "identical", "narrow", "shifted", "uncapped"}:
+    if variant not in {"reference", "identical", "narrow", "shifted", "uncapped", "narrow_placebo"}:
         raise RuntimeError("Invalid fixture variant")
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    ring = _ring(narrow=variant == "narrow",
+    ring = _ring(narrow=variant in {"narrow", "narrow_placebo"},
                  missing_face=variant == "uncapped")
-    ball = _ball(shifted=variant == "shifted")
+    ball = _ball(shifted=variant in {"shifted", "narrow_placebo"})
     _mesh("CBDK_SYNTH_Ball", *ball)
     _mesh("CBDK_SYNTH_Shaft", *_shaft())
     _mesh("CBDK_SYNTH_Socket", *ring)
@@ -120,7 +122,8 @@ def main():
         raise RuntimeError("Expected one output directory")
     out = Path(args[0]).resolve()
     out.mkdir(parents=True, exist_ok=True)
-    for variant in ("reference", "identical", "narrow", "shifted", "uncapped"):
+    for variant in ("reference", "identical", "narrow", "shifted", "uncapped",
+                    "narrow_placebo"):
         export(out / (variant + ".glb"), variant)
     print("CBDK_JOINT_MVP_FIXTURES_PASS")
 
