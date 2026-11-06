@@ -315,6 +315,26 @@ class VisualPropertyReviewTests(unittest.TestCase):
         self.assertNotIn("123456789.123", sheet)
         self.assertNotIn("default=", sheet)
 
+    def test_review_sheet_orders_by_checkability_not_cause_probability(self):
+        result = build_visual_property_review(
+            sample_review(), [self.source], roles={"part_003": "socket"})
+        hints = result["recommendations"][0]["exact_name_matches"]
+        by_name = {hint["candidate_family"]: hint for hint in hints}
+        self.assertIn("socket_opening_diameter", by_name)
+        self.assertIn("clearance", by_name)
+        # Use explicit synthetic trace counts to test stable presentation,
+        # never to claim either property is a real cause of the shape issue.
+        by_name["socket_opening_diameter"]["possible_geometry_dataflow"]["possible_path_count"] = 2
+        by_name["socket_opening_diameter"]["possible_code_references"]["possible_reference_count"] = 2
+        by_name["clearance"]["possible_geometry_dataflow"]["possible_path_count"] = 0
+        by_name["clearance"]["possible_code_references"]["possible_reference_count"] = 0
+        text = render_review_markdown(result)
+        self.assertLess(text.index("**`socket_opening_diameter`"),
+                        text.index("**`clearance`"))
+        self.assertIn("確認する順番（原因の確からしさではありません）", text)
+        self.assertIn("実際の原因や修正値の正しさとは無関係", text)
+        self.assertIn("原因未確定", text)
+
     def test_review_markdown_empty_and_unmatched_remain_cautious(self):
         empty = build_visual_property_review(
             sample_review(scenario="identical"), [self.source])
