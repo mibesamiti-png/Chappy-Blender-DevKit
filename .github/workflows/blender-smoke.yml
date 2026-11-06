@@ -289,7 +289,7 @@ jobs:
           fi
           echo "Trusted additive parameter GLB generation and roundtrip controls passed." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Compare BVH surface distances and an open hole after synthetic GLB roundtrip
+      - name: Benchmark BVH wall-clock and compare six trusted GLB surface fixtures
         shell: bash
         run: |
           set -euo pipefail
@@ -306,7 +306,7 @@ jobs:
           report = json.loads((root / 'surface_distance_experiment.json').read_text())
           assert report['kind'] == 'cbdk_trusted_glb_surface_distance_experiment', report
           assert report['source'] == 'repository_authored_synthetic_only', report
-          assert len(report['variants']) == 5, report
+          assert len(report['variants']) == 6, report
           assert all(report['checks'].values()), report
           assert all(v is False for v in report['safety'].values()), report
           a = report['comparisons']['alternate_triangulation']
@@ -314,6 +314,23 @@ jobs:
           t = report['comparisons']['raised']
           grid = report['comparisons']['grid_256']
           assert report['triangles']['grid_256'] == 256, report
+          assert report['triangles']['grid_512'] == 512, report
+          assert report['comparisons']['grid_512']['symmetric_mean'] == 0, report
+          timings = report['timings']
+          small = timings['grid_64_same_input_bvh_vs_bruteforce']
+          large = timings['grid_512_bvh_only']
+          assert small['reference_triangles'] == 64
+          assert large['reference_triangles'] == 512
+          assert small['scores_agree_with_brute_force'] is True
+          assert large['scores_agree_with_brute_force'] is False
+          assert set(small['benchmarks']) == {'bvh', 'brute_force'}
+          assert set(large['benchmarks']) == {'bvh'}
+          assert all(value['median_elapsed_ms'] >= 0
+                     for record in (small, large)
+                     for value in record['benchmarks'].values())
+          assert all(record['performance_regression_gate'] is False
+                     and record['relative_timings_portable'] is False
+                     for record in (small, large))
           assert grid['symmetric_mean'] == 0.0, grid
           assert grid['search_acceleration'] == 'deterministic_median_split_triangle_aabb_bvh', grid
           assert grid['reference_to_candidate']['triangle_distance_evaluations'] * 4 < grid['reference_to_candidate']['brute_force_evaluations'], grid
@@ -328,7 +345,7 @@ jobs:
           for variant in report['variants']:
               assert (root / (variant + '.glb')).stat().st_size > 100
           PY
-          echo "Synthetic five-GLB BVH-distance and planar-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
+          echo "Synthetic six-GLB BVH wall-clock observations and cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
