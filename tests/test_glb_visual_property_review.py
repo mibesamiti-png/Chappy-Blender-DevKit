@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import copy
+from contextlib import redirect_stdout
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from cbdk.glb_property_map import PropertyMappingError
 from cbdk.glb_visual_property_review import (
@@ -265,6 +268,31 @@ class VisualPropertyReviewTests(unittest.TestCase):
         with self.assertRaises(PropertyMappingError):
             review_visual_file(inp, [self.source], "../published.json",
                                root=self.root)
+
+    def test_cli_prints_only_sanitized_summary_and_saves_private_local_json(self):
+        from cbdk.__main__ import main
+
+        inp = self.root / "visual_report.json"
+        inp.write_text(json.dumps(sample_review()), "utf-8")
+        printed = io.StringIO()
+        # Route the existing local-only writer to an isolated temporary root.
+        def run_local(*args, **kwargs):
+            return review_visual_file(*args, **kwargs, root=self.root)
+
+        with patch("cbdk.__main__.review_visual_file", side_effect=run_local):
+            with redirect_stdout(printed):
+                status = main([
+                    "glb-visual-property-review", str(inp),
+                    "--source", str(self.source),
+                    "--role", "part_003=socket",
+                    "--output", "reports/latest/cli_ast_review.json",
+                ])
+        self.assertEqual(status, 0)
+        self.assertIn("recommendation_count", printed.getvalue())
+        self.assertNotIn("socket_opening_diameter", printed.getvalue())
+        self.assertNotIn("PRIVATE_joint_addon", printed.getvalue())
+        self.assertNotIn(str(self.root), printed.getvalue())
+        self.assertTrue((self.root / "reports/latest/cli_ast_review.json").is_file())
 
     def test_duplicate_key_json_rejected(self):
         file = self.root / "bad.json"
