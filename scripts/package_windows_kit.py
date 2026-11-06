@@ -3,12 +3,25 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+import tomllib
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PREFIX = "Chappy-Blender-DevKit"
+
+
+def project_version(root: Path = ROOT) -> str:
+    with (root / "pyproject.toml").open("rb") as source:
+        version = tomllib.load(source)["project"]["version"]
+    if not isinstance(version, str) or not version or any(ch not in "0123456789." for ch in version):
+        raise ValueError("Invalid project version")
+    return version
+
+
+def default_output(root: Path = ROOT) -> Path:
+    return root / "dist" / f"CBDK_v{project_version(root)}_Windows_Blender_DevKit.zip"
 
 
 def build(output: Path) -> int:
@@ -42,7 +55,7 @@ def build(output: Path) -> int:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, default=ROOT / "dist" / "CBDK_v0.16_Windows_Blender_DevKit.zip")
+    parser.add_argument("--output", type=Path, default=default_output())
     args = parser.parse_args(argv)
     count = build(args.output)
     print(f"Packaged {count} tracked files into {args.output}")
