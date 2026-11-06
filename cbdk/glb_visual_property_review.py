@@ -64,7 +64,10 @@ def parse_role_labels(raw: list[str] | None) -> dict[str, str]:
 
 def _check_rows(report, side):
     totals = report.get(side)
-    parts = report.get("parts", {}).get(side)
+    layout = report.get("parts")
+    if not isinstance(layout, dict):
+        raise PropertyMappingError("Missing anonymous GLB-020 part collections")
+    parts = layout.get(side)
     if (not isinstance(totals, dict)
             or set(totals) != {"low", "medium", "high"}
             or not isinstance(parts, list) or not 1 <= len(parts) <= MAX_PARTS):
@@ -113,6 +116,7 @@ def _read_observations(report: dict):
     candidate = _check_rows(report, "candidate")
     audit = report.get("boundary_edge_audit")
     if (not isinstance(audit, dict)
+            or audit.get("method") != "world_space_quantized_triangle_edge_incidence_v1"
             or audit.get("fully_watertight_proven") is not False
             or audit.get("hole_locations_verified") is not False
             or audit.get("internal_voids_verified") is not False
@@ -126,12 +130,20 @@ def _read_observations(report: dict):
         for idx, row in enumerate(rows):
             if (not isinstance(row, dict)
                     or row.get("part_id") != parts[idx]["part_id"]
+                    or row.get("triangle_count") != parts[idx]["triangle_count"]
                     or type(row.get("boundary_edges")) is not int
                     or not 0 <= row["boundary_edges"] <= 3 * parts[idx]["triangle_count"]
                     or type(row.get("observed_boundary")) is not bool
                     or row["observed_boundary"] != (row["boundary_edges"] > 0)
                     or row.get("topology_proven") is not False):
                 raise PropertyMappingError("Invalid edge evidence")
+    sensitivity = report.get("sampling_sensitivity_audit")
+    if (not isinstance(sensitivity, dict)
+            or sensitivity.get("method") !=
+            "extra_halton_24_probe_sensitivity_v1"
+            or sensitivity.get("unobserved_regions_verified") is not False
+            or sensitivity.get("complete_surface_equivalence_proven") is not False):
+        raise PropertyMappingError("Unverified supplemental sampling audit")
     matches = report.get("part_match_candidates")
     if (not isinstance(matches, dict)
             or matches.get("status") != "review_only"
@@ -147,7 +159,10 @@ def _read_observations(report: dict):
                 or row.get("reference_part_id") != reference[idx]["part_id"]
                 or row.get("status") not in {"suggested", "ambiguous", "unmatched"}
                 or not isinstance(row.get("candidate_part_ids"), list)
-                or any(x not in candidate_ids for x in row["candidate_part_ids"])):
+                or len(row["candidate_part_ids"]) > 2
+                or len(set(row["candidate_part_ids"])) != len(row["candidate_part_ids"])
+                or any(type(x) is not str or x not in candidate_ids
+                       for x in row["candidate_part_ids"])):
             raise PropertyMappingError("Invalid anonymous part match status")
         if row["status"] == "suggested":
             if (len(row["candidate_part_ids"]) != 1
