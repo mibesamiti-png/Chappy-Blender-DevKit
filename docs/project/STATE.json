@@ -321,6 +321,14 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_multires_surface.py",
       "note": "粗8点/面から疑わしい最大8面＋面積上位2面を48点/面まで選択精査するレビュー専用双方向距離。従来24点と粗8点で見逃した幅0.44の中央開口を精査で検出（最大距離0.0657466）。Blender4.4.3/4.5.15/5.2.1で自作合成7 GLBの書出・再読込に成功。コード+文書commit 4c7248c8のPython3版、Windows2版、Blender3版、Windows kit、handoff全CI成功。閉じた内部空洞・任意の微小穴の検出保証なし"
+    },
+    {
+      "id": "GLB-018",
+      "title": "角・開口境界・微細面・頂点密集から多解像度の精査対象を優先選択",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/glb_feature_priority.py",
+      "note": "既存の粗8/精48サンプルで、幾何学上の候補（外寸内の開放辺、隣接面の鋭い折れ、相対的に小面積の面、共有頂点近傍の密集、非多様体疑い）から精査枠1面を優先、別1面は大面積の探索として保持。従来面積のみと新方式の比較をCBDK製大型パネル＋小穴の2GLBでテスト。純Python13件追加、合計9合成GLBのBlender3版CI実測待ち。境界は穴を保証せず、欠陥・閉じた空洞も未証明。ユーザーソース不実行"
     }
   ],
   "known_issues": [
@@ -494,6 +502,13 @@
       "status": "done",
       "title": "細い開口を検出する多解像度表面サンプリングを合成GLBで検証",
       "acceptance": "実測済: Pythonの13回帰テストとBlender4.4.3/4.5.15/5.2.1自作合成7 GLB。従来24点最大距離0、粗8点0、精査48点0.0657466（run 42244257499）。同一性認定・私有モデルの実行/公開なし"
+    },
+    {
+      "id": "NEXT-016",
+      "priority": 16,
+      "status": "in_progress",
+      "title": "特徴優先で大型板に埋もれた小さい開口を見つける合成GLB比較を検証",
+      "acceptance": "純Pythonテストで大型板に邪魔されて面積方式が見逃す開口を特徴方式で見つけ、折れ角・穴の疑い・小面・密集ヒントと非証明フラグを確認。Blender4.4.3/4.5.15/5.2.1で計9合成GLB出力/再読込し、旧方式0/新方式>0を実証。元アドオンの実行・自動修正なし"
     }
   ],
   "decisions": [
@@ -641,6 +656,11 @@
       "id": "DEC-029",
       "decision": "多解像度では差分が大きい面だけでなく未検出面も少数探索し『誤差ゼロ＝同一』と扱わない",
       "note": "粗8/精48点、疑わしい面最大8＋探索2面/方向の上限を固定し、実際の追加サンプル数を報告。面積上位の探索は無差分保証ではなく選択バイアスあり。サンプル数が異なる面の加重平均は単調とは限らず、元GLBアドオンを自動実行/修正しない"
+    },
+    {
+      "id": "DEC-030",
+      "decision": "幾何学的な優先候補は欠陥の確定ではなくレビュー用ヒントとし、面積探索枠を必ず残す",
+      "note": "原点/外寸を利用した内部候補境界、隣接三角形法線の鋭角差、面積中央値比、共頂点近傍の多さ、非多様体疑いで候補を比較。同名頂点座標による局所接続は厳密なメッシュ位相の証明にならず、境界は外周・切れ目かもしれない。精査枠2面のうち最大1面を特徴優先、1面を面積探索に保持し、従来area-only切替も維持。私有幾何をレポート出力せず、自動修正しない"
     }
   ],
   "last_verified": {
@@ -716,6 +736,7 @@
     "surface_distance": "2026-11-06 GLB-014 code+docs SHA f7e9e114e3484da650044737189ae20395a53e74: Python 42235161491, Windows 42235161515, Blender 42235161529 (4.4.3/4.5.15/5.2.1), kit 42235161511, handoff 42235161506 all SUCCESS. 13 new tests, sampled bidirectional surface distance, open-hole and alternate triangulation synthetic roundtrip. GLB-014 implemented/blender_ci, NEXT-012 done; PR draft and formal last_verified 0.17.0 unchanged.",
     "surface_bvh": "2026-11-06: GLB-015 code/docs SHA bcef8572994065f73d05e2e9c37245d64a13035e: Python 42238115233, Windows 42238115886, Blender3-version 42238114860, kit 42238115035, handoff 42238115141 all SUCCESS. Blender 4.5.15 256-face GLB observed 1,572,864 brute vs 49,152 BVH exact triangle computations (32x fewer), 0 distance. GLB-015 implemented/blender_ci; NEXT-013 done. Formal v0.17.0 unchanged; PR draft.",
     "surface_benchmark": "2026-11-07: GLB-016 implementation+docs SHA ca9ad5076fb911bc8337bc525c163b1b069c6bcb all 5 workflows SUCCESS: Python 42241396452, Windows PowerShell 42241396094, Blender 3-version 42241395979, Windows kit 42241396296, durable handoff 42241396289. Synthetic 64-face BVH/brute median ms by Blender version: 4.4.3 35.510505/161.156313, 4.5.15 19.356758/86.027068, 5.2.1 32.467850/149.716417; synthetic 512-face BVH-only median ms 352.050953/192.798623/321.247609. No portable speedup promise; GLB-016 implemented/blender_ci, NEXT-014 done; v0.17.0 formal release remains.",
-    "multires_surface": "2026-11-07: GLB-017 SHA 4c7248c853047b1f21088e01441a6c5fed9ca4b2 all CI SUCCESS: Blender 4.4.3/4.5.15/5.2.1 42244257499 (narrow hole legacy24=0, coarse8=0, selected48=0.0657466), Python3-version 42244257474 (13 new tests), Windows PowerShell 42244257438, Windows kit 42244257461, durable handoff 42244257445. GLB-017 implemented/blender_ci, NEXT-015 done. General coverage and enclosed cavities not proven. PR draft, release last_verified 0.17.0 preserved."
+    "multires_surface": "2026-11-07: GLB-017 SHA 4c7248c853047b1f21088e01441a6c5fed9ca4b2 all CI SUCCESS: Blender 4.4.3/4.5.15/5.2.1 42244257499 (narrow hole legacy24=0, coarse8=0, selected48=0.0657466), Python3-version 42244257474 (13 new tests), Windows PowerShell 42244257438, Windows kit 42244257461, durable handoff 42244257445. GLB-017 implemented/blender_ci, NEXT-015 done. General coverage and enclosed cavities not proven. PR draft, release last_verified 0.17.0 preserved.",
+    "feature_priority": "2026-11-07 GLB-018: feature-aware geometry review rank (interior-like boundary, sharp edge, small triangle, dense vertex neighborhood, non-manifold hint) with 1-feature + 1-area exploration slots; 13 new pure-Python regression tests and 9 synthetic Blender GLB CI. Until observed current-head success keep partial/not_tested. User addon execution and private upload forbidden; release last_verified 0.17.0 unchanged."
   }
 }
