@@ -142,11 +142,31 @@ def trace_property_references(sources: list[str | Path],
             x["function_name"], x["access"]))
         counts = {kind: sum(x["access"] == kind for x in items)
                   for kind in ("read", "write", "delete", "read_write")}
+        # Aggregate all observations before limiting display examples: counts
+        # must not depend on the 16-example UI cap. This only identifies
+        # syntactic 'self' access in a named class, never actual binding.
+        self_scopes: dict[tuple[str, str], dict] = {}
+        for site in items:
+            if site["receiver_kind"] != "self" or not site["class_name"]:
+                continue
+            key = (site["source_label"], site["class_name"])
+            scope = self_scopes.get(key)
+            if scope is None:
+                scope = {
+                    "source_label": key[0], "class_name": key[1],
+                    "possible_reference_count": 0,
+                    "access_counts": {kind: 0 for kind in counts},
+                    "actual_property_binding_verified": False,
+                }
+                self_scopes[key] = scope
+            scope["possible_reference_count"] += 1
+            scope["access_counts"][site["access"]] += 1
         result[name] = {
             "possible_reference_count": len(items),
             "access_counts": counts,
             "examples": items[:MAX_EXAMPLES_PER_PROPERTY],
             "examples_truncated": len(items) > MAX_EXAMPLES_PER_PROPERTY,
+            "syntactic_self_scopes": [self_scopes[key] for key in sorted(self_scopes)],
             "receiver_binding_verified": False,
             "runtime_effect_verified": False,
         }
