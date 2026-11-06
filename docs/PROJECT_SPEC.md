@@ -302,3 +302,9 @@ Python側に12件のpreflight/安全ランナー/報告/スキップテストと
 新CI \`.github/workflows/glb-viewer-browser.yml\` では本物のヘッドレスChromiumを用い、CBDK自作の入替2部品モデルをローカルHTMLで表示し、回転/ズーム・候補選択・面フィルタ・通信なし・JS実行例外なしを検証する。外部ブラウザ試験環境の導入時にはUbuntu 24.04を固定する。テスト成功と実ユーザーGLBの形状認識精度を混同しない。
 
 正式リリースv0.17.0とドラフトPR #25は維持。Python、Blender、WindowsおよびブラウザのCIは、それぞれ実際に確認されたコミットSHAと結果を別に記録する。
+
+### GLB-020 第4段階の検証（2026-11-07）
+
+コードSHA `72e9bd4e4ad2cb9b9716ee0cb5ea10de60cd779e` では、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183982)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184368)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184086)・[Windowsキット](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184021)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183990)・[Chromium実ブラウザ操作](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183979)が**全6系統success**。
+
+各テストはCBDKが作った合成データのみ。HTML表示・操作の成功は、3D形状の完全一致や本当の部品同一性、特定のアドオン設定の原因特定の証明ではない。
