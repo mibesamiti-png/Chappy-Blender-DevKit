@@ -195,9 +195,14 @@ jobs:
           mkdir -p reports/ci/glb_preview
           "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
             --python scripts/blender_make_glb_fixture.py \
-            -- reports/ci/glb_fixture.glb \
+            -- reports/ci/glb_fixture.glb reference \
             2>&1 | tee reports/ci/glb_fixture.log
-          grep -F 'CBDK_GLB_FIXTURE_PASS ' reports/ci/glb_fixture.log
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_make_glb_fixture.py \
+            -- reports/ci/glb_fixture_drift.glb silhouette-drift \
+            2>&1 | tee reports/ci/glb_fixture_drift.log
+          grep -F 'CBDK_GLB_FIXTURE_PASS reference ' reports/ci/glb_fixture.log
+          grep -F 'CBDK_GLB_FIXTURE_PASS silhouette-drift ' reports/ci/glb_fixture_drift.log
           python -m cbdk glb-inspect reports/ci/glb_fixture.glb \
             --output reports/ci/glb_preview/structure_only.json \
             2>&1 | tee reports/ci/glb_inspect.log
@@ -231,7 +236,47 @@ jobs:
             reports/ci/glb_preview/scene_metadata.json \
             reports/ci/glb_preview/scene_metadata.json \
             --output reports/ci/glb_self_compare.json
-          echo "GLB static structure + seven scene views + isolated object thumbnails + self-comparison PASSED." >> "$GITHUB_STEP_SUMMARY"
+
+          python -m cbdk glb-preview reports/ci/glb_fixture_drift.glb \
+            --blender "$BLENDER_PATH" \
+            --output reports/ci/glb_drift_preview \
+            --resolution 256 --timeout 180 \
+            2>&1 | tee reports/ci/glb_drift_preview.log
+
+          set +e
+          python -m cbdk glb-compare \
+            reports/ci/glb_preview/scene_metadata.json \
+            reports/ci/glb_drift_preview/scene_metadata.json \
+            --output reports/ci/glb_drift_compare.json \
+            --scene-rel-tol 0.20 --dimension-rel-tol 0.20 --center-rel-tol 0.20 \
+            --silhouette-iou-min 0.90
+          drift_status=$?
+          set -e
+          test "$drift_status" -eq 1
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('reports/ci/glb_drift_compare.json').read_text())
+          codes = {row['code'] for row in report['differences'] if row['severity'] == 'error'}
+          assert not report['passed'], report
+          assert 'scene_silhouette' in codes or 'object_silhouette' in codes, report
+          assert 'object_dimensions' not in codes, report
+          PY
+
+          if [ "$BLENDER_VERSION" = "4.5.15" ]; then
+            set +e
+            python -m cbdk glb-regression \
+              reports/ci/glb_fixture.glb reports/ci/glb_fixture_drift.glb \
+              --blender "$BLENDER_PATH" \
+              --output reports/ci/glb_regression_e2e \
+              --resolution 256 --timeout 180 \
+              --scene-rel-tol 0.20 --dimension-rel-tol 0.20 --center-rel-tol 0.20 \
+              --silhouette-iou-min 0.90
+            regression_status=$?
+            set -e
+            test "$regression_status" -eq 1
+          fi
+          echo "GLB views, silhouettes, self-compare, same-bounds silhouette drift detection and e2e regression behavior PASSED." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload evidence and log even when Blender fails
         if: always()

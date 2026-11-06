@@ -35,6 +35,19 @@ def obj(name, center, size, *, vertices=8, edges=12, polygons=6):
     }
 
 
+def silhouette(cells, *, grid=8):
+    total = grid * grid
+    packed = bytearray((total + 7) // 8)
+    for index in cells:
+        packed[index // 8] |= 1 << (index % 8)
+    return {
+        "available": True,
+        "grid_size": grid,
+        "bits_hex": packed.hex(),
+        "filled_cells": len(set(cells)),
+    }
+
+
 def scene(objects, *, name="model.glb"):
     mins = [min(o["world_bounds"]["min"][i] for o in objects) for i in range(3)]
     maxs = [max(o["world_bounds"]["max"][i] for o in objects) for i in range(3)]
@@ -104,6 +117,51 @@ class GLBCompareTests(unittest.TestCase):
         bad = scene([obj("A", [0, 0, 0], [1, 1, 1]), obj("A", [2, 0, 0], [1, 1, 1])])
         with self.assertRaises(SceneComparisonError):
             compare_scene_metadata(bad, bad)
+
+
+    def test_scene_silhouette_detects_same_bounds_different_outline(self):
+        ref = scene([obj("Body", [0, 0, 0], [2, 2, 2])])
+        cand = scene([obj("Body", [0, 0, 0], [2, 2, 2])])
+        ref["silhouettes"] = {"front.png": silhouette([0, 1, 8, 9])}
+        cand["silhouettes"] = {"front.png": silhouette([0, 1, 2, 8, 9, 10])}
+        result = compare_scene_metadata(ref, cand, silhouette_iou_min=0.8)
+        self.assertFalse(result["passed"])
+        self.assertIn("scene_silhouette", {x["code"] for x in result["differences"]})
+
+    def test_object_silhouette_pinpoints_part(self):
+        ref_obj = obj("Socket", [0, 0, 0], [2, 2, 2])
+        cand_obj = obj("Socket", [0, 0, 0], [2, 2, 2])
+        ref_obj["silhouettes"] = {"iso.png": silhouette([0, 1, 8, 9])}
+        cand_obj["silhouettes"] = {"iso.png": silhouette([0, 1, 2, 8, 9, 10])}
+        result = compare_scene_metadata(
+            scene([ref_obj]), scene([cand_obj]), silhouette_iou_min=0.8
+        )
+        self.assertFalse(result["passed"])
+        diff = next(x for x in result["differences"] if x["code"] == "object_silhouette")
+        self.assertEqual(diff["metrics"]["reference_object"], "Socket")
+        self.assertEqual(diff["metrics"]["view"], "iso.png")
+
+    def test_identical_silhouette_passes(self):
+        ref_obj = obj("A", [0, 0, 0], [1, 1, 1])
+        cand_obj = obj("A", [0, 0, 0], [1, 1, 1])
+        sig = silhouette([0, 1, 8, 9])
+        ref_obj["silhouettes"] = {"front.png": sig}
+        cand_obj["silhouettes"] = {"front.png": sig}
+        ref = scene([ref_obj]); cand = scene([cand_obj])
+        ref["silhouettes"] = {"front.png": sig}
+        cand["silhouettes"] = {"front.png": sig}
+        result = compare_scene_metadata(ref, cand)
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["summary"]["scene_silhouette_iou"]["front.png"], 1.0)
+
+    def test_rejects_malformed_silhouette_hex_length(self):
+        ref = scene([obj("A", [0, 0, 0], [1, 1, 1])])
+        cand = scene([obj("A", [0, 0, 0], [1, 1, 1])])
+        ref["silhouettes"] = {
+            "front.png": {"available": True, "grid_size": 8, "bits_hex": "00", "filled_cells": 0}
+        }
+        with self.assertRaises(SceneComparisonError):
+            compare_scene_metadata(ref, cand)
 
     def test_writes_comparison_json(self):
         with tempfile.TemporaryDirectory() as tmp:

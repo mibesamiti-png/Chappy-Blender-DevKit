@@ -16,6 +16,9 @@ from mathutils import Vector
 
 MARKER = "CBDK_GLB_RENDER_PASS "
 MAX_OBJECT_THUMBNAILS = 32
+SILHOUETTE_GRID_SIZE = 32
+MAX_SILHOUETTE_TRIANGLES = 250000
+OBJECT_SILHOUETTE_VIEWS = ("front.png", "right.png", "top.png", "iso.png")
 
 
 def _args():
@@ -120,16 +123,130 @@ def _projected_extent(points, camera):
     return max(width, height, 1e-4)
 
 
-def _render_view(camera, center, points, radius, direction, output_path, resolution):
+def _position_camera(camera, center, points, radius, direction):
     camera.location = center + Vector(direction).normalized() * radius * 4.0
     _look_at(camera, center)
     camera.data.ortho_scale = _projected_extent(points, camera) * 1.18
+
+
+def _render_view(camera, center, points, radius, direction, output_path, resolution):
+    _position_camera(camera, center, points, radius, direction)
     scene = bpy.context.scene
     scene.render.resolution_x = resolution
     scene.render.resolution_y = resolution
     scene.render.resolution_percentage = 100
     scene.render.filepath = str(output_path)
     bpy.ops.render.render(write_still=True)
+
+
+
+def _edge2(a, b, p):
+    return (p[0] - a[0]) * (b[1] - a[1]) - (p[1] - a[1]) * (b[0] - a[0])
+
+
+def _inside_triangle(p, a, b, c):
+    e1 = _edge2(a, b, p)
+    e2 = _edge2(b, c, p)
+    e3 = _edge2(c, a, p)
+    has_neg = e1 < -1e-12 or e2 < -1e-12 or e3 < -1e-12
+    has_pos = e1 > 1e-12 or e2 > 1e-12 or e3 > 1e-12
+    return not (has_neg and has_pos)
+
+
+def _pack_binary_grid(cells):
+    packed = bytearray((len(cells) + 7) // 8)
+    for index, value in enumerate(cells):
+        if value:
+            packed[index // 8] |= 1 << (index % 8)
+    return packed.hex()
+
+
+def _silhouette_signature(camera, objects, *, grid_size=SILHOUETTE_GRID_SIZE):
+    if not 8 <= grid_size <= 128:
+        raise RuntimeError("Silhouette grid outside safe range")
+    triangle_count = 0
+    for obj in objects:
+        obj.data.calc_loop_triangles()
+        triangle_count += len(obj.data.loop_triangles)
+    if triangle_count > MAX_SILHOUETTE_TRIANGLES:
+        return {
+            "available": False,
+            "reason": "triangle_limit",
+            "triangles": triangle_count,
+            "max_triangles": MAX_SILHOUETTE_TRIANGLES,
+            "grid_size": grid_size,
+        }
+
+    inv = camera.matrix_world.inverted()
+    scale = max(float(camera.data.ortho_scale), 1e-9)
+    cells = bytearray(grid_size * grid_size)
+
+    def projected(obj, vertex_index):
+        point = inv @ (obj.matrix_world @ obj.data.vertices[vertex_index].co)
+        return (point.x / scale + 0.5, point.y / scale + 0.5)
+
+    for obj in objects:
+        mesh = obj.data
+        for tri in mesh.loop_triangles:
+            a, b, c = (projected(obj, vi) for vi in tri.vertices)
+            min_u = min(a[0], b[0], c[0])
+            max_u = max(a[0], b[0], c[0])
+            min_v = min(a[1], b[1], c[1])
+            max_v = max(a[1], b[1], c[1])
+            x0 = max(0, min(grid_size - 1, int(min_u * grid_size)))
+            x1 = max(0, min(grid_size - 1, int(max_u * grid_size)))
+            y0 = max(0, min(grid_size - 1, int(min_v * grid_size)))
+            y1 = max(0, min(grid_size - 1, int(max_v * grid_size)))
+            if max_u < 0.0 or min_u > 1.0 or max_v < 0.0 or min_v > 1.0:
+                continue
+            for y in range(y0, y1 + 1):
+                v = (y + 0.5) / grid_size
+                base = y * grid_size
+                for x in range(x0, x1 + 1):
+                    if cells[base + x]:
+                        continue
+                    u = (x + 0.5) / grid_size
+                    if _inside_triangle((u, v), a, b, c):
+                        cells[base + x] = 1
+
+    filled = [i for i, value in enumerate(cells) if value]
+    if filled:
+        xs = [i % grid_size for i in filled]
+        ys = [i // grid_size for i in filled]
+        bbox = [min(xs), min(ys), max(xs), max(ys)]
+        centroid = [sum(xs) / len(xs), sum(ys) / len(ys)]
+    else:
+        bbox = None
+        centroid = None
+    return {
+        "available": True,
+        "grid_size": grid_size,
+        "bits_hex": _pack_binary_grid(cells),
+        "filled_cells": len(filled),
+        "bbox_cells": bbox,
+        "centroid_cells": centroid,
+        "triangles": triangle_count,
+    }
+
+
+def _view_silhouettes(camera, objects, points, center, radius, views):
+    result = {}
+    for filename, direction in views.items():
+        _position_camera(camera, center, points, radius, direction)
+        result[filename] = _silhouette_signature(camera, objects)
+    return result
+
+
+def _object_silhouettes(camera, meshes, views):
+    result = {}
+    directions = {name: views[name] for name in OBJECT_SILHOUETTE_VIEWS}
+    for obj in sorted(meshes, key=lambda item: item.name)[:MAX_OBJECT_THUMBNAILS]:
+        points = _points_for([obj])
+        _mins, _maxs, center, _size, radius = _bounds(points)
+        result[obj.name] = _view_silhouettes(
+            camera, [obj], points, center, radius, directions
+        )
+    return result
 
 
 def _object_world_bounds(obj):
@@ -251,9 +368,14 @@ def main():
     thumbnails, truncated = _render_object_thumbnails(
         camera, meshes, output, resolution
     )
+    scene_silhouettes = _view_silhouettes(camera, meshes, points, center, radius, views)
+    object_silhouettes = _object_silhouettes(camera, meshes, views)
+    for row in object_rows:
+        if row["name"] in object_silhouettes:
+            row["silhouettes"] = object_silhouettes[row["name"]]
 
     metadata = {
-        "schema_version": 3,
+        "schema_version": 4,
         "kind": "cbdk_glb_blender_scene_metadata",
         "source_name": source.name,
         "blender_version": bpy.app.version_string,
@@ -266,6 +388,8 @@ def main():
         },
         "objects": object_rows,
         "views": list(views),
+        "silhouettes": scene_silhouettes,
+        "silhouette_grid_size": SILHOUETTE_GRID_SIZE,
         "object_thumbnails": thumbnails,
         "thumbnail_limit": MAX_OBJECT_THUMBNAILS,
         "thumbnail_truncated": truncated,

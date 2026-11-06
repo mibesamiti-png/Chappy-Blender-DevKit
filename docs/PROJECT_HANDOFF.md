@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.17.0を検証済みmainとして維持しつつ、v0.18 PR #23でGLB world-space形状回帰比較を実装。Python 343件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功
+- 最新の節目: v0.18でworld bounds比較＋32x32シルエットIoU比較まで実装。PR #24でPython 347件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功。同bounds異輪郭の実機検出も成功
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -48,6 +48,7 @@
 | `GLB-001` | GLB静的構造解析とBlender多方向プレビュー | 実装済 | Blender CI | schema v2静的解析＋Blender本命7方向PNG＋最大32部品単独サムネイル＋neutral clay/Workbench。PR #21のBlender 4.4.3/4.5.15/5.2.1で合成GLB fixtureの構造JSON・scene metadata・全画像生成が成功 |
 | `GLB-002` | BlenderなしGLB Quick Preview fallback | 実装済 | Pythonテスト | 任意依存trimesh+matplotlibで7方向PNGと最大32部品単独サムネイルを生成。外部URIを事前拒否し、50万頂点/25万面の安全上限。ユーザーGLB(7 mesh)で7方向+7部品画像をローカル生成確認。本命のBlender実レンダリングより低精度であることを明示 |
 | `GLB-003` | 参考GLBと生成GLBのworld-space形状回帰比較 | 実装済 | Blender CI | scene metadata schema 3のworld bounds、shape/strict比較、geometry fallback matching、glb-regression CLIを実装。PR #23でPython 343件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1のsynthetic GLB metadata self-comparisonが全成功。bounds同一の輪郭差はLIM-008として継続 |
+| `GLB-004` | 7方向・部品別シルエットIoU回帰比較 | 実装済 | Blender CI | scene metadata schema 4で32x32 binary silhouetteを全体7方向＋最大32部品のfront/right/top/isoへ保存。IoU比較をglb-compare/glb-regressionへ接続。PR #24でPython 347件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1が成功し、Cubeと同boundsの八面体をsilhouette差だけで失敗判定できることを実機確認 |
 
 ## 既知の問題・制約
 
@@ -60,7 +61,7 @@
 | `LIM-005` | low | open | 大規模メッシュは監査20万要素上限を超えると操作しない。回避策: 小さなメッシュに分割するか、必要に応じ監査上限を再設計する。安全を確認せず上限を解除しない |
 | `LIM-006` | low | fixed | 非公開時のGitHub Actionsランナー未割当(steps=null)は公開化で解消。回避策: 2026-11-06にリポジトリをpublicへ変更後、同じPRワークフローで実ランナー・steps・logsが生成され全CIが実行可能になった。Issue #19は解決としてclose |
 | `LIM-007` | low | fixed | GLB多方向プレビューの実機CI未実行問題は解消。回避策: PR #21のBlender 4.4.3/4.5.15/5.2.1で7方向画像と部品単独画像を含むfixtureテストが成功。実ユーザーGLBのBlenderレンダリングは引き続き必要時に個別確認 |
-| `LIM-008` | medium | open | v0.18初期の形状比較はworld bounds中心で、同じ外接寸法でも内部/輪郭が異なる形状を見逃しうる。回避策: 7方向レンダリングと部品サムネイルを人/AIの補助証拠として併用し、次段階でシルエットまたは表面距離比較を追加する。bounds比較だけで完全一致を主張しない |
+| `LIM-008` | medium | open | 32x32シルエット比較でも小さな穴・内部形状・サブグリッド細部は見逃しうる。回避策: world bounds＋全体7方向＋部品4方向シルエットIoUを併用し、必要なら次段階で表面距離/ボクセル比較を追加する。シルエット一致だけで完全な形状同一を主張しない |
 
 ## 次にやること（優先順）
 

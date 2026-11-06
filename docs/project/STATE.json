@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.17.0を検証済みmainとして維持しつつ、v0.18 PR #23でGLB world-space形状回帰比較を実装。Python 343件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功"
+    "milestone": "v0.18でworld bounds比較＋32x32シルエットIoU比較まで実装。PR #24でPython 347件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功。同bounds異輪郭の実機検出も成功"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -209,6 +209,14 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_compare.py",
       "note": "scene metadata schema 3のworld bounds、shape/strict比較、geometry fallback matching、glb-regression CLIを実装。PR #23でPython 343件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1のsynthetic GLB metadata self-comparisonが全成功。bounds同一の輪郭差はLIM-008として継続"
+    },
+    {
+      "id": "GLB-004",
+      "title": "7方向・部品別シルエットIoU回帰比較",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "scripts/blender_glb_render.py",
+      "note": "scene metadata schema 4で32x32 binary silhouetteを全体7方向＋最大32部品のfront/right/top/isoへ保存。IoU比較をglb-compare/glb-regressionへ接続。PR #24でPython 347件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1が成功し、Cubeと同boundsの八面体をsilhouette差だけで失敗判定できることを実機確認"
     }
   ],
   "known_issues": [
@@ -272,8 +280,8 @@
       "id": "LIM-008",
       "status": "open",
       "severity": "medium",
-      "title": "v0.18初期の形状比較はworld bounds中心で、同じ外接寸法でも内部/輪郭が異なる形状を見逃しうる",
-      "workaround": "7方向レンダリングと部品サムネイルを人/AIの補助証拠として併用し、次段階でシルエットまたは表面距離比較を追加する。bounds比較だけで完全一致を主張しない",
+      "title": "32x32シルエット比較でも小さな穴・内部形状・サブグリッド細部は見逃しうる",
+      "workaround": "world bounds＋全体7方向＋部品4方向シルエットIoUを併用し、必要なら次段階で表面距離/ボクセル比較を追加する。シルエット一致だけで完全な形状同一を主張しない",
       "related_requirement": "GLB-003"
     }
   ],
@@ -476,6 +484,7 @@
     "registration_draft": "2026-11-06: REG-001の回帰テストはPR #21のPython 3.11/3.12/3.13で成功。自動承認・自動登録は引き続き行わない",
     "registration_scaffold": "2026-11-06: REG-002回帰テストはPR #21のPython/Windows CIで成功。Windows hosted runnerの8.3短縮パス差を修正",
     "registration_behavior": "2026-11-06: REG-003回帰テストはPR #21のPython 3版CIで成功。behavior申告は実機安全性の自動証明ではない",
-    "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま"
+    "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま",
+    "v018_silhouette_regression": "2026-11-06: PR #24 head 2735aa974539ec95fde20e2c9f1de155f6687209 でPython 347件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windows kit、handoffが全成功。実Blenderでreference Cubeと同bounds八面体のsilhouette driftを3版すべて検出。GLB-004をimplementedへ昇格"
   }
 }
