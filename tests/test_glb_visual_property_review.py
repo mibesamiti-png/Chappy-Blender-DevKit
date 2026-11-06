@@ -11,6 +11,9 @@ import unittest
 from unittest.mock import patch
 
 from cbdk.glb_property_map import PropertyMappingError
+from cbdk.glb_visual_review_markdown import (
+    markdown_destination, render_review_markdown, write_private_review_markdown,
+)
 from cbdk.glb_visual_property_review import (
     build_visual_property_review, parse_role_labels, review_visual_file,
 )
@@ -293,6 +296,108 @@ class VisualPropertyReviewTests(unittest.TestCase):
         self.assertNotIn("PRIVATE_joint_addon", printed.getvalue())
         self.assertNotIn(str(self.root), printed.getvalue())
         self.assertTrue((self.root / "reports/latest/cli_ast_review.json").is_file())
+
+    def test_review_markdown_reports_observations_and_ast_evidence_without_cause_claim(self):
+        result = build_visual_property_review(
+            sample_review(), [self.source], roles={"part_003": "socket"})
+        sheet = render_review_markdown(result)
+        self.assertIn("生成側", sheet)
+        self.assertIn("part_003", sheet)
+        self.assertIn("黄 24面", sheet)
+        self.assertIn("赤 48面", sheet)
+        self.assertIn("socket_opening_diameter", sheet)
+        self.assertIn("宣言候補:", sheet)
+        self.assertIn("人による確認項目", sheet)
+        self.assertIn("原因未確定", sheet)
+        self.assertIn("本人確認なし", sheet)
+        self.assertNotIn("PRIVATE_joint_addon", sheet)
+        self.assertNotIn(str(self.root), sheet)
+        self.assertNotIn("123456789.123", sheet)
+        self.assertNotIn("default=", sheet)
+
+    def test_review_markdown_empty_and_unmatched_remain_cautious(self):
+        empty = build_visual_property_review(
+            sample_review(scenario="identical"), [self.source])
+        text = render_review_markdown(empty)
+        self.assertIn("レビューが必要な生成側の部品: 0件", text)
+        self.assertIn("未測定の問題", text)
+        unmatched_source = self.root / "empty_source.py"
+        unmatched_source.write_text("class Nothing: pass\n", "utf-8")
+        result = build_visual_property_review(
+            sample_review(scenario="uncapped"), [unmatched_source],
+            roles={"part_003": "socket"})
+        text = render_review_markdown(result)
+        self.assertIn("一致した宣言がありません", text)
+        self.assertIn("参照側候補**: 未確定", text)
+
+    def test_markdown_private_path_rejects_traversal_and_symlink(self):
+        result = build_visual_property_review(
+            sample_review(), [self.source], roles={"part_003": "socket"})
+        for dest in ("/tmp/leak.md", "../outside.md", "reports/ci/foo.md",
+                     "reports/latest/../../../out.md", "reports/latest/a.txt"):
+            with self.subTest(dest=dest), self.assertRaises(PropertyMappingError):
+                write_private_review_markdown(result, dest, root=self.root)
+        output = "reports/latest/review_sheet.md"
+        file = write_private_review_markdown(result, output, root=self.root)
+        self.assertEqual(file.read_text("utf-8"), render_review_markdown(result))
+        with self.assertRaises(FileExistsError):
+            write_private_review_markdown(result, output, root=self.root)
+        link = self.root / "reports/latest/link.md"
+        try:
+            link.symlink_to(self.root / "outside.md")
+        except OSError:
+            return
+        with self.assertRaises((FileExistsError, PropertyMappingError)):
+            markdown_destination("reports/latest/link.md", root=self.root)
+
+    def test_invalid_unverified_mapping_cannot_generate_markdown(self):
+        result = build_visual_property_review(
+            sample_review(), [self.source], roles={"part_003": "socket"})
+        mutations = []
+        for key, val in (("cause_and_effect_proven", True),
+                         ("parameter_values_inferred", True),
+                         ("input_glb_or_addon_executed", True)):
+            altered = copy.deepcopy(result)
+            altered[key] = val
+            mutations.append(altered)
+        altered = copy.deepcopy(result)
+        altered["recommendations"][0]["visual_observation"]["recommended_parameter_value"] = 0.9
+        mutations.append(altered)
+        altered = copy.deepcopy(result)
+        altered["recommendations"][0]["target"] = "part_999"
+        mutations.append(altered)
+        altered = copy.deepcopy(result)
+        altered["recommendations"][0]["exact_name_matches"][0]["declarations"][0]["source_label"] = "../private.py"
+        mutations.append(altered)
+        for case, altered in enumerate(mutations):
+            with self.subTest(case=case), self.assertRaises(PropertyMappingError):
+                render_review_markdown(altered)
+
+    def test_optional_markdown_flag_writes_local_companion_and_preflights_collision(self):
+        report_file = self.root / "visual_report.json"
+        report_file.write_text(json.dumps(sample_review()), "utf-8")
+        report_hash = report_file.read_bytes()
+        source_hash = self.source.read_bytes()
+        target = "reports/latest/sheet.json"
+        result = review_visual_file(
+            report_file, [self.source], target,
+            role_labels=["part_003=socket"], root=self.root, markdown=True)
+        self.assertEqual(
+            (self.root / "reports/latest/sheet.md").read_text("utf-8"),
+            render_review_markdown(result))
+        self.assertEqual(source_hash, self.source.read_bytes())
+        self.assertEqual(report_hash, report_file.read_bytes())
+        with self.assertRaises(FileExistsError):
+            review_visual_file(report_file, [self.source], target,
+                               role_labels=["part_003=socket"], root=self.root,
+                               markdown=True)
+        assert not (self.root / "reports/latest/second.json").exists()
+        (self.root / "reports/latest/second.md").write_text("keep me", "utf-8")
+        with self.assertRaises(FileExistsError):
+            review_visual_file(
+                report_file, [self.source], "reports/latest/second.json",
+                root=self.root, markdown=True)
+        self.assertFalse((self.root / "reports/latest/second.json").exists())
 
     def test_duplicate_key_json_rejected(self):
         file = self.root / "bad.json"
