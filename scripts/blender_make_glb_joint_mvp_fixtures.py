@@ -16,6 +16,8 @@ import sys
 import bpy
 
 SEGMENTS = 12
+SOCKET_OPENING_REFERENCE = 1.70
+SOCKET_OPENING_DEFECT = 0.78
 
 
 def _mesh(name, coords, triangles):
@@ -28,9 +30,18 @@ def _mesh(name, coords, triangles):
     return obj
 
 
-def _ring(*, narrow=False, missing_face=False):
-    """Four concentric 12-vertex rings form an annular hollow socket."""
-    outer, inner = 1.30, (0.39 if narrow else 0.85)
+def _ring(*, socket_opening_diameter=SOCKET_OPENING_REFERENCE,
+          missing_face=False):
+    """Four concentric 12-vertex rings form an annular hollow socket.
+
+    Only the CBDK-owned explicit 0.78/1.70 synthetic control values are
+    accepted; never take or execute arbitrary addon settings as fixture code.
+    """
+    if (type(socket_opening_diameter) not in (float, int) or
+            socket_opening_diameter not in (SOCKET_OPENING_REFERENCE,
+                                            SOCKET_OPENING_DEFECT)):
+        raise ValueError("Synthetic socket experiment value is not allowlisted")
+    outer, inner = 1.30, float(socket_opening_diameter) / 2.0
     levels = [(outer, -0.60), (inner, -0.60),
               (outer, 0.60), (inner, 0.60)]
     vertices = [
@@ -98,8 +109,10 @@ def export(target, variant):
     if variant not in {"reference", "identical", "narrow", "shifted", "uncapped", "narrow_placebo"}:
         raise RuntimeError("Invalid fixture variant")
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    ring = _ring(narrow=variant in {"narrow", "narrow_placebo"},
-                 missing_face=variant == "uncapped")
+    ring = _ring(socket_opening_diameter=(
+        SOCKET_OPENING_DEFECT if variant in {"narrow", "narrow_placebo"}
+        else SOCKET_OPENING_REFERENCE
+    ), missing_face=variant == "uncapped")
     ball = _ball(shifted=variant in {"shifted", "narrow_placebo"})
     _mesh("CBDK_SYNTH_Ball", *ball)
     _mesh("CBDK_SYNTH_Shaft", *_shaft())
