@@ -81,6 +81,14 @@ def _shaft():
         j = (i + 1) % SEGMENTS
         tris.extend([(i, j, SEGMENTS + i),
                      (j, SEGMENTS + j, SEGMENTS + i)])
+    # Both cylinder caps must be closed in the nominal/negative control.
+    # Otherwise the baseline would *correctly* report open edges.
+    bottom_center, top_center = len(coords), len(coords) + 1
+    coords.extend([(x, 0.0, bottom), (x, 0.0, top)])
+    for i in range(SEGMENTS):
+        j = (i + 1) % SEGMENTS
+        tris.append((bottom_center, j, i))
+        tris.append((top_center, SEGMENTS + i, SEGMENTS + j))
     return coords, tris
 
 
