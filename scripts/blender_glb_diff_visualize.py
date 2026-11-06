@@ -23,6 +23,7 @@ from cbdk.glb_surface_distance import MAX_TRIANGLES  # noqa: E402
 from cbdk.glb_diff_viewer import render_local_diff_viewer  # noqa: E402
 from cbdk.glb_part_match import suggest_spatial_part_matches  # noqa: E402
 from cbdk.glb_sampling_audit import probe_sampling_sensitivity, counts_by_part  # noqa: E402
+from cbdk.glb_boundary_audit import boundary_audit  # noqa: E402
 
 MARKER = "CBDK_GLB_DIFF_VISUALIZE_PASS "
 
@@ -155,6 +156,8 @@ def main():
     )
     (output_dir / "compare_viewer.html").write_text(html, encoding="utf-8")
 
+    topology_reference = boundary_audit(ref_faces, ref_counts)
+    topology_candidate = boundary_audit(cand_faces, cand_counts)
     part_matches = suggest_spatial_part_matches(
         ref_faces, cand_faces, ref_counts, cand_counts,
     )
@@ -179,6 +182,20 @@ def main():
         "part_id_scheme": "anonymous_sequential_by_imported_object_name",
         "cross_file_part_identity_proven": False,
         "part_match_candidates": part_matches,
+        "boundary_edge_audit": {
+            "method": topology_reference["method"],
+            "relative_weld_epsilon": topology_reference["relative_weld_epsilon"],
+            "coordinate_welding_is_approximate": True,
+            "fully_watertight_proven": False,
+            "internal_voids_verified": False,
+            "hole_locations_verified": False,
+            "reference": topology_reference["summary"],
+            "candidate": topology_candidate["summary"],
+            "parts": {
+                "reference": topology_reference["parts"],
+                "candidate": topology_candidate["parts"],
+            },
+        },
         "sampling_sensitivity_audit": {
             "method": audit["method"],
             "initial_samples_per_triangle": audit["initial_samples_per_triangle"],
@@ -211,6 +228,7 @@ def main():
             "Anonymous part indexes identify meshes within one GLB only",
             "Same part index across files is NOT verified object correspondence",
             "Spatial part candidates are uncertain heuristics, not verified identity",
+            "Coordinate-welded edge counts suggest open boundaries; not proof of actual holes or internal volumes",
             "Additional probes reveal sample-sensitive faces, not all unmeasured regions",
             "Unmeasured regions are not localized or uniquely colored",
             "Only local derived GLBs contain private geometry; JSON is aggregate-only",
