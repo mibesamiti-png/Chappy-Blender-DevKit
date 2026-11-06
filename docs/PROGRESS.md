@@ -926,3 +926,10 @@ Chromium CIはUbuntu24.04でPlaywrightを導入し、CBDK自作の合成2部品�
 コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
 
 closed/open 四面体のBlender3版での差分と、元ソースを公開しない匿名集計が確認できた。これをもってGLB-020全体を完成とはせず、手動レビュー・モデルの細部や本当の部品同一性は未解決のまま維持する。
+
+## 2026-11-07 GLB-020 第7段階 — 境界線の位置を3D比較画面に表示
+
+- `local_boundary_segments`で座標近接統合後の**境界エッジ両端の世界座標**を、匿名部品番号付きでローカル画面専用に出力。既存の境界集計との本数一致を必須とし、最大512三角面由来の1536線分に制限。公開レポートには座標を出さない。
+- `compare_viewer.html`に水色の境界線オーバーレイと表示切替を追加。参照/生成の独立した部品選択・同期カメラに追従。Canvas 2Dの描画は**奥側の線も見えるX-ray的な近似**で、正確な遮蔽判定や実物の穴位置の証明には使わない。
+- `tests/test_glb_boundary_audit.py`と`tests/test_glb_diff_visualize.py`で閉/開四面体の線分座標・非公開HTMLの保持・匿名部品ごとの分離を検証。Chromium GUIで左右の境界線の表示切替と、Blender3版CIでGLB由来HTMLの境界線0対3本を検証するゲートを追加。
+- これは**形状の検査を補助する表示**であり、内部空洞の一致・小穴の完全検出・元アドオンの自動修正は行わない。GLB-020部分実装、GLB-021/022未実装、正式版v0.17.0のまま。
