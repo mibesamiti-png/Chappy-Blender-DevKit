@@ -157,3 +157,8 @@ PR #23でPython 343件を3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender
 Blender版previewは、通常のPNGとは別に実メッシュを32x32へ正射影したbinary silhouette signatureを`scene_metadata.json`へ保存する。全体7方向と部品別4方向を比較できるため、world boundsが同じでも輪郭が異なるケースを検出しやすくなる。
 
 `glb-compare` / `glb-regression` の既定IoU下限は0.90。必要に応じ `--silhouette-iou-min 0.95` のように厳しくできる。32x32より小さい穴・細線・内部形状は完全には捉えないため、シルエット一致を完全な形状同一性とは扱わない。
+
+
+### シルエット差の実Blender検証
+
+PR #24では、基準Cubeと**同じworld bounds**を持つ八面体をcandidateとして生成した。寸法/中心の許容差を緩めた状態でも32x32 silhouette IoUだけで差分を検出し、Blender 4.4.3 / 4.5.15 / 5.2.1すべてで意図した不一致判定を確認した。4.5.15では`glb-regression`の一括経路も検証済み。
