@@ -199,7 +199,7 @@ jobs:
           from pathlib import Path
 
           root = Path('reports/ci/glb_preview')
-          expected = {'front.png', 'right.png', 'top.png', 'iso.png'}
+          expected = {'front.png', 'back.png', 'right.png', 'left.png', 'top.png', 'bottom.png', 'iso.png'}
           missing = sorted(name for name in expected if not (root / name).is_file())
           assert not missing, missing
 
@@ -215,7 +215,7 @@ jobs:
               'CBDK_Test_Cube', 'CBDK_Test_Sphere'
           }, scene['objects']
           PY
-          echo "GLB static structure + front/right/top/iso Blender preview PASSED." >> "$GITHUB_STEP_SUMMARY"
+          echo "GLB static structure + seven scene views + isolated object thumbnails PASSED." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload evidence and log even when Blender fails
         if: always()
