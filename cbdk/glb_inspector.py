@@ -199,6 +199,22 @@ def _validate_graph(nodes: list, meshes: list, scenes: list) -> tuple[list[list[
     return parents, children_rows
 
 
+def _external_uri_references(buffers: list, images: list) -> list[dict[str, Any]]:
+    refs = []
+    for kind, rows in (("buffer", buffers), ("image", images)):
+        for index, entry in enumerate(rows):
+            if not isinstance(entry, dict):
+                raise GLBInspectionError(f"{kind}s[{index}] must be an object")
+            uri = entry.get("uri")
+            if uri is None:
+                continue
+            if not isinstance(uri, str):
+                raise GLBInspectionError(f"{kind}s[{index}].uri must be a string")
+            if uri and not uri.lower().startswith("data:"):
+                refs.append({"kind": kind, "index": index, "uri": uri})
+    return refs
+
+
 def inspect_glb(path: str | Path) -> dict:
     """Return deterministic structural metadata without importing or rendering."""
     document, chunks, file_size = _read_glb_json(path)
@@ -208,12 +224,14 @@ def inspect_glb(path: str | Path) -> dict:
     materials = _safe_list(document.get("materials"), "materials")
     accessors = _safe_list(document.get("accessors"), "accessors")
     images = _safe_list(document.get("images"), "images")
+    buffers = _safe_list(document.get("buffers"), "buffers")
     textures = _safe_list(document.get("textures"), "textures")
     animations = _safe_list(document.get("animations"), "animations")
     skins = _safe_list(document.get("skins"), "skins")
     cameras = _safe_list(document.get("cameras"), "cameras")
 
     parents, children_rows = _validate_graph(nodes, meshes, scenes)
+    external_uris = _external_uri_references(buffers, images)
 
     mesh_rows = []
     total_primitives = approximate_vertex_refs = approximate_index_refs = 0
@@ -295,7 +313,7 @@ def inspect_glb(path: str | Path) -> dict:
         "counts": {
             "scenes": len(scenes), "nodes": len(nodes), "meshes": len(meshes),
             "materials": len(materials), "accessors": len(accessors),
-            "images": len(images), "textures": len(textures),
+            "images": len(images), "buffers": len(buffers), "textures": len(textures),
             "animations": len(animations), "skins": len(skins), "cameras": len(cameras),
             "primitives": total_primitives,
             "approximate_vertex_references": approximate_vertex_refs,
@@ -304,6 +322,7 @@ def inspect_glb(path: str | Path) -> dict:
         "scenes": scene_rows,
         "nodes": node_rows,
         "meshes": mesh_rows,
+        "external_uris": external_uris,
         "materials": [
             {"index": i, "name": _name(m.get("name") if isinstance(m, dict) else None, f"Material_{i}")}
             for i, m in enumerate(materials)
@@ -317,6 +336,7 @@ def inspect_glb(path: str | Path) -> dict:
             "static_only": True,
             "executed_embedded_content": False,
             "loaded_external_uris": False,
+            "external_uris_present": bool(external_uris),
             "decoded_images": False,
             "loaded_binary_payload": False,
             "blender_runtime_verified": False,
