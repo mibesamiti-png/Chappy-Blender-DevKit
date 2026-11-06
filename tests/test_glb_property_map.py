@@ -62,6 +62,7 @@ class GLBPropertyMapTests(unittest.TestCase):
         self.assertEqual(match["candidate_family"], "ball_diameter")
         self.assertEqual(match["match"], "exact_declaration_name_only")
         self.assertEqual(match["declarations"][0]["class_name"], "Settings")
+        self.assertEqual(match["declarations"][0]["property_constructor"], "FloatProperty")
         self.assertEqual(match["declarations"][0]["line"], 3)
         self.assertEqual(row["unmatched_parameter_families"],
                          ["socket_opening_diameter", "shaft_diameter"])
@@ -93,6 +94,8 @@ class GLBPropertyMapTests(unittest.TestCase):
             "class Config:\n    ball_diameter: FP(default=2)\n")
         out = map_repair_plan_properties(review_plan(("ball_diameter",)), [source])
         self.assertEqual(out["static_property_declarations_found"], 1)
+        self.assertEqual(out["recommendations"][0]["exact_name_matches"][0]
+                         ["declarations"][0]["property_constructor"], "FloatProperty")
 
     def test_plain_unimported_property_function_is_not_trusted(self):
         source = self.make_source(
