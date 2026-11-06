@@ -333,10 +333,10 @@
     {
       "id": "GLB-019",
       "title": "ローカル2GLBを安全に読み込みBVH表面距離と特徴優先多解像度の比較を既存パイプラインに統合",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/glb_surface_pipeline.py",
-      "note": "新CLI glb-surface-review: 静的GLB preflight（ローカルのみ/外部URI禁止/24MiB/頂点参照10万）、factory-startup + disable-autoexec Blender trusted runnerで共通world-space三角面を読込、固定24点BVH表面距離+特徴優先粗8精48の集計JSONを保存。512面/GLB超はskipped明記、未実測を合格にしない。既存glb-regression --surface-reviewは任意追加で、元のpassedはメタデータ専用と注記。Pythonユニット/Blender3版で既存自作合成GLB実読込テストを追加したがCI結果待ち。ユーザーデータは公開CI未投入"
+      "note": "ローカル2GLBを静的preflight後、factory-startup/disable-autoexecのBlender固定スクリプトでworld-space三角面を抽出し、固定BVH距離+特徴優先多解像度の集計を出すglb-surface-review CLIを実装。glb-regression --surface-review opt-inにも統合。512面超はskippedで合格扱いしない。合成GLBの開口検出/別三角分割をBlender4.4.3/4.5.15/5.2.1で実輸入して確認（実装SHA ec13972f, Blender run 42257317535成功）。Python3版 42257317519, kit 42257317475, handoff 42257317601成功。Windows PowerShell run 42257317637は記録時pending。実ユーザーGLB大規模/個別オブジェクト対応は未検証"
     }
   ],
   "known_issues": [
@@ -521,9 +521,9 @@
     {
       "id": "NEXT-017",
       "priority": 17,
-      "status": "in_progress",
+      "status": "done",
       "title": "本物の2つのGLB入力から表面誤差を出力し既存glb-regressionにopt-in統合",
-      "acceptance": "Blender 4.4.3/4.5.15/5.2.1で自作合成GLB2組を新CLIで読み込んで表面差有無を計測。glb-regression --surface-reviewが従来の比較/診断/プランと集計surface_review.jsonを共存させる。preflight/上限/スキップ/プライバシー検証のPythonテスト成功。privateユーザーGLBをCI投入しない"
+      "acceptance": "Blender 4.4.3/4.5.15/5.2.1で自作合成GLB2組を新CLIに実読込し、中央開口は差分検出・同じ面の別分割は差分なしを確認。既存glb-regression --surface-reviewとの共存を実機(4.5.15)とモック回帰テストで確認（run 42257317535）。Pythonの12 launcher+3 regressionテスト成功。未解析/一致保証の混同なし"
     }
   ],
   "decisions": [
@@ -758,6 +758,6 @@
     "surface_benchmark": "2026-11-07: GLB-016 implementation+docs SHA ca9ad5076fb911bc8337bc525c163b1b069c6bcb all 5 workflows SUCCESS: Python 42241396452, Windows PowerShell 42241396094, Blender 3-version 42241395979, Windows kit 42241396296, durable handoff 42241396289. Synthetic 64-face BVH/brute median ms by Blender version: 4.4.3 35.510505/161.156313, 4.5.15 19.356758/86.027068, 5.2.1 32.467850/149.716417; synthetic 512-face BVH-only median ms 352.050953/192.798623/321.247609. No portable speedup promise; GLB-016 implemented/blender_ci, NEXT-014 done; v0.17.0 formal release remains.",
     "multires_surface": "2026-11-07: GLB-017 SHA 4c7248c853047b1f21088e01441a6c5fed9ca4b2 all CI SUCCESS: Blender 4.4.3/4.5.15/5.2.1 42244257499 (narrow hole legacy24=0, coarse8=0, selected48=0.0657466), Python3-version 42244257474 (13 new tests), Windows PowerShell 42244257438, Windows kit 42244257461, durable handoff 42244257445. GLB-017 implemented/blender_ci, NEXT-015 done. General coverage and enclosed cavities not proven. PR draft, release last_verified 0.17.0 preserved.",
     "feature_priority": "2026-11-07 GLB-018 code/docs SHA 676e92f8cc4ad48774ea6e0702710576fe97a286 all five GitHub CI SUCCESS: Python3 42246918798, Windows PowerShell 2 42246918818, Blender4.4.3/4.5.15/5.2.1 42246918883, Windows kit 42246918868, durable handoff 42246918953. Real synthetic 9-GLB: large panels with narrow small-part opening area-only max 0.0 vs feature-aware max 0.0657466 all Blender versions; review-only false defect-equivalence/auto-apply flags. GLB-018 implemented/blender_ci, NEXT-016 done. PR draft; formal v0.17.0 preserved.",
-    "real_glb_surface_bridge": "2026-11-07 GLB-019 local opt-in real GLB surface pipeline, trusted Blender runner, static preflight/no external URI/24 MiB/512 faces, output aggregates, regression --surface-review, 12 launcher safety + 3 regression tests, 3 Blender-version CI synthetic end-to-end. Pending observed current SHA CI. Official last_verified v0.17.0; PR #25 draft."
+    "real_glb_surface_bridge": "2026-11-07 GLB-019 implementation+spec SHA ec13972f45f73617536d718491eee57f98a21e26 Blender3-version 42257317535 SUCCESS (new local CLI holes vs alternative triangulation, opt-in regression 4.5.15), Python3 42257317519 SUCCESS, kit 42257317475 SUCCESS, handoff 42257317601 SUCCESS; Windows PowerShell run 42257317637 pending at recording. 512 triangles cap, 24 MiB size and no external URIs. GLB-019 implemented/blender_ci, NEXT-017 done. PR #25 draft, formal last_verified v0.17.0 unchanged."
   }
 }
