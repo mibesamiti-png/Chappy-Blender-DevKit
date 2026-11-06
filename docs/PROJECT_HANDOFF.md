@@ -13,8 +13,8 @@
 ## 最新の開発状況
 
 - 現在のバージョン: `0.16.0`
-- 開発段階: private_development_preview
-- 最新の節目: v0.16 ストリーミング監査とXYZ各軸独立照合を実装。微小な部分移動・未選択頂点の微小変化も検出し復元。ローカルPython238件成功。CIランナー問題によりPR #18未マージ
+- 開発段階: public_repository_development_preview
+- 最新の節目: リポジトリ公開化でGitHub Actionsのランナー未割当問題が解消。PR #21のPython 3版・Windows 2版・Blender 3版が全成功し、GLB 7方向＋部品単独レンダリングも実機CI成功。PR #18/#20も再検証中
 - 次の予定リリース: `0.17.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -33,18 +33,20 @@
 | `PLAN-001` | 機能依存閉包・Blender互換性チェック | 実装済 | Pythonテスト | 5機能。許可リストにないコードは実行しない |
 | `BUILD-001` | レシピからのBlenderアドオン生成 | 一部実装 | Blender CI | レガシー形式・固定の自作プレビューのみ |
 | `EDIT-001` | Edit Mode選択頂点の安全な移動 | 実装済 | Blender CI | 単一メッシュ/有限オフセット/Blender UNDOフラグ |
-| `EDIT-002` | 編集差分の監査とベストエフォート復元 | 一部実装 | Blender CI | 加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。ローカル238件成功・最新版CIは未検証 |
-| `TEST-001` | Python/Windows/Blender 3バージョンCI | 実装済 | Blender CI | 4.4.3、4.5.15、5.2.1で最新の確認済み |
+| `EDIT-002` | 編集差分の監査とベストエフォート復元 | 一部実装 | Blender CI | 加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。PR #21のBlender 4.4.3/4.5.15/5.2.1 CIで実測成功 |
+| `TEST-001` | Python/Windows/Blender 3バージョンCI | 実装済 | Blender CI | リポジトリ公開化後、PR #21でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。mainの正式last_verifiedは未更新 |
 | `UI-001` | 汎用アドオンUI組み立て | 未実装 | 未検証 | 任意レイアウトの生成は未対応 |
 | `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 未実装 | 未検証 | 法的/ライセンス確認を先に行う |
 | `INST-001` | GitHubからBlenderへの直接インストール・更新 | 保留 | 未検証 | ユーザー希望で保留。UI確認段階まで実装しない |
 | `PERF-001` | 巨大メッシュ向け監査・効率化 | 一部実装 | Blender CI | 20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否 |
 | `GUI-001` | 実際のGUI Undo・操作感の自動検証 | 未実装 | 未検証 | ヘッドレスではUndoフラグと編集結果まで確認 |
-| `UNDO-001` | 背景BlenderでのネイティブUndo/Redo検査 | 一部実装 | 未検証 | v0.17開発ブランチに追加。poll不可を未検証として記録。GitHub実機CIは未実施、GUIショートカットは対象外 |
-| `PLAN-002` | 全レシピと部品依存の一括静的監査 | 一部実装 | 未検証 | 6レシピ・5機能・7部品の整合性と3版の静的互換性を照合。13件の回帰テストを追加したが現行CI未実行、実機認定なし |
-| `REG-001` | 自作部品・機能の登録計画自動生成 | 一部実装 | 未検証 | 未登録ID・依存・ソース衝突を検査して非実行のレビュー計画を生成。コード/台帳の自動追加・承認は行わない。16件の追加回帰テストは未実測 |
-| `REG-002` | 登録計画から未完成テストのひな形を安全に生成 | 一部実装 | 未検証 | 現行カタログと登録計画の完全一致を確認し、5つのTODO失敗テストをignored領域に新規生成。19件の回帰テスト追加、実行・Blender実機は未検証 |
-| `REG-003` | 読み取り専用・メッシュ編集で未完成テストの内容を切替 | 一部実装 | 未検証 | --behavior read_only/mesh_editを明示指定。共通5項目に不変性・Undo・選択範囲・復元など3項目を追加。従来未指定JSONは互換維持。新規13テストはCI未実測 |
+| `UNDO-001` | 背景BlenderでのネイティブUndo/Redo検査 | 一部実装 | Blender CI | PR #21でBlender 4.4.3/4.5.15/5.2.1の背景プローブを実行。背景ではundo.poll不可をunavailableとして正しく記録し、GUIショートカットは対象外 |
+| `PLAN-002` | 全レシピと部品依存の一括静的監査 | 一部実装 | Pythonテスト | 6レシピ・5機能・7部品の整合性と3版の静的互換性を照合。PR #21のPython 3.11/3.12/3.13全体テスト成功 |
+| `REG-001` | 自作部品・機能の登録計画自動生成 | 一部実装 | Pythonテスト | 未登録ID・依存・ソース衝突を検査して非実行のレビュー計画を生成。コード/台帳の自動追加・承認は行わない。PR #21のPython 3版CIで回帰テスト成功 |
+| `REG-002` | 登録計画から未完成テストのひな形を安全に生成 | 一部実装 | Pythonテスト | 現行カタログと登録計画の完全一致を確認し、TODO失敗テストをignored領域に新規生成。Windows短縮パス差も修正し、PR #21のPython/Windows CI成功 |
+| `REG-003` | 読み取り専用・メッシュ編集で未完成テストの内容を切替 | 一部実装 | Pythonテスト | --behavior read_only/mesh_editを明示指定。共通項目に不変性・Undo・選択範囲・復元を追加。PR #21のPython 3版CIで回帰テスト成功 |
+| `GLB-001` | GLB静的構造解析とBlender多方向プレビュー | 実装済 | Blender CI | schema v2静的解析＋Blender本命7方向PNG＋最大32部品単独サムネイル＋neutral clay/Workbench。PR #21のBlender 4.4.3/4.5.15/5.2.1で合成GLB fixtureの構造JSON・scene metadata・全画像生成が成功 |
+| `GLB-002` | BlenderなしGLB Quick Preview fallback | 実装済 | Pythonテスト | 任意依存trimesh+matplotlibで7方向PNGと最大32部品単独サムネイルを生成。外部URIを事前拒否し、50万頂点/25万面の安全上限。ユーザーGLB(7 mesh)で7方向+7部品画像をローカル生成確認。本命のBlender実レンダリングより低精度であることを明示 |
 
 ## 既知の問題・制約
 
@@ -55,16 +57,18 @@
 | `LIM-003` | low | open | Blender公式アーカイブ取得で稀にHTTP 403。回避策: ダウンロード失敗とコード失敗を区別し、CIの失敗ジョブのみ再実行する |
 | `LIM-004` | medium | open | 自作部品の採用・ライセンス/再配布確認は未完了。回避策: 開発用プレビューのみで、approved=falseを維持する |
 | `LIM-005` | low | open | 大規模メッシュは監査20万要素上限を超えると操作しない。回避策: 小さなメッシュに分割するか、必要に応じ監査上限を再設計する。安全を確認せず上限を解除しない |
-| `LIM-006` | high | open | PR #18のCIがランナー未割当(0)・実行ステップ0で終了。GitHub Actions利用枠またはサービス側制限の可能性。回避策: Issue #19にGitHub Actionsランナー未割当/steps=0を記録。プライベートリポジトリのActions利用枠・予算などを所有者が点検。PR #18にはCI重複排除を導入済み。全CI成功までmainはv0.15を維持 |
+| `LIM-006` | low | fixed | 非公開時のGitHub Actionsランナー未割当(steps=null)は公開化で解消。回避策: 2026-11-06にリポジトリをpublicへ変更後、同じPRワークフローで実ランナー・steps・logsが生成され全CIが実行可能になった。Issue #19は解決としてclose |
+| `LIM-007` | low | fixed | GLB多方向プレビューの実機CI未実行問題は解消。回避策: PR #21のBlender 4.4.3/4.5.15/5.2.1で7方向画像と部品単独画像を含むfixtureテストが成功。実ユーザーGLBのBlenderレンダリングは引き続き必要時に個別確認 |
 
 ## 次にやること（優先順）
 
-1. `NEXT-006` **PR #18のGitHub Actions実行前失敗を調査しWindowsを含む全CIを再検証** (in_progress)。完了条件: GitHub Issue #19: GitHub Actions usage/budgetまたはランナー供給問題を切り分け、Python/Windows/Blender3版/ZIPの全CI成功を実測してv0.16をマージ
+1. `NEXT-006` **PR #18の公開リポジトリCI再検証とv0.16統合判断** (in_progress)。完了条件: 公開化でランナー問題は解消済み。PR #18のPython/Windows/Blender/パッケージ再実行を完了し、結果を確認して安全ならv0.16統合へ進む
 2. `NEXT-002` **Blender Undo・Redoの実機検証を拡充** (in_progress)。完了条件: 自動化可能なUndo/Redoの機械的チェックと、GUI操作未検証部分を切り分けて記録する
 3. `NEXT-005` **v0.17：ベンチマーク実測を比較して監査の追加最適化・Undo/Redo回帰テストを検討** (todo)。完了条件: 3つのBlender版の監査結果とメモリ測定を比較し、速度/安全性の妥協点と残るGUI検証を記録
 4. `NEXT-003` **機能登録と新レシピ構築の自動化を改善** (in_progress)。完了条件: 新規許可部品で台帳・依存・CIの不一致を検出する
 5. `NEXT-004` **GitHubからBlenderへ直接インストール・更新** (deferred)。完了条件: ユーザーがUI確認の必要性を示すまで作らない
 6. `NEXT-001` **v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断** (in_progress)。完了条件: メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない
+7. `NEXT-007` **GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認** (in_progress)。完了条件: 合成fixtureの3バージョンBlender CIは完了。実ユーザーGLBでも必要に応じBlender Previewを生成し、Quick Previewとの部品対応と形状を照合する
 
 ## 前回、実際に確認されたテスト
 
@@ -89,6 +93,9 @@
 - `DEC-009` 新規部品登録は提案生成と人手の許可を分離。CLIでレビュー案を出力しても許可リスト・元ソース・部品台帳を変更しない。新部品は正式採用せず、手動レビューとCIが必要
 - `DEC-010` テストひな形はレビュー用の未完成コードと明示して非実行・非上書き。生成先はreports/latest/scaffolds内のみ。全TODOはself.failで成功偽装を防止し、tests/や元機能・台帳へ自動登録しない
 - `DEC-011` 新機能の動作種別は開発者の明示申告とし自動推測しない。read_onlyとmesh_editの申告は静的メタデータであり実機での安全性証明ではない。既存ドラフトはunspecifiedとして共通5項目を維持し、生成ひな形はすべて失敗TODO
+- `DEC-012` GLB形状理解は構造JSONとBlender実レンダリングを根拠にする。画像生成AIによる再構成を元GLBの正確な表示として扱わず、生成画像は説明図・設計案に限定する
+- `DEC-013` Blender不能時は任意依存Quick Previewをfallbackとして使う。trimesh+matplotlib画像は実GLB形状から生成するが描画精度はBlenderより低い。外部URIを拒否し、Blender実レンダリングが利用可能ならそちらを優先する
+- `DEC-014` 公開リポジトリではGitHub Actionsを実機デバッグ基盤として積極利用する。2026-11-06のpublic化でprivate時のランナー未割当が解消。追跡済み内容は公開情報になるため、ユーザーGLB・私有元アドオン・生成private report・秘密情報は今後もコミットしない
 
 ## 更新・プライバシールール
 

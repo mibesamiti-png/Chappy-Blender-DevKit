@@ -332,3 +332,22 @@ v0.15で加工前後のメッシュを丸ごと複製していた方式を変更
 - Blender 4.4.3/4.5.15/5.2.1上で70×70格子メッシュを使い実行秒数・Python追跡メモリのピークを記録し、上限超過時に元メッシュが変わらないことを確認。
 
 旧capture_edit_snapshot/audit_vertex_translation APIや既存レシピは維持。20万要素の上限は解除しておらず、性能の観測値は環境依存。個人開発用プレビュー・未承認状態・GitHubからの直接インストール保留も継続。
+
+
+## v0.17 draft — GLB Visual Inspector
+
+参考3Dモデルやアドオン生成物をGLBで受け取ったとき、画像生成AIの再構成に頼らず、構造JSONとBlender実レンダリングを作る開発機能です。
+
+```bash
+# Blenderなし: node/mesh/material/primitiveを静的解析
+python -m cbdk glb-inspect model.glb --output reports/latest/glb_structure.json
+pip install -e ".[glb-quick]"
+python -m cbdk glb-quick-preview model.glb --output reports/latest/glb_quick_preview
+
+# 信頼済みBlenderあり: 構造JSON + front/right/top/iso PNG + scene metadata
+python -m cbdk glb-preview model.glb \
+  --blender /path/to/blender \
+  --output reports/latest/glb_preview
+```
+
+静的解析はGLBのBIN payload、外部URI、画像を読み込まず、JSON構造だけを確認します。ユーザーGLBや生成レポートはGitHubへ自動コミットしません。詳細は `docs/GLB_VISUAL_INSPECTOR.md`。

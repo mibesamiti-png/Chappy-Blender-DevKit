@@ -434,3 +434,53 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - `docs/REGISTRATION_DRAFT.md`、仕様書、進捗台帳、引き継ぎ、AGENTSを更新。要件ID `REG-003` / 設計判断ID `DEC-011`。
 
 **確認状況：** 上記13件はテストを追加しただけで、GitHub ActionsやBlender/Windows実機では成功を確認していない。PR #18/20はCIの実行前障害（Issue #19）で未マージ。検証済みの最新バージョンはv0.15.0。
+
+
+## v0.17 開発中 — 2026-11-06（GLB Visual Inspector）
+
+### 実装
+- `cbdk/glb_inspector.py`: GLB 2.0のヘッダとJSONチャンクだけを標準ライブラリで解析。scene/node/mesh/material、primitive、POSITION/index accessor件数をJSON化し、外部URI・画像・埋め込みデータを実行/デコードしない。
+- `python -m cbdk glb-inspect model.glb`: Blenderなしで `structure.json` 相当の構造レポートを出力。
+- `cbdk/glb_render.py` + `scripts/blender_glb_render.py`: 信頼済みBlenderを `--background --factory-startup` で起動し、GLBを実importして `front/right/top/iso` の4PNGと `scene_metadata.json` を生成。
+- `python -m cbdk glb-preview model.glb --blender <path>`: 静的構造JSONとBlender実レンダリングを一括生成。
+- `scripts/blender_make_glb_fixture.py`: CI専用にCube + Sphereの決定的GLBを作成。
+- Blender 3バージョンCIへ、fixture生成 → 静的解析 → 4方向レンダリング → オブジェクト名/枚数/metadata確認を追加。
+- `docs/GLB_VISUAL_INSPECTOR.md`: AIがGLB形状を判断する際は、画像生成AIの再構成ではなくBlender実レンダリングと構造JSONを優先するルールを記録。
+
+### 現時点の確認
+- GLB静的解析8件 + Blender起動ラッパー5件、合計13件のPython単体テストをローカルで成功。
+- ユーザー提供の実GLB `うさぎとかえる - A5(1).glb` を静的解析し、7 node / 7 meshを検出。node名として `足の甲.001`, `つま先.001`, `かかと.001_A`, `かかと.001_B`, `BallJoint_001_Ball` などを読み取れた。これはGitHubへ実データを保存したという意味ではなく、ローカル検証のみ。
+- Blender 4.4.3 / 4.5.15 / 5.2.1での新しいGLBレンダリングCIはまだ成功結果を確認していないため、実機検証済みとは記録しない。
+
+### 設計判断
+- GLBの内容を画像生成AIだけで「再現した画像」は元データの正確なプレビューとして扱わない。
+- 今後の形状理解は `front/right/top/iso PNG → scene_metadata.json → structure.json → ユーザースクリーンショット` を主要根拠とする。
+- GLBはModifier、Edit Mode選択、BlenderアドオンPropertyを完全保存しないため、内部構造デバッグでは.blend/Blender実機を引き続き併用する。
+
+
+### PR #21 CI観測（2026-11-06）
+- GLB Visual Inspector用ドラフトPR #21を `feature/v0.17-undo-redo-probe` 向けに作成。
+- GitHub ActionsはPython、Windows、Blender 4.4.3 / 4.5.15 / 5.2.1、durable handoffの全実行ジョブで失敗表示となったが、API上はすべて `steps=null` / `logs_url=null`。リポジトリコードや新しいGLBテストへ到達した証拠がない。
+- 実行ID: Python `42172631874`、Windows `42172632052`、Blender `42172631906`、handoff `42172631812`。
+- 既存Issue #19へ同じランナー割当症状の再現として記録。**GLB実装のBlender runtime failureとは判定せず、未検証を維持する。**
+
+
+## v0.17 GLB Visual Inspector — 7方向・部品単独・Quick Preview fallback
+
+- Blender本命レンダラーを4方向から**7方向（front/back/right/left/top/bottom/iso）**へ拡張。GLB内Mesh Objectを最大32個まで1個ずつ斜視レンダリングし、重なって隠れる部品を個別確認できるようにした。
+- 構造確認では元マテリアルの透明/発光に影響されないよう、Blender内だけで中立Clayへ一時置換。元マテリアル名はscene metadataに保持。
+- `glb_inspector.py` schema v2: nodeのparents/mesh_name、POSITION accessor min/max、壊れたnode/mesh参照、node cycleを検査。外部buffer/image URIは**参照だけ記録し読み込まない**。
+- `glb-quick-preview` を追加。任意依存 `trimesh + matplotlib + numpy` でBlenderなしでも7方向+部品単独画像を作る。外部URIはloader起動前に拒否、50万頂点/25万面を上限にする。
+- ユーザーの `うさぎとかえる - A5(1).glb` をローカル検証し、**7 node / 7 mesh**、足の甲・つま先・かかとA/B・円柱2個・BallJoint球を識別。Quick Previewで**7方向画像 + 7部品単独画像**を実生成できた。ユーザーデータはGitHubへコミットしていない。
+- Quick PreviewはMatplotlib 3D由来の低精度fallbackであり、Blender実レンダリングと同等の証拠にはしない。
+- 最新PR #21 workflowもPython/Blenderジョブが `steps=null` のまま実行前失敗。Blender 4.4.3/4.5.15/5.2.1実機検証は引き続き未確認。
+
+
+## 2026-11-06 — public化でGitHub Actions実機デバッグ復旧
+
+- リポジトリをpublicへ変更後、private時に発生していた `runner_id=0 / steps=null` のGitHub Actions実行前失敗が解消。Issue #19を解決としてclose。
+- PR #21 head `b2579a4c0149657089c5e6109bed263a5d619dde`: Python 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1の全workflow成功。
+- 実CIでWindows一時フォルダの8.3短縮パス差、Blender sibling script import、headless EGL不足、Blender版ごとのrender engine enum差を発見して修正。
+- GLB Visual Inspectorは3つのBlender版で合成Cube+Sphere GLBをimportし、構造JSON、scene metadata、front/back/right/left/top/bottom/iso、部品単独サムネイルの生成に成功。
+- 背景Blender Undo/Redoプローブは3版で実行。`undo.poll()`不可は `unavailable_in_background` として正常に区別し、GUI Ctrl+Z成功とは扱わない。
+- PR #18/#20の旧失敗workflowもpublic化後に再実行し、下位開発スタックの再検証を開始。mainの正式 `last_verified` は統合前なのでv0.15.0のまま維持。

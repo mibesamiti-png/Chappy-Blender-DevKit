@@ -19,6 +19,9 @@ from .feature_catalog import load_feature_catalog, plan_features
 from .modular_builder import validate_modular_recipe
 from .registration_draft import propose_registration, write_draft
 from .registration_scaffold import scaffold_from_saved_draft
+from .glb_inspector import write_glb_inspection
+from .glb_render import render_glb_preview
+from .glb_quick_render import quick_render_glb
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -134,6 +137,36 @@ def main(argv=None) -> int:
                                   help='Create a TODO-failing local unittest skeleton from a saved draft')
     scaffold_cmd.add_argument('--draft', required=True,
                               help='Saved registration draft JSON under reports/latest/')
+
+    glb_inspect_cmd = sub.add_parser(
+        'glb-inspect',
+        help='Inspect GLB 2.0 structure without Blender, image decoding or external URI loading',
+    )
+    glb_inspect_cmd.add_argument('source', help='Local .glb file')
+    glb_inspect_cmd.add_argument(
+        '--output',
+        default='reports/latest/glb_structure.json',
+        help='Static structure JSON output',
+    )
+
+
+    glb_quick_cmd = sub.add_parser(
+        'glb-quick-preview',
+        help='Render a lower-fidelity GLB preview without Blender (optional dependencies)',
+    )
+    glb_quick_cmd.add_argument('source', help='Local .glb file')
+    glb_quick_cmd.add_argument('--output', default='reports/latest/glb_quick_preview')
+    glb_quick_cmd.add_argument('--resolution', type=int, default=640)
+
+    glb_preview_cmd = sub.add_parser(
+        'glb-preview',
+        help='Inspect a GLB and render front/right/top/iso PNGs in trusted Blender',
+    )
+    glb_preview_cmd.add_argument('source', help='Local .glb file')
+    glb_preview_cmd.add_argument('--blender', required=True, help='Trusted Blender executable path')
+    glb_preview_cmd.add_argument('--output', default='reports/latest/glb_preview')
+    glb_preview_cmd.add_argument('--resolution', type=int, default=768)
+    glb_preview_cmd.add_argument('--timeout', type=int, default=180)
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -254,6 +287,46 @@ def main(argv=None) -> int:
             target = scaffold_from_saved_draft(args.draft)
             print(f"Review-only failing test skeleton: {target}")
             print("TODO assertions intentionally fail. Not imported, approved, or verified.")
+            return 0
+        if args.command == 'glb-inspect':
+            report = write_glb_inspection(args.source, args.output)
+            print(json.dumps({
+                'kind': report['kind'],
+                'source_name': report['source_name'],
+                'counts': report['counts'],
+                'output': str(Path(args.output)),
+                'rendered': False,
+            }, ensure_ascii=False, indent=2))
+            return 0
+
+        if args.command == 'glb-quick-preview':
+            report = quick_render_glb(
+                args.source,
+                args.output,
+                resolution=args.resolution,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'glb-preview':
+            output = Path(args.output)
+            structure = output / 'structure.json'
+            static_report = write_glb_inspection(args.source, structure)
+            render_report = render_glb_preview(
+                args.blender,
+                args.source,
+                output,
+                resolution=args.resolution,
+                timeout=args.timeout,
+            )
+            print(json.dumps({
+                'kind': 'cbdk_glb_visual_inspection',
+                'source_name': static_report['source_name'],
+                'counts': static_report['counts'],
+                'structure': str(structure),
+                'scene_metadata': str(output / render_report['metadata']),
+                'views': [str(output / item) for item in render_report['views']],
+                'blender_version': render_report['blender_version'],
+            }, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'feature-list':
             catalog = load_feature_catalog(root=Path(__file__).resolve().parent.parent)
