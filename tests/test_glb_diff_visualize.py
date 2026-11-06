@@ -14,6 +14,7 @@ from cbdk.glb_diff_colors import (
 )
 from cbdk.glb_diff_visualize import run_glb_diff_visualize
 from cbdk.glb_diff_viewer import render_local_diff_viewer
+from cbdk.glb_part_match import suggest_spatial_part_matches
 from cbdk.glb_surface_pipeline import GLBSurfacePipelineError
 
 
@@ -47,6 +48,7 @@ def report():
         "part_count_limit_per_scene": 64,
         "part_id_scheme": "anonymous_sequential_by_imported_object_name",
         "cross_file_part_identity_proven": False,
+        "part_match_candidates": suggest_spatial_part_matches(TRI, TRI, [1], [1]),
         "parts": {
             "reference": [
                 {"part_id": "part_001", "triangle_count": 1,
@@ -179,6 +181,8 @@ class OfflineLinkedViewerTests(unittest.TestCase):
         self.assertEqual(data["reference"]["parts"][1]["part_id"], "part_002")
         self.assertEqual(len(data["candidate"]["parts"]), 1)
         self.assertFalse(data["auto_apply"])
+        self.assertEqual(data["part_suggestions"]["reference_parts"][0]["status"], "suggested")
+        self.assertFalse(data["part_suggestions"]["cross_file_part_identity_proven"])
         self.assertNotIn("name", content)
         self.assertNotIn("private", content)
 
