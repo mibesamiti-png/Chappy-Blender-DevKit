@@ -270,3 +270,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - The viewer HTML template is trusted CBDK-owned static markup/script. Populate only finite bounded validated coordinates and anonymous integer part/color data. Keep Content-Security-Policy and no remote dependencies/network connections.
 - A software Canvas 2D triangle painter is an approximate 3D view (imperfect depth ordering); never present it as an exact geometric comparison, GUI-verified result, proof of correspondence or auto-repair.
 - Python tests and Node syntax checks do not establish end-user browser interaction. Real browser GUI checks and GLB-020 completion criteria remain outstanding.
+
+## GLB-020 spatial suggestion and Chromium smoke safety
+
+- \`suggest_spatial_part_matches\` returns **review-only, tentative** IDs. Do not claim true cross-GLB part correspondence, automatic addon parameter matching, or self-repair. Missing, overlapping or symmetric parts may be ambiguous and must remain unbound.
+- Viewer candidate navigation requires an explicit user click. Never mutate user addon settings, meshes or original GLB files in this workflow.
+- \`review.json\` may include only anonymous candidate IDs and bounded dimensionless scores, **not raw geometry or source object names**. \`compare_viewer.html\` itself contains derived geometry: private user HTML must not enter public logs, GitHub, Notion, or uploaded CI artifacts.
+- The browser CI uses CBDK-authored synthetic 3D geometry only. A passing headless Chromium interaction smoke does not certify arbitrary private GLBs or exact geometric identity.
