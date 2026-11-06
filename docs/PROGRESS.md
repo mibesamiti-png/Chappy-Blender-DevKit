@@ -474,3 +474,13 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - ユーザーの `うさぎとかえる - A5(1).glb` をローカル検証し、**7 node / 7 mesh**、足の甲・つま先・かかとA/B・円柱2個・BallJoint球を識別。Quick Previewで**7方向画像 + 7部品単独画像**を実生成できた。ユーザーデータはGitHubへコミットしていない。
 - Quick PreviewはMatplotlib 3D由来の低精度fallbackであり、Blender実レンダリングと同等の証拠にはしない。
 - 最新PR #21 workflowもPython/Blenderジョブが `steps=null` のまま実行前失敗。Blender 4.4.3/4.5.15/5.2.1実機検証は引き続き未確認。
+
+
+## 2026-11-06 — public化でGitHub Actions実機デバッグ復旧
+
+- リポジトリをpublicへ変更後、private時に発生していた `runner_id=0 / steps=null` のGitHub Actions実行前失敗が解消。Issue #19を解決としてclose。
+- PR #21 head `b2579a4c0149657089c5e6109bed263a5d619dde`: Python 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1の全workflow成功。
+- 実CIでWindows一時フォルダの8.3短縮パス差、Blender sibling script import、headless EGL不足、Blender版ごとのrender engine enum差を発見して修正。
+- GLB Visual Inspectorは3つのBlender版で合成Cube+Sphere GLBをimportし、構造JSON、scene metadata、front/back/right/left/top/bottom/iso、部品単独サムネイルの生成に成功。
+- 背景Blender Undo/Redoプローブは3版で実行。`undo.poll()`不可は `unavailable_in_background` として正常に区別し、GUI Ctrl+Z成功とは扱わない。
+- PR #18/#20の旧失敗workflowもpublic化後に再実行し、下位開発スタックの再検証を開始。mainの正式 `last_verified` は統合前なのでv0.15.0のまま維持。
