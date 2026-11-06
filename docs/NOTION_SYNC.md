@@ -144,6 +144,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 - テスト対象コード SHA `23e9dec5d313468a70cc3bab7a5bb57fc090a8b3`：[Python 42309145079](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145079)、[Windows 42309145003](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145003)、[Blender4.4.3/4.5.15/5.2.1 42309145076](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145076)、[Windows kit 42309145019](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145019)、[引き継ぎ 42309145005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145005)、[Chromium 42309145006](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145006) **全6系統success**。
 - Keep GLB-022 partial, GLB-021 partial, GLB-020 MVP frozen; formal v0.17.0 and draft v0.18 PR #25 unchanged. CI SHA is for source tests; docs-only commits are not a new code verification.
 
+## GLB-022 adaptive bounded synthetic feedback loop (2026-11-07)
+
+- New bounded adaptive bisection on **CBDK-owned synthetic socket fixtures only**. Feedback on aggregate GLB-020 global bidirectional sampled maximum against hardcoded test target 0.12 changes the next 0.01-step candidate, under max 4 trials; local history distinguishes measured target-feasible value from any proven optimum.
+- Blender 3-version actual generated/compared path was 1.24→1.47→1.35→1.41; 1.47 was within the synthetic test target and the final bracket remained 1.41..1.47. Python counterbranch changes measured outcome at 1.24 and selects 1.01 next. No user addon or private GLB is opened, executed, modified, or uploaded.
+- テスト対象コードSHA `37ee124aabb44df5ad9cb246342712bd9e0eb2ef`：[Python 42311608904](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608904)、[Windows 42311608916](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608916)、[Blender4.4.3/4.5.15/5.2.1 42311608910](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608910)、[Windows Kit 42311609353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609353)、[引き継ぎ 42311609070](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609070)、[Chromium 42311609211](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609211) **全6系統success**。
+- GLB-022 remains partial; formal v0.17.0 and draft PR #25 unchanged. Do not claim complete shape equivalence, part identity, exact Hausdorff distance, a real-user setting recommendation, or manufacturing tolerance.
+
 ## Milestone update checklist
 
 1. Inspect the latest PR commit and changes; execute or inspect the relevant Python/Windows/Blender CI.
