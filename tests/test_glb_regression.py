@@ -53,10 +53,10 @@ class GLBRegressionTests(unittest.TestCase):
                 "status": "review_only",
                 "surface_observation": "sampled_difference_detected",
             }
-            with patch("cbdk.glb_regression.write_glb_inspection"), \\
-                 patch("cbdk.glb_regression.render_glb_preview"), \\
+            with patch("cbdk.glb_regression.write_glb_inspection"), \
+                 patch("cbdk.glb_regression.render_glb_preview"), \
                  patch("cbdk.glb_regression.write_scene_comparison",
-                       return_value=comparison), \\
+                       return_value=comparison), \
                  patch("cbdk.glb_regression.run_glb_surface_review",
                        return_value=surface) as review:
                 result = run_glb_regression(
@@ -82,10 +82,10 @@ class GLBRegressionTests(unittest.TestCase):
                 "summary": {"errors": 1},
                 "differences": [],
             }
-            with patch("cbdk.glb_regression.write_glb_inspection"), \\
-                 patch("cbdk.glb_regression.render_glb_preview"), \\
+            with patch("cbdk.glb_regression.write_glb_inspection"), \
+                 patch("cbdk.glb_regression.render_glb_preview"), \
                  patch("cbdk.glb_regression.write_scene_comparison",
-                       return_value=comparison), \\
+                       return_value=comparison), \
                  patch("cbdk.glb_regression.run_glb_surface_review",
                        return_value={
                            "kind": "cbdk_glb_surface_review",
