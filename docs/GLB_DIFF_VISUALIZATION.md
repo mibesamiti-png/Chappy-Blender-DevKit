@@ -96,3 +96,15 @@ The browser test uses **only a CBDK-generated synthetic, permuted two-part fixtu
 コードSHA `72e9bd4e4ad2cb9b9716ee0cb5ea10de60cd779e` では、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183982)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184368)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184086)・[Windowsキット](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184021)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183990)・[Chromium実ブラウザ操作](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183979)が**全6系統success**。
 
 The headless Chromium smoke ran the same offline HTML viewer code with a synthetic permutation of two mesh parts and checked browser interactions. This verifies operation in that tested environment only. Both `suggested` and `ambiguous` are review-only heuristic states, and no shape identity or self-repair is proven. Browser support outside this test configuration and private large meshes require separate validation.
+
+## GLB-020 phase 5 — supplemental sampling sensitivity (development preview)
+
+CBDK now uses an additional **24 disjoint deterministic Halton points per triangle** after the existing 24-point surface-distance color classification. The primary red/yellow/grey colors **remain based on the initial 24 samples**. If the additional probes reveal a materially larger nearest-surface difference (at least **0.5% of the shared scene AABB diagonal**) or cross a displayed color threshold, the local viewer flags the triangle with a **purple outline**. The outline has an independent on/off checkbox.
+
+This is an **observed sampling-sensitivity indicator**, not a map of all unseen regions. A triangle with no purple outline is **not** proved fully examined, and subtle holes, enclosed cavities, thin structures and semantic defects may remain undetected.
+
+- `cbdk/glb_sampling_audit.py` performs bounded local BVH point-to-triangle checks (24 additional points per triangle, up to 512 input triangles per GLB).
+- `review.json` stores **aggregate-only sensitivity counts**, per-anonymous-part counts and method/limit flags, never raw source vertices, original object labels or paths.
+- `compare_viewer.html` carries the original local geometry and **per-face Boolean sensitivity flags** for the purple overlay; like the derived GLBs, this private HTML is **local only**.
+- `unobserved_regions_verified=false` and `complete_surface_equivalence_proven=false` stay explicit. This first step does **not** localize every unsampled area or upgrade grey into a guarantee.
+- Python unit tests cover identical surfaces, a synthesized missed-corner probe, malformed thresholds/geometry and per-part count validity. Headless Chromium tests toggle the outline in a synthetic fixture, and the Blender CI checks the new JSON method and count consistency. Record the test SHA and successful run IDs only after GitHub Actions completes.
