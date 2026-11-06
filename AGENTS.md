@@ -105,3 +105,38 @@ The legacy full-snapshot verifier and the streamed post-edit verifier must agree
 ## v0.16 per-axis audit safety
 
 Audit each XYZ component independently for each vertex. A successful X displacement must not hide a lost small Y displacement. Reject any mutation on axes with zero requested offset or on unselected vertices; no tolerance there because coordinates are read back from the same BMesh value domain. For requested nonzero axes require observable movement and compare the expected displacement with the tighter of the absolute limit and 15% of delta. Maintain strict old/full-snapshot versus streamed audit parity and a rollback regression for partially written multi-axis edits. Local Python 238/238 passed on 2026-11-05; latest Windows and Blender CI are still blocked before runners start, so do not claim verification or merge PR #18.
+
+
+## v0.17 draft — Native Undo/Redo evidence boundaries
+
+The dedicated `scripts/blender_undo_redo_smoke.py` must use only a CBDK-authored generated nudge preview, launched with Blender `--background --factory-startup`. A successful nudge only proves the edit operation; do not report that native Undo, native Redo, or GUI shortcuts passed unless those *specific* operations were actually tested.
+
+Validate the structured output using `python -m cbdk.undo_probe_report`. A false `bpy.ops.ed.undo.poll()` or `redo.poll()` is `unavailable`, never `passed`. Preserve `gui_hotkey_verified=false` and `user_project_tested=false`. Do not silently promote optional background probe results to GUI certification or project approval.
+
+While PR #18 is blocked by GitHub Actions runner allocation, v0.17 remains a separate development branch with no new CI success claim. Do not change `last_verified`, publish a package, or merge before necessary CI and compatibility checks.
+
+## v0.17 draft — complete recipe matrix, static-only
+
+Before changing any authored feature, recipe or dependency, inspect `cbdk/recipe_matrix.py` and its independent `EXPECTED_RECIPES` mapping. `python -m cbdk.recipe_matrix` must reject missing modules, incomplete 6-recipe coverage, metadata tampering or unsupported Blender targets without executing arbitrary source code. Update trusted source mappings, the feature catalog, all expected recipe combinations and tests together for a new authored feature.
+
+An offline `static_checks_passed` report explicitly means **not** Blender runtime verified, GUI tested, legal redistribution cleared or approved. Keep the existing CI gate and `--preview-unapproved` safety policy. Do not merge v0.17 while its new CI and upstream v0.16 are unverified.
+
+## v0.17 draft — review-only authored registration plans
+
+Before manually adding a CBDK-authored feature or part, use `python -m cbdk registration-draft` for a proposal and inspect `docs/REGISTRATION_DRAFT.md`. This command may only print JSON or write an exclusive private report under `reports/latest/`; it must never execute untrusted source, change `catalog/`, populate trusted allowlists, approve licensing, publish, or claim CI/runtime success. Unknown IDs, stale catalog mappings and colliding paths must fail closed.
+
+Implementation of a proposed feature remains a separate reviewed change that updates trusted source mappings, recipes, tests and CI. Keep `approved=false`, `license_review=pending`, and the explicit preview-only gate. PR #20 remains a draft until all upstream v0.16 and v0.17 checks actually pass.
+
+## v0.17 draft — registration test scaffold safety
+
+`python -m cbdk registration-tests --draft reports/latest/registration_draft.json` is a review-only, local scaffold workflow. Never trust a saved JSON plan without recomputing it from the present trusted allowlists and catalogs. Reject duplicate JSON keys, inconsistent safety flags, unknown parts, source collisions and path escapes before rendering.
+
+Output Python must remain under ignored `reports/latest/scaffolds/`, never auto-added to tracked `tests/`, runtime scripts, catalogs or Blender. Use exclusive file creation (no overwrite). All generated TODO assertions must deliberately fail until human review and actual implementation. Generating a scaffold, parsing its syntax or passing static validation proves neither runtime correctness nor license clearance. Keep v0.17 PR #20 in draft until proper Python, Windows and Blender CI are actually observed.
+
+## v0.17 draft — explicit feature behavior and test selection
+
+For registration proposals, `--behavior` must be one of `unspecified`, `read_only`, or `mesh_edit`. This choice is *developer-declared planning metadata*, never inferred from filenames, unknown code or static AST similarity, and never proof that actual code is read-only or safely mutating. Omitted behavior must retain schema-1 legacy plan shape and its original five failing TODO tests.
+
+`read_only` adds independent immutability and unnecessary-Undo checks; `mesh_edit` adds selected-only mutation, rollback and native Undo/Redo checks. Both branches remain unexecuted review scaffolds under ignored `reports/latest/scaffolds/`, with all TODOs deliberately failing and files created exclusively. Neither branch may be silently admitted to `tests/`, runtime templates, catalog allowlists, official Blender Extensions or approved release status.
+
+Document every untested code change in STATE/HANDOFF. Until GitHub Actions Issue #19 resolves, the new thirteen Python regression tests and Blender/Windows behavior are unverified. Preserve the last real v0.15 CI evidence.

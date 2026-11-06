@@ -17,6 +17,8 @@ from .part_matrix import evidence_paths, summarize_parts, write_matrix, render_m
 from .addon_builder import build_addon
 from .feature_catalog import load_feature_catalog, plan_features
 from .modular_builder import validate_modular_recipe
+from .registration_draft import propose_registration, write_draft
+from .registration_scaffold import scaffold_from_saved_draft
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -116,6 +118,22 @@ def main(argv=None) -> int:
     plan_cmd.add_argument('--recipe', default='recipes/modular_combined.json')
     plan_cmd.add_argument('--target-blender', default=None)
     plan_cmd.add_argument('--output', default=None)
+
+    draft_cmd = sub.add_parser('registration-draft',
+                               help='Propose manual registration steps without approving or executing code')
+    draft_cmd.add_argument('--feature-id', required=True)
+    draft_cmd.add_argument('--behavior', choices=('unspecified', 'read_only', 'mesh_edit'),
+                           default='unspecified', help='Author-declared behavior; never inferred or verified')
+    draft_cmd.add_argument('--requires-part', action='append', required=True)
+    draft_cmd.add_argument('--new-part-id')
+    draft_cmd.add_argument('--new-part-module')
+    draft_cmd.add_argument('--output',
+                           help='Optional fresh JSON report under reports/latest/ (never overwrites)')
+
+    scaffold_cmd = sub.add_parser('registration-tests',
+                                  help='Create a TODO-failing local unittest skeleton from a saved draft')
+    scaffold_cmd.add_argument('--draft', required=True,
+                              help='Saved registration draft JSON under reports/latest/')
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -221,6 +239,22 @@ def main(argv=None) -> int:
             result = check_evidence_freshness(_json(args.evidence))
             print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0 if result['fresh'] else 1
+        if args.command == 'registration-draft':
+            report = propose_registration(args.feature_id, args.requires_part,
+                                          new_part_id=args.new_part_id,
+                                          new_part_module=args.new_part_module,
+                                          behavior=args.behavior)
+            if args.output:
+                saved = write_draft(report, relative_path=args.output)
+                print(f"Registration proposal saved: {saved} (review-only; NOT approved)")
+            else:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'registration-tests':
+            target = scaffold_from_saved_draft(args.draft)
+            print(f"Review-only failing test skeleton: {target}")
+            print("TODO assertions intentionally fail. Not imported, approved, or verified.")
+            return 0
         if args.command == 'feature-list':
             catalog = load_feature_catalog(root=Path(__file__).resolve().parent.parent)
             report = {'schema_version': 1, 'kind': 'trusted_preview_features',

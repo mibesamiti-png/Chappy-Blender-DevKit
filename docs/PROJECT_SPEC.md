@@ -91,3 +91,50 @@ python -m unittest discover -s tests -v
 - ゼロ移動指定の軸や未選択頂点の座標は完全一致を求める。微小な誤変更も正当化しない。
 - 非ゼロ軸の差分誤差は、既存の絶対/差分連動閾値と要求距離の15%を比較し、小さい方で判定。float32精度で表現できない要求は成功扱いしない。
 - 監査違反ではBMeshの更新後スナップショットから可能な限り復元するが、Blender本体のクラッシュやトポロジー再構築までは保証しない。
+
+
+## v0.17 開発検証：Undo/Redo証拠の取り扱い
+
+- Native Undo/Redoは、CBDK生成プレビューだけをBlender `--background --factory-startup` 上で有効化して検査する。外部アドオンやユーザーの.blendを実行しない。
+- 正確な頂点移動と選択/トポロジー不変を最初に確かめる。`bpy.ops.ed.undo.poll()` または `redo.poll()` が偽なら、その工程を検証成功と記録しない。
+- 取得したレポートは `cbdk.undo_probe_report` でスキーマ・状態整合性を検証する。実行不能時の状態は `unavailable_in_background` であり、「Undoの成功」ではない。
+- GUI Ctrl+Z / Ctrl+Shift+Z、実際のUI操作感、ユーザーデータ上での互換性はヘッドレスCIでは保証しない。別途Windows GUIで検証する。
+- この節の実装は開発ブランチ上の未検証作業であり、v0.16のPR #18の未解決CI問題を解消するものではない。正式な合格実測が取れるまでmainへマージしない。
+
+## v0.17 ドラフト：レシピ依存関係の一括監査
+
+`cbdk/recipe_matrix.py` は6つの信頼済みレシピを固定の期待機能IDと突き合わせる。登録済み5機能/7部品が`modular_all`も含む6レシピで漏れなく参照されること、カタログ/モジュールの対応・静的Blender対象版・ファイル存在を検査する。原本の実行・依存コードのインポート・ビルドや公開はしない。
+
+実行例：`python -m cbdk.recipe_matrix --output reports/ci/recipe_matrix.json`
+
+新しい機能を登録したときは、`TRUSTED_FEATURES`/`TRUSTED_PART_SOURCES`、カタログとレシピ、独立した`EXPECTED_RECIPES`、生成テンプレートと各テストを同時更新する必要がある。静的マトリクス成功はBlender実機・Windows GUIやライセンス認定の代わりにならない。
+
+現段階では開発ブランチの未検証変更。GitHub Actionsの実行前障害Issue #19が解決するまでは、CIの実行結果を成功とは書かない。
+
+## v0.17 開発中：新機能・部品の安全な登録準備
+
+新規機能の登録候補は `python -m cbdk registration-draft` で**レビュー専用JSON**として生成できる。既存台帳とコードallowlistの整合性、提案IDの重複、新規ソース予定パスの衝突、部品依存を静的に検査し、マトリクス・CI・ライセンス・引き継ぎ更新の手順を出力する。
+
+例：`python -m cbdk registration-draft --feature-id align_vertices --requires-part BLCTX-001 --requires-part BME-004 --new-part-id BME-004 --new-part-module edit_align`
+
+`--output` を明示した場合だけ `reports/latest/` 以下にJSONを新規保存。既存ファイルの上書き、私有ソースのインポート/実行、カタログやコードの自動変更、権利認定、実機テスト成功の自動認定は**禁止**する。出力は登録の提案であり、パーツ採用や公開を許可するものではない。
+
+実際の組み込みには、原本/権利を人手で確認したうえで台帳・許可リスト・コード・レシピ・スモークテストを別PRで更新する。全体Python/Windows/Blender CIの実測完了までは `main` へマージしない。参照：`docs/REGISTRATION_DRAFT.md`。
+
+## v0.17 開発中：登録ドラフトからレビュー用Pythonテストの自動ひな形
+
+`registration-draft --output reports/latest/registration_draft.json` で保存した提案を、`python -m cbdk registration-tests --draft reports/latest/registration_draft.json` で読み込む。提案の全項目を現行の信頼済み台帳から再生成して比較し、期限切れ相当の不一致、改変されたID/依存/承認フラグ、重複JSONキー、危険な出力パスを拒否する。
+
+生成される `reports/latest/scaffolds/test_<feature_id>_review.py` はプライベートな非追跡領域のみ。既存ファイルは上書きしない。想定テスト5項目は初期状態ですべて `self.fail("TODO: ...")` とし、未完成なのに成功するテストは生成しない。生成されたファイルや元ソースはCBDKから自動でインポート・実行しない。公式 `tests/`、台帳、許可リストへ移動/登録するのは人手レビューと実装・実測の後。
+
+**CI/Blender実機成功・公開ライセンス承認・UI品質を意味しない。** v0.16/0.17の未検証コードは安定版mainにマージしない。詳細：`docs/REGISTRATION_DRAFT.md`。
+
+## v0.17 追加仕様：宣言された動作種別でテストのひな形を切り替える
+
+`python -m cbdk registration-draft --feature-id ... --requires-part ... --behavior read_only` または `--behavior mesh_edit` で、開発者が新機能の動作種別を申告する。種類の判定に未確認コードを実行したり、機能名だけで勝手に推定したりしない。
+
+保存される `behavior` は省略可能なスキーマ1の補助フィールド。従来の省略状態は `unspecified` として扱い、既存の保存済み計画と共通5件のTODOを維持する。`read_only` と `mesh_edit` は共通5項目に各3件の専用TODOを追加する。読み取り専用では座標・選択・モディファイア・変換・Undo履歴の不変性を確認する。メッシュ編集では選択範囲のみの変更、入力エラー時のロールバック、ネイティブUndo/Redoによる再現を確認する。
+
+`behavior` はあくまで**申告されたテスト計画上の分類**であり、コードが本当に読み取り専用/編集可能であることを認証・自動判定するものではない。生成先は従来どおり無視対象の `reports/latest/scaffolds/` に限定、全TODO失敗・非実行・非上書きを維持。Blender実機確認・ライセンス審査・正式採用を自動化しない。
+
+CIブロッカー Issue #19 のため、この追加機能のPython/Windows/Blenderの全テスト合格は未実測。v0.17ドラフトPR #20に留め、安定版と `last_verified` を変更しない。

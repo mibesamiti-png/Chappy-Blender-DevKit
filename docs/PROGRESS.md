@@ -370,3 +370,67 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - 非ゼロ移動の数値誤差は絶対閾値と移動量に対する15%の相対閾値の小さい方を使用し、非常に小さい要求を誤差の範囲として見逃さない。float32の丸めで精度不足の場合、正しく拒否する安全側の設計。
 - 新規回帰テスト6件：1軸のみ反映、未選択頂点の微小変更、期待移動量より大幅に小さな変更、微小な正しい移動、ゼロ移動軸の変更、頂点移動処理での部分反映の検出とロールバック。
 - ローカルPython（3.13.5）の**全238件成功**。最新のBlender/Windows GitHub CIはランナー割当前の問題が継続し、**未検証**。PR #18はmainへマージしていない。
+
+
+## v0.17 開発中 — 2026-11-05（背景Blender Undo/Redoの証拠分離）
+
+### 開発ブランチで追加
+- `scripts/blender_undo_redo_smoke.py`: CBDK生成の `modular_nudge` プレビューだけをBlenderファクトリー設定の別プロセスで有効化し、選択頂点の移動・トポロジー不変を確認。可能ならBlenderネイティブ `bpy.ops.ed.undo/redo` の結果を編集データから再取得して検証。
+- `cbdk/undo_probe_report.py`: 構造化JSON証拠を検証し、`verified_background` / `partial_background` / `unavailable_in_background` を区別。`poll()=False` を成功と誤認しない。GUIショートカット検証済みを名乗る証拠は禁止。
+- `tests/test_undo_probe_report.py`: 不整合・未検証の成功偽装・二重レコード・不正JSON・GUI検証誤認を拒否するPython回帰テストを追加。
+- `.github/workflows/blender-smoke.yml`: 既存6レシピをビルドした後に`modular_nudge`を対象として単独のUndo/Redoプローブを実行し、結果を`reports/ci/undo_redo.json`に保存するCI工程を追加。
+
+### 検証状態・注意
+- **この追加変更のPython全体テスト・Blender実機CI・Windows GUIは未実行。** 成功数は記録しない。
+- Blenderのバックグラウンド環境ではネイティブUndo/Redoのpollが利用不可の可能性があり、その場合は`unavailable_in_background`を保存する。これはUndo/Redo動作確認の成功ではない。
+- GUI Ctrl+Z / Ctrl+Shift+Z の実機操作は別件（GUI-001）として未実装・未検証のまま。
+- `main`はv0.15.0、v0.16のPR #18もCIブロッカー Issue #19 により未マージ。v0.17変更は`feature/v0.17-undo-redo-probe`に隔離し、正式検証前にmainへ統合しない。
+- `last_verified` はv0.15.0の記録を維持する。
+
+## v0.17 追加開発 — 2026-11-05（6レシピの静的整合マトリクス）
+
+### 変更
+- `cbdk/recipe_matrix.py`: `modular_objects` / `modular_edit` / `modular_combined` / `modular_geometry` / `modular_nudge` / `modular_all` の期待機能セットを個別に管理し、カタログ許可リスト・部品依存閉包・信頼済みソースの存在・Blender 4.4.3/4.5.15/5.2.1との静的互換性をまとめて監査する。コードは**実行せず読み取りのみ**。
+- `python -m cbdk.recipe_matrix --output reports/ci/recipe_matrix.json`: 依存と安全情報だけを記した決定的JSONを生成。ライセンス承認/Blender実機検証/GUI品質を主張しない。
+- `tests/test_recipe_matrix.py`: 13テストを追加。レシピ構成変更、余計なコード欄、欠損ヘルパー、部品参照改変、対応Blender範囲、サイズ過大、シンボリックリンクなどを拒否する。
+- `.github/workflows/blender-smoke.yml` に一括監査を追加。Blender生成アドオンのビルド前に実行しJSONを証拠成果物へ格納する。
+
+### 検証状態
+- **今回追加した13件を含むPythonテストと新規CIはまだ実行結果を確認していない**。実装とテストの存在は確認したが、成功としては記載しない。
+- v0.17ドラフトPR #20の開発ブランチに保存。前提のv0.16 PR #18はCI障害Issue #19のため未マージ。mainはv0.15。
+- 部品の正式採用や公開用Blender Extensions生成は引き続き範囲外。 `last_verified` は前回のv0.15のまま。
+- 追加のUndo証拠バリデーションでは、ステータスの非文字列型・真偽値によるJSONスキーマ偽装・Blenderバージョン文字列中の制御文字を拒否するよう強化。回帰テスト1件を追加（**実行結果は未確認**）。
+
+## v0.17 開発中 — 2026-11-05（登録ドラフト生成）
+
+### 実装したもの
+- `cbdk/registration_draft.py`: 新規自作機能ID・既存部品依存・任意の新規部品ID/ソース予定名を受け、登録に必要な作業項目を**レビュー用JSON**にまとめる。現行カタログとPythonの固定allowlistを照合し、未知の部品ID、重複ID、既存ソース衝突、パストラバーサルを拒否。
+- `python -m cbdk registration-draft`: CLIを追加。標準出力にJSON、`--output reports/latest/*.json` 指定時のみプライベートなローカルレポートを新規作成（上書き禁止）。
+- `tests/test_registration_draft.py`: 登録計画、既存部品のみの構成、悪意あるID、未登録/重複依存、改変されたカタログ、ファイル衝突、プライベート出力のシンボリックリンク回避、CLI異常終了など16件の回帰テストを追加。
+- `docs/REGISTRATION_DRAFT.md`: 操作例と、作業計画は実機認定でもライセンス確認でもないことを文書化。
+- GitHub引き継ぎのREG-001要件に登録し、NEXT-003（登録とレシピ構築の改善）を継続。
+
+### 検証・制限
+- **今回追加した16件のPython回帰テストとGitHub Actionsはまだ成功を実測していない。** コードとテストが保存された段階。Blender GUI・Windows実機でも未検証。
+- レポートは `status=proposal_only`, `approved=false`, `runtime_verified=false`, `catalog_modified=false`。元アドオンの自動実行や許可済みソースへの自動登録は実施しない。
+- v0.17の開発先はドラフトPR #20、ベースv0.16 PR #18はIssue #19のCIランナー未割当問題で未マージ。安定版mainとlast_verifiedはv0.15.0のまま。
+
+## v0.17 開発中 — 2026-11-05（登録計画→安全なテストひな形生成）
+
+- `cbdk/registration_scaffold.py`: 保存済みの登録提案JSONを厳密に検証し、現行カタログ/許可リストから同じ計画を再計算。不一致・重複JSONキー・型不整合・シンボリックリンク・領域外参照を拒否する。
+- `python -m cbdk registration-tests --draft reports/latest/registration_draft.json`: `reports/latest/scaffolds/test_<feature_id>_review.py` のみ新規生成。Git管理外領域で上書き禁止。元ソース、カタログ、公式テストには書かない。
+- ひな形の5テストは、権利と依存のレビュー、Blenderモード・選択、期待結果、異常入力の不変性、Undo/Redoと複数版でのスモーク。それぞれ `self.fail("TODO: ...")` を初期設定にして、レビュー前に誤って成功しないようにする。
+- `tests/test_registration_scaffold.py`: 19件の回帰テストを追加。悪意ある入力、JSONキー重複、検証結果の偽装、誤った依存関係、古い台帳、出力上書き、symlink経由の領域逸脱、CLI接続を確認するテストコード。
+- `docs/REGISTRATION_DRAFT.md` を更新。要件 `REG-002` と決定 `DEC-010` をGitHub引き継ぎ台帳に追加。
+
+**検証状況：** この変更の19回帰テストとBlender/Windows実機CIの成功はまだ実測していない。GitHub ActionsはIssue #19で実行開始前に失敗しており、主張できる直近の全CI成功はv0.15.0のまま。ドラフトPR #20で保留。
+
+## v0.17 開発中 — 2026-11-05（動作種別によるテストひな形の切替）
+
+- `cbdk/registration_draft.py` に、開発者申告の `unspecified`, `read_only`, `mesh_edit` を追加。未指定の従来JSONには新しいキーを出さず、後方互換性を維持。
+- CLI `python -m cbdk registration-draft --behavior read_only|mesh_edit` を追加。テスト項目を切り替える申告値であり、元の未確認ソースの自動解釈・実行ではない。
+- `cbdk/registration_scaffold.py` のレビュー用未完成テストひな形を分岐。従来の共通5件に加え、read_onlyでは不変性と不要なUndo変更、mesh_editでは選択範囲変更・ロールバック・Undo/Redoの3件を追加（どちらも合計8件）。全項目は `self.fail(TODO)` で初期状態不合格。
+- `tests/test_registration_behavior.py` に回帰テスト13件を追加。既存ドラフト互換性、明示値の検証、生成されたソースの構文、未完了テストのカウント、CLI経由の申告、新規ソース無改変等をテストするコードを登録。
+- `docs/REGISTRATION_DRAFT.md`、仕様書、進捗台帳、引き継ぎ、AGENTSを更新。要件ID `REG-003` / 設計判断ID `DEC-011`。
+
+**確認状況：** 上記13件はテストを追加しただけで、GitHub ActionsやBlender/Windows実機では成功を確認していない。PR #18/20はCIの実行前障害（Issue #19）で未マージ。検証済みの最新バージョンはv0.15.0。
