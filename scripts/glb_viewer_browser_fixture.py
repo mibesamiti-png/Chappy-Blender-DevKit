@@ -25,6 +25,9 @@ def main():
         reference, candidate,
         values["reference_labels"], values["candidate_labels"],
         [1, 1], [1, 1],
+        # Synthetic UI injection only: exercises sensitivity-border toggle.
+        sampling_flags={"reference": [True, False],
+                        "candidate": [False, False]},
     )
     target.write_text(html, encoding="utf-8")
     assert len(html.encode("utf-8")) > 1000
