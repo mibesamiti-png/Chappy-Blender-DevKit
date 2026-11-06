@@ -40,7 +40,7 @@
 
 - 実装と検証は `docs/project/STATE.json`、生成 `docs/PROJECT_HANDOFF.md`、仕様/進捗、ドラフトPR #25に記録。
 - Notion [CBDKプロジェクト](https://app.notion.com/p/410948b7493781449462ca76e9567e75) に4つのタスクIDと状態をミラー。
-- **次の新規実装候補は GLB-020**。GLB-019の実ユーザーGLB実測が必要になれば先に安全確認する。
+- **次の新規実装候補は GLB-021**（GLB-020レビューMVPは総合受け入れ済み・高精度化は後日）。GLB-019の実ユーザーGLB実測が必要になれば先に安全確認する。
 
 ### 2026-11-07 実装進捗: GLB-020は一部実装
 
@@ -89,3 +89,12 @@
 - `compare_viewer.html`の左右Canvasに推定境界線を水色で重ねる。チェックでオン・オフ、匿名部品別の絞り込み、視点同期に追従。推定線分は**私有HTMLにのみ含み**、GitHub/Notionで共有する集計JSONに元の座標を残さない。
 - テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
 - **制約**：X-ray的な線分表示は遮蔽の正確さを保証しない。線がなければ穴がないとは断定できず、意図した開口と欠陥も自動で区別できない。GLB-020は一部実装、GLB-021/022未実装、正式版v0.17.0/ドラフトPR #25維持。
+
+### GLB-020 MVP総合受け入れ・機能追加の一時停止
+
+- **3部品の合成ボールジョイント風モデル**で、正常/ソケット開口狭窄/ボール位置ずれ/ソケットリップ2面欠損を検査。正常時の誤検出0、変更部品だけの差分、欠損時の境界0→4本、ソースGLBのSHA-256不変が合格条件。
+- 最終テスト対象コード SHA `db33ce4242bbe98b3c5f9ac43d89bf21c3657089`：
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898364)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898499)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898512)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898604)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898325)・[Chromium実GUI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898701) **全6系統成功**。
+- 途中で「正常な軸に実際の開放端がある」ことが判明し、テスト用メッシュを正しく閉じて再検証。解析の判定閾値は緩めずに修正した。
+- **GLB-020はレビューMVP合格・高精度化はバックログ**として、機能ステータスは`partial`を維持。今後は余計な追加改良を止め、次に**GLB-021：問題→アドオン設定の改善候補**、次いでGLB-022の許可済み合成実験を優先。GLB-021/022はまだ未実装、PR #25はドラフト・正式版はv0.17.0のまま。
+- [GLB-020受け入れ基準と残課題](GLB020_MVP_ACCEPTANCE.md)
