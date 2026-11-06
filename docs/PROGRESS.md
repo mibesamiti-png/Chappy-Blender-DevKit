@@ -618,3 +618,13 @@ GLB-007は実装済/Blender CI確認済みとして記録。正式バージョ�
 - [Windows kit run 42208333310](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333310) と [引き継ぎ run 42208332987](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208332987) も成功。
 
 **未検証範囲**：ユーザー私有アドオンの実際のBlender登録、プロパティの受信元オブジェクトとの結びつき、メッシュ形状への効果。上記は実装コミットに対する実測であり、後続ドキュメント更新のコード実行結果とは区別する。PRはドラフト、正式版`last_verified=v0.17.0`を保持。
+
+## v0.18 開発中 — 2026-11-06（GLB-009: 受け手の構文上の関連）
+
+- `cbdk/glb_property_usage.py` にクラスと匿名ソース別の `self.<prop>` 参照の集計を追加。ASTのみを読むため元アドオンの実行はなし。16件の表示サンプルと集計件数を切り離した。
+- `cbdk/glb_property_map.py` に `same_class_reference_review` を追加。宣言クラスと一致するselfアクセス候補/他の受け手・別クラス・別ファイル由来の候補を分離し、`read/write/read_write/delete`を集計。クラス名匿名化の誤衝突を除外。
+- `tests/test_glb_property_binding.py` に14件の回帰テストを追加。別クラス・別ファイル同名クラス・ローカルの`self`・動的getattr・19件以上の例示上限、プライバシーと非実行/非承認を確認。
+- Blender 4.4.3/4.5.15/5.2.1の合成GLBと合成アドオン宣言を用いるCIに、同クラスself属性参照を見付けても実行時登録・geometry効果は未確認とするチェックを追加。
+- STATE.json: `GLB-009`、`DEC-021`、`NEXT-009`更新。引き継ぎ文書を同期。
+
+**検証状態:** 上記テストとCIのコードは追加済み。成功した最新実ジョブを確認するまではGLB-009を一部実装・未検証のまま管理。実ユーザーアドオン/GLBの動作、GUI、コードの自動修正は対象外。
