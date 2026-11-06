@@ -18,6 +18,7 @@ if str(PROJECT) not in sys.path:
     sys.path.insert(0, str(PROJECT))
 
 from fixtures import cbdk_parameter_experiment as fixture  # noqa: E402
+from cbdk.parameter_experiment_metrics import vertex_displacement  # noqa: E402
 
 VARIANTS = (
     ("baseline", 0.75, 0.08),
@@ -47,6 +48,7 @@ def _mesh_stats(obj) -> dict:
         "mesh_vertex_count": len(vertices),
         "mesh_polygon_count": len(obj.data.polygons),
         "mesh_coordinate_sha256": digest,
+        "local_vertices_for_trusted_fixture": vertices,
         "world_dimensions": [round(float(value), 6) for value in obj.dimensions],
     }
 
@@ -119,6 +121,38 @@ def main() -> None:
         _clean_scene()
         fixture.unregister()
 
+    # Only synthetic repository-owned meshes enter this metric. Drop raw XYZ
+    # coordinates from the final JSON: report only aggregate evidence.
+    displacement = {}
+    for stage, snapshots in (("generated", generated), ("imported", imported)):
+        base = snapshots["baseline"]
+        displacement[stage] = {}
+        for changed in ("sphere_radius_changed", "bevel_width_changed"):
+            displacement[stage][changed] = {
+                name: vertex_displacement(
+                    base[name]["local_vertices_for_trusted_fixture"],
+                    snapshots[changed][name]["local_vertices_for_trusted_fixture"])
+                for name in sorted(base)
+            }
+    for stage in (generated, imported):
+        for variant in stage.values():
+            for stats in variant.values():
+                del stats["local_vertices_for_trusted_fixture"]
+
+    sphere = "CBDK_Param_Sphere"
+    cube = "CBDK_Param_BevelCube"
+    for stage, rows in displacement.items():
+        radius = rows["sphere_radius_changed"]
+        bevel = rows["bevel_width_changed"]
+        if not radius[sphere]["max_local_displacement"] > 0.2:
+            raise AssertionError("Radius did not produce measurable sphere vertex displacement")
+        if radius[cube]["changed_vertex_count"] != 0:
+            raise AssertionError("Sphere radius changed an unrelated bevel cube")
+        if not bevel[cube]["max_local_displacement"] > 0.01:
+            raise AssertionError("Bevel width did not move cube vertices measurably")
+        if bevel[sphere]["changed_vertex_count"] != 0:
+            raise AssertionError("Bevel width changed an unrelated sphere")
+
     result = {
         "kind": "cbdk_trusted_blender_parameter_experiment",
         "schema_version": 1,
@@ -132,6 +166,7 @@ def main() -> None:
         ],
         "generated_mesh": generated,
         "imported_glb_mesh": imported,
+        "quantified_vertex_displacement": displacement,
         "controls": {
             "sphere_radius_changes_sphere": True,
             "sphere_radius_does_not_change_bevel_cube": True,
