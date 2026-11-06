@@ -573,6 +573,21 @@ jobs:
           row = matches['reference_parts'][0]
           assert row['status'] == 'ambiguous'
           assert row['topology_review_required'] is True
+          html = Path(
+              'reports/ci/surface_distance/boundary_review/compare_viewer.html'
+          ).read_text(encoding='utf-8')
+          assert 'id="show-boundaries"' in html
+          assert '__CBDK_VIEWER_DATA__' not in html
+          data = json.loads(html.split(
+              '<script id="cbdk-viewer-data" type="application/json">', 1
+          )[1].split('</script>', 1)[0])
+          assert data['boundary_overlay_approximate'] is True
+          assert data['boundary_location_proven'] is False
+          assert len(data['boundary_overlay']['reference']) == 0
+          assert len(data['boundary_overlay']['candidate']) == 3
+          assert all(len(line) == 7 and line[0] == 1
+                     for line in data['boundary_overlay']['candidate'])
+          assert 'SYNTHETIC_BOUNDARY_TEST' not in html
           assert 'SYNTHETIC_BOUNDARY_TEST' not in str(report)
           assert 'closed_tetra.glb' not in str(report)
           assert 'open_tetra.glb' not in str(report)
