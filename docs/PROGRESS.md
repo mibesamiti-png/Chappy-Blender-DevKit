@@ -628,3 +628,15 @@ GLB-007は実装済/Blender CI確認済みとして記録。正式バージョ�
 - STATE.json: `GLB-009`、`DEC-021`、`NEXT-009`更新。引き継ぎ文書を同期。
 
 **検証状態:** 上記テストとCIのコードは追加済み。成功した最新実ジョブを確認するまではGLB-009を一部実装・未検証のまま管理。実ユーザーアドオン/GLBの動作、GUI、コードの自動修正は対象外。
+
+### GLB-009 実測CI（2026-11-06）
+
+実装コミット `2c000dad0980ee76562576ba63c0e7b568284748` に対して、GitHub Actions 5ワークフローの成功を確認。
+
+- Python 3.11/3.12/3.13： [run 42210546730](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546730)。GLB-009の新規14回帰テストを含む。
+- Windows PowerShell 3.11/3.13： [run 42210546742](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546742)。
+- Blender 4.4.3/4.5.15/5.2.1： [run 42210546751](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546751)。合成GLBから候補を出し合成プロパティの同クラスself参照の集計と`binding_verified=false`等をチェック。
+- Windows kit： [run 42210546861](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546861)。
+- GitHub handoff： [run 42210546734](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546734)。
+
+この実測に基づき、GLB-009を「実装済/Blender CI確認」としてSTATE/HANDOFFへ記録した。これは**実装コミット**の証拠。後続ドキュメント更新コミットの成功と混同しない。PR #25は未マージ・ドラフトで、正式リリース`last_verified`はv0.17.0のまま。実私有アドオンでの正しいクラス・受信実体・形状効果は未検証。
