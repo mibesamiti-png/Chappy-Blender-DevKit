@@ -7,7 +7,7 @@
 | ID | 目標 | 状態 | 次の扱い | Notion |
 |---|---|---|---|---|
 | GLB-019 | 実際の参照GLBと生成GLBを読み込み、表面距離・開口差・特徴優先解析を既存比較へ統合 | **implemented / blender_ci** | 合成モデルでCI成功。実ユーザーGLB・512三角形超・個別部品対応は追加検証 | [タスク](https://app.notion.com/p/410948b7493781e888acd4392249365d) |
-| GLB-020 | **形状差分の3D可視化**。差の位置、部品、規模を赤/黄などの色と凡例で確認 | **partial / blender_ci** | 匿名部品別の色付きGLBと集計JSONに加え、オフラインHTMLで左右連動3Dビューを追加（Blender3版/JS構文CI成功）。実ブラウザ操作、クロスGLB部品対応、未測定領域表示は残る。詳細 [仕様](GLB_DIFF_VISUALIZATION.md) | [タスク](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25) |
+| GLB-020 | **形状差分の3D可視化**。差の位置、部品、規模を赤/黄などの色と凡例で確認 | **partial / blender_ci** | 匿名部品別の色付きGLBと集計JSONに加え、オフラインHTMLで左右連動3Dビューを追加（Blender3版/JS構文CI成功）。実Chromium操作CIと空間的な部品候補表示も成功。部品の同一性の証明、未測定領域表示、実ユーザーGLBは残る。詳細 [仕様](GLB_DIFF_VISUALIZATION.md) | [タスク](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25) |
 | GLB-021 | **アドオン設定の改善候補と連携**。例: ソケットの開口差→該当しそうな設定候補を人がレビュー | **not_implemented / not_tested** | AST静的解析・差分診断と結び、不明な関連は推測として分離 | [タスク](https://app.notion.com/p/410948b7493781efb123c459b521312e) |
 | GLB-022 | **生成→比較→改善の反復実験**。許可済み合成アドオンのパラメータを変更してGLB再生成と改善測定 | **not_implemented / not_tested** | まずCBDK自作・allowlistの合成アドオンのみ。人手の確認・測定履歴を保持 | [タスク](https://app.notion.com/p/410948b74937811ea006d4d6bd55b1dc) |
 
@@ -59,3 +59,9 @@
 - `compare_viewer.html`で左右同時回転・拡大/移動、部品の独立切替、灰色の非表示を実装。色付けは24サンプル/面の参考値で、重なる面の描画にCanvas 2Dペインターの近似が残る。
 - 実装・テストSHA `b5d1d27f5e7834fa22faeefb02792091c1ac87d0`：Python [42268089086](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268089086)、Windows [42268088883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088883)、Blender 4.4.3/4.5.15/5.2.1 [42268088779](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088779)、Windowsキット [42268088823](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088823)、引き継ぎ [42268088869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088869) **全成功**。これはHTML生成とJS構文のCIであり、ブラウザ実機の操作試験ではない。
 - HTML自体は派生元3D形状を含むため**公開GitHubやNotionへの実データアップロードは禁止**。見た目の実機レビュー、未知領域・正確な部品対応の機能は次の課題。
+
+### GLB-020 第4段階：候補推定・Chromium実操作CI
+
+- 部品対応候補を位置・寸法・三角面数の相互最近傍と曖昧度で提示。候補の手動表示は可能だが、部品の同一性の証明や自動修正ではない。
+- コードSHA `72e9bd4e4ad2cb9b9716ee0cb5ea10de60cd779e` では、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183982)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184368)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184086)・[Windowsキット](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184021)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183990)・[Chromium実ブラウザ操作](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183979)が**全6系統success**。
+- 今後は未観測領域・表示遮蔽精度・実ユーザーモデルの検証を進める。GLB-021/022は未実装のまま。
