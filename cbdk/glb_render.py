@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 
 
-class GLBRenderError(RuntimeError):
+class GLBRenderError(ValueError):
     pass
 
 
