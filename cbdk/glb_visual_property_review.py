@@ -160,9 +160,9 @@ def _read_observations(report: dict):
                 or row.get("status") not in {"suggested", "ambiguous", "unmatched"}
                 or not isinstance(row.get("candidate_part_ids"), list)
                 or len(row["candidate_part_ids"]) > 2
-                or len(set(row["candidate_part_ids"])) != len(row["candidate_part_ids"])
                 or any(type(x) is not str or x not in candidate_ids
-                       for x in row["candidate_part_ids"])):
+                       for x in row["candidate_part_ids"])
+                or len(set(row["candidate_part_ids"])) != len(row["candidate_part_ids"])):
             raise PropertyMappingError("Invalid anonymous part match status")
         if row["status"] == "suggested":
             if (len(row["candidate_part_ids"]) != 1
