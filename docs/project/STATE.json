@@ -257,6 +257,14 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_property_map.py",
       "note": "匿名ソース/同クラスself参照と別クラス・別オブジェクト参照をAST上区別しread/write等を全件集計。PR #25の実装commit 2c000dadでPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・kit・handoff CI全成功。宣言プロパティの実体同一/登録・ジオメトリ効果は未検証"
+    },
+    {
+      "id": "GLB-010",
+      "title": "プロパティ式からメッシュ生成APIまでの構文上の経路を追跡",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/glb_geometry_flow.py",
+      "note": "bpy.ops.meshのプリミティブ、bmesh.opsの一部、object寸法等へselfプロパティまたは直線的ローカル別名が引数として届くAST上の経路を検出。関数内共起のみでは判定しない。分岐/ループ/関数間は未追跡、実際の形状効果は未証明。新規20回帰テスト・Blender3版合成fixtureを追加、現head CI成功確認前"
     }
   ],
   "known_issues": [
@@ -387,7 +395,7 @@
       "priority": 9,
       "status": "in_progress",
       "title": "診断した設定候補と実アドオンのプロパティの安全な照合",
-      "acceptance": "GLB候補名の宣言、同名属性のread/write追跡、同ソース同クラスself参照候補と別オブジェクト参照の区別を静的に実装。実行時のプロパティ登録・正確な受信実体・形状への影響は今後人手と承認済みBlender実機検証で確かめる"
+      "acceptance": "bpy.props宣言とGLB候補の一致、属性read/write、同クラスself参照、Blenderメッシュ生成API引数への直線的AST経路をレビュー限定で実装。分岐/ループ/他関数や実プロパティの正確な実体・形状効果は未検証。次は承認済み合成アドオンの形状変化を実機で別途比較する"
     }
   ],
   "decisions": [
@@ -495,6 +503,11 @@
       "id": "DEC-021",
       "decision": "同クラスself属性参照は強めのレビュー手がかりに限り実行時の同一プロパティと断定しない",
       "note": "匿名ソース+クラスの一致とself構文のみで分類。未解決/他クラス/他ファイルを分離し、長いクラス名の匿名化衝突は照合から除外。関数呼出・実登録・メッシュへの影響・設定値の自動提案は未証明で、私有ソースを実行/公開しない"
+    },
+    {
+      "id": "DEC-022",
+      "decision": "プロパティ値とメッシュAPIの構文的データフローは原因確定・自動修正の根拠にしない",
+      "note": "許可リスト内Blender APIに明示的なselfプロパティ値/簡易ローカル別名が流れる場合に限って静的証拠を報告。分岐/ループ/ネスト/メソッド間は安全側で未検証。コード本文・数値・私有パスを出力せず、受信実体・ジオメトリへの効果・Blender登録は常に未確認"
     }
   ],
   "last_verified": {
@@ -562,6 +575,7 @@
     "glb_repair_plan": "2026-11-06: PR #25 code SHA d9c5c92590759faac158824d84e4f8ca94c7c5bb; Python 42204425313, Windows 42204425351, Blender3版 42204425335, kit 42204425475, handoff 42204425288 の5ワークフロー全成功。GLB-006 implemented/blender_ci。PRはドラフト、mainと正式last_verified v0.17.0は不変",
     "glb_property_mapping": "2026-11-06: PR #25 code HEAD c36350754770e54ed30695b63661382bf815682c で5ワークフロー全成功: Python 42206398064 (3版), Windows 42206398098 (2版), Blender 42206398080 (4.4.3/4.5.15/5.2.1), kit 42206398068, handoff 42206398078。GLB-007 implemented/blender_ci。ただし正式release v0.17.0は維持しユーザー実アドオンは未実測",
     "glb_property_usage": "2026-11-06: PR #25 c640ad06e5f55bf5a4112ba3bb5635751f2023a7 に対するPython 42208333161、Windows 42208333343、Blender3版 42208333010、kit 42208333310、handoff 42208332987 の全ワークフローsuccessを確認。GLB-008 implemented/blender_ci、PRドラフト・last_verified v0.17.0を保持",
-    "glb_binding_hints": "2026-11-06: PR #25 code SHA 2c000dad0980ee76562576ba63c0e7b568284748の全CI成功: Python 42210546730、Windows 42210546742、Blender3版 42210546751、kit 42210546861、handoff 42210546734。GLB-009 implemented/blender_ci。PR draftのまま正式v0.17.0 last_verified変更なし"
+    "glb_binding_hints": "2026-11-06: PR #25 code SHA 2c000dad0980ee76562576ba63c0e7b568284748の全CI成功: Python 42210546730、Windows 42210546742、Blender3版 42210546751、kit 42210546861、handoff 42210546734。GLB-009 implemented/blender_ci。PR draftのまま正式v0.17.0 last_verified変更なし",
+    "glb_geometry_flow": "2026-11-06: PR #25 GLB-010 source glb_geometry_flow.py、20件の回帰テスト、3版Blender合成GLB fixtureを追加。メッシュ生成API引数までの静的経路は推測であり実行時因果は未検証。実ジョブの結果確認前は partial/not_tested。正式last_verified v0.17.0は保持"
   }
 }
