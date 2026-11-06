@@ -88,3 +88,37 @@ def classify_faces(reference, candidate):
         "sampled_only": True,
         "complete_surface_equivalence_proven": False,
     }
+
+
+MAX_PARTS = 64
+
+
+def summarize_anonymous_parts(labels, face_counts):
+    """Group original-order face classifications without retaining source names.
+
+    A part ID is local to one source GLB; the same numeric ID in the other
+    GLB is *not* evidence of correspondence or an equivalent object.
+    """
+    if not isinstance(labels, list) or not isinstance(face_counts, list):
+        raise ValueError("Invalid face classification or part layout")
+    if not 1 <= len(face_counts) <= MAX_PARTS:
+        raise ValueError("GLB visualization needs 1..64 nonempty mesh objects")
+    if any(type(count) is not int or count < 1 for count in face_counts):
+        raise ValueError("Every visualized part needs at least one triangle")
+    if sum(face_counts) != len(labels) or len(labels) > 512:
+        raise ValueError("Part boundaries do not match classified triangles")
+    if any(label not in COLOR_RGBA for label in labels):
+        raise ValueError("Unknown GLB visualization color class")
+    parts = []
+    start = 0
+    for i, count in enumerate(face_counts):
+        selection = labels[start:start + count]
+        parts.append({
+            "part_id": f"part_{i + 1:03d}",
+            "triangle_count": count,
+            "low": selection.count("low"),
+            "medium": selection.count("medium"),
+            "high": selection.count("high"),
+        })
+        start += count
+    return parts
