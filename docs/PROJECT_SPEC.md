@@ -278,3 +278,9 @@ Python側に12件のpreflight/安全ランナー/報告/スキップテストと
 - 入力の静的preflight、外部URI拒否、各512三角形上限、24MiB上限、固定Blenderスクリプト・`--factory-startup --disable-autoexec`、元アドオンコード非実行、ネットワークアップロード禁止、元GLB不変を維持。派生GLBには元の形状座標が含まれるためローカル保存専用。
 - **検証**: Python単体テスト、3版Blenderで自作合成GLBの差分/同等分割を比較して色付きGLBを出力し、Blenderへ再インポートするCIを追加。テスト成功はSHAに紐づけて記録する。
 - **未完了**: 元オブジェクトの識別/選択、複数モデル同時ビュー・カメラ連動、未知領域の独立色、細部の検出率向上、大型GLB。灰色/誤差0は幾何完全一致や内部空洞無しの証明ではない。新しい手動修正候補の自動適用も行わない。詳細: `docs/GLB_DIFF_VISUALIZATION.md`。
+
+## GLB-020 第2段階：匿名部品別の着色GLB（試作）
+
+参照・生成それぞれに最大64個の非空メッシュを保持したまま、匿名の`CBDK_Reference_Part_###` / `CBDK_Candidate_Part_###`として3D色分けモデルを書き出す。`review.json`の`parts.reference`/`parts.candidate`に部品別の三角面数と色の枚数を記録するが、元の部品名や生頂点座標は出さない。元GLBは書き換えず、派生モデルはローカル保存限定。**双方の同じ部品番号は対応関係の証明ではない。** 連動比較UIや未知領域の表示・大規模GLBは未完成。
+
+合成2部品GLBの実書出・再読込と色別材料の維持はBlender4.4.3/4.5.15/5.2.1でCI成功。検証: [Blender run 42265921506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921506)、実装テストSHA `7365828b`。正式v0.17.0/ドラフトPR #25維持。
