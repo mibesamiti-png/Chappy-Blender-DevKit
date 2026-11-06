@@ -170,7 +170,8 @@ def build_repair_plan(diagnosis: dict) -> dict:
         if any(not isinstance(row, dict) for row in metrics):
             raise RepairPlanError("Each evidence item must be an object")
         summary = item.get("evidence_summary")
-        if not isinstance(summary, dict) or summary.get("evidence_count") != len(metrics):
+        if (not isinstance(summary, dict) or type(summary.get("evidence_count")) is not int
+                or summary["evidence_count"] != len(metrics)):
             raise RepairPlanError("Inconsistent evidence_summary")
         views = summary.get("affected_views")
         if (not isinstance(views, list) or any(
@@ -259,7 +260,6 @@ def write_repair_plan(plan: dict, destination: str | Path) -> Path:
 
 
 def plan_from_comparison(comparison: str | Path, destination: str | Path) -> dict:
-    from .glb_diagnose import diagnose_comparison_file
     diagnosis = diagnose_comparison_file(comparison)
     result = build_repair_plan(diagnosis)
     write_repair_plan(result, destination)
