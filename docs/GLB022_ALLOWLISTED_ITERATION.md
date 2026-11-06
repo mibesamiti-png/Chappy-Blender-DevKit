@@ -29,3 +29,11 @@ CBDK自作の小規模な3部品（ボール、軸、ソケット）で、**生�
 `tests/test_glb_synthetic_iteration.py`で棄却→採用→上限2・停止条件・不正レポート・偽の自動承認・上書き防止を検査する。Blender 4.4.3/4.5.15/5.2.1 のCIでも`scripts/run_glb022_synthetic_iteration.py`を実行し、**毎回GLBを実際に別ファイルへ出力し直して**差分レポートを新規作成する。
 
 CIで成功が確認されたコードのコミットSHAとrun IDを記録するまでは、GLB-022全体を実装済みとはしない。正式版v0.17.0は維持、v0.18はドラフトPR #25のまま。今後の課題は、合成モデルでの複数パラメータ候補・失敗時の中断と再実行・ユーザーの明示許可付き実データ検証・隔離環境・反復品質評価など。
+
+## 第1段階の実測CI結果（2026-11-07）
+
+テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`： [Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)、[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)、[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)、[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)、[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)、[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+
+CBDK自作の固定3部品GLBで、初期合成不具合を再生成し、無関係なボール位置移動を**実Blenderで新規生成→GLB比較して棄却**。次にCBDK合成ソケットの既知正常状態を新規生成して**採用**、観測差分0で停止することをBlender3バージョンのCIで実証。入力として自作の固定ジェネレーターのみを実行し、生成器・GLBのSHA-256不変を確認。ローカルの匿名JSON/日本語Markdownに判断履歴を保存。
+
+このコードの成功は、**実ユーザーのボールジョイントアドオンが自動修正できることや、どの数値が最適かを自由に探索できることの証拠ではない**。GLB-022全体の管理状態は`partial`、GLB-020レビューMVPは合格/追加改良凍結、GLB-021も`partial`。正式v0.17.0は変更せず、v0.18のドラフトPR #25に含まれる。
