@@ -189,3 +189,11 @@ Track GLB-006 under the canonical STATE.json and generated PROJECT_HANDOFF.md wi
 Report exact declaration-name matches separately from unmatched candidates. Treat every match as requiring human review. Do not infer a numeric correction from GLB bounds, infer a source code change, or automatically apply settings. Strip source body, default values, local filenames and absolute paths from output; only anonymous source labels/class names/line numbers/property constructor metadata may be recorded. The report must stay exclusively under ignored `reports/latest/`, never overwritten and never published. Keep private user models and addons entirely out of the public repository.
 
 Synthetic fixtures in CI are repository-authored and are not user input. Document Python/Windows/Blender CI evidence accurately; retain official release last_verified at v0.17.0 until a verified release. Additional workflow details: `docs/GLB_PROPERTY_MAPPING.md`.
+
+## v0.18 — AST-only potential property usage evidence (GLB-008)
+
+Track same-name Python attribute occurrences conservatively and only in explicitly selected local files. `read`, `write`, `read_write`, `delete` describe the **syntax**, never proved Blender property binding or geometry effect. Capture bounded anonymous source labels, function/class names and line numbers; no source expressions, constants, default values, raw file paths or source bodies.
+
+`receiver_binding_verified` and `runtime_effect_verified` remain false. An incidental `obj.property` that shares the declaration name may be unrelated; dynamic `getattr` and cross-module flow are unknown. Avoid claiming that a candidate parameter changes geometry until separately verified. Don't import, exec, modify, run or publish private addon sources. Any generated report remains in ignored `reports/latest/`.
+
+Use 23 new Python regression cases plus the synthetic multi-version Blender fixture to verify the non-executing behavior; record CI success only after the actual relevant commit's jobs complete.
