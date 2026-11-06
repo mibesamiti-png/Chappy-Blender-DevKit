@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>CBDK | ローカル3D差分レビュー</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui,-apple-system,Segoe UI,sans-serif; background: #0c1220; color: #e8edf5; }
+    * { box-sizing: border-box; }
+    body { max-width: 1550px; margin: auto; padding: 20px; }
+    header, .bar, .legend, .panelhead { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    header { justify-content: space-between; margin-bottom: 16px; }
+    h1 { font-size: 21px; margin: 0; } h2 { font-size: 16px; margin: 0; }
+    .muted { color: #9faec2; font-size: 13px; }
+    .note { margin: 16px 0; padding: 12px 14px; border: 1px solid #334158; border-radius: 9px; font-size: 13px; line-height: 1.55; color: #cad4e2; }
+    .layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .panel { border: 1px solid #354258; border-radius: 12px; background: #131e2e; min-width: 0; overflow: hidden; }
+    .panelhead { justify-content: space-between; padding: 12px; }
+    select, button { background: #202e42; border: 1px solid #50627a; color: #f0f5fa; border-radius: 7px; padding: 8px; cursor: pointer; }
+    button:focus-visible, select:focus-visible, canvas:focus-visible { outline: 2px solid #8fd0ff; outline-offset: 2px; }
+    canvas { display: block; width: 100%; height: 440px; touch-action: none; cursor: grab; background: #101a28; }
+    canvas:active { cursor: grabbing; }
+    .legend { margin-top: 16px; } .item { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; }
+    .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .status { margin-top: 12px; font-size: 13px; color: #bed5e9; min-height: 18px; }
+    @media (max-width: 750px) { .layout { grid-template-columns: 1fr; } canvas { height: 330px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>CBDK｜3D形状差分の連動レビュー</h1>
+      <div class="muted">ローカル専用・外部通信なし・元モデルは変更しない</div>
+    </div>
+    <div class="bar">
+      <label><input id="hide-low" type="checkbox"> 差が小さい面を非表示</label>
+      <button id="reset" type="button">視点をリセット</button>
+    </div>
+  </header>
+  <div class="layout">
+    <section class="panel" aria-label="参照モデル">
+      <div class="panelhead"><h2>参照モデル</h2><label class="muted">部品 <select id="part-reference" aria-label="参照部品"></select></label></div>
+      <canvas id="canvas-reference" tabindex="0" aria-label="参照モデルの3D表示"></canvas>
+      <div class="panelhead muted" id="count-reference"></div>
+    </section>
+    <section class="panel" aria-label="生成モデル">
+      <div class="panelhead"><h2>生成モデル</h2><label class="muted">部品 <select id="part-candidate" aria-label="生成部品"></select></label></div>
+      <canvas id="canvas-candidate" tabindex="0" aria-label="生成モデルの3D表示"></canvas>
+      <div class="panelhead muted" id="count-candidate"></div>
+    </section>
+  </div>
+  <div class="legend">
+    <span class="item"><span class="swatch" style="background:#969ba2"></span>灰：サンプル誤差が1%未満</span>
+    <span class="item"><span class="swatch" style="background:#f0b423"></span>黄：1%以上5%未満</span>
+    <span class="item"><span class="swatch" style="background:#e81717"></span>赤：5%以上</span>
+  </div>
+  <div class="note">
+    ドラッグ＝両モデルを同時回転 ／ Shift＋ドラッグ＝同時移動 ／ ホイール＝同時ズーム。
+    部品表示は左右独立。参照と生成の同じ部品番号は<strong>同一部品を保証しません</strong>。
+    色は各三角面24点のサンプル測定による目安です。灰色・誤差ゼロも完全一致を証明せず、
+    小穴や内部空間などの未測定部分は判定できない場合があります。
+    このHTMLには派生した3D形状データが含まれます。元モデルと同様に非公開で保管してください。
+  </div>
+  <div class="status" id="status" role="status">読込中...</div>
+  <script id="cbdk-viewer-data" type="application/json">__CBDK_VIEWER_DATA__</script>
+  <script>
+  "use strict";
+  (function () {
+    const data = JSON.parse(document.getElementById("cbdk-viewer-data").textContent);
+    if (data.kind !== "cbdk_local_diff_viewer" || data.version !== 1) {
+      document.getElementById("status").textContent = "未対応の比較データです";
+      return;
+    }
+    const palette = ["#969ba2", "#f0b423", "#e81717"];
+    const sides = ["reference", "candidate"];
+    const camera = { yaw: -0.6, pitch: 0.55, zoom: 1, dx: 0, dy: 0 };
+    const selectors = {};
+    const canvases = {};
+    let hideLow = false;
+    let dragging = null;
+    function project(x, y, z, width, height) {
+      const px = x - data.center[0];
+      const py = y - data.center[1];
+      const pz = z - data.center[2];
+      const cy = Math.cos(camera.yaw);
+      const sy = Math.sin(camera.yaw);
+      const cp = Math.cos(camera.pitch);
+      const sp = Math.sin(camera.pitch);
+      const x1 = cy * px - sy * py;
+      const y1 = sy * px + cy * py;
+      const screenY = cp * pz - sp * y1;
+      const depth = cp * y1 + sp * pz;
+      const scale = Math.min(width, height) * 0.67 * camera.zoom / data.diagonal;
+      return [width / 2 + (x1 + camera.dx) * scale,
+              height / 2 - (screenY + camera.dy) * scale, depth];
+    }
+    function drawOne(side) {
+      const canvas = canvases[side];
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+      const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.clearRect(0, 0, width, height);
+      const filter = selectors[side].value;
+      const polygons = [];
+      for (const face of data[side].faces) {
+        if (filter !== "all" && String(face[0]) !== filter) continue;
+        if (hideLow && face[1] === 0) continue;
+        const a = project(face[2], face[3], face[4], width, height);
+        const b = project(face[5], face[6], face[7], width, height);
+        const c = project(face[8], face[9], face[10], width, height);
+        polygons.push({ a: a, b: b, c: c, depth: (a[2] + b[2] + c[2]) / 3, color: palette[face[1]] });
+      }
+      // Painter's algorithm is a bounded review approximation, not a GPU depth buffer.
+      polygons.sort((a, b) => b.depth - a.depth);
+      for (const item of polygons) {
+        ctx.beginPath();
+        ctx.moveTo(item.a[0], item.a[1]);
+        ctx.lineTo(item.b[0], item.b[1]);
+        ctx.lineTo(item.c[0], item.c[1]);
+        ctx.closePath();
+        ctx.fillStyle = item.color;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(11,19,29,0.38)";
+        ctx.lineWidth = Math.max(0.6, dpr * 0.55);
+        ctx.stroke();
+      }
+      const label = document.getElementById("count-" + side);
+      label.textContent = polygons.length + " / " + data[side].faces.length +
+        " 三角面を表示（" + data[side].parts.length + " 部品）";
+    }
+    function redraw() { for (const side of sides) drawOne(side); }
+    for (const side of sides) {
+      const canvas = document.getElementById("canvas-" + side);
+      const selector = document.getElementById("part-" + side);
+      selectors[side] = selector;
+      canvases[side] = canvas;
+      const all = document.createElement("option");
+      all.value = "all";
+      all.textContent = "すべての部品";
+      selector.appendChild(all);
+      data[side].parts.forEach(function (part, index) {
+        const opt = document.createElement("option");
+        opt.value = String(index + 1);
+        opt.textContent = "Part " + String(index + 1).padStart(3, "0") +
+          " （赤" + part.high + " 黄" + part.medium + " 灰" + part.low + "）";
+        selector.appendChild(opt);
+      });
+      selector.addEventListener("change", redraw);
+      canvas.addEventListener("pointerdown", function (event) {
+        if (event.button !== 0) return;
+        canvas.setPointerCapture(event.pointerId);
+        dragging = { id: event.pointerId, x: event.clientX, y: event.clientY, pan: event.shiftKey };
+      });
+      canvas.addEventListener("pointermove", function (event) {
+        if (!dragging || dragging.id !== event.pointerId) return;
+        const dx = event.clientX - dragging.x;
+        const dy = event.clientY - dragging.y;
+        dragging.x = event.clientX;
+        dragging.y = event.clientY;
+        if (dragging.pan) {
+          const scale = data.diagonal / (Math.max(1, canvas.clientHeight) * 0.67 * camera.zoom);
+          camera.dx += dx * scale;
+          camera.dy -= dy * scale;
+        } else {
+          camera.yaw += dx * 0.009;
+          camera.pitch = Math.max(-1.55, Math.min(1.55, camera.pitch + dy * 0.009));
+        }
+        redraw();
+      });
+      function release(event) {
+        if (dragging && dragging.id === event.pointerId) dragging = null;
+      }
+      canvas.addEventListener("pointerup", release);
+      canvas.addEventListener("pointercancel", release);
+      canvas.addEventListener("wheel", function (event) {
+        event.preventDefault();
+        camera.zoom = Math.max(0.1, Math.min(20, camera.zoom * Math.exp(-event.deltaY * 0.0015)));
+        redraw();
+      }, { passive: false });
+      canvas.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowLeft") camera.yaw -= 0.12;
+        else if (event.key === "ArrowRight") camera.yaw += 0.12;
+        else if (event.key === "ArrowUp") camera.pitch = Math.max(-1.55, camera.pitch - 0.12);
+        else if (event.key === "ArrowDown") camera.pitch = Math.min(1.55, camera.pitch + 0.12);
+        else return;
+        event.preventDefault();
+        redraw();
+      });
+    }
+    document.getElementById("hide-low").addEventListener("change", function (event) {
+      hideLow = event.target.checked;
+      redraw();
+    });
+    document.getElementById("reset").addEventListener("click", function () {
+      camera.yaw = -0.6;
+      camera.pitch = 0.55;
+      camera.zoom = 1;
+      camera.dx = 0;
+      camera.dy = 0;
+      redraw();
+    });
+    window.addEventListener("resize", redraw);
+    document.getElementById("status").textContent =
+      "連動視点を使用中｜完全一致・部品対応の証明ではありません｜通信なし";
+    redraw();
+  }());
+  </script>
+</body>
+</html>
