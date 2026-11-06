@@ -348,3 +348,9 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - Do not describe sampled yellow/red face reductions as continuous distance optimization, guaranteed complete geometry match, causal explanation for an arbitrary addon, or recommended joint sizes.
 - Bounded 1/2/3 budget tests must not report success on an unresolved socket, and old 2-candidate CI must remain intact. Keep all model geometry, local AST paths and HTML/GLB artifacts private. No arbitrary addon execution or automatic source writes.
 - GLB-022 remains partial / blender_ci. Tested CI SHA and run IDs are recorded in `docs/GLB022_MULTI_CANDIDATE.md`; the subsequent docs-only commits are not treated as newly code-tested.
+
+## GLB-022 phase 3 progressive sampled-distance synthetic protocol
+
+- The `progressive` protocol is **synthetic only**, adding explicit CBDK fixture variants `narrow_mid_shifted` and `narrow_mid` at fixed socket diameter 1.24. Reject cross-part ball regression, accept an intermediate decrease in the **global bidirectional sampled maximum** even when colored triangle counts stay unchanged, then accept restored synthetic 1.70 and stop at sampled zero.
+- The metric is not per-part or exact Hausdorff distance. Keep the separate changed-part classification veto, finite values, consistent coordinate scale, strict attempt budget, input integrity checks and non-overwriting local JSON/Markdown. Do not generalize it to user GLBs or claim precise geometry equivalence.
+- All three protocols (`basic`, `cross_part`, `progressive`) must stay CI-tested on Blender 4.4.3 / 4.5.15 / 5.2.1. GLB-022 remains partial. Never execute arbitrary user addons, mutate originals, or upload derived geometry/private AST data to public GitHub/Notion.
