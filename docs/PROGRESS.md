@@ -1019,3 +1019,11 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - 最大3試行、予算1/2での未完成打切り、欠損レビュー/不正数値/安全フラグの拒否、ユーザー非公開データを出力しないことをPythonとBlender実GLBで検証。
 - テスト対象コードSHA `44e15f8f6664fe29e06810fd06d8d73dda70bec6`：[Python 42307811087](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811087)、[Windows 42307810687](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810687)、[Blender4.4.3/4.5.15/5.2.1 42307810797](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810797)、[Windows Kit 42307810828](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810828)、[Handoff 42307811040](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811040)、[Chromium 42307810743](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810743) **全6系統成功**。
 - GLB-022は`partial`。全体サンプリング最大値は厳密な部品別誤差・完全幾何一致ではない。実ユーザーアドオンの原因/適切な設定値は依然未検証。[詳細](GLB022_PROGRESSIVE_SYNTHETIC.md)。
+
+## 2026-11-07 GLB-022 第4段階 — 数値候補の算術生成とBlender実比較
+
+- 合成ソケット開口の0.78〜1.70を算術4分割して**1.01/1.24/1.47/1.70**の数値候補を計算。候補を手書きで固定した試験IDへ変換するだけでなく、CBDK生成器が検証済みの小数値を受け付け、それぞれBlenderで新規GLB出力・再比較。
+- 双方向の全体サンプル最大距離が減り、他部品の分類面数が増えない候補だけ採用。途中で改善が止まれば棄却、予算1/2/3の打切りでは未完了を保存。合成既知正常の1.70では観測0で停止。
+- JSON/日本語Markdown履歴はローカル新規ファイル、候補値の安全範囲・未知入力・上書き禁止・SHA-256不変を確認。旧3プロトコルもCIに保持。
+- テスト対象コード SHA `23e9dec5d313468a70cc3bab7a5bb57fc090a8b3`：[Python 42309145079](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145079)、[Windows 42309145003](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145003)、[Blender4.4.3/4.5.15/5.2.1 42309145076](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145076)、[Windows kit 42309145019](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145019)、[引き継ぎ 42309145005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145005)、[Chromium 42309145006](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145006) **全6系統success**。
+- **GLB-022はpartialのまま**。これは自作合成モデルの固定格子探索であり、実アドオンの自由最適化や厳密な距離・完全幾何一致ではない。[第4段階仕様](GLB022_GENERATED_GRID.md)。
