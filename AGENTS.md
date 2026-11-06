@@ -291,3 +291,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - Normalize only anonymous per-part, bounded world coordinates; retain 512 triangles / 64 part caps. Do not store raw source vertices, edges, paths or original part names in public-safe JSON. Private HTML and colored GLBs still contain derived geometry and must remain local.
 - A mismatch in observed boundary/nonmanifold status *demotes* a spatial part pairing to **ambiguous**. It never approves a new corresponding part, edits Blender data or applies an addon parameter.
 - Synthetic closed/uncapped tetra tests (Python and real Blender GLBs) are evidence for these cases only. Arbitrary models, T-junctions, floating-point welding errors and internal cavities remain out of scope.
+
+## GLB-020 local-only boundary segment overlay
+
+- `local_boundary_segments` produces derived **private world-space line coordinates**, restricted to the local offline HTML. The public-safe JSON report must contain only counts, Boolean flags and anonymous IDs; never add lines, raw vertices or source paths to that report or Notion.
+- The canvas overlay draws observed boundary segments in cyan after approximate face rendering (X-ray-like). It does NOT provide reliable occlusion, physical hole localization, watertightness or a verified model discrepancy.
+- Maintain source non-modification, anonymous per-part alignment, maximum 512 triangles / 64 parts, disabled Blender auto-execution, private artifact locality, and the existing sample/part-identity caveats.
+- Check synthetic closed-versus-open tetrahedron in Python and Blender 3-version CI. Use headless Chromium to verify both overlay toggles without permitting any network traffic. CI success must be attributed to its exact tested SHA.
