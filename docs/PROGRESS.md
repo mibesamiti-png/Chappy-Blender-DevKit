@@ -684,4 +684,4 @@ GLB-012を実装済/Blender CI検証、NEXT-010をdoneとしてSTATE/HANDOFFに�
 - `tests/test_parameter_direction.py`に純Python回帰テスト11件追加。3版Blender CIで7 GLBの実出力と方向・無変更対照・非自動承認フラグをチェック。
 - 要件GLB-013・設計判断DEC-025・タスクNEXT-011をSTATE.json/HANDOFFで管理。
 
-**検証境界:** 最新PR headのCIを見てからGLB-013の検証状態を更新する。これは合成メッシュの局所頂点距離による実験であり、一般GLBの表面一致や実ユーザーアドオンの最適設定値の証明ではない。PRはドラフト、正式last_verified v0.17.0維持。
+**検証境界:** 最新PR headのCIを見てからGLB-013の検証状態を更新する。これは合成メッシュの頂点順不変な局所半径分布による実験であり、一般GLBの表面一致や実ユーザーアドオンの最適設定値の証明ではない。PRはドラフト、正式last_verified v0.17.0維持。
