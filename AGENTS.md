@@ -167,3 +167,9 @@ When a comparison fails, use its structured diagnostics to guide a reviewed code
 ## v0.18 — silhouette regression evidence
 
 Silhouette signatures are deterministic Blender-derived evidence, not AI-generated reconstruction. Keep the grid bounded (32x32 by default), enforce triangle limits before expensive rasterization, and record unavailable signatures explicitly. IoU below threshold is a diagnostic failure; IoU above threshold is not proof of exact geometry, watertightness, mechanical fit, or internal cavities. Never auto-approve/merge code from silhouette score alone.
+
+## v0.18 draft — quantitative GLB diagnostic evidence (GLB-005)
+
+Treat `glb-diagnose` as a review-only hypothesis generator for valid `cbdk_glb_scene_comparison` JSON. Validate boolean `passed`, error/warning/info counts, numeric and finite metrics, bounded difference arrays, duplicate JSON keys and input size *before* claiming a diagnosis. Do not promote unknown diagnostic codes to a clean bill of health: preserve their identity and flag review work.
+
+Each grouped hypothesis should carry the affected camera views, worst silhouette IoU and relevant relative/volume errors for reviewers. Neither an in-tolerance comparison nor a silhouette match proves identical solids, cavities or exact surface geometry. Do not run private source addons, rewrite code, auto-approve components or upload private GLB data to public GitHub. Keep `last_verified` at the last fully observed CI release until tests on the current PR head actually pass.
