@@ -61,7 +61,7 @@ def _look_at(obj, target):
 def _select_render_engine(scene):
     """Choose a compatible structural render engine across supported Blender versions."""
     errors = []
-    for candidate in ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE", "BLENDER_WORKBENCH"):
+    for candidate in ("BLENDER_WORKBENCH", "BLENDER_EEVEE_NEXT", "BLENDER_EEVEE"):
         try:
             scene.render.engine = candidate
             return candidate
@@ -75,6 +75,11 @@ def _setup_studio(center, radius):
     engine = _select_render_engine(scene)
     scene.render.image_settings.file_format = "PNG"
     scene.render.film_transparent = False
+    if engine == "BLENDER_WORKBENCH":
+        # Fast, deterministic structural preview; scene lights are ignored by Workbench.
+        scene.display.shading.light = "STUDIO"
+        scene.display.shading.color_type = "MATERIAL"
+        scene.display.shading.show_shadows = True
     if scene.world is None:
         scene.world = bpy.data.worlds.new("CBDK_World")
     scene.world.color = (0.035, 0.035, 0.045)
