@@ -806,3 +806,17 @@ CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlend
 - 正本STATE.jsonにGLB-018/DEC-030/NEXT-016を登録して、PROJECT_HANDOFFを同期。
 
 **境界:** 幾何特徴は優先候補であり欠陥の確定ではない。新方式は小部品を優先できても、未選択領域の穴を見逃し得る。公開CIにユーザーの非公開GLB・アドオンは入れず、自動修正もしない。最新headの実CIを確認するまではGLB-018は部分実装/未検証。v0.18ドラフト、正式v0.17.0維持。
+
+### GLB-018 特徴ヒント優先・合成9 GLB実測成功（2026-11-07）
+
+コード・仕様・引き継ぎコミット `676e92f8cc4ad48774ea6e0702710576fe97a286` に対して、5つのGitHub Actionsワークフローは**すべて成功**した。
+
+- Python 3.11/3.12/3.13: [42246918798](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918798)（新規13件の特徴優先回帰テスト含む）。
+- Windows PowerShell 3.11/3.13: [42246918818](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918818)。
+- Blender 4.4.3/4.5.15/5.2.1: [42246918883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918883)。CBDK製合成GLB9種を実際に生成・再読み込み。大型板2枚と中央小部品の開口差は、面積のみを追加調査する旧方式で**サンプル最大距離0**、特徴優先方式では**0.0657466**。3版のログで同値を確認。
+- Windows kit: [42246918868](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918868)。
+- Durable handoff: [42246918953](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918953)。
+
+既存の7 GLB検証、GLB-017の狭穴検出、256/512面BVHの精密距離・ウォールクロック測定、非公開データを実行/公開しないチェックも成功。GLB-018を`implemented/blender_ci`、NEXT-016を`done`としてSTATE/HANDOFFに反映した。
+
+**結果の解釈**：これは特定の自作合成モデル上での改善証拠。開放辺が本物の穴かどうか、粗いサンプルの未調査箇所に欠陥がないこと、すべての小部品/内部空洞が見つかることを意味しない。計算優先順位のヒューリスティックであり完全な表面一致は未証明。上記は実装コミットのCIであり、後続の記録更新コミットの再CIとは区別する。v0.18はドラフトPR #25、正式v0.17.0の`last_verified`は保持。
