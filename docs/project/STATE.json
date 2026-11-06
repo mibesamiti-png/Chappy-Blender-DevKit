@@ -277,10 +277,10 @@
     {
       "id": "GLB-012",
       "title": "信頼済み合成Blenderアドオンのパラメータ変更前後を定量測定",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/parameter_experiment_metrics.py",
-      "note": "リポジトリ製合成アドオンの球半径・Bevel幅を個別変更し、生成メッシュとGLB再読込後の頂点移動量（平均/最大/変化件数）を集計。無関係の部品は変化0を確認。頂点順一致の合成fixtureに限定し、一般GLBの形状一致証明ではない。新規10回帰テスト+Blender3版CIの実測待ち"
+      "note": "CBDK製合成アドオンの球半径/Bevel幅変更を生成直後とGLB再読込後で平均/最大頂点変位と変化点数として測定し、他の部品が不変の対照実験を確認。PR #25 commit 04526f1dのPython3版/Windows2版/Blender4.4.3/4.5.15/5.2.1/kit/handoff全CI成功。任意GLB・ユーザーアドオンへ一般化できない"
     }
   ],
   "known_issues": [
@@ -416,9 +416,9 @@
     {
       "id": "NEXT-010",
       "priority": 10,
-      "status": "in_progress",
+      "status": "done",
       "title": "安全な合成アドオンで形状変化を数値実証",
-      "acceptance": "Blender3版CIで球半径/Bevel幅を別々に変更してGLBの前後を比較し、対象の頂点移動量が正・非対象が0・再読み込み後も変化が残ることを記録"
+      "acceptance": "CBDK製合成アドオンで球半径/Bevel幅の単独変更をGLB再読込後まで定量比較。変更対象の頂点移動が正・非対象は0を3版Blender CIで確認（commit 04526f1d）"
     }
   ],
   "decisions": [
@@ -611,6 +611,6 @@
     "glb_binding_hints": "2026-11-06: PR #25 code SHA 2c000dad0980ee76562576ba63c0e7b568284748の全CI成功: Python 42210546730、Windows 42210546742、Blender3版 42210546751、kit 42210546861、handoff 42210546734。GLB-009 implemented/blender_ci。PR draftのまま正式v0.17.0 last_verified変更なし",
     "glb_geometry_flow": "2026-11-06: PR #25 GLB-010 source glb_geometry_flow.py、20件の回帰テスト、3版Blender合成GLB fixtureを追加。メッシュ生成API引数までの静的経路は推測であり実行時因果は未検証。実ジョブの結果確認前は partial/not_tested。正式last_verified v0.17.0は保持",
     "glb_modifier_flow": "2026-11-06: PR #25 SHA b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 全5ワークフロー成功: Python 42214954563; Windows 42214954671; Blender 3版 42214954642; kit 42214954657; handoff 42214954600。GLB-011 implemented/blender_ci、PR draft、last_verified v0.17.0維持",
-    "trusted_parameter_displacement": "2026-11-06 PR #25 GLB-012 定量頂点移動/変更しない対照部品を実験スクリプトに追加、10純Python回帰テスト+Blender3版CIを追加。実測成功前はpartial/not_tested。PR draftと正式v0.17.0維持"
+    "trusted_parameter_displacement": "2026-11-06: GLB-012 PR #25実装コミット04526f1ddd9f336df16d2841ccafc278cd8edf4fで全成功: Python 42220053230, Windows 42220053331, Blender3版 42220053332, kit 42220053222, handoff 42220053158。GLB-012 implemented/blender_ci。PRドラフト・正式last_verified v0.17.0維持"
   }
 }
