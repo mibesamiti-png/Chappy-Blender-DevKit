@@ -289,7 +289,7 @@ jobs:
           fi
           echo "Trusted additive parameter GLB generation and roundtrip controls passed." >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Compare order-independent 3D surfaces and an open hole after synthetic GLB roundtrip
+      - name: Compare BVH surface distances and an open hole after synthetic GLB roundtrip
         shell: bash
         run: |
           set -euo pipefail
@@ -306,12 +306,17 @@ jobs:
           report = json.loads((root / 'surface_distance_experiment.json').read_text())
           assert report['kind'] == 'cbdk_trusted_glb_surface_distance_experiment', report
           assert report['source'] == 'repository_authored_synthetic_only', report
-          assert len(report['variants']) == 4, report
+          assert len(report['variants']) == 5, report
           assert all(report['checks'].values()), report
           assert all(v is False for v in report['safety'].values()), report
           a = report['comparisons']['alternate_triangulation']
           h = report['comparisons']['open_hole']
           t = report['comparisons']['raised']
+          grid = report['comparisons']['grid_256']
+          assert report['triangles']['grid_256'] == 256, report
+          assert grid['symmetric_mean'] == 0.0, grid
+          assert grid['search_acceleration'] == 'deterministic_median_split_triangle_aabb_bvh', grid
+          assert grid['reference_to_candidate']['triangle_distance_evaluations'] * 4 < grid['reference_to_candidate']['brute_force_evaluations'], grid
           assert a['symmetric_mean'] < 1e-6, a
           assert h['candidate_to_reference']['mean'] > .01, h
           assert h['symmetric_sampled_max'] > .10, h
@@ -323,7 +328,7 @@ jobs:
           for variant in report['variants']:
               assert (root / (variant + '.glb')).stat().st_size > 100
           PY
-          echo "Synthetic four-GLB surface-distance and planar-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
+          echo "Synthetic five-GLB BVH-distance and planar-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
