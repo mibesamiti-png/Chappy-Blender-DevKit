@@ -327,3 +327,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - A decrease in sampled yellow/red triangle counts is **not** proof of complete geometric equivalence. The fixed 0.78/1.70 socket values are exclusively synthetic control values, never recommendations for real joints.
 - Preserve fail-closed unknown trial names, contradictory scores and forged safety guarantees, input GLB SHA-256 invariance, local-only fresh files and the six-way CI evidence at its tested code SHA.
 - GLB-021 remains partial and GLB-022 remains unimplemented until an independently reviewed, allowlisted *iterative* runner is actually implemented and verified.
+
+## GLB-022 bounded synthetic iteration only
+
+- Only CBDK-controlled fixed fixture variants may be regenerated. Runner `scripts/run_glb022_synthetic_iteration.py` operates exclusively inside a **new** `reports/ci` folder, uses `--factory-startup --disable-autoexec`, launches only the trusted source-controlled synthetic generator, and compares each regenerated GLB through the validated GLB-020 pipeline. Arbitrary add-ons, user GLBs and unreviewed parameter values are prohibited.
+- The two candidate steps are intentionally fixed (unrelated ball move **reject**, known synthetic socket restoration **accept**). Strict observed reduction in sampled socket error without new sampled errors elsewhere is required. Stop at observed zero or maximum attempts. Neither this metric nor static AST mapping proves physical function, complete geometry, or real code causality.
+- Keep trial history and colored/geometry-bearing outputs local; share only aggregate CI outcomes and the tested commit SHA. Do not auto-edit user code, change source GLBs, merge PR #25 or release v0.18 without authorization.
+- GLB-022 is partial (bounded synthetic MVP) until independently validated for wider opt-in workflows; avoid claiming general automatic parameter optimization.
