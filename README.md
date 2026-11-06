@@ -341,6 +341,8 @@ v0.15で加工前後のメッシュを丸ごと複製していた方式を変更
 ```bash
 # Blenderなし: node/mesh/material/primitiveを静的解析
 python -m cbdk glb-inspect model.glb --output reports/latest/glb_structure.json
+pip install -e ".[glb-quick]"
+python -m cbdk glb-quick-preview model.glb --output reports/latest/glb_quick_preview
 
 # 信頼済みBlenderあり: 構造JSON + front/right/top/iso PNG + scene metadata
 python -m cbdk glb-preview model.glb \
