@@ -197,3 +197,9 @@ Track same-name Python attribute occurrences conservatively and only in explicit
 `receiver_binding_verified` and `runtime_effect_verified` remain false. An incidental `obj.property` that shares the declaration name may be unrelated; dynamic `getattr` and cross-module flow are unknown. Avoid claiming that a candidate parameter changes geometry until separately verified. Don't import, exec, modify, run or publish private addon sources. Any generated report remains in ignored `reports/latest/`.
 
 Use 23 new Python regression cases plus the synthetic multi-version Blender fixture to verify the non-executing behavior; record CI success only after the actual relevant commit's jobs complete.
+
+## v0.18 — GLB-009 syntactic class/self relevance
+
+Distinguish same-anonymous-file + same-class `self.property` AST references from other/unresolved attribute uses. Maintain total counts independently of capped display examples, and separately count read/write/read_write/delete. Do NOT promote the syntactic correlation into verified receiver identity, Blender property registration, geometry effects or numeric correction advice. Prevent redacted/overlong class names from matching the real class.
+
+Tests must cover other receivers, other classes, same class names across files, declaration-only classes, counts beyond the example cap, nonexecution and private data suppression. Keep all reports ignored and never import/execute user-provided addon code. `docs/GLB_PROPERTY_MAPPING.md` describes the current evidence limitations.
