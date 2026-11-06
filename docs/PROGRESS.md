@@ -957,3 +957,11 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - Pythonテストで悪意のある安全フラグ/異常なJSON/偽の部品役割/元ソース副作用の非実行/出力非上書きを検証。Blender3版ではCBDK合成の正常/ソケット狭窄/ボール移動/リップ欠損の4比較結果を実際にGLB-021へ入力する。
 - コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
 - **GLB-020のMVPスコープ凍結は維持**。GLB-021は`partial`、次の`NEXT-019`は`in_progress`、GLB-022は未実装、正式版v0.17.0は変更しない。詳細： [GLB-021仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。
+
+## 2026-11-07 GLB-021 第2段階：非公開の人間向けレビューシート
+
+- `cbdk/glb_visual_review_markdown.py` を追加。GLB-020からの匿名差分（黄/赤面数・観測境界辺）と、ASTの宣言名一致/参照件数/構文上の形状処理経路を**「観測」「候補」「未確認」の区別付き**の日本語Markdownで表示する。
+- 新しいCLI `python -m cbdk glb-visual-property-review ... --markdown` は、元のJSONに加えて、同名の`.md`をローカルのignored `reports/latest`に新規作成。Markdownにも候補名と宣言行が含まれるので**私有データ**として扱い、GitHub/Notionへのアップロードは禁止。
+- 正常合成GLB（候補0件）、開口狭窄、ボール移動、リップ欠損に対し、コード実行/値の自動適用をせずに人手のチェックリストを生成。公開パス・元ソース本文/既定値の不掲載、既存ファイル非上書き、シンボリックリンクや不正な安全フラグ拒否を回帰テストへ追加。
+- 人の役割ラベルは未確認。部品の本当の対応・設定の実行時登録・差分の原因や修正値は**未証明**。`GLB-021`は一部実装、`GLB-022`は未実装、`GLB-020`の細かな機能増築は引き続き凍結。
+- 詳細：[GLB-021のレビューシート仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。検証証拠は対象コードのSHAとGitHub Actionsの結果を確かめた後で別途追記する。
