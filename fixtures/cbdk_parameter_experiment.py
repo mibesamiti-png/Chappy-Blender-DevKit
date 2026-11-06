@@ -22,16 +22,16 @@ class CBDKParameterExperimentSettings(bpy.types.PropertyGroup):
 
     def build_geometry(self):
         bpy.ops.mesh.primitive_uv_sphere_add(
-            segments=24, ring_count=12, radius=settings.sphere_radius,
+            segments=24, ring_count=12, radius=self.sphere_radius,
             location=(-2.0, 0.0, 0.0),
         )
-        sphere = context.object
+        sphere = bpy.context.object
         sphere.name = "CBDK_Param_Sphere"
         bpy.ops.mesh.primitive_cube_add(size=2.0, location=(2.0, 0.0, 0.0))
-        cube = context.object
+        cube = bpy.context.object
         cube.name = "CBDK_Param_BevelCube"
         bevel = cube.modifiers.new("CBDK_Bevel", "BEVEL")
-        bevel.width = settings.bevel_width
+        bevel.width = self.bevel_width
         bevel.segments = 3
         # Apply the modifier before export, so different bevel widths really
         # change vertex coordinates in the GLB rather than relying on exporter
