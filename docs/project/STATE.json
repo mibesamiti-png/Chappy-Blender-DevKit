@@ -309,10 +309,10 @@
     {
       "id": "GLB-016",
       "title": "BVH/総当たりの実時間中央値を比較し512面の合成GLBを実機測定",
-      "status": "partial",
-      "verification": "not_tested",
+      "status": "implemented",
+      "verification": "blender_ci",
       "source": "cbdk/surface_benchmark.py",
-      "note": "同一合成64面でBVHと総当たりを交互順序・ウォームアップ後3回計測し中央値をms記録。512面はBVHのみ3回測定。Blender3版でCBDK製合成GLB6種を生成/再読込。実測時間比にCI閾値は設けず、テスト用の純Python10回帰テスト追加。最新CI未検証。実大規模ユーザーモデルの性能は不明"
+      "note": "同一合成64面でBVHと総当たりのウォームアップ後3回の時間中央値を比較、512面GLBはBVH単独で測定。合成GLB6種をBlender4.4.3/4.5.15/5.2.1で生成→再読込し、距離一致/512面距離0を確認（commit 9581ab20、Blender run 42240589340成功）。64面ms: Blender4.4.3 BVH35.510505/総当たり161.156313、4.5.15 BVH19.356758/86.027068、5.2.1 BVH32.46785/149.716417。512面BVH ms: 352.050953/192.798623/321.247609。Python/kit/handoff CI成功、Windows PowerShellは記録時pending。速度比はCI閾値でなくランナー依存"
     }
   ],
   "known_issues": [
@@ -476,9 +476,9 @@
     {
       "id": "NEXT-014",
       "priority": 14,
-      "status": "in_progress",
+      "status": "done",
       "title": "Blenderの合成64面/512面GLBで実行時間中央値と正確性を検証",
-      "acceptance": "Blender4.4.3/4.5.15/5.2.1で合成6GLBを再読込し64面BVHと総当たりの実測ms中央値（距離同値）・512面BVHのみのms中央値を記録。計算回数と時間を混同せず、速度倍率はCI合格閾値にしない"
+      "acceptance": "3版Blenderで6 GLB生成/再読込、64面の同一入力BVH/総当たりの距離一致と実行時間中央値、512面BVH単独中央値を観測（Blender run 42240589340）。速度倍率をCI合否条件としない。実ユーザーGLBに対する性能は未検証"
     }
   ],
   "decisions": [
@@ -695,6 +695,6 @@
     "trusted_parameter_direction": "2026-11-06: GLB-013 code/CI commit e73f7eba0cd0bd5ceafacab53b64c397a7bd45a4; Python (42223468580), Windows (42223468045), Blender3 version (42223468513), kit (42223468046), handoff (42223468069) all SUCCESS. Includes 11 direction plus 5 radial metric regression tests. Direction from synthetic GLB scores only; GLB-013 implemented/blender_ci, NEXT-011 done. PR draft; last_verified 0.17.0 unchanged.",
     "surface_distance": "2026-11-06 GLB-014 code+docs SHA f7e9e114e3484da650044737189ae20395a53e74: Python 42235161491, Windows 42235161515, Blender 42235161529 (4.4.3/4.5.15/5.2.1), kit 42235161511, handoff 42235161506 all SUCCESS. 13 new tests, sampled bidirectional surface distance, open-hole and alternate triangulation synthetic roundtrip. GLB-014 implemented/blender_ci, NEXT-012 done; PR draft and formal last_verified 0.17.0 unchanged.",
     "surface_bvh": "2026-11-06: GLB-015 code/docs SHA bcef8572994065f73d05e2e9c37245d64a13035e: Python 42238115233, Windows 42238115886, Blender3-version 42238114860, kit 42238115035, handoff 42238115141 all SUCCESS. Blender 4.5.15 256-face GLB observed 1,572,864 brute vs 49,152 BVH exact triangle computations (32x fewer), 0 distance. GLB-015 implemented/blender_ci; NEXT-013 done. Formal v0.17.0 unchanged; PR draft.",
-    "surface_benchmark": "2026-11-07: GLB-016 pure Python benchmark_surface_search (3 trials, warmup, alternated order), Blender sixth 512-face generated/reimported GLB, 64-face BVH-vs-brute + 512-face BVH-only timings, 10 regression tests added to PR #25. Current head CI pending. Retain formal last_verified 0.17.0; no private data."
+    "surface_benchmark": "2026-11-07: GLB-016 code/docs SHA 9581ab205fa8a8573881494a107cb891b5bb5bf6 Blender3-version run 42240589340 SUCCESS, Python 42240590020 SUCCESS, kit 42240588950 SUCCESS, handoff 42240588940 SUCCESS, Windows PowerShell run 42240588999 pending at recording. 64-face BVH/brute ms medians: 4.4.3 35.51/161.16; 4.5.15 19.36/86.03; 5.2.1 32.47/149.72. 512-face BVH ms 352.05/192.80/321.25. No portable timing guarantees. GLB-016 implemented/blender_ci, NEXT-014 done; release last_verified 0.17.0, PR draft."
   }
 }
