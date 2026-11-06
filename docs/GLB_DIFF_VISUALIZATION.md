@@ -78,3 +78,15 @@ After running the command above, open **`compare_viewer.html`** from the newly g
 実装・テストSHA `b5d1d27f5e7834fa22faeefb02792091c1ac87d0`：Python [42268089086](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268089086)、Windows [42268088883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088883)、Blender 4.4.3/4.5.15/5.2.1 [42268088779](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088779)、Windowsキット [42268088823](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088823)、引き継ぎ [42268088869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088869) **全成功**。これはHTML生成とJS構文のCIであり、ブラウザ実機の操作試験ではない。
 
 ブラウザGUIでの操作試験、WebGL相当の精度保証、別GLB間の部品対応や内部未測定部分の表示は未完了。HTMLの派生三角形は機密扱いし、`review.json`の集計データとの違いを維持する。
+
+## Spatial part suggestions and real-browser smoke (GLB-020 phase 4)
+
+The optional in-memory heuristic in \`cbdk/glb_part_match.py\` compares anonymized per-part world-space bounding-box **centers and dimensions**, with a small penalty for differing triangle counts. It checks mutual-best and minimum-margin requirements before displaying a single **suggested** candidate. A tie, several similarly plausible parts, or a weak spatial match becomes **ambiguous** or **unmatched**; none is automatically approved. It is not a reliable identity proof after large movements, reordering of geometry, rescaling, rotation, retessellation or complex edits.
+
+The offline viewer now displays the reference part's tentative spatial candidate. The **候補を右側に表示** button only changes the candidate-side part filter after a user click; it never changes any mesh, addon parameter, or original file. For ambiguous or unmatched cases the button is disabled. Original object names, private paths and raw vertices remain excluded from the *JSON report*. The HTML still embeds local/private geometry.
+
+The report and viewer include \`part_match_candidates\` and \`part_suggestions\` respectively, with explicit \`cross_file_part_identity_proven=false\` and \`auto_apply=false\`. Candidate scores are dimensionless heuristic observations, not geometrically conclusive.
+
+A dedicated GitHub Actions browser smoke workflow (\`.github/workflows/glb-viewer-browser.yml\`) uses a real headless Chromium browser to test local synthetic HTML: both canvases repaint on a keyboard orbit and wheel zoom, reference part selection does not auto-link, the review-only candidate button works, hide-grey works, reset runs, and no runtime errors or HTTP requests are observed. The Ubuntu runner is pinned to 24.04 to avoid unsupported Ubuntu 26.04 in the older fixed Playwright dependency.
+
+The browser test uses **only a CBDK-generated synthetic, permuted two-part fixture** and uploads no HTML artifact. Successful browser smoke will prove those tested interactions on that synthetic fixture only, not accuracy of arbitrary user model geometry, internal holes, or reliable part identity.
