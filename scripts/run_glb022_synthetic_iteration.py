@@ -21,13 +21,20 @@ from cbdk.glb_synthetic_iteration import (
     BASELINE, CANDIDATES, _decision, _score, _safe_rows,
     build_synthetic_iteration_history, write_iteration_history,
 )
+from cbdk.glb_synthetic_multi import (
+    CANDIDATES as MULTI_CANDIDATES,
+    build_multi_iteration_history, write_multi_iteration_history,
+)
 
 
 def _sha256(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def run(blender, output):
+def run(blender, output, *, protocol="basic"):
+    if protocol not in ("basic", "cross_part"):
+        raise ValueError("Only the two CBDK-owned synthetic protocols are allowed")
+    trial_ids = CANDIDATES if protocol == "basic" else MULTI_CANDIDATES
     trusted_script = REPO / "scripts/blender_make_glb_joint_mvp_fixtures.py"
     if trusted_script.is_symlink() or not trusted_script.is_file():
         raise ValueError("Missing CBDK-owned fixture generator")
@@ -48,7 +55,7 @@ def run(blender, output):
     glb_hashes = {}
 
     def generate(kind):
-        if kind not in ("reference", BASELINE, *CANDIDATES):
+        if kind not in ("reference", BASELINE, *trial_ids):
             raise ValueError("Non-allowlisted generator condition")
         folder = candidates / kind
         if folder.exists() or folder.is_symlink():
@@ -80,7 +87,7 @@ def run(blender, output):
     }
     current = BASELINE
     executed = 0
-    for kind in CANDIDATES:
+    for kind in trial_ids:
         candidate = generate(kind)
         report = run_glb_diff_visualize(
             str(executable), reference, candidate,
@@ -96,18 +103,27 @@ def run(blender, output):
         if (score["socket_sampled_affected_faces"] == 0
                 and score["other_parts_sampled_affected_faces"] == 0):
             break
-    if (executed != 2 or set(reports) != set((BASELINE, *CANDIDATES))
+    if (executed != len(trial_ids)
+            or set(reports) != set((BASELINE, *trial_ids))
             or current != "identical"):
-        raise ValueError("Fixed two-trial synthetic protocol did not converge")
-    history = build_synthetic_iteration_history(reports)
+        raise ValueError("Fixed allowlisted synthetic protocol did not converge")
+    history = (build_synthetic_iteration_history(reports)
+               if protocol == "basic" else
+               build_multi_iteration_history(reports))
     if (before_script_hash != _sha256(trusted_script)
             or any(_sha256(path) != sha for path, sha in glb_hashes.items())):
         raise ValueError("Source-controlled generator or generated inputs changed")
-    paths = write_iteration_history(history, root)
+    paths = (write_iteration_history(history, root)
+             if protocol == "basic" else
+             write_multi_iteration_history(history, root))
     if not all(p.is_file() for p in paths):
         raise ValueError("Missing local iteration evidence")
     print("CBDK_GLB022_SYNTHETIC_ITERATION_PASS")
-    print("Two real regenerated comparisons: unrelated edit rejected, known restoration accepted")
+    if protocol == "basic":
+        print("Two real regenerated comparisons: unrelated edit rejected, known restoration accepted")
+    else:
+        print("CBDK_GLB022_MULTI_SYNTHETIC_PASS")
+        print("Three fresh candidates: no improvement rejected, cross-part regression rejected, restore accepted")
     print("Stopped on sampled zero; sources unchanged; real addon validation unclaimed")
     return history
 
@@ -117,8 +133,10 @@ def main(argv=None):
     parser.add_argument("--blender", required=True, help="CI-verified Blender executable")
     parser.add_argument("--output", default="reports/ci/glb022_iteration",
                         help="New synthetic CI folder under reports/ci only")
+    parser.add_argument("--protocol", choices=("basic", "cross_part"),
+                        default="basic", help="CBDK-owned fixed synthetic protocol")
     args = parser.parse_args(argv)
-    run(args.blender, args.output)
+    run(args.blender, args.output, protocol=args.protocol)
     return 0
 
 
