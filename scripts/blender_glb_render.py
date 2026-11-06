@@ -58,9 +58,21 @@ def _look_at(obj, target):
     obj.rotation_euler = (target - obj.location).to_track_quat("-Z", "Y").to_euler()
 
 
+def _select_render_engine(scene):
+    """Choose a compatible structural render engine across supported Blender versions."""
+    errors = []
+    for candidate in ("BLENDER_EEVEE_NEXT", "BLENDER_EEVEE", "BLENDER_WORKBENCH"):
+        try:
+            scene.render.engine = candidate
+            return candidate
+        except (TypeError, ValueError) as exc:
+            errors.append(f"{candidate}: {exc}")
+    raise RuntimeError("No supported render engine available: " + " | ".join(errors))
+
+
 def _setup_studio(center, radius):
     scene = bpy.context.scene
-    scene.render.engine = "BLENDER_EEVEE_NEXT"
+    engine = _select_render_engine(scene)
     scene.render.image_settings.file_format = "PNG"
     scene.render.film_transparent = False
     if scene.world is None:
@@ -83,6 +95,7 @@ def _setup_studio(center, radius):
         scene.collection.objects.link(light)
         light.location = center + direction.normalized() * radius * 4.0
         _look_at(light, center)
+    return engine
 
 
 def _make_camera():
@@ -202,7 +215,7 @@ def main():
     mins, maxs, center, size, radius = _bounds(points)
 
     _remove_imported_render_helpers(imported)
-    _setup_studio(center, radius)
+    render_engine = _setup_studio(center, radius)
     camera = _make_camera()
     _apply_clay_material(meshes)
 
@@ -240,6 +253,7 @@ def main():
         "thumbnail_limit": MAX_OBJECT_THUMBNAILS,
         "thumbnail_truncated": truncated,
         "render_mode": "neutral_clay_structure",
+        "render_engine": render_engine,
         "original_material_names_preserved_in_objects": True,
         "safety": {
             "factory_startup": True,
