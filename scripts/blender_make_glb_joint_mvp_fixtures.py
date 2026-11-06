@@ -10,6 +10,7 @@ All synthetic files remain in the temporary CI workspace.
 from __future__ import annotations
 
 import math
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 import sys
 
@@ -19,6 +20,11 @@ SEGMENTS = 12
 SOCKET_OPENING_REFERENCE = 1.70
 SOCKET_OPENING_DEFECT = 0.78
 SOCKET_OPENING_INTERMEDIATE = 1.24
+
+
+def _generated_grid_values():
+    """Only four fixed, arithmetic CBDK synthetic conditions (not user input)."""
+    return tuple(Decimal(78 + step * 23) / 100 for step in range(1, 5))
 
 
 def _mesh(name, coords, triangles):
@@ -32,16 +38,17 @@ def _mesh(name, coords, triangles):
 
 
 def _ring(*, socket_opening_diameter=SOCKET_OPENING_REFERENCE,
-          missing_face=False):
+          missing_face=False, grid_only=False):
     """Four concentric 12-vertex rings form an annular hollow socket.
 
     Only the CBDK-owned explicit 0.78/1.70 synthetic control values are
     accepted; never take or execute arbitrary addon settings as fixture code.
     """
+    allowed = ((SOCKET_OPENING_REFERENCE, SOCKET_OPENING_DEFECT,
+                SOCKET_OPENING_INTERMEDIATE) if not grid_only
+               else tuple(float(v) for v in _generated_grid_values()))
     if (type(socket_opening_diameter) not in (float, int) or
-            socket_opening_diameter not in (SOCKET_OPENING_REFERENCE,
-                                            SOCKET_OPENING_DEFECT,
-                                            SOCKET_OPENING_INTERMEDIATE)):
+            socket_opening_diameter not in allowed):
         raise ValueError("Synthetic socket experiment value is not allowlisted")
     outer, inner = 1.30, float(socket_opening_diameter) / 2.0
     levels = [(outer, -0.60), (inner, -0.60),
@@ -107,16 +114,19 @@ def _shaft():
     return coords, tris
 
 
-def export(target, variant):
+def export(target, variant, *, grid_diameter=None):
     if variant not in {"reference", "identical", "narrow", "shifted", "uncapped", "narrow_placebo",
-                       "narrow_mid", "narrow_mid_shifted"}:
+                       "narrow_mid", "narrow_mid_shifted", "grid_candidate"}:
         raise RuntimeError("Invalid fixture variant")
+    if (variant == "grid_candidate") != (grid_diameter is not None):
+        raise RuntimeError("Grid value is required only for grid_candidate")
     bpy.ops.wm.read_factory_settings(use_empty=True)
     ring = _ring(socket_opening_diameter=(
+        grid_diameter if variant == "grid_candidate" else
         SOCKET_OPENING_DEFECT if variant in {"narrow", "narrow_placebo"}
         else SOCKET_OPENING_INTERMEDIATE if variant in {"narrow_mid", "narrow_mid_shifted"}
         else SOCKET_OPENING_REFERENCE
-    ), missing_face=variant == "uncapped")
+    ), missing_face=variant == "uncapped", grid_only=variant == "grid_candidate")
     ball = _ball(shifted=variant in {"shifted", "narrow_placebo", "narrow_mid_shifted"})
     _mesh("CBDK_SYNTH_Ball", *ball)
     _mesh("CBDK_SYNTH_Shaft", *_shaft())
@@ -137,12 +147,24 @@ def main():
     args = sys.argv[sys.argv.index("--") + 1:]
     allowlist = ("reference", "identical", "narrow", "shifted", "uncapped",
                  "narrow_placebo", "narrow_mid", "narrow_mid_shifted")
+    grid_diameter = None
     if len(args) == 1:
         variants = allowlist
     elif len(args) == 3 and args[1] == "--single" and args[2] in allowlist:
         # GLB-022's fixed trial runner regenerates each candidate in turn.
         # Arbitrary source scripts / numeric values are not supported.
         variants = (args[2],)
+    elif (len(args) == 5 and args[1:4] ==
+          ["--single", "grid_candidate", "--socket-diameter"]):
+        # This is a bounded test fixture, not a free-form numeric input API.
+        try:
+            raw = Decimal(args[4])
+        except (InvalidOperation, ValueError):
+            raise RuntimeError("Invalid synthetic grid value") from None
+        if raw not in _generated_grid_values() or str(raw) != f"{raw:.2f}":
+            raise RuntimeError("Out-of-grid synthetic socket value refused")
+        grid_diameter = float(raw)
+        variants = ("grid_candidate",)
     else:
         raise RuntimeError("Only CBDK-owned allowlisted synthetic trial IDs accepted")
     out = Path(args[0]).absolute()
@@ -153,7 +175,7 @@ def main():
         target = out / (variant + ".glb")
         if target.exists() or target.is_symlink():
             raise RuntimeError("Never overwrite source GLB")
-        export(target, variant)
+        export(target, variant, grid_diameter=grid_diameter)
     print("CBDK_JOINT_MVP_FIXTURES_PASS")
 
 
