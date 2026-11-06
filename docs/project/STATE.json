@@ -225,6 +225,14 @@
       "verification": "blender_ci",
       "source": "cbdk/glb_diagnose.py",
       "note": "参考/候補GLBのscene・部品差分を影響視点、最悪IoU、相対誤差、体積割合、重大度別で集約し、異常JSON・矛盾カウンタを拒否。PR #25のコードcommit e971b784でPython3版/Windows2版/Blender3版の実機診断と回帰テスト成功。公開・実ユーザーGLB再現の保証なし"
+    },
+    {
+      "id": "GLB-006",
+      "title": "GLB差分から確認すべきアドオン設定候補を提示",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/glb_repair_plan.py",
+      "note": "GLB診断の原因カテゴリ・対象部品名から、設定項目の候補群と確認順をレビュー専用JSONへ出力。部品名は未確認の推測であり実装内のパラメータ存在を保証しない。新規20回帰テスト・Blender実機CIは最新コミットの結果確認前"
     }
   ],
   "known_issues": [
@@ -349,6 +357,13 @@
       "status": "in_progress",
       "title": "参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ",
       "acceptance": "参照GLB/生成GLBをBlenderで別々に実レンダリングし、world-space bounds・部品対応・7方向画像・構造を比較して、ズレの種類と対象部品を機械可読JSONへ記録する。boundsだけでは判別できない形状差は次段階で画像/表面距離比較を追加する"
+    },
+    {
+      "id": "NEXT-009",
+      "priority": 9,
+      "status": "todo",
+      "title": "診断した設定候補と実アドオンのプロパティの安全な照合",
+      "acceptance": "未知の自作アドオンを実行せず、明示レビューしたproperty名・出典を候補群に結び付け、存在しない設定を確定候補として案内しない"
     }
   ],
   "decisions": [
@@ -436,6 +451,11 @@
       "id": "DEC-017",
       "decision": "GLB診断は検証可能な比較差分に基づくレビュー仮説であり、自動修正・完全一致認定をしない",
       "note": "最悪IoUと差分誤差を証拠として並べ、32x32輪郭の死角を明示。未知の差分コードやwarning/infoが存在したら未確認事項として記録し、比較結果の矛盾は拒否する"
+    },
+    {
+      "id": "DEC-018",
+      "decision": "診断から生成した設定候補は推測として表示し自動変更しない",
+      "note": "ボール/ソケット/ヒンジ名称は弱いロール推測に限り、元ソースとの実一致・数値修正量は判断しない。候補→人手確認→生成GLB再出力→再比較を推奨し、コード実行/書換/自動承認/私有GLB公開を禁止"
     }
   ],
   "last_verified": {
@@ -499,6 +519,7 @@
     "registration_behavior": "2026-11-06: REG-003回帰テストはPR #21のPython 3版CIで成功。behavior申告は実機安全性の自動証明ではない",
     "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま",
     "v018_silhouette_regression": "2026-11-06: PR #24 head 2735aa974539ec95fde20e2c9f1de155f6687209 でPython 347件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windows kit、handoffが全成功。実Blenderでreference Cubeと同bounds八面体のsilhouette driftを3版すべて検出。GLB-004をimplementedへ昇格",
-    "glb_diagnosis_evidence": "2026-11-06: PR #25 e971b784e5f6694252e924c0b8183dd393aa3860 のPython(42202420004), Windows(42202419886), Blender3版(42202419874), Windows kit(42202419926), durable handoff(42202419869)で成功を観測。追加19テストを含む。PRはドラフトでmain未統合、last_verifiedはv0.17.0を維持"
+    "glb_diagnosis_evidence": "2026-11-06: PR #25 e971b784e5f6694252e924c0b8183dd393aa3860 のPython(42202420004), Windows(42202419886), Blender3版(42202419874), Windows kit(42202419926), durable handoff(42202419869)で成功を観測。追加19テストを含む。PRはドラフトでmain未統合、last_verifiedはv0.17.0を維持",
+    "glb_repair_plan": "2026-11-06: v0.18 draft PR #25に review-only glb-repair-plan CLI / glb-regression連携 / Blender3版fixture CI / 新規20テストを追加。GLB-006は現headの実測が済むまで not_tested。正式last_verifiedはv0.17.0を維持"
   }
 }
