@@ -23,6 +23,24 @@ class GLBSurfacePipelineError(ValueError):
     pass
 
 
+def _reject_duplicate_keys(pairs):
+    output = {}
+    for key, value in pairs:
+        if key in output:
+            raise ValueError("duplicate JSON key")
+        output[key] = value
+    return output
+
+
+def _reject_nonfinite_constant(value):
+    raise ValueError("nonfinite JSON constant: " + value)
+
+
+def _strict_json(text):
+    return json.loads(text, object_pairs_hook=_reject_duplicate_keys,
+                      parse_constant=_reject_nonfinite_constant)
+
+
 def _preflight(source: str | Path) -> Path:
     path = Path(source).resolve()
     if not path.is_file() or path.suffix.lower() != ".glb":
@@ -93,7 +111,7 @@ def run_glb_surface_review(
     if result.returncode != 0 or len(payloads) != 1:
         raise GLBSurfacePipelineError("Blender surface review failed; no report was accepted")
     try:
-        payload = json.loads(payloads[0])
+        payload = _strict_json(payloads[0])
         if not isinstance(payload, dict) or set(payload) != {"kind", "status"}:
             raise ValueError("invalid runner acknowledgment")
         if payload["kind"] != "cbdk_glb_surface_review":
@@ -102,7 +120,7 @@ def run_glb_surface_review(
             raise ValueError("unexpected status")
         if not target.is_file() or target.stat().st_size > MAX_REPORT_BYTES:
             raise ValueError("report is missing or too large")
-        report = json.loads(target.read_text(encoding="utf-8"))
+        report = _strict_json(target.read_text(encoding="utf-8"))
         if not isinstance(report, dict) or report.get("kind") != payload["kind"]:
             raise ValueError("invalid report kind")
         if report.get("status") != payload["status"] or report.get("schema_version") != 1:
