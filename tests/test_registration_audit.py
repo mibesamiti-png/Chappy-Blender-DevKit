@@ -16,7 +16,7 @@ class RegistrationAuditTests(unittest.TestCase):
         self.assertEqual(result["recipe_count"], 6)
 
     def test_direct_builder_normalizes_project_root(self):
-        recipe = json.loads((ROOT / "recipes/modular_nudge.json").read_text())
+        recipe = json.loads((ROOT / "recipes/modular_nudge.json").read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "preview.zip"
             build_modular(recipe, output, root=ROOT / "catalog" / "..", preview_unapproved=True)
@@ -75,8 +75,8 @@ class RegistrationAuditTests(unittest.TestCase):
             for directory in ("catalog", "templates", "parts"):
                 shutil.copytree(ROOT / directory, root / directory)
             source = root / "templates/modular_preview/features/vertex_nudge.py"
-            source.write_text(source.read_text() + '\nfrom ..helpers.undeclared import run\n')
-            recipe = json.loads((ROOT / "recipes/modular_nudge.json").read_text())
+            source.write_text(source.read_text(encoding="utf-8") + '\nfrom ..helpers.undeclared import run\n', encoding="utf-8")
+            recipe = json.loads((ROOT / "recipes/modular_nudge.json").read_text(encoding="utf-8"))
             output = root / "preview.zip"
             with self.assertRaisesRegex(ValueError, "Unpackaged"):
                 build_modular(recipe, output, root=root, preview_unapproved=True)
@@ -88,12 +88,12 @@ class RegistrationAuditTests(unittest.TestCase):
             for directory in ("catalog", "templates", "parts", "recipes", "scripts", ".github"):
                 shutil.copytree(ROOT / directory, root / directory)
             smoke = root / "scripts/blender_modular_addon_smoke.py"
-            original = smoke.read_text()
-            smoke.write_text(original.replace('"vertex_nudge"}', '"unreviewed"}'))
+            original = smoke.read_text(encoding="utf-8")
+            smoke.write_text(original.replace('"vertex_nudge"}', '"unreviewed"}'), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "Runtime feature inventory"):
                 audit_registration(root=root)
-            smoke.write_text(original)
+            smoke.write_text(original, encoding="utf-8")
             workflow = root / ".github/workflows/blender-smoke.yml"
-            workflow.write_text(workflow.read_text().replace(' modular_nudge modular_all; do', ' modular_all; do'))
+            workflow.write_text(workflow.read_text(encoding="utf-8").replace(' modular_nudge modular_all; do', ' modular_all; do'), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "CI recipe inventory"):
                 audit_registration(root=root)
