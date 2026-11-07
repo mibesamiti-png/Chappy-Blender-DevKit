@@ -43,7 +43,7 @@ geometry or source-derived names from real files. A hard wall-clock assertion
 is avoided because runner performance varies; actual observed timings are
 reported from Python/Blender CI instead.
 
-`scripts/blender_surface_inventory_smoke.py` exports and re-imports five
+`scripts/blender_surface_inventory_smoke.py` exports and re-imports four
 fresh authored GLBs: 255/256/257-boundary one-part meshes plus one 64-part
 512-triangle test. For each, verify SHA-256 unchanged, face/edge/part
 counts and aggregate matching outcomes. Prior R2/R3 GLB fixture coverage
