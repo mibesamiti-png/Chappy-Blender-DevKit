@@ -11,7 +11,7 @@ import re
 import stat
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
-from .extension_manifest import review_manifest_fields
+from .extension_manifest import review_manifest_fields, manifest_field_diagnostics
 
 KNOWN = {
     "cbdk_mesh_inspector_preview": (1, "mesh_inspector"),
@@ -169,6 +169,7 @@ def inspect_preview_archive(source: str | Path) -> dict:
         "official_blender_extension_validate_ran": False,
         "manifest_fields_review_only": fields,
         "manifest_structure_review": review_manifest_fields(fields),
+        "manifest_field_diagnostics": manifest_field_diagnostics(fields),
         "blocker_categories": {
             "owner_metadata": ["version", "maintainer", "license"],
             "approval": ["component_approval", "redistribution_authorization"],

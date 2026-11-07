@@ -533,3 +533,7 @@ this milestone's target CI has not run yet. No GUI or user-project guarantee.
 コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。
 
 [検証範囲・不具合再現/修正・未確認・再開点](UI_MODE_SETTINGS.md)。旧出力/レシピを維持し、実GUI/権利/汎用UI等を閉じず全体partial。次の自動化はEXT-001の診断/公式validator合成結果照合を優先。
+
+## 2026-11-08 JST EXT-001診断の集中改善
+
+[仕様/検証](EXTENSION_DIAGNOSTICS.md)。データ専用extension-manifest-reviewと項目別固定案内を追加。入力値/個人情報/元パス/未知キー名を出力せず、既存preview事前検査にも案内を共有。公式CLI検証を6合成例へ拡充し、終了値だけでなく拒否項目を照合。unknown/partial/mismatchは完全一致と区別する。ローカル839件/Blender4.3.2成功、今回対象CIは未実行。実Extension/権利/実GUI/ユーザーデータは未確認、全体partial維持。

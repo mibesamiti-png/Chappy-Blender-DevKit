@@ -128,6 +128,10 @@ def main(argv=None) -> int:
     ext_cmd.add_argument('preview_zip', help='Local CBDK-authored legacy preview ZIP')
     ext_cmd.add_argument('--output', default='reports/latest/extension_readiness.json',
                          help='New private review report, never an extension package')
+    manifest_cmd = sub.add_parser('extension-manifest-review',
+                                 help='Review TOML data without addon execution or revealing manifest values')
+    manifest_cmd.add_argument('manifest')
+    manifest_cmd.add_argument('--output', default='reports/latest/extension_manifest_review.json')
 
     feature_cmd = sub.add_parser('feature-list', help='List trusted authored preview features; no approval implied')
     feature_cmd.add_argument('--output', default=None)
@@ -508,6 +512,11 @@ def main(argv=None) -> int:
             return 0
         if args.command == 'glb-repair-plan':
             report = plan_from_comparison(args.comparison, args.output)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'extension-manifest-review':
+            from .extension_manifest_review import write_manifest_review
+            report = write_manifest_review(args.manifest, args.output)
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'extension-preflight':

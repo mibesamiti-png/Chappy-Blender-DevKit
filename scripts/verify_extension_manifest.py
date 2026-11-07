@@ -11,7 +11,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from cbdk.extension_manifest import review_manifest_fields
+from cbdk.extension_manifest import compare_official_validation
 
 FIXTURE = {
     "schema_version": "1.0.0", "id": "cbdk_validator_fixture", "version": "0.0.1",
@@ -29,10 +29,11 @@ def verify(blender, output):
     results = []
     for name, change, expected in (("valid_subset", {}, True),
                                     ("missing_license", {"license": None}, False),
-                                    ("punctuated_tagline", {"tagline": "Invalid tagline!"}, False)):
+                                    ("punctuated_tagline", {"tagline": "Invalid tagline!"}, False),
+                                    ("invalid_id", {"id": "invalid-id"}, False),
+                                    ("invalid_version", {"version": "not-version"}, False),
+                                    ("empty_maintainer", {"maintainer": ""}, False)):
         fields = {**FIXTURE, **change}
-        local = review_manifest_fields(fields)
-        assert (local["status"] == "structurally_valid_subset") == expected
         folder = root / name
         folder.mkdir()
         # JSON literals for the fixture's ASCII strings/arrays are also TOML
@@ -43,15 +44,17 @@ def verify(blender, output):
         proc = subprocess.run([blender, "--background", "--factory-startup", "--disable-autoexec",
                                "--command", "extension", "validate", str(folder.resolve())],
                               capture_output=True, text=True, timeout=90)
-        if (proc.returncode == 0) != expected:
+        compared = compare_official_validation(fields, proc.returncode, proc.stdout + "\n" + proc.stderr)
+        if ((proc.returncode == 0) != expected or not compared["complete_diagnostic_agreement"]):
             raise AssertionError("Official manifest validator disagrees with synthetic case: " + name)
         results.append({"case": name, "official_accepted": proc.returncode == 0,
-                        "local_status": local["status"]})
+                        "local_status": compared["local_status"], "diagnostic_comparison": compared})
     report = {"kind": "cbdk_synthetic_official_manifest_validation", "cases": results,
               "real_component_license_chosen": False, "real_extension_validated": False,
               "source_executed": False, "extension_zip_created": False}
     (root / "validation.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print("CBDK_SYNTHETIC_OFFICIAL_MANIFEST_PASS (not a component license or release approval)")
+    print("CBDK_MANIFEST_DIAGNOSTIC_AGREEMENT_PASS: six synthetic cases, exit codes and fields checked")
 
 
 if __name__ == "__main__":

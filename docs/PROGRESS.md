@@ -1213,3 +1213,7 @@ RNAが古いときの実選択再検査をPythonで確認。ローカル823テ�
 [検証範囲・不具合再現/修正・未確認・再開点](UI_MODE_SETTINGS.md)。旧出力/レシピを維持し、実GUI/権利/汎用UI等を閉じず全体partial。次の自動化はEXT-001の診断/公式validator合成結果照合を優先。
 
 2026-11-08 JST: 正本9cc05daを既存Notion CBDKプロジェクトへ同期成功。内容更新1応答警告なし、旧履歴保持・新規ページ/私有データなし。受領記録だけの後続コミットにコードCIを帰属させない。
+
+## 2026-11-08 JST EXT-001診断の集中改善
+
+[仕様/検証](EXTENSION_DIAGNOSTICS.md)。データ専用extension-manifest-reviewと項目別固定案内を追加。入力値/個人情報/元パス/未知キー名を出力せず、既存preview事前検査にも案内を共有。公式CLI検証を6合成例へ拡充し、終了値だけでなく拒否項目を照合。unknown/partial/mismatchは完全一致と区別する。ローカル839件/Blender4.3.2成功、今回対象CIは未実行。実Extension/権利/実GUI/ユーザーデータは未確認、全体partial維持。

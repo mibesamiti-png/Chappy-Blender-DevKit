@@ -15,6 +15,8 @@ on:
       - 'cbdk/modular_builder.py'
       - 'cbdk/extension_preflight.py'
       - 'cbdk/extension_manifest.py'
+      - 'cbdk/extension_manifest_review.py'
+      - 'tests/test_extension_manifest_review.py'
       - 'tests/test_extension_manifest.py'
       - 'scripts/verify_extension_manifest.py'
       - 'scripts/build_ui_variant.py'

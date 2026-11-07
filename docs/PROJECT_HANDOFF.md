@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18 UI-001/BUILD-001: 固定モード表示/範囲縮小設定、非実行UI計画/生成物記録、置換語入りラベルの生成修正。4b99068のPython830件×3/Windows2/Blender3を含む全7CI成功。実GUI/権利/汎用UI/実Extension未確認、正式v0.17.0維持
+- 最新の節目: v0.18 EXT-001: 値を出さないTOMLレビューCLI、項目別案内と公式診断照合、6合成ケースを実装。ローカル839件/Blender4.3.2成功、今回対象CI未実行。正式Extension/権利/実GUI未完了、v0.17.0維持
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -36,7 +36,7 @@
 | `EDIT-002` | 編集差分の監査とベストエフォート復元 | 一部実装 | Blender CI | 加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。PR #21のBlender 4.4.3/4.5.15/5.2.1 CIで実測成功 |
 | `TEST-001` | Python/Windows/Blender 3バージョンCI | 実装済 | Blender CI | リポジトリ公開化後、PR #21でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。mainの正式last_verifiedは未更新 |
 | `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 |
-| `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | 必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 |
+| `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | 必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ローカル成功/対象CI待ち。 |
 | `INST-001` | GitHubからBlenderへの直接インストール・更新 | 保留 | 未検証 | ユーザー希望で保留。UI確認段階まで実装しない |
 | `PERF-001` | 巨大メッシュ向け監査・効率化 | 一部実装 | Blender CI | 20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否 |
 | `GUI-001` | 実際のGUI Undo・操作感の自動検証 | 未実装 | 未検証 | ヘッドレスではUndoフラグと編集結果まで確認 |
@@ -186,6 +186,7 @@
 - `DEC-059` 必須manifest構造と権利承認を分離し、型付きUIと登録復旧を既存プレビュー内で拡充する。公式validatorは合成データ専用fixtureのみ。例示SPDXを実部品へ適用せず、正式ZIP/公開/採用なし。未知UIコードを組み込まず既存6レシピ/5機能を維持。自己整合hashは出自認証ではない。
 - `DEC-060` パネルの助言判定と実編集の安全検査を区別し、構造/入力ガードだけを共通化する。UIはcached total_vert_selを読みBMesh走査/座標コピーなし。RNAが古い場合もexecuteが実選択/数値/トポロジー/上限を再検査。ゼロ値で入力を無効にして修正不能にしない。両property factory失敗の回復も検証する。
 - `DEC-061` 表示条件は固定literal、設定範囲はコード契約の内側のみ、生成時に挿入文字列を再置換しない。省略時の6レシピ/旧計画出力を維持。visible_inはalways/object/edit_meshだけで矛盾を拒否。型/サイズ/最大範囲をJSONへ委ねない。静的UIレビューとメタデータは実行/承認/真正性の証明ではない。
+- `DEC-062` manifest構造診断を値なしで共有し、公式検証は終了コードだけでなく項目の一致を要求する。生ログ/個人情報/私有パスを保存せず既知項目だけ正規化。unknown/partial/mismatchを完全一致へ昇格しない。fixtureのSPDXや公式パス成功を部品の承認/ライセンスへ適用しない。
 
 ## 更新・プライバシールール
 
