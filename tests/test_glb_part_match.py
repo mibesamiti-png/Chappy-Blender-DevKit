@@ -10,6 +10,31 @@ def triangle(x=0.0, z=0.0):
     return [(x, 0., z), (x + 1., 0., z), (x, 1., z)]
 
 
+def square_frame(*, opening_x=0., opening_half_width=.3,
+                 flip_diagonal=False, flip_winding=False, offset_x=0.):
+    """Eight-triangle CBDK-only square annulus, one real inner boundary."""
+    outer = [(-1., -1., 0.), (1., -1., 0.),
+             (1., 1., 0.), (-1., 1., 0.)]
+    inner = [
+        (opening_x - opening_half_width, -.3, 0.),
+        (opening_x + opening_half_width, -.3, 0.),
+        (opening_x + opening_half_width, .3, 0.),
+        (opening_x - opening_half_width, .3, 0.),
+    ]
+    vertices = [((x + offset_x), y, z) for x, y, z in outer + inner]
+    faces = []
+    for i in range(4):
+        j = (i + 1) % 4
+        if flip_diagonal:
+            indices = ((i, j, i + 4), (j, j + 4, i + 4))
+        else:
+            indices = ((i, j, j + 4), (i, j + 4, i + 4))
+        for face in indices:
+            tri = [vertices[k] for k in face]
+            faces.append(list(reversed(tri)) if flip_winding else tri)
+    return faces
+
+
 class PartCandidatesTests(unittest.TestCase):
     def test_reordered_meshes_are_suggested_by_position_not_index(self):
         ref = [triangle(0), triangle(3)]
@@ -131,6 +156,74 @@ class PartCandidatesTests(unittest.TestCase):
         self.assertEqual(row["status"], "suggested")
         self.assertEqual(row["topology_review_reasons"], [])
         self.assertFalse(row["topology_review_required"])
+
+    def test_same_boundary_count_but_moved_opening_is_ambiguous(self):
+        reference = square_frame()
+        shifted_hole = square_frame(opening_x=.24)
+        from cbdk.glb_boundary_audit import boundary_audit
+        self.assertEqual(boundary_audit(reference, [8])["parts"][0]["boundary_edges"], 8)
+        self.assertEqual(boundary_audit(shifted_hole, [8])["parts"][0]["boundary_edges"], 8)
+        row = suggest_spatial_part_matches(
+            reference, shifted_hole, [8], [8],
+        )["reference_parts"][0]
+        self.assertEqual(row["normalized_score"], 0.0)
+        self.assertEqual(row["status"], "ambiguous")
+        self.assertEqual(row["topology_review_reasons"],
+                         ["boundary_spatial_layout_mismatch"])
+        self.assertEqual(row["candidate_part_ids"], ["part_001"])
+
+    def test_same_boundary_count_but_resized_opening_is_ambiguous(self):
+        reference = square_frame()
+        changed = square_frame(opening_half_width=.5)
+        result = suggest_spatial_part_matches(reference, changed, [8], [8])
+        self.assertEqual(result["reference_parts"][0]["status"], "ambiguous")
+        self.assertEqual(result["reference_parts"][0]["topology_review_reasons"],
+                         ["boundary_spatial_layout_mismatch"])
+        self.assertEqual(result["unpaired_candidate_part_ids"], ["part_001"])
+        self.assertFalse(result["cross_file_part_identity_proven"])
+
+    def test_opposite_diagonals_and_reversed_winding_are_not_mismatch(self):
+        reference = square_frame()
+        same_contour = square_frame(flip_diagonal=True, flip_winding=True)
+        row = suggest_spatial_part_matches(
+            reference, same_contour, [8], [8],
+        )["reference_parts"][0]
+        self.assertEqual(row["status"], "suggested")
+        self.assertEqual(row["topology_review_reasons"], [])
+
+    def test_symmetric_reflection_same_contour_is_not_mismatch(self):
+        reference = square_frame()
+        mirrored = [[(-x, y, z) for x, y, z in face]
+                    for face in square_frame(flip_diagonal=True)]
+        row = suggest_spatial_part_matches(
+            reference, mirrored, [8], [8],
+        )["reference_parts"][0]
+        self.assertEqual(row["status"], "suggested")
+        self.assertEqual(row["topology_review_reasons"], [])
+
+    def test_part_translation_and_reordered_parts_still_suggest(self):
+        a, b = square_frame(offset_x=-4.), square_frame(offset_x=4.)
+        shuffled = square_frame(offset_x=4.04, flip_diagonal=True)
+        other = square_frame(offset_x=-3.96, flip_winding=True)
+        result = suggest_spatial_part_matches(
+            a + b, shuffled + other, [8, 8], [8, 8],
+        )
+        self.assertEqual([row["status"] for row in result["reference_parts"]],
+                         ["suggested", "suggested"])
+        self.assertEqual([row["candidate_part_ids"] for row in result["reference_parts"]],
+                         [["part_002"], ["part_001"]])
+        self.assertTrue(all(not row["topology_review_reasons"]
+                            for row in result["reference_parts"]))
+
+    def test_boundary_budget_demotes_without_expensive_pairwise_scan(self):
+        # 90 disconnected triangles have 270 distinct open edges.
+        faces = [triangle(float(i * 2)) for i in range(90)]
+        result = suggest_spatial_part_matches(faces, faces, [90], [90])
+        row = result["reference_parts"][0]
+        self.assertEqual(row["status"], "ambiguous")
+        self.assertEqual(row["topology_review_reasons"],
+                         ["boundary_layout_budget_exceeded"])
+        self.assertEqual(result["unpaired_candidate_part_ids"], ["part_001"])
 
     def test_rejects_invalid_parts_and_nonfinite_coordinates(self):
         faces = [triangle()]
