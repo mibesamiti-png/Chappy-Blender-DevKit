@@ -31,8 +31,10 @@ from test_glb_part_match import nearly_touching_triangles, square_frame
 
 def unpruned_layout(ref_lines, cand_lines, part):
     """Run the original R2 scan without only the R8 box prefilter."""
+    # Use a plain function rather than a Mock object: a Mock executed for
+    # each of ~49k probes biases an aggregate timing comparison drastically.
     with patch("cbdk.glb_part_match._outside_expanded_boundary_segment_box",
-               return_value=False):
+               new=lambda *_args: False):
         return _boundary_layout_issue(ref_lines, cand_lines, part, part)
 
 
