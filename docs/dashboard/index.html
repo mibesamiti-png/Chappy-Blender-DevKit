@@ -54,6 +54,7 @@
       <button type="button" id="refresh" title="GitHubから取得">↻ 手動更新</button>
       <button type="button" id="automatic" aria-pressed="true">● 自動更新 ON（5分）</button>
       <button type="button" id="sound" aria-pressed="false">♪ 通知音 OFF</button>
+      <button type="button" id="previewSound" class="hidden" title="通知音を一回鳴らして確認">♫ 試聴</button>
     </div>
   </header>
   <div class="meta">
@@ -72,7 +73,7 @@
   </section>
 
   <section class="section">
-    <div class="rowhead"><h2>チーム別状況</h2><span class="sub">同じラウンドのPRと正確なHEADのCIを照合</span></div>
+    <div class="rowhead"><h2>チーム別状況</h2><span class="sub" id="teamSummary">同じラウンドのPRと正確なHEADのCIを照合</span></div>
     <div class="teams">
       <article class="panel" id="teamA"><div class="teamline"><div class="initial">A</div><div><div class="teamname">司令塔</div><div class="teamrole">統合・CI・次回計画</div></div></div><span class="pill" id="statusA">読み込み中</span><div class="teamdesc" id="detailA">―</div><a class="smalllink hidden" id="linkA" target="_blank" rel="noopener noreferrer">PRを開く</a></article>
       <article class="panel" id="teamB"><div class="teamline"><div class="initial">B</div><div><div class="teamname">GLB解析</div><div class="teamrole">形状・境界照合</div></div></div><span class="pill" id="statusB">読み込み中</span><div class="teamdesc" id="detailB">―</div><a class="smalllink hidden" id="linkB" target="_blank" rel="noopener noreferrer">PRを開く</a></article>
@@ -87,6 +88,7 @@
   </section>
 
   <div class="notice">
+    <div>● 音が鳴るか試したいときは「♪ 通知音」をONにして「♫ 試聴」をクリック。初回読込済みの完了・すでに通知したラウンドでは鳴らしません。</div>
     <div>● 画面を開いている間のみ5分ごとに更新。閉じたタブでは監視しません。通知音は「♪ 通知音」を押して有効化した後に、新しく完了を確認したA/B/C/Dにつき一度だけ鳴ります。初回表示の過去の完了は鳴りません。ブラウザの省電力・音声制限が優先されます。</div>
     <div>● 完了 = B/C/Dは担当PRのHEADで5系統CI成功、Aは統合PRのマージ後に別SHAの7系統push CI成功。未実行のCIを成功扱いしません。数字は自動推定を含み、一般ユーザー向け完成・ライセンス承認を意味しません。</div>
     <div>● 公開GitHub APIのみ使用。トークン不要・送信データなし。通常の未認証API上限は60回/時。 <a href="https://github.com/mibesamiti-png/Chappy-Blender-DevKit" target="_blank" rel="noopener noreferrer">GitHubリポジトリ</a> / <a href="https://github.com/mibesamiti-png/Chappy-Blender-DevKit/blob/feature/v0.18-shape-diagnostics/docs/PARALLEL_ROLLING_QUEUE.md" target="_blank" rel="noopener noreferrer">作業キュー</a></div>
@@ -195,6 +197,11 @@
   }
   function clearChildren(el){while(el.firstChild)el.removeChild(el.firstChild)}
   function addItem(tag,text,cls,parent){const el=document.createElement(tag);el.textContent=text;if(cls)el.className=cls;parent.appendChild(el);return el}
+  function renderSummary(items,round){
+    const done=items.filter(x=>x.team!=="A"&&x.item.state==="done");
+    const names=done.map(x=>x.team).join("・");
+    setText("teamSummary","R"+round+"　BCD完了 "+done.length+"/3"+(names?"（"+names+"）":""));
+  }
   function renderTasks(section,round,state){
     const list=$("tasks");clearChildren(list);
     ["B","C","D"].forEach(team=>{const li=document.createElement("li");addItem("div",team+" / R"+round,"tasktop",li);addItem("div",taskText(section,round,team),"taskbody",li);list.appendChild(li)});
@@ -267,7 +274,7 @@
       if(!Array.isArray(prs)||!Array.isArray(runs)||!q.round)throw Error("GitHub応答・作業キューを解析できません");
       renderMetrics(state,q.round,prs);renderTasks(q.section,q.round,state);renderRecent(prs);
       const items=["A","B","C","D"].map(team=>({team,item:teamStatus(team,q.round,prs,runs)}));
-      items.forEach(x=>showTeam(x.team,x.item));announce(items);
+      items.forEach(x=>showTeam(x.team,x.item));renderSummary(items,q.round);announce(items);
       setConnection("更新成功","ok");setText("checked","最終確認: "+fmtDate(new Date().toISOString()))
     }catch(err){
       setConnection("取得失敗・以前の表示を保持","fail");
@@ -283,12 +290,13 @@
   $("refresh").addEventListener("click",refresh);
   $("automatic").addEventListener("click",()=>{auto=!auto;applyAutomatic()});
   $("sound").addEventListener("click",async()=>{
-    if(audioEnabled){audioEnabled=false;$("sound").textContent="♪ 通知音 OFF";$("sound").setAttribute("aria-pressed","false");return}
+    if(audioEnabled){audioEnabled=false;$("sound").textContent="♪ 通知音 OFF";$("sound").setAttribute("aria-pressed","false");$("previewSound").classList.add("hidden");return}
     try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw Error("Web Audio非対応");
       if(!audio)audio=new Audio();await audio.resume();audioEnabled=true;
-      $("sound").textContent="♫ 通知音 ON";$("sound").setAttribute("aria-pressed","true");setText("flash","次の新規完了から通知します")
+      $("sound").textContent="♫ 通知音 ON";$("sound").setAttribute("aria-pressed","true");$("previewSound").classList.remove("hidden");setText("flash","次の新規完了から通知します")
     }catch(_){setText("flash","音声が使えません。ブラウザ設定を確認してください")}
   });
+  $("previewSound").addEventListener("click",()=>{if(audioEnabled){playCompletion(0);setText("flash","通知音を試聴しました")}});
   applyAutomatic();refresh()
 })();
 </script>
