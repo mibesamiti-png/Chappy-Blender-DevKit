@@ -228,7 +228,7 @@ class GLBSurfacePipelineTests(unittest.TestCase):
                     stderr="",
                 )
             with patch("cbdk.glb_surface_pipeline.inspect_glb",
-                       return_value=inspection()), \\
+                       return_value=inspection()), \
                  patch("cbdk.glb_surface_pipeline.subprocess.run",
                        side_effect=run):
                 with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
@@ -250,7 +250,7 @@ class GLBSurfacePipelineTests(unittest.TestCase):
                 stderr="",
             )
         with patch("cbdk.glb_surface_pipeline.inspect_glb",
-                   return_value=inspection()), \\
+                   return_value=inspection()), \
              patch("cbdk.glb_surface_pipeline.subprocess.run",
                    side_effect=run):
             with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
