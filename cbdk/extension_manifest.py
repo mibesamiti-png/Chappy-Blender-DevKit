@@ -78,30 +78,52 @@ def manifest_field_diagnostics(fields):
 
 
 def observe_official_validation(returncode, output):
-    """Normalize bounded CLI output, omitting paths, values and unknown text.
+    """Normalize bounded official CLI output; never trust exit status alone.
 
-    An exit code alone is insufficient. Unknown/new output formats are
-    unclassified, never silently promoted to validator success or rejection.
-    This recognizes observations; it does not authenticate the caller/log.
+    Unknown or contradictory field diagnostics make the observation
+    unclassified rather than allowing a subset of errors to look complete.
+    Original validator values, paths and free-form log text are not returned.
+    This checks consistency, NOT authenticity of the supplied observation.
     """
     if type(returncode) is not int or not isinstance(output, str) or len(output) > 200_000:
         raise ValueError("Invalid or oversized official validation observation")
     diagnostics = set()
     success = False
+    unknown = False
     for line in output.splitlines():
         line = line.strip()
         if line.startswith('Success parsing TOML in "'):
+            if not re.fullmatch(r'Success parsing TOML in "[^"]+"', line) or success:
+                unknown = True
             success = True
-        missing = re.fullmatch(r'missing "([a-z_]+)"', line)
-        invalid = re.match(r'key "([a-z_]+)" invalid:', line)
-        if missing and missing[1] in REQUIRED:
-            diagnostics.add((missing[1], "missing"))
-        if invalid and invalid[1] in REQUIRED:
-            diagnostics.add((invalid[1], "invalid"))
-    status = ("accepted" if returncode == 0 and success and not diagnostics else
-              "rejected" if returncode > 0 and diagnostics and not success else "unclassified")
+            continue
+        if line.startswith('missing "'):
+            match = re.fullmatch(r'missing "([a-z_]+)"', line)
+            if match and match[1] in REQUIRED and (match[1], "missing") not in diagnostics:
+                diagnostics.add((match[1], "missing"))
+            else:
+                unknown = True
+            continue
+        if line.startswith('key "'):
+            match = re.match(r'key "([a-z_]+)" invalid:', line)
+            if match and match[1] in REQUIRED and (match[1], "invalid") not in diagnostics:
+                diagnostics.add((match[1], "invalid"))
+            else:
+                unknown = True
+            continue
+        # Expected generic header precedes known field errors. It is not
+        # sufficient by itself to classify a rejection.
+        if line.startswith('Error parsing TOML '):
+            continue
+        if line.startswith(('Error:', 'ERROR:', 'Traceback', 'Exception:',
+                            'ValueError:', 'RuntimeError:', 'Permission denied:')):
+            unknown = True
+    status = ("accepted" if returncode == 0 and success and not diagnostics and not unknown else
+              "rejected" if returncode > 0 and diagnostics and not success and not unknown else
+              "unclassified")
     return {"status": status,
             "diagnostics": [{"field": field, "code": code} for field, code in sorted(diagnostics)],
+            "has_unrecognized_diagnostics": unknown,
             "authenticates_log": False}
 
 
