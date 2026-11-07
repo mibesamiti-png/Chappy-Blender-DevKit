@@ -70,21 +70,21 @@ class ManifestReviewTests(unittest.TestCase):
         incomplete = {**fields(), "license": None}
         cases = (
             ("unknown_rejection_line", incomplete, 1,
-             'Error parsing TOML "synthetic"\\nmissing "license"\\nNew diagnostic: hidden private value'),
+             'Error parsing TOML "synthetic"\nmissing "license"\nNew diagnostic: hidden private value'),
             ("unknown_rejection_footer", incomplete, 1,
-             'missing "license"\\nvalidation status unavailable'),
+             'missing "license"\nvalidation status unavailable'),
             ("conflicting_field_diagnostics", incomplete, 1,
-             'missing "license"\\nkey "license" invalid: synthetic contradiction'),
+             'missing "license"\nkey "license" invalid: synthetic contradiction'),
             ("success_plus_error_header", fields(), 0,
-             'Success parsing TOML in "synthetic"\\nError parsing TOML "synthetic"'),
+             'Success parsing TOML in "synthetic"\nError parsing TOML "synthetic"'),
             ("error_header_then_success", fields(), 0,
-             'Error parsing TOML "synthetic"\\nSuccess parsing TOML in "synthetic"'),
+             'Error parsing TOML "synthetic"\nSuccess parsing TOML in "synthetic"'),
             ("success_plus_warning", fields(), 0,
-             'Success parsing TOML in "synthetic"\\nWARNING: hidden private value'),
+             'Success parsing TOML in "synthetic"\nWARNING: hidden private value'),
             ("success_plus_unknown_line", fields(), 0,
-             'Success parsing TOML in "synthetic"\\nunexpected private line'),
+             'Success parsing TOML in "synthetic"\nunexpected private line'),
             ("duplicate_generic_error_header", incomplete, 1,
-             'Error parsing TOML "synthetic"\\nError parsing TOML "synthetic"\\nmissing "license"'),
+             'Error parsing TOML "synthetic"\nError parsing TOML "synthetic"\nmissing "license"'),
         )
         for label, source, exitcode, output in cases:
             with self.subTest(case=label):
@@ -100,8 +100,8 @@ class ManifestReviewTests(unittest.TestCase):
         # real official-validator results. Synthetic test, no Blender executed.
         for version in ("4.4.3", "4.5.15", "5.2.1"):
             with self.subTest(version=version):
-                output = ('Blender ' + version + ' (synthetic build)\\n'
-                          'Success parsing TOML in "synthetic"\\nBlender quit')
+                output = ('Blender ' + version + ' (synthetic build)\n'
+                          'Success parsing TOML in "synthetic"\nBlender quit')
                 report = compare_official_validation(fields(), 0, output)
                 self.assertEqual(report["status"], "agreement")
                 self.assertTrue(report["complete_diagnostic_agreement"])
