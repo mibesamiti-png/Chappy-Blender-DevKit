@@ -67,6 +67,12 @@ def run(path):
             assert hasattr(bpy.types, "VIEW3D_PT_cbdk_modular_preview")
             assert hasattr(bpy.types.Scene, "cbdk_modular_result")
             assert hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
+            parameter = module._UI_OPTIONS["nudge_offset"]
+            actual_default = bpy.context.scene.cbdk_modular_nudge_offset
+            assert all(abs(a - b) < 1e-6 for a, b in zip(actual_default, parameter["default"]))
+            rna = bpy.context.scene.bl_rna.properties["cbdk_modular_nudge_offset"]
+            assert rna.array_length == parameter["size"]
+            assert rna.hard_min == parameter["min"] and rna.hard_max == parameter["max"]
             operator_ids = {op.bl_idname for op in module._OPERATORS}
             expected_ops = set()
             if "object_selection" in features:
@@ -129,6 +135,9 @@ def run(path):
                 preview = type("CBDK_Synthetic_Panel", (), {"layout": layout})()
                 module.VIEW3D_PT_cbdk_modular_preview.draw(preview, bpy.context)
                 result = layout.events
+                styles = module._UI_OPTIONS["section_styles"]
+                assert sum(e[0] == "box" for e in result) == sum(s["boxed"] for s in styles)
+                assert sum(e[0] == "row" for e in result) == len(features) + sum(s["layout"] == "row" for s in styles)
                 observed_ops = [entry for entry in result if entry[0] == "operator"]
                 assert {entry[1] for entry in observed_ops} == expected_ops, result
                 enabled = [entry[1] for entry in result if entry[0] == "enabled"]
@@ -271,6 +280,48 @@ def run(path):
             assert not hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
             assert not module._REGISTERED
             checks.append("disable_unregistered_all")
+            # Inject a controlled registration failure after one real class.
+            native_register = bpy.utils.register_class
+            calls = []
+            def fail_second(cls):
+                calls.append(cls)
+                if len(calls) == 2:
+                    raise RuntimeError("CBDK controlled registration failure")
+                native_register(cls)
+            bpy.utils.register_class = fail_second
+            try:
+                try:
+                    module.register()
+                except RuntimeError as exc:
+                    assert "controlled registration failure" in str(exc)
+                else:
+                    raise AssertionError("Injected registration failure was ignored")
+            finally:
+                bpy.utils.register_class = native_register
+            assert not module._REGISTERED and not module._OWNED_PROPERTIES
+            assert not any(hasattr(bpy.types.Scene, name) for name in module._PROPERTY_NAMES)
+            module.register()
+            try:
+                module.register()
+            except RuntimeError:
+                pass
+            else:
+                raise AssertionError("Repeated registration should fail before mutation")
+            module.unregister()
+            # A pre-existing foreign property must survive failed registration.
+            bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(default="foreign")
+            try:
+                try:
+                    module.register()
+                except RuntimeError:
+                    pass
+                else:
+                    raise AssertionError("Foreign Scene property collision accepted")
+                assert hasattr(bpy.types.Scene, "cbdk_modular_result")
+                assert not hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
+            finally:
+                del bpy.types.Scene.cbdk_modular_result
+            checks.append("registration_failure_recovery_and_foreign_property_preserved")
         finally:
             if enabled:
                 try:

@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18 EXT-001準備：固定自作legacy ZIPを安全に静的監査するextension-preflightを実装。1f31506のPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功。正式Extensions ZIP/ライセンス/配布許可は未完了。v0.17.0正式版維持
+- 最新の節目: v0.18 EXT/UI集中実装: manifest項目別診断/依存閉包、公式validator合成3例、宣言レイアウト/型付き初期値/登録失敗復旧、実描画比較/SHA目録を追加。ローカル818件成功、対象CIは今回未実行。正式v0.17.0/partial維持
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -35,8 +35,8 @@
 | `EDIT-001` | Edit Mode選択頂点の安全な移動 | 実装済 | Blender CI | 単一メッシュ/有限オフセット/Blender UNDOフラグ |
 | `EDIT-002` | 編集差分の監査とベストエフォート復元 | 一部実装 | Blender CI | 加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。PR #21のBlender 4.4.3/4.5.15/5.2.1 CIで実測成功 |
 | `TEST-001` | Python/Windows/Blender 3バージョンCI | 実装済 | Blender CI | リポジトリ公開化後、PR #21でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。mainの正式last_verifiedは未更新 |
-| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 固定5自作機能の見出し・ボタン順序に加え、Blenderオブジェクト/編集モードとactive meshによるボタン有効化、頂点移動XYZ値の安全なパネル入力を追加。元operatorの実行時検査と登録/解除を維持。597ed5cのPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功。GUI手動操作・汎用UI・正式配布は未検証のためpartial。 |
-| `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | 固定自作プレビュー2形式のZIP構造/ファイルSHA256/承認フラグを安全に監査し、Blender Extensionsに必要なライセンス・maintainer・version等の未決事項をJSONで一覧化。1f31506のPython/Windows/Blender3版/Kit/Handoff/Chromium全6CI成功。正式manifest.toml/Extensions ZIP・Blender公式validate/再配布承認は未実装、常にblocked_for_extension_release。 |
+| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。今回ローカル成功/対象CI待ちでpartial維持。 |
+| `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | 必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。今回ローカル成功/対象CI待ちでpartial維持。 |
 | `INST-001` | GitHubからBlenderへの直接インストール・更新 | 保留 | 未検証 | ユーザー希望で保留。UI確認段階まで実装しない |
 | `PERF-001` | 巨大メッシュ向け監査・効率化 | 一部実装 | Blender CI | 20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否 |
 | `GUI-001` | 実際のGUI Undo・操作感の自動検証 | 未実装 | 未検証 | ヘッドレスではUndoフラグと編集結果まで確認 |
@@ -183,6 +183,7 @@
 - `DEC-056` UI-001は当面CBDK自作5機能の宣言的パネル表示に限定し、レシピから任意コードや未知operatorを登録させない。catalog/ui_layouts.jsonの全5機能配置だけを受け付け、宣言をコードではなくリテラルに変換。ea0a4bfの対象6CIで生成ZIPとBlender3版Panel.draw/登録/無効化が成功。未知ボタンID、JSON重複キーなどは拒否。Windows GUI操作、自由なUI・正式Extensions・再配布は未完成。UI-001 partial/blender_ci、PRドラフト・正式v0.17.0維持。
 - `DEC-057` UI-001の固定自作機能プレビューでモード別有効化とBlender RNAの安全な頂点移動XYZ入力を追加する。対象は既存5自作operatorのみ。active meshとOBJECT/EDIT_MESHで押下可否を制御し、移動値はScene FloatVectorProperty[-10,10]で既存operator.offsetへ渡す。597ed5cの対象全6CIと3版Blender headless Panel.draw成功。Windows GUI操作や任意UI・自動承認の証拠にはしない。UI-001 partial、正式v0.17.0、PR #25ドラフト維持。
 - `DEC-058` EXT-001は公開可能なExtensions ZIPを生成せず、まずCBDK自作preview ZIPの出自/ハッシュ/構成と正式公開ブロッカーの自動検査に限定する。構造/サイズ/パス/重複/シンボリックリンク/ハッシュ/承認フラグを検証し、必須メタデータの未確定値はJSON nullに留める。1f31506の対象6CI・Blender3版合格。コード/元ファイルは実行せず、blender_manifest.tomlと正式ZIP、公式extension validate、GUI実操作、ライセンス・再配布承認は未実装。EXT-001 partial/blender_ci、PR #25ドラフトと正式v0.17.0を維持。
+- `DEC-059` 必須manifest構造と権利承認を分離し、型付きUIと登録復旧を既存プレビュー内で拡充する。公式validatorは合成データ専用fixtureのみ。例示SPDXを実部品へ適用せず、正式ZIP/公開/採用なし。未知UIコードを組み込まず既存6レシピ/5機能を維持。自己整合hashは出自認証ではない。
 
 ## 更新・プライバシールール
 

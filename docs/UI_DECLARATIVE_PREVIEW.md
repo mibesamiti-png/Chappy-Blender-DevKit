@@ -53,3 +53,25 @@ remain **partial** pending general-purpose layout/controls and actual GUI review
   contexts, checks the operator argument mapping, and verifies Scene properties
   are removed on disable. This is a synthetic headless Blender UI test, **not**
   an actual Windows graphical click/undo test.
+
+## 2026-11-08 JST: presentation, typed defaults and registration recovery
+
+Sections optionally accept `layout: "row" | "column"` and `boxed: bool`.
+Defaults preserve the old catalog and all six recipes. Only the authored
+`vertex_nudge` control may specify `parameters: {"offset": [X,Y,Z]}`.
+A code-owned float-vector contract fixes size 3, bounds -10..10 and the
+existing default. Overrides must be finite numbers (not booleans), within
+bounds, and a nonzero vector. Unknown parameters, types or operators fail
+before ZIP creation. Runtime RNA uses the same validated contract.
+
+The old `plan_ui_layout` return shape is preserved; the builder requests the
+additional presentation/parameter plan and injects it using Python literals.
+A temporary copied authored project tests a horizontal, unboxed section and
+custom XYZ default without editing tracked catalogs or adopting new features.
+
+Registration refuses existing Scene-property collisions before mutation and
+tracks owned properties. Property/class registration is inside the rollback
+boundary. Native Blender tests inject failure on the second class, confirm
+cleanup, re-register, reject duplicate registration, and preserve an unrelated
+pre-existing Scene property. This is controlled headless evidence, not arbitrary
+failure atomicity or Windows GUI/Undo certification.

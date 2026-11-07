@@ -19,6 +19,7 @@ import bpy
 
 _FEATURE_IDS = __CBDK_FEATURE_IDS__
 _UI_SECTIONS = __CBDK_UI_SECTIONS__
+_UI_OPTIONS = __CBDK_UI_OPTIONS__
 _OPERATORS = [
     importlib.import_module("." + feature, __name__ + ".features").OPERATOR_CLASS
     for feature in _FEATURE_IDS
@@ -41,11 +42,13 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
 
     def draw(self, context):
         col = self.layout.column(align=True)
-        for title, buttons in _UI_SECTIONS:
-            group = col.box()
+        for index, (title, buttons) in enumerate(_UI_SECTIONS):
+            style = _UI_OPTIONS["section_styles"][index]
+            group = col.box() if style["boxed"] else col.column(align=True)
             group.label(text=title)
+            body = group.row(align=True) if style["layout"] == "row" else group
             for feature_id, label in buttons:
-                button_row = group.row(align=True)
+                button_row = body.row(align=True)
                 active = context.active_object
                 has_mesh = active is not None and active.type == "MESH"
                 mode = "EDIT_MESH" if feature_id in _EDIT_MODE_FEATURES else "OBJECT"
@@ -68,28 +71,31 @@ _CLASSES = tuple(_OPERATORS) + (VIEW3D_PT_cbdk_modular_preview,)
 _REGISTERED = []
 
 
+_PROPERTY_NAMES = ("cbdk_modular_result", "cbdk_modular_nudge_offset")
+_OWNED_PROPERTIES = []
+
+
 def register():
-    # Roll back even if a later operator/panel fails to register.
-    bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
-        name="Last CBDK preview result", default="No inspection yet"
-    )
-    bpy.types.Scene.cbdk_modular_nudge_offset = bpy.props.FloatVectorProperty(
-        name="Local Nudge XYZ", description="Local-space offset for selected vertices",
-        size=3, default=(0.0, 0.0, 0.1), min=-10.0, max=10.0,
-        subtype="TRANSLATION",
-    )
+    # Refuse collisions before touching another add-on's Scene data.
+    if _REGISTERED or _OWNED_PROPERTIES or any(hasattr(bpy.types.Scene, name) for name in _PROPERTY_NAMES):
+        raise RuntimeError("CBDK preview is already registered or Scene properties conflict")
     try:
+        bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
+            name="Last CBDK preview result", default="No inspection yet"
+        )
+        _OWNED_PROPERTIES.append("cbdk_modular_result")
+        parameter = _UI_OPTIONS["nudge_offset"]
+        bpy.types.Scene.cbdk_modular_nudge_offset = bpy.props.FloatVectorProperty(
+            name="Local Nudge XYZ", description="Local-space offset for selected vertices",
+            size=parameter["size"], default=parameter["default"],
+            min=parameter["min"], max=parameter["max"], subtype="TRANSLATION",
+        )
+        _OWNED_PROPERTIES.append("cbdk_modular_nudge_offset")
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
             _REGISTERED.append(cls)
     except Exception:
-        for cls in reversed(_REGISTERED):
-            bpy.utils.unregister_class(cls)
-        _REGISTERED.clear()
-        if hasattr(bpy.types.Scene, "cbdk_modular_result"):
-            del bpy.types.Scene.cbdk_modular_result
-        if hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset"):
-            del bpy.types.Scene.cbdk_modular_nudge_offset
+        unregister()
         raise
 
 
@@ -97,7 +103,7 @@ def unregister():
     for cls in reversed(_REGISTERED):
         bpy.utils.unregister_class(cls)
     _REGISTERED.clear()
-    if hasattr(bpy.types.Scene, "cbdk_modular_result"):
-        del bpy.types.Scene.cbdk_modular_result
-    if hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset"):
-        del bpy.types.Scene.cbdk_modular_nudge_offset
+    for name in reversed(_OWNED_PROPERTIES):
+        if hasattr(bpy.types.Scene, name):
+            delattr(bpy.types.Scene, name)
+    _OWNED_PROPERTIES.clear()

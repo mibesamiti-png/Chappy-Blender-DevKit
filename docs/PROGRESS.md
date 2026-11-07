@@ -1168,3 +1168,12 @@ Notion節目同期も成功。正本73b5635を既存CBDKプロジェクトとPR/
 ## 2026-11-07 — EXT-001 extension-readiness preflight
 
 CBDK自作のlegacy/modular preview ZIPの整合性・内容のSHA256/パストラバーサル/重複/出自未承認を検査し、Extensions正式公開の未解決事項をJSONで表示する`extension-preflight`を追加。コード`1f31506`のPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功。実Extensions ZIP・Blenderの公式検証・ライセンス選択・再配布権限は未完了。EXT-001 partial、v0.18ドラフト/正式v0.17.0維持。
+
+## 2026-11-08 JST — EXT-001 / UI-001 / BUILD-001集中実装
+
+必須manifestの構造/未入力とライセンス・承認待ちを分離し、部品/同梱ファイル閉包を検証。
+公式extension validateはデータ専用合成3例だけで実行し、実部品のライセンスは未決定。
+宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Sceneプロパティ衝突を拒否し、
+登録途中失敗→後片付け→再登録を検査する。実レンダリング13枚の同方向比較/SHA目録も追加。
+ローカルPython818件成功、Blender4.3.2で合成公式validatorとカスタムUI/登録失敗復旧成功。
+対象3版/Windowsの今回CIは未実行。全体partial/実GUI・権利・正式Extension未完了を維持。

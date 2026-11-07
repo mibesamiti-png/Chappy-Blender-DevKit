@@ -13,6 +13,27 @@ from cbdk.ui_layout import plan_ui_layout, validate_ui_layout
 
 
 class AuthoredUILayoutTests(unittest.TestCase):
+    def test_optional_layout_and_typed_offset_preserve_legacy_plan(self):
+        original = validate_ui_layout(self.data)
+        self.data["sections"][0].update(layout="row", boxed=False)
+        self.data["sections"][1]["controls"][1]["parameters"] = {"offset": [0.125, -0.25, 0.5]}
+        self.assertEqual(validate_ui_layout(self.data), original)
+        self.write()
+        plan, options = plan_ui_layout(["vertex_nudge", "mesh_bounds"], root=self.root, include_options=True)
+        self.assertEqual(options["section_styles"][0], {"layout": "row", "boxed": False})
+        self.assertEqual(options["nudge_offset"]["default"], (0.125, -0.25, 0.5))
+        self.assertEqual(options["nudge_offset"]["min"], -10)
+
+    def test_bad_parameter_values_and_operator_injection_rejected(self):
+        for value in ([0, 0, 0], [True, 0, 1], [float("nan"), 0, 1], [11, 0, 1], [1, 2]):
+            with self.subTest(value=value):
+                self.data["sections"][1]["controls"][1]["parameters"] = {"offset": value}
+                with self.assertRaises(ValueError):
+                    validate_ui_layout(self.data)
+        self.data["sections"][1]["controls"][1]["parameters"] = {"execute": "unknown.py"}
+        with self.assertRaises(ValueError):
+            validate_ui_layout(self.data)
+
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)

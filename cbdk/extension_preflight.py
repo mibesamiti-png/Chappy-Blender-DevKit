@@ -11,6 +11,7 @@ import re
 import stat
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
+from .extension_manifest import review_manifest_fields
 
 KNOWN = {
     "cbdk_mesh_inspector_preview": (1, "mesh_inspector"),
@@ -119,6 +120,21 @@ def inspect_preview_archive(source: str | Path) -> dict:
                            p.get("license_review") not in ("pending", "not_reviewed")
                            for p in parts)):
                 raise ValueError("Preview part approvals or license metadata are unexpected")
+            from .feature_catalog import TRUSTED_FEATURES, TRUSTED_PART_SOURCES
+            from .modular_builder import HELPERS
+            expected_parts = ({p for f in selected for p in TRUSTED_FEATURES[f]["parts"]}
+                              if schema == 2 else {"BLCTX-001", "BLCTX-002", "BME-001"})
+            ids = [p.get("part_id") for p in parts]
+            if any(type(p) is not str for p in ids) or len(set(ids)) != len(ids) or set(ids) != expected_parts:
+                raise ValueError("Preview part dependency inventory mismatch")
+            expected_files = {"__init__.py", "README.txt", "helpers/__init__.py"}
+            expected_files |= {HELPERS[TRUSTED_PART_SOURCES[p]] for p in expected_parts}
+            if schema == 2:
+                expected_files |= {"features/__init__.py"} | {"features/" + f + ".py" for f in selected}
+                if metadata.get("part_ids") != sorted(expected_parts):
+                    raise ValueError("Preview dependency list mismatch")
+            if rels != expected_files:
+                raise ValueError("Preview contains undeclared helper or file")
             # All validation above is structural. Never import any bundled source.
             source_count = len(rels)
     except (BadZipFile, UnicodeDecodeError, KeyError) as exc:
@@ -144,6 +160,7 @@ def inspect_preview_archive(source: str | Path) -> dict:
         "package_id": package,
         "archive_structure_checked": True,
         "provenance_hashes_verified": True,
+        "source_authenticity_verified": False,
         "verified_source_file_count": source_count,
         "python_code_executed": False,
         "preview_only": True,
@@ -151,6 +168,13 @@ def inspect_preview_archive(source: str | Path) -> dict:
         "manifest_toml_emitted": False,
         "official_blender_extension_validate_ran": False,
         "manifest_fields_review_only": fields,
+        "manifest_structure_review": review_manifest_fields(fields),
+        "blocker_categories": {
+            "owner_metadata": ["version", "maintainer", "license"],
+            "approval": ["component_approval", "redistribution_authorization"],
+            "packaging": ["extension_archive_layout"],
+            "verification": ["official_manifest_validation", "extension_runtime_test"],
+        },
         "blockers": [
             "owner_must_set_and_review_version",
             "owner_must_provide_maintainer",

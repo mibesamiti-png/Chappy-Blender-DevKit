@@ -9,6 +9,8 @@ import argparse
 from html import escape
 from pathlib import Path
 import shutil
+import hashlib
+import json
 
 VIEWS = ("front", "back", "right", "left", "top", "bottom", "iso")
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
@@ -47,13 +49,23 @@ def build_gallery(root: Path) -> int:
 
     gallery.mkdir()
     cards = []
+    inventory = []
     for title, source, filename in verified:
         shutil.copyfile(source, gallery / filename)
+        inventory.append({"file": filename, "label": title, "bytes": source.stat().st_size,
+                          "sha256": hashlib.sha256(source.read_bytes()).hexdigest()})
         cards.append(
             f'<figure><img src="{escape(filename, quote=True)}" '
             f'alt="{escape(title, quote=True)}" loading="lazy">'
             f'<figcaption>{escape(title)}</figcaption></figure>'
         )
+    comparisons = []
+    for view in ("front", "right", "top", "iso"):
+        comparisons.append('<section><h2>' + view + '</h2><div class="grid">' +
+                           ''.join('<figure><img src="' + prefix + view + '.png" alt="' + label + '">'
+                                   '<figcaption>' + label + '</figcaption></figure>'
+                                   for prefix, label in (("glb_preview_", "Reference"),
+                                                         ("glb_drift_preview_", "Silhouette drift"))) + '</div></section>')
     content = """<!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -72,11 +84,19 @@ figcaption{padding:12px;font-size:14px}
 参考モデル、輪郭差のある比較モデル、部品別プレビューを収録しています。
 生成されたレンダリング画像であり、Blender画面のGUIスクリーンショットではありません。
 私有ユーザーデータや実モデルの検証結果ではありません。</p>
+<h2>同じ方向の比較</h2><p>同じビュー名の実描画を並べています。修正成功や完全な形状一致の証明ではありません。</p>
+""" + "\n".join(comparisons) + """
+<h2>全画像</h2>
 <section class="grid">
 """ + "\n".join(cards) + """
 </section></body></html>
 """
     (gallery / "index.html").write_text(content, encoding="utf-8")
+    (gallery / "manifest.json").write_text(json.dumps({
+        "kind": "cbdk_synthetic_render_gallery", "image_count": len(inventory),
+        "comparative_views": ["front", "right", "top", "iso"], "images": inventory,
+        "gui_screenshot": False, "proves_shape_equivalence": False,
+    }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return len(cards)
 
 

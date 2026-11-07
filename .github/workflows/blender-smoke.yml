@@ -14,6 +14,10 @@ on:
       - 'cbdk/addon_builder.py'
       - 'cbdk/modular_builder.py'
       - 'cbdk/extension_preflight.py'
+      - 'cbdk/extension_manifest.py'
+      - 'tests/test_extension_manifest.py'
+      - 'scripts/verify_extension_manifest.py'
+      - 'scripts/build_ui_variant.py'
       - 'tests/test_extension_preflight.py'
       - 'cbdk/ui_layout.py'
       - 'catalog/ui_layouts.json'
@@ -200,6 +204,11 @@ jobs:
             grep -F 'CBDK_MODULAR_ADDON_PASS ' "reports/ci/${recipe}_smoke.log"
           done
           echo 'Modular preview variants: objects, edit, combined, geometry, nudge and all PASSED.' >> "$GITHUB_STEP_SUMMARY"
+          python scripts/build_ui_variant.py reports/ci/CBDK_UI_Variant.zip
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec --python-exit-code 7 \
+            --python scripts/blender_modular_addon_smoke.py -- reports/ci/CBDK_UI_Variant.zip \
+            2>&1 | tee reports/ci/ui_variant_smoke.log
+          grep -F 'CBDK_MODULAR_ADDON_PASS ' reports/ci/ui_variant_smoke.log
       - name: Audit extension compatibility blockers on authored CI previews
         shell: bash
         run: |
@@ -208,6 +217,8 @@ jobs:
             --output reports/ci/extension_readiness_modular.json
           python -m cbdk extension-preflight reports/ci/CBDK_Mesh_Inspector_Preview.zip \
             --output reports/ci/extension_readiness_legacy.json
+          python scripts/verify_extension_manifest.py --blender "$BLENDER_PATH" \
+            --output reports/ci/official_manifest_fixtures
           python - <<'PY'
           import json
           from pathlib import Path
@@ -1074,6 +1085,22 @@ jobs:
           python scripts/build_synthetic_screenshot_gallery.py --ci-root reports/ci
           test -s reports/ci/screenshot_gallery/index.html
           test "$(find reports/ci/screenshot_gallery -maxdepth 1 -name '*.png' | wc -l)" -eq 13
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root = Path('reports/ci/screenshot_gallery')
+          report = json.loads((root / 'manifest.json').read_text(encoding='utf-8'))
+          assert report['image_count'] == 13 and len(report['images']) == 13
+          for row in report['images']:
+              data = (root / row['file']).read_bytes()
+              assert len(data) == row['bytes']
+              assert hashlib.sha256(data).hexdigest() == row['sha256']
+          hashes = {row['file']: row['sha256'] for row in report['images']}
+          assert hashes['glb_preview_front.png'] != hashes['glb_drift_preview_front.png']
+          assert report['comparative_views'] == ['front', 'right', 'top', 'iso']
+          assert report['gui_screenshot'] is False
+          print('CBDK_SYNTHETIC_GALLERY_INTEGRITY_PASS: 13 renders and distinct front comparison')
+          PY
           echo "Synthetic Blender render gallery: 13 real PNGs (reference, drift, parts) in screenshot_gallery/index.html." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload evidence and log even when Blender fails

@@ -71,20 +71,21 @@ def build_modular(
         raise ValueError("Not approved for release: --preview-unapproved is required for LOCAL builds")
     plan = plan_features(feature_ids, root=root, target_blender=target_blender)
     resolved_features = tuple(plan["ordered_features"])
-    ui_sections = plan_ui_layout(resolved_features, root=root)
+    ui_sections, ui_options = plan_ui_layout(resolved_features, root=root, include_options=True)
     part_ids = plan["part_ids"]
     # Keep authored-part metadata separate from proof of approval.
     from .addon_builder import _read_catalog
     catalog = _read_catalog(root=root)
 
     init_template = _trusted_read("templates/modular_preview/__init__.py", root=root).decode("utf-8")
-    for marker in ("__CBDK_DISPLAY_NAME__", "__CBDK_FEATURE_IDS__", "__CBDK_UI_SECTIONS__"):
+    for marker in ("__CBDK_DISPLAY_NAME__", "__CBDK_FEATURE_IDS__", "__CBDK_UI_SECTIONS__", "__CBDK_UI_OPTIONS__"):
         if init_template.count(marker) != 1:
             raise ValueError("Modular template placeholder must occur exactly once: " + marker)
     init_code = (init_template
                  .replace("__CBDK_DISPLAY_NAME__", repr(name))
                  .replace("__CBDK_FEATURE_IDS__", repr(resolved_features))
-                 .replace("__CBDK_UI_SECTIONS__", repr(ui_sections)))
+                 .replace("__CBDK_UI_SECTIONS__", repr(ui_sections))
+                 .replace("__CBDK_UI_OPTIONS__", repr(ui_options)))
     # Python repr is an escaped Python *literal*, not code supplied by recipes.
     sources = sorted({PART_SOURCES[part_id] for part_id in part_ids})
     assets: dict[str, bytes] = {

@@ -57,3 +57,30 @@ The existing `build-addon` legacy preview packaging path and its
 `--preview-unapproved` safeguard remain unchanged. EXT-001 is
 **partial** only for structural preflight; formal Extensions release
 is not implemented or approved.
+
+## 2026-11-08 JST: bounded manifest structure review
+
+`manifest_structure_review` now lists missing required fields separately from
+field-specific invalid values. It checks schema/id, SemVer, printable owner
+metadata, tagline length/suffix, minimum Blender 4.2+, and SPDX-prefix **syntax**.
+Unsupported optional fields require official validation; this is a bounded
+subset, not a complete SPDX registry/compatibility or Blender manifest validator.
+`blocker_categories` separates metadata, approval, packaging and verification.
+Missing license/owner input remains null and blocks release. No license is chosen.
+
+The ZIP audit also checks exact part dependency IDs and helper/file closure,
+rejecting invented/duplicate parts or undeclared files even if hashes agree.
+`source_authenticity_verified=false`: self-consistent hashes do not authenticate
+source origin. Packaged Python is never executed by this preflight.
+
+`scripts/verify_extension_manifest.py` invokes the **official** Blender
+`--command extension validate` on three disposable, synthetic manifest cases:
+a valid subset, a missing license, and invalid tagline punctuation. The sample
+SPDX value belongs only to validator test data; it is not a license declaration
+for CBDK or its components. The fixture's Python raises if imported and is never
+loaded. No real Extension ZIP is built, installed, approved or released.
+The real preview report's official-validation flag remains false.
+
+Rules were checked against the [Blender 4.5 manual](https://docs.blender.org/manual/en/4.5/advanced/extensions/getting_started.html)
+and the locally installed Blender validator. Target-version evidence is recorded
+in STATE after CI, separately from local Blender 4.3.2.

@@ -487,3 +487,16 @@ NEXT-003完了。NEXT-002は制御履歴2ケースの成功を確認したが通
 ## EXT-001 一部実装 — Blender Extensions形式の移行前チェック
 
 `cbdk/extension_preflight.py` と `python -m cbdk extension-preflight` は、CBDKが自作して許可したlegacy/modular preview ZIPだけを対象にした安全な静的検査。既知のZIPメンバー/パス/サイズ/ZIP symlink/重複と、全構成ファイルのSHA-256出自を照合する。未認可・ライセンス未選択・正式なmanifest/Extensions ZIP未生成/公式Blender extension validate未実施を必ず公開ブロッカーとしてJSON出力する。元Pythonコードを実行・採用・配布しない。公式Blender Extensions形式の最終パッケージではなく、`EXT-001`はpartial/blender_ci（1f31506の全6系統CI、Blender3版成功）。実装詳細は[EXTENSION_PREFLIGHT.md](EXTENSION_PREFLIGHT.md)。
+
+## 2026-11-08 JST: Extensions / generated UI validation milestone
+
+EXT-001 adds bounded required-manifest diagnostics and exact dependency/file
+closure; legal approval, missing owner metadata and invalid structure remain
+separate. Official Blender validation runs only on synthetic data fixtures, not
+real CBDK components. [Details](EXTENSION_PREFLIGHT.md).
+UI-001/BUILD-001 add optional row/column and boxed sections, typed bounded nudge
+defaults, property collision refusal and registration rollback/recovery.
+[Details](UI_DECLARATIVE_PREVIEW.md). Existing legacy generation and six recipes
+remain supported, preview-only/unapproved. Thirteen synthetic Blender renders
+are paired by view and recorded with SHA/size; four actual Chromium screenshots
+remain intact. No user geometry is uploaded. Target CI is pending for this change.

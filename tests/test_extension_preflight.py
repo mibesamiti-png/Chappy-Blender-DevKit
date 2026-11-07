@@ -54,6 +54,27 @@ class ExtensionPreflightTests(unittest.TestCase):
         self.assertEqual(result["manifest_fields_review_only"]["blender_version_min"], "4.4.0")
         self.assertIn("owner_release_and_redistribution_authorization_required", result["blockers"])
 
+    def test_manifest_missing_inputs_and_approvals_are_separate(self):
+        self.build()
+        report = inspect_preview_archive(self.zip)
+        self.assertEqual(report["manifest_structure_review"]["status"], "incomplete")
+        self.assertEqual(report["manifest_structure_review"]["missing_required_fields"], ["version", "maintainer", "license"])
+        self.assertFalse(report["source_authenticity_verified"])
+        self.assertIn("component_approval", report["blocker_categories"]["approval"])
+
+    def test_metadata_cannot_invent_or_duplicate_dependencies(self):
+        self.build()
+        name = "cbdk_modular_preview/CBDK_BUILD_INFO.json"
+        with ZipFile(self.zip) as z:
+            original = json.loads(z.read(name))
+        for ids in (["UNKNOWN-001"], [p["part_id"] for p in original["parts"]] + [original["parts"][0]["part_id"]]):
+            changed = dict(original)
+            changed["parts"] = [{"part_id": pid, "catalog_approved": False, "license_review": "pending"} for pid in ids]
+            target = self.replace_zip_member(name, json.dumps(changed).encode())
+            with self.assertRaises(ValueError):
+                inspect_preview_archive(target)
+            target.unlink()
+
     def test_tampered_source_byte_detected_without_executing(self):
         self.build()
         with ZipFile(self.zip) as z:
