@@ -66,6 +66,7 @@ def run(path):
             enabled = True
             assert hasattr(bpy.types, "VIEW3D_PT_cbdk_modular_preview")
             assert hasattr(bpy.types.Scene, "cbdk_modular_result")
+            assert hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
             operator_ids = {op.bl_idname for op in module._OPERATORS}
             expected_ops = set()
             if "object_selection" in features:
@@ -81,41 +82,77 @@ def run(path):
             assert operator_ids == expected_ops, (operator_ids, expected_ops)
             checks.append("only_selected_operators_registered")
 
-            # Exercise actual Blender panel.draw with a recording layout.
-            # Never claim manual Windows UI coverage from this headless smoke.
+            # Exercise Blender's real Panel.draw with a recording layout.
+            # This verifies the UI logic, not real Windows mouse/GPU rendering.
+            class RecordingOperator:
+                def __init__(self, events):
+                    object.__setattr__(self, "events", events)
+
+                def __setattr__(self, key, value):
+                    self.events.append(("operator_property", key, tuple(value)))
+
             class RecordingLayout:
-                def __init__(self):
-                    self.events = []
+                def __init__(self, events=None):
+                    self.events = events if events is not None else []
 
                 def column(self, align=False):
-                    return self
+                    return RecordingLayout(self.events)
+
+                def row(self, align=False):
+                    self.events.append(("row",))
+                    return RecordingLayout(self.events)
 
                 def box(self):
                     self.events.append(("box",))
-                    return self
+                    return RecordingLayout(self.events)
 
                 def label(self, *, text):
                     self.events.append(("label", text))
 
+                @property
+                def enabled(self):
+                    return True
+
+                @enabled.setter
+                def enabled(self, value):
+                    self.events.append(("enabled", bool(value)))
+
+                def prop(self, data, identifier, *, text):
+                    self.events.append(("prop", identifier, text, tuple(getattr(data, identifier))))
+
                 def operator(self, identifier, *, text):
                     self.events.append(("operator", identifier, text))
+                    return RecordingOperator(self.events)
 
-            layout = RecordingLayout()
-            preview = type("CBDK_Synthetic_Panel", (), {"layout": layout})()
-            module.VIEW3D_PT_cbdk_modular_preview.draw(preview, bpy.context)
-            visible = []
-            for title, buttons in module._UI_SECTIONS:
-                visible.append(("box",))
-                visible.append(("label", title))
-                for feature_id, label in buttons:
-                    visible.append((
-                        "operator", module._OPERATORS_BY_FEATURE[feature_id].bl_idname,
-                        label,
-                    ))
-            visible.append(("label", bpy.context.scene.cbdk_modular_result))
-            assert layout.events == visible, (layout.events, visible)
-            assert {event[1] for event in layout.events if event[0] == "operator"} == expected_ops
-            checks.append("declarative_ui_layout_and_selected_button_order")
+            def verify_panel(expected_mode, expected_enabled):
+                layout = RecordingLayout()
+                preview = type("CBDK_Synthetic_Panel", (), {"layout": layout})()
+                module.VIEW3D_PT_cbdk_modular_preview.draw(preview, bpy.context)
+                result = layout.events
+                observed_ops = [entry for entry in result if entry[0] == "operator"]
+                assert {entry[1] for entry in observed_ops} == expected_ops, result
+                enabled = [entry[1] for entry in result if entry[0] == "enabled"]
+                assert len(enabled) == len(module._FEATURE_IDS), result
+                expected = []
+                for _, controls in module._UI_SECTIONS:
+                    for feature, _ in controls:
+                        expected.append(feature in expected_enabled)
+                assert enabled == expected, (enabled, expected, expected_mode)
+                assert bpy.context.mode == expected_mode
+                if "vertex_nudge" in features:
+                    props = [entry for entry in result if entry[0] == "prop"]
+                    offsets = [entry for entry in result if entry[0] == "operator_property"]
+                    assert len(props) == len(offsets) == 1, result
+                    assert props[0][1] == "cbdk_modular_nudge_offset"
+                    assert offsets[0] == ("operator_property", "offset", props[0][3])
+                else:
+                    assert not any(event[0] in {"prop", "operator_property"} for event in result)
+                return result
+
+            assert all(not enabled for enabled in
+                       [item[1] for item in verify_panel("OBJECT", set())
+                        if item[0] == "enabled"])
+            checks.append("panel_requires_active_mesh")
 
             mesh = bpy.data.meshes.new("CBDK_Modular_Triangle")
             mesh.from_pydata([(0, 0, 0), (1, 0, 0), (0, 1, 0)], [], [(0, 1, 2)])
@@ -128,6 +165,9 @@ def run(path):
             bpy.context.view_layer.objects.active = obj
             obj.select_set(True)
             light.select_set(True)
+            assert bpy.context.mode == "OBJECT"
+            verify_panel("OBJECT", {"object_selection", "mesh_bounds", "modifier_summary"})
+            checks.append("panel_object_mode_guards")
 
             if "object_selection" in features:
                 assert bpy.ops.cbdk.modular_selected_meshes() == {"FINISHED"}
@@ -170,6 +210,13 @@ def run(path):
             light.select_set(False)
             bpy.ops.object.mode_set(mode="EDIT")
             bpy.ops.mesh.select_all(action="SELECT")
+            verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"})
+            checks.append("panel_edit_mode_guards")
+            if "vertex_nudge" in features:
+                bpy.context.scene.cbdk_modular_nudge_offset = (0.125, 0.0, 0.0)
+                actual_layout = verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"})
+                assert ("operator_property", "offset", (0.125, 0.0, 0.0)) in actual_layout
+                checks.append("panel_editable_nudge_offset")
             if "edit_selection" in features:
                 assert bpy.ops.cbdk.modular_edit_selection() == {"FINISHED"}
                 status = bpy.context.scene.cbdk_modular_result
@@ -221,6 +268,7 @@ def run(path):
             enabled = False
             assert not hasattr(bpy.types, "VIEW3D_PT_cbdk_modular_preview")
             assert not hasattr(bpy.types.Scene, "cbdk_modular_result")
+            assert not hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
             assert not module._REGISTERED
             checks.append("disable_unregistered_all")
         finally:

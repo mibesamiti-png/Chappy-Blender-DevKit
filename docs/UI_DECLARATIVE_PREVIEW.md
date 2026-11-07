@@ -35,3 +35,21 @@ python -m cbdk build-addon --recipe recipes/modular_all.json \
 No automatic source execution, private GLB upload, main merge, official release,
 unknown operator injection, or feature adoption is permitted. UI-001 should
 remain **partial** pending general-purpose layout/controls and actual GUI review.
+
+## UI-001 next step: context guards and nudge parameters (v0.18)
+
+- Fixed safe Blender context map: object inspection buttons require an active
+  mesh in OBJECT mode; selection counts and vertex nudge require EDIT_MESH.
+  Only Blender RNA context values are inspected, never user Python.
+- Unavailable functions remain visible but disabled, instead of launching a
+  guaranteed CANCELLED operator in the wrong mode. The operator's own original
+  execute-time safety checks remain unchanged.
+- The existing vertex-nudge operator gets an editable local XYZ offset in the
+  panel, through a bounded Scene FloatVectorProperty (each component -10..10).
+  Its source module, existing default and safety validation remain unchanged.
+  Adding a UI property does **not** establish arbitrary operator parameter
+  support or a general UI designer.
+- CI asserts the panel controls in no-active-mesh, object-mode and edit-mode
+  contexts, checks the operator argument mapping, and verifies Scene properties
+  are removed on disable. This is a synthetic headless Blender UI test, **not**
+  an actual Windows graphical click/undo test.

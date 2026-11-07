@@ -24,6 +24,12 @@ _OPERATORS = [
     for feature in _FEATURE_IDS
 ]
 _OPERATORS_BY_FEATURE = dict(zip(_FEATURE_IDS, _OPERATORS))
+# Fixed context map for the five reviewed CBDK-authored operators.
+# Recipes/JSON cannot inject a new context or an arbitrary operator.
+_OBJECT_MODE_FEATURES = frozenset(("object_selection", "mesh_bounds", "modifier_summary"))
+_EDIT_MODE_FEATURES = frozenset(("edit_selection", "vertex_nudge"))
+assert set(_FEATURE_IDS) <= _OBJECT_MODE_FEATURES | _EDIT_MODE_FEATURES
+
 
 
 class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
@@ -39,7 +45,22 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
             group = col.box()
             group.label(text=title)
             for feature_id, label in buttons:
-                group.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
+                button_row = group.row(align=True)
+                active = context.active_object
+                has_mesh = active is not None and active.type == "MESH"
+                mode = "EDIT_MESH" if feature_id in _EDIT_MODE_FEATURES else "OBJECT"
+                button_row.enabled = has_mesh and context.mode == mode
+                if feature_id == "vertex_nudge":
+                    # The built-in RNA property limits local offsets to +/-10.
+                    # This edits only the chosen operator arguments, never
+                    # executes user-supplied Python or alters the source mesh.
+                    button_row.prop(context.scene, "cbdk_modular_nudge_offset", text="XYZ")
+                    button = button_row.operator(
+                        _OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label
+                    )
+                    button.offset = context.scene.cbdk_modular_nudge_offset
+                else:
+                    button_row.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
         col.label(text=context.scene.cbdk_modular_result)
 
 
@@ -52,6 +73,11 @@ def register():
     bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
         name="Last CBDK preview result", default="No inspection yet"
     )
+    bpy.types.Scene.cbdk_modular_nudge_offset = bpy.props.FloatVectorProperty(
+        name="Local Nudge XYZ", description="Local-space offset for selected vertices",
+        size=3, default=(0.0, 0.0, 0.1), min=-10.0, max=10.0,
+        subtype="TRANSLATION",
+    )
     try:
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
@@ -62,6 +88,8 @@ def register():
         _REGISTERED.clear()
         if hasattr(bpy.types.Scene, "cbdk_modular_result"):
             del bpy.types.Scene.cbdk_modular_result
+        if hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset"):
+            del bpy.types.Scene.cbdk_modular_nudge_offset
         raise
 
 
@@ -71,3 +99,5 @@ def unregister():
     _REGISTERED.clear()
     if hasattr(bpy.types.Scene, "cbdk_modular_result"):
         del bpy.types.Scene.cbdk_modular_result
+    if hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset"):
+        del bpy.types.Scene.cbdk_modular_nudge_offset

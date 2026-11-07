@@ -133,6 +133,20 @@ class ModularBuilderTests(unittest.TestCase):
         self.assertEqual(manifest['ui_section_titles'], ['Inspection', 'Edit Mode'])
         self.assertNotIn('__CBDK_UI_SECTIONS__', source)
 
+    def test_generated_panel_has_guarded_operator_arguments(self):
+        self.data['features'] = ['vertex_nudge']
+        self.save_recipe()
+        self.build()
+        with ZipFile(self.output) as archive:
+            source = archive.read(f'{PACKAGE_ID}/__init__.py').decode('utf-8')
+        import ast
+        tree = ast.parse(source)
+        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+        self.assertIn('_EDIT_MODE_FEATURES', names)
+        self.assertIn('cbdk_modular_nudge_offset', source)
+        self.assertIn('button_row.enabled', source)
+        self.assertIn('button.offset', source)
+
     def test_feature_order_does_not_affect_zip(self):
         self.build()
         first = self.output.read_bytes()
