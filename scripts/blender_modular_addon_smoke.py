@@ -139,11 +139,17 @@ def run(path):
                 preview = type("CBDK_Synthetic_Panel", (), {"layout": layout})()
                 module.VIEW3D_PT_cbdk_modular_preview.draw(preview, bpy.context)
                 result = layout.events
-                visible = [(title, controls, style) for (title, controls), style in
-                           zip(module._UI_SECTIONS, module._UI_OPTIONS["section_styles"])
-                           if style["visible_in"] == "always"
-                           or (style["visible_in"] == "object" and expected_mode == "OBJECT")
-                           or (style["visible_in"] == "edit_mesh" and expected_mode == "EDIT_MESH")]
+                visible = []
+                for (title, controls), style, control_modes in zip(
+                        module._UI_SECTIONS, module._UI_OPTIONS["section_styles"],
+                        module._UI_OPTIONS["control_visibility"]):
+                    if style["visible_in"] not in ("always", expected_mode.lower()):
+                        continue
+                    shown = tuple((feature, label) for (feature, label), mode in
+                                  zip(controls, control_modes)
+                                  if mode in ("always", expected_mode.lower()))
+                    if shown:
+                        visible.append((title, shown, style))
                 styles = [style for _, _, style in visible]
                 visible_features = {feature for _, controls, _ in visible for feature, _ in controls}
                 assert sum(e[0] == "box" for e in result) == sum(s["boxed"] for s in styles)
@@ -171,12 +177,19 @@ def run(path):
                     assert not any(event[0] in {"prop", "operator_property"} for event in result)
                 return result
 
-            if all(style["visible_in"] != "always" for style in module._UI_OPTIONS["section_styles"]):
+            # No active controls in Sculpt mode: even an always-visible
+            # section must not leave an empty heading/box behind.
+            def visible_in_sculpt(index):
+                style = module._UI_OPTIONS["section_styles"][index]
+                modes = module._UI_OPTIONS["control_visibility"][index]
+                return style["visible_in"] == "always" and "always" in modes
+
+            if not any(visible_in_sculpt(i) for i in range(len(module._UI_SECTIONS))):
                 layout = RecordingLayout()
                 preview = type("CBDK_Synthetic_Hidden_Panel", (), {"layout": layout})()
                 simulated = SimpleNamespace(mode="SCULPT", active_object=None, scene=bpy.context.scene)
                 module.VIEW3D_PT_cbdk_modular_preview.draw(preview, simulated)
-                assert not any(e[0] == "operator" for e in layout.events)
+                assert not any(e[0] in ("operator", "box") for e in layout.events)
                 assert ("label", "No preview controls for this mode") in layout.events
                 checks.append("simulated_unsupported_mode_empty_panel_explanation")
 
@@ -331,7 +344,9 @@ def run(path):
             assert not hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
             assert not module._REGISTERED
             checks.append("disable_unregistered_all")
-            if any(s["visible_in"] != "always" for s in module._UI_OPTIONS["section_styles"]):
+            if (any(s["visible_in"] != "always" for s in module._UI_OPTIONS["section_styles"])
+                    or any(mode != "always" for controls in module._UI_OPTIONS["control_visibility"]
+                           for mode in controls)):
                 checks.append("declarative_section_modes_switch_visible_controls")
             # Fail each property factory, including the second allocation after
             # one real Scene property was created. Recover before class tests.
