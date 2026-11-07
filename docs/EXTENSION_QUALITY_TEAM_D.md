@@ -393,3 +393,67 @@ authentic, copyright cleared, SPDX compatible or installable as an
 official Extension. EXT-001 remains \`partial\`. Production code should
 change only if a concrete unsafe permission escalation or privacy leak
 appears; common scripts/CI/STATE/Handoff/Notion/main are A-owned.
+
+
+## R10 — separate repository source comparison (development-only)
+
+**Status: test-and-design evidence, not a new production trust API.** R9
+demonstrated that a ZIP can be self-rehashed: its recorded digests can match
+modified packaged helpers even though those helpers differ from the current
+CBDK checkout. The R10 Python tests model a bounded, **read-only** comparison
+with a reference independently read from known repository-owned source files.
+
+The comparison is deliberately in the D-owned test suite, not in release
+packaging. It must **not** alter \`cbdk/extension_preflight.py\`,
+\`source_authenticity_verified\`, signed-package status or publication gates.
+
+### Tested comparisons and hard bounds
+
+- The reference root is fixed to the imported CBDK \`addon_builder.ROOT\`
+  checkout (resolved once). An unknown root argument, an absolute/traversal
+  source name or a name outside the hard-coded \`SOURCES\`, \`HELPERS\` and
+  \`TRUSTED_FEATURES\` mappings must be refused. No path from the archive's
+  own JSON is treated as an authoritative external reference.
+- At most the existing \`MAX_MEMBERS=64\` members are inspected, and only
+  for valid preview ZIPs already accepted by \`inspect_preview_archive\`.
+  Archive size remains bounded by \`MAX_ARCHIVE_BYTES=16MiB\` and each
+  referenced file/read by \`MAX_ENTRY_BYTES=2MiB\`. ZIPs failing canonical
+  checks are not promoted to a source comparison.
+- Normal CBDK-authored ZIPs from **all seven** known recipes are compared
+  byte-for-byte against current repository-owned helper and modular feature
+  file contents, with the same CRLF-to-LF normalization used by the builder.
+  Only allowlisted helper/feature members are compared. Generated init/README
+  content is excluded because those are template-expanded, not direct copies
+  of a single known source path.
+- A changed helper with **unmodified** declared SHA is rejected by the
+  existing archive-integrity preflight before comparison. A changed helper
+  with **both** self-declared file and part hashes updated passes static
+  *internal* ZIP checks but differs from the independent, currently checked
+  out source. Reports contain **only a status and bounded counts**, never
+  raw code, paths, member names, user values, license text or marker strings.
+- A hypothetical **updated known source** is simulated strictly by creating
+  an *in-memory test snapshot* with the same changed bytes; comparison then
+  yields byte equality against the simulated reference. This does not
+  overwrite the real repository or accept arbitrary caller-controlled roots.
+  It illustrates that equality is relative to the selected source snapshot.
+- References with an unknown name/root, incomplete or unexpected member
+  inventory, non-byte content or oversized values are rejected; original
+  repository source file bytes remain unchanged. The independent comparison
+  does not import/execute/install packaged code.
+
+The test-only results \`same_known_repo_bytes\` and
+\`different_known_repo_bytes\` mean **byte agreement with the selected
+known checkout or synthetic reference snapshot**, nothing more. Even
+\`same_known_repo_bytes\` leaves all of
+\`source_authenticity_verified\`, author consent, SPDX/license compatibility,
+redistribution permission, official Blender Extensions validation and release
+authorization **false**. The final canonical ZIP status remains
+\`blocked_for_extension_release\`. R4's seven valid previews, R9
+self-rehash regressions and A's six **data-only** official Blender validator
+fixtures in versions 4.4.3/4.5.15/5.2.1 remain required.
+
+The comparison's fixed-root allowlist is a *test property*, not proof of
+the repository's signed origin. Actual owner approval, externally verifiable
+signature, source rights, private-user addons, Windows GUI and formal
+Extension creation/install/uninstall remain unverified. EXT-001 is still
+\`partial\`. Shared CI/scripts/STATE/Handoff/Notion/main are A-owned.
