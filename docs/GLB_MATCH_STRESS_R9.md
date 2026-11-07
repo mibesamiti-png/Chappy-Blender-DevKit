@@ -93,13 +93,17 @@ that result and do **not** increase complexity.
 
 All R9 edits remain in GLB-owned tests and documentation;
 A alone owns common CI/Blender smoke, STATE/HANDOFF/PROGRESS,
-Notion, other teams, main and formal release. Existing
-Blender CI may not trigger from this new R9 test alone;
-if that happens, **do not mark Blender R9 verification green**.
-Instead report the gap and request that A wire a dedicated
-GLB R9 smoke, or extend a specifically A-approved
-GLB-only test trigger. Historical R8 Blender smoke remains
-separate evidence and cannot substitute exact R9 SHA.
+Notion, other teams, main and formal release. One additional
+GLB-owned mock-IO facade control in `tests/test_glb_regression.py`
+checks same-outline resplitting, near tolerance, and a real notch
+without promoting candidates to file-level approval. Its path
+is listed as an **existing Blender CI trigger** without editing
+A's workflow or shared smoke script. Actual R9 dense-AABB
+negative fixtures are still **Python-only**; Blender CI merely
+runs the existing CBDK-authored GLB export/import coverage.
+Always distinguish the exact R9 SHA's workflow result from
+older R8 integrated smoke; no unrun Blender R9 fixture is
+claimed green.
 
 Required per final R9 HEAD: Python 3.11/3.12/3.13 full
 suite, Windows PowerShell 3.11/3.13, Chromium, Handoff;
