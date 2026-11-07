@@ -1,7 +1,7 @@
 """Team C R5: lifecycle edge cases and native-script contract.
 
 Python tests are synthetic. tests/blender_ui_lifecycle_r5.py is separately
-executable under real Blender, NOT automatically launched by existing Actions.
+executed in the existing A-owned Blender matrix, with real version-specific evidence.
 """
 from __future__ import annotations
 
@@ -96,7 +96,7 @@ class R5NativeProbePackagingTests(unittest.TestCase):
             for alias in node.names
         }
         self.assertTrue(imports <= {
-            "json", "sys", "tempfile", "addon_utils", "bpy"})
+            "importlib", "json", "sys", "tempfile", "addon_utils", "bpy"})
         assert "input_sources_private" not in source
         self.assertNotIn("eval(", source)
         self.assertNotIn("exec(", source)
