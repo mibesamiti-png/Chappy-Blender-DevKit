@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18 PR #25: NEXT-003の生成前AST依存/登録検査とCI一覧照合、NEXT-002の明示Undo履歴による単一/複数頂点・連続編集検証を実装。Python765件成功、ローカルBlender4.3.2で制御条件のUndo/Redo成功。対象3版CIは今回未実行。正式v0.17.0維持"
+    "milestone": "v0.18 PR #25: NEXT-003登録/依存/CI一覧監査とNEXT-002明示履歴Undo/Redoを実装。初回Windows CIの短縮パス拒否を修正、追加2件込み767テストを再検証。NEXT-003対象CI待ち、NEXT-002 GUI未検証。正式v0.17.0維持"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -998,6 +998,6 @@
     "synthetic_comparison_first_ci": "2026-11-07 f4130ff: Python42363769046/Windows42363769107/Kit42363769048/Handoff42363769039/Chromium42363769071 success. Blender42363769064: 4.4.3 success, 4.5.15/5.2.1 failed because official declared version strings include LTS, rejected by new condition validator. Fix explicitly allows bounded LTS suffix, preserves full version as a comparison condition; final CI pending. Parent-symlink output escape guard also fixed with regression coverage.",
     "same_condition_comparison": "2026-11-07 code2867ab31cf355486232f1f1b257315c9e73146a1 all6 success: Python742x3 run42364086005, Windows42364086014, Blender42364085988 (4.4.3/4.5.15/5.2.1, independent4-trial repeat and failed-run exclusion), Kit42364085981, Handoff42364085980, Chromium42364085989. First f4130ff failed on LTS version labels and was fixed, not blindly rerun. Resource data: docs/GLB023_RUN_COMPARISON.md; audit/Undo review: docs/AUDIT_RUNTIME_REVIEW.md. Formal last_verified0.17.0 unchanged.",
     "bound_ast_experiment_review": "2026-11-07 code79fea17e70665392731780ed5a518982530b7323 ALL6 success: Python752x3 run42366055143, Windows42366055138, Blender42366055131 (4.4.3/4.5.15/5.2.1, bound complete/incomplete/controlled-timeout review and mismatched-baseline rejection), Kit42366055135, Handoff42366055133, Chromium42366055162. AST fixture never executed; private sheets stay outside uploaded artifacts; source/aggregate hashes unchanged. NEXT-019 done; real property identity/effect remains unverified.",
-    "registration_undo_milestone": "2026-11-07: 登録検査・Undo/Redo制御実験を実装。ローカルPython765件成功、Blender4.3.2は補助証拠のみ。今回の対象CI未実行。実機CI後にNEXT-003完了可否を判定、NEXT-002はGUI未検証を維持。"
+    "registration_undo_milestone": "a987c44: Python765件×3/Kit/Handoff/Chromium成功、Windows42368028009は2件失敗（短縮パス正規化不足）。監査/直接ビルド入口でroot.resolve()を追加し別表記の回帰2件を追加。修正後767件のローカル/対象CIを再確認する。最初のBlender CIは進行中、成功と未記録。"
   }
 }

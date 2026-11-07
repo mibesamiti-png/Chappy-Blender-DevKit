@@ -64,6 +64,7 @@ def build_modular(
     target_blender: str | None = None,
 ) -> dict:
     """Compose only exact CBDK-owned feature templates, no arbitrary imports."""
+    root = root.resolve()
     name, feature_ids = validate_modular_recipe(recipe)
     if not preview_unapproved:
         raise ValueError("Not approved for release: --preview-unapproved is required for LOCAL builds")

@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18 PR #25: NEXT-003の生成前AST依存/登録検査とCI一覧照合、NEXT-002の明示Undo履歴による単一/複数頂点・連続編集検証を実装。Python765件成功、ローカルBlender4.3.2で制御条件のUndo/Redo成功。対象3版CIは今回未実行。正式v0.17.0維持
+- 最新の節目: v0.18 PR #25: NEXT-003登録/依存/CI一覧監査とNEXT-002明示履歴Undo/Redoを実装。初回Windows CIの短縮パス拒否を修正、追加2件込み767テストを再検証。NEXT-003対象CI待ち、NEXT-002 GUI未検証。正式v0.17.0維持
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)

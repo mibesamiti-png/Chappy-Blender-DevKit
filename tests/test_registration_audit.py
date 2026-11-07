@@ -11,6 +11,17 @@ from cbdk.registration_audit import audit_registration, validate_registration_as
 
 
 class RegistrationAuditTests(unittest.TestCase):
+    def test_audit_normalizes_project_root_before_containment_checks(self):
+        result = audit_registration(root=ROOT / "catalog" / "..")
+        self.assertEqual(result["recipe_count"], 6)
+
+    def test_direct_builder_normalizes_project_root(self):
+        recipe = json.loads((ROOT / "recipes/modular_nudge.json").read_text())
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp) / "preview.zip"
+            build_modular(recipe, output, root=ROOT / "catalog" / "..", preview_unapproved=True)
+            self.assertTrue(output.is_file())
+
     def test_current_six_builds_and_ci_match(self):
         result = audit_registration(root=ROOT)
         self.assertEqual(result["recipe_count"], 6)

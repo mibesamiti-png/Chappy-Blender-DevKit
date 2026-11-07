@@ -99,6 +99,7 @@ def audit_registration(*, root: Path) -> dict:
     from .recipe_matrix import EXPECTED_RECIPES, audit_recipe_matrix
     from .modular_builder import build_modular
 
+    root = root.resolve()
     matrix = audit_recipe_matrix(root=root)
     smoke = ast.parse(_trusted_read("scripts/blender_modular_addon_smoke.py", root=root))
     known = [n.value for n in smoke.body if isinstance(n, ast.Assign)
