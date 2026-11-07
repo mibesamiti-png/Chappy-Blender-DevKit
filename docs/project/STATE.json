@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18: R1〜R6に続きR7のB/C/D 11ファイルをPR #63で開発統合（687b2acd）。GLBゼロ長境界がR6高速経路を誤通過する負例を再現・正長ガードで修正、Blender3版実機でScene登録失敗回復・所有権保護、Extensionsの32KiB/64フィールドTOML境界を検証。R7結合5CI、統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skill 7CI全成功。R8はPR #64で割当済み。実ユーザーGLB、Windows GUI、権利、正式Extensions/公開は未検証。正式v0.17.0維持。 Aが開発状況ライブボードMVP（PR #68、d656f62d）を追加し7系統CI成功、ブラウザ実機/Pages公開は別ゲート。"
+    "milestone": "v0.18: R1〜R6に続きR7のB/C/D 11ファイルをPR #63で開発統合（687b2acd）。GLBゼロ長境界がR6高速経路を誤通過する負例を再現・正長ガードで修正、Blender3版実機でScene登録失敗回復・所有権保護、Extensionsの32KiB/64フィールドTOML境界を検証。R7結合5CI、統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skill 7CI全成功。R8はPR #64で割当済み。実ユーザーGLB、Windows GUI、権利、正式Extensions/公開は未検証。正式v0.17.0維持。 Aが開発状況ライブボードMVP（PR #68、d656f62d）を追加し7系統CI成功、ブラウザ実機/Pages公開は別ゲート。 Dashboard v2（PR #71）としてBCD完了件数・音試聴・Raw取得fallbackを統合、実ブラウザ受入は引き続き未完了。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -371,7 +371,7 @@
       "status": "partial",
       "verification": "python",
       "source": "docs/dashboard/index.html",
-      "note": "v0.18開発ブランチのPR #68で公開データ読み取り専用MVPを追加。STATE/PR/CI/ローリングキューに基づく数値・ABCD・次の作業と5分自動/手動更新。ラウンド/チーム一回のopt-in音をNodeオフライン回帰で検証。dev SHA d656f62dのPython3版・Windows2版・Blender3版・Chromium・Handoff・Kit・Skill全7系統CI成功。実Edge/Chromeのネットワーク/通知音、GitHub Pages公開は未検証。"
+      "note": "v0.18開発ブランチのPR #68で公開データ読み取り専用MVPを追加。STATE/PR/CI/ローリングキューに基づく数値・ABCD・次の作業と5分自動/手動更新。ラウンド/チーム一回のopt-in音をNodeオフライン回帰で検証。dev SHA d656f62dのPython3版・Windows2版・Blender3版・Chromium・Handoff・Kit・Skill全7系統CI成功。実Edge/Chromeのネットワーク/通知音、GitHub Pages公開は未検証。 v2 PR #71（開発SHA dd8ae12b）でBCD完了件数/3、手動通知音試聴、Rawキュー失敗時のContents API読み取りfallbackを追加。Nodeオフライン検証と別途Chromium模擬データUIテストでC新規完了の一回通知を確認（GitHub実通信・Windows実機音は未検証）。"
     }
   ],
   "known_issues": [
@@ -998,6 +998,11 @@
       "id": "DEC-068",
       "decision": "A所有のGitHub読み取り専用HTMLライブボードをv0.18開発ブランチに統合し、ブラウザ実機確認とPages公開は別ゲートにする",
       "note": "PR #68統合コードd656f62d2b70301ec34c667f89743d17e7168a1b。Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995が各success。NodeテストでチームCI・音通知dedupeを検証。公開API3回/5分+raw1回、認証情報を保存せず、5分更新・手動更新。Pages設定/main/正式v0.17.0は変更しない。"
+    },
+    {
+      "id": "DEC-069",
+      "decision": "Dashboard v2でBCD完了件数と通知音試聴、作業キュー代替取得を追加し、ブラウザの実ユーザー端末検証は引き続き別ゲートとする",
+      "note": "A PR #71 combined SHA98ec697252f04fa58bdfcc1614ea5587c5446d7a: Python42417792237/Windows42417792437/Chromium42417792272/Handoff42417792410各success。dev squash SHA dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a、post-merge 7CI確認中。Node版のロジックと独立したChromiumネットワークモックでBCD 2/3→3/3、完了音1回、再更新で重複なし、Raw→Contents fallbackを確認。実GitHub APIへのローカルfile://からのアクセス、実Windows Edge通知音、Pages設定はユーザー実機で未検証。"
     }
   ],
   "last_verified": {
@@ -1095,6 +1100,7 @@
     "rolling_r5_integration": "2026-11-08 JST: Team B PR #47 head0d388155、C PR #48 c56b641、D PR #46 a86ebdb各5系統成功。A PR #49初回b300e743 Blender3版失敗→テストのみ修正。修正SHA106bf250にPython42405240225/Windows42405240226/Blender42405240271/Chromium42405240247/Handoff42405240230の5系統成功（3版native UI marker）。dev squash a1c2f84715acce1f8cd33abaf003556708c13c07: Python42405529257/Windows42405529241/Blender42405529262/Chromium42405529203/Handoff42405529311/Kit42405529324/Skill42405529212 全7系統成功。R6キューPR #51統合 d2414e1cfa7a053d347637c77ddd6011447b5945。formal last_verified v0.17.0維持。",
     "rolling_r6_integration": "2026-11-08 JST: B #54 0c293687、C #55 4624c83c、D #53 d6263f4d各個別5系統成功。A結合PR #56 SHA 7400516a9ab8230eda60a0daea8141e0c03c2844でPython42410170293/Windows42410170317/Blender42410170354(3版)/Chromium42410170318/Handoff42410170290 all success。dev squash SHA e2f09e593d9c7bdff66695c7e8972eea98e160caでPython42410463309/Windows42410463276/Blender42410463269/Chromium42410463349/Handoff42410463353/Kit42410463251/Skill42410463244の7系統すべてsuccess。R7割当PR #57 merged d491fe30cec57cf5ca4b8db307c715c5e7073053。実GLB/GUI/配布/権利未検証、formal v0.17.0 last_verified維持。",
     "rolling_r7_integration": "2026-11-08 JST: B #61 182ae87a、C #62 eef6bcea、D #60 040036c7各5系統成功。B初回zero-length負例 fff82a6 は意図した失敗、同一strict-positive segmentガードを追加して修正。A結合PR #63 52dea171587888be2c26045808bbaf24a76bee7cでPython42413415247/Windows42413415263/Blender42413415266(3版)/Chromium42413415159/Handoff42413415103 all success。dev squash 687b2acdc920253d69eda8c5e9c1c102d02aaef3でPython42413646111/Windows42413646149/Blender42413646135/Chromium42413646129/Handoff42413646222/Kit42413646126/Skill42413646165の7系統success。R8 queue PR #64 merged 91f89578ba038c6486e3a4150d8d0fd27e4744ad。formal last_verified v0.17.0維持。",
-    "dashboard_mvp": "2026-11-08 JST: A単独PR #68 dev squash d656f62d2b70301ec34c667f89743d17e7168a1b。docs/dashboard/index.html・README.md、tests/test_dashboard_static.pyのスタンドアロンHTML GitHub API READ-ONLY画面。post-merge7 family success（Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995）。実ブラウザネットワーク接続/通知音/Pages配備は未確認でNEXT-024。"
+    "dashboard_mvp": "2026-11-08 JST: A単独PR #68 dev squash d656f62d2b70301ec34c667f89743d17e7168a1b。docs/dashboard/index.html・README.md、tests/test_dashboard_static.pyのスタンドアロンHTML GitHub API READ-ONLY画面。post-merge7 family success（Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995）。実ブラウザネットワーク接続/通知音/Pages配備は未確認でNEXT-024。",
+    "dashboard_v2": "2026-11-08 JST: A専用PR #71 (98ec6972) merged to dev dd8ae12b; progress count, optional preview chime, queue fallback, Node regression and separate Chromium mocked browser UI tests. Exact-head Python/Windows/Chromium/Handoff passed. Post-merge Blender matrix pending. Browser real GitHub API/Windows sound/Pages NOT verified; DASH-001 stays partial and NEXT-024 open."
   }
 }
