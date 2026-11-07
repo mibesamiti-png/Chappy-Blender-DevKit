@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R1〜R6に続きR7のB/C/D 11ファイルをPR #63で開発統合（687b2acd）。GLBゼロ長境界がR6高速経路を誤通過する負例を再現・正長ガードで修正、Blender3版実機でScene登録失敗回復・所有権保護、Extensionsの32KiB/64フィールドTOML境界を検証。R7結合5CI、統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skill 7CI全成功。R8はPR #64で割当済み。実ユーザーGLB、Windows GUI、権利、正式Extensions/公開は未検証。正式v0.17.0維持。 Aが開発状況ライブボードMVP（PR #68、d656f62d）を追加し7系統CI成功、ブラウザ実機/Pages公開は別ゲート。
+- 最新の節目: v0.18: R1〜R6に続きR7のB/C/D 11ファイルをPR #63で開発統合（687b2acd）。GLBゼロ長境界がR6高速経路を誤通過する負例を再現・正長ガードで修正、Blender3版実機でScene登録失敗回復・所有権保護、Extensionsの32KiB/64フィールドTOML境界を検証。R7結合5CI、統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skill 7CI全成功。R8はPR #64で割当済み。実ユーザーGLB、Windows GUI、権利、正式Extensions/公開は未検証。正式v0.17.0維持。 Aが開発状況ライブボードMVP（PR #68、d656f62d）を追加し7系統CI成功、ブラウザ実機/Pages公開は別ゲート。 Dashboard v2（PR #71）としてBCD完了件数・音試聴・Raw取得fallbackを統合、実ブラウザ受入は引き続き未完了。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -67,7 +67,7 @@
 | `GLB-020` | 形状差分の3D可視化 | 一部実装 | Blender CI | GLB-020のレビューMVPは合成3部品・正常/開口狭窄/ボール移動/ソケットリップ欠損で総合受け入れテスト成功。正常時の誤検出0、変更部品だけの異常、欠損リップ境界+4、入力GLBのSHA256不変を検証。コードSHA db33ce4242bbe98b3c5f9ac43d89bf21c3657089：Python 42289898364、Windows 42289898499、Blender3版 42289898512、Kit 42289898604、Handoff 42289898325、Chromium 42289898701 の全6系統成功。MVP受け入れで追加機能は凍結しGLB-021へ。真の内部空洞/細穴/512面超/部品同一性・実ユーザーGLB未検証につき全機能ステータスはpartialを維持 |
 | `GLB-021` | アドオン設定の改善候補と連携 | 一部実装 | Blender CI | AST候補/日本語シート/変更履歴に、初期GLB-020集計SHA一致の合成反復レビューを追加。宣言/参照/構文経路と完了・未完了・失敗prefixを私有JSON/MDに整理。手動socket役割と完全一致名は合成操作の確認候補のみで、実プロパティ効果/因果/値は未証明。79fea17e70665392731780ed5a518982530b7323でPython752件×3/Windows2/Blender4.4.3/4.5.15/5.2.1の連携・別集計拒否・元データ不変に成功。6CI: Python42366055143、Windows42366055138、Blender42366055131、Kit42366055135、Handoff42366055133、Chromium42366055162。全体partial、実データ・GUI・実インスタンス検証は未完了。 今回NEXT-008/009: 双方向調査focus・複数宣言triage・constructor再束縛の安全側除外を追加。b17fa4dでPython787件×3/Windows2/Blender3と全6CI成功。宣言不確実性・実体/因果未証明のため全体partial維持。 |
 | `GLB-022` | 生成→比較→改善の反復実験 | 一部実装 | Blender CI | 合成最大4試行/失敗レビューに条件付きschema2と旧schema1読取互換、同条件2〜16実行比較を追加。プロトコル/ソースSHA/Blender版（LTS保持）/基準・初期GLB SHA/スケール/初期観測/予算を照合。失敗・未完了・改変・不一致を除外し距離/面数混在は人手確認。2867ab31cf355486232f1f1b257315c9e73146a1でPython742件×3/Windows2/Blender3の独立通常4試行2回比較・失敗除外成功。6CI: Python42364086005、Windows42364086014、Blender42364085988、Kit42364085981、Handoff42364085980、Chromium42364085989。全体partial、任意実ユーザー因果/最適値/完全一致は未保証。 b17fa4d/Blender42374909099で検証済み経過と双方向focus/AST曖昧さの私有triageを接続。自動再実行/実プロパティ因果は認定せずpartial維持。 |
-| `DASH-001` | GitHub開発状況をブラウザから確認・自動更新・完了通知 | 一部実装 | Pythonテスト | v0.18開発ブランチのPR #68で公開データ読み取り専用MVPを追加。STATE/PR/CI/ローリングキューに基づく数値・ABCD・次の作業と5分自動/手動更新。ラウンド/チーム一回のopt-in音をNodeオフライン回帰で検証。dev SHA d656f62dのPython3版・Windows2版・Blender3版・Chromium・Handoff・Kit・Skill全7系統CI成功。実Edge/Chromeのネットワーク/通知音、GitHub Pages公開は未検証。 |
+| `DASH-001` | GitHub開発状況をブラウザから確認・自動更新・完了通知 | 一部実装 | Pythonテスト | v0.18開発ブランチのPR #68で公開データ読み取り専用MVPを追加。STATE/PR/CI/ローリングキューに基づく数値・ABCD・次の作業と5分自動/手動更新。ラウンド/チーム一回のopt-in音をNodeオフライン回帰で検証。dev SHA d656f62dのPython3版・Windows2版・Blender3版・Chromium・Handoff・Kit・Skill全7系統CI成功。実Edge/Chromeのネットワーク/通知音、GitHub Pages公開は未検証。 v2 PR #71（開発SHA dd8ae12b）でBCD完了件数/3、手動通知音試聴、Rawキュー失敗時のContents API読み取りfallbackを追加。Nodeオフライン検証と別途Chromium模擬データUIテストでC新規完了の一回通知を確認（GitHub実通信・Windows実機音は未検証）。 |
 
 ## 既知の問題・制約
 
@@ -199,6 +199,8 @@
 
 - `DEC-067` R7でGLB厳密境界fastpathのゼロ長線分誤通過を再現して保守的ガードを統合し、Blender登録失敗回復とExtension TOML上限を確認後R8を正式割当。B #61 SHA182ae87、C #62 eef6bce、D #60 040036c 各5系統CI成功。B初期テストHEAD fff82a6は意図通りREDとなりゼロ長R2不一致を発見、正長ガードを修正。A統合#63 HEAD 52dea171で5系統all green、dev統合687b2acdで独立7系統success後R8 #64を統合。実GLB/GUI/権利/配布/mainと正式リリースは別ゲート。
 - `DEC-068` A所有のGitHub読み取り専用HTMLライブボードをv0.18開発ブランチに統合し、ブラウザ実機確認とPages公開は別ゲートにする。PR #68統合コードd656f62d2b70301ec34c667f89743d17e7168a1b。Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995が各success。NodeテストでチームCI・音通知dedupeを検証。公開API3回/5分+raw1回、認証情報を保存せず、5分更新・手動更新。Pages設定/main/正式v0.17.0は変更しない。
+
+- `DEC-069` Dashboard v2でBCD完了件数と通知音試聴、作業キュー代替取得を追加し、ブラウザの実ユーザー端末検証は引き続き別ゲートとする。A PR #71 combined SHA98ec697252f04fa58bdfcc1614ea5587c5446d7a: Python42417792237/Windows42417792437/Chromium42417792272/Handoff42417792410各success。dev squash SHA dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a、post-merge Python42418153530/Windows42418153594/Blender42418153563(4.4.3/4.5.15/5.2.1)/Chromium42418153533/Handoff42418153613/Kit42418153551/Skill42418153532の7系統success確認。Node版のロジックと独立したChromiumネットワークモックでBCD 2/3→3/3、完了音1回、再更新で重複なし、Raw→Contents fallbackを確認。実GitHub APIへのローカルfile://からのアクセス、実Windows Edge通知音、Pages設定はユーザー実機で未検証。
 
 ## 更新・プライバシールール
 
