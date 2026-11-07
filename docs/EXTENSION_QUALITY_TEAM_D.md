@@ -67,3 +67,39 @@ actual approved package validation/install/removal tests, and final publication
 approval.
 
 Blender specifications: https://docs.blender.org/manual/en/4.5/advanced/extensions/getting_started.html
+
+## R3 rolling lane — validator log classification (synthetic only)
+
+The R2 ZIP layout/provenance audit is unchanged. The R3 change tightens only
+`observe_official_validation`: the entire bounded output must consist of
+recognized field diagnostics, one consistent TOML status header, optional
+Blender startup/shutdown markers, or blank lines. Previously ignored
+free-form output is now **unclassified** rather than implicitly harmless.
+
+**Allowed fixture classes (not authorization):**
+
+| Source | Classification | Notes |
+| --- | --- | --- |
+| Real official validator, synthetic `valid_subset` | accepted / agreement | Required fields only; no approval |
+| Real official validator, five synthetic invalid/missing-field cases | rejected / agreement | Each known diagnostic matches reviewed field |
+| Synthetic optional Blender version banner / clean exit | same as core observation | Version banner is not evidence of authentic logs |
+
+**Rejected synthetic log classes** (only labels and expected states recorded;
+never copy validator paths, free-form values, emails or source snippets):
+
+| Case | Expected observation |
+| --- | --- |
+| Unknown failure detail or unknown post-diagnostic line | unclassified |
+| Missing and invalid for the same required field | unclassified |
+| Success marker plus error header (either order) | unclassified |
+| Success marker plus unknown warning / nonstandard line | unclassified |
+| Duplicate generic error header | unclassified |
+| Duplicate known field, malformed or repeated success marker | unclassified |
+
+The official validator log **is observed, not authenticated**. This parser
+must not convert a successful synthetic TOML run into permission to distribute
+an Extension or claim a license. Blender's six data-only cases run through the
+existing A-owned smoke workflow; neither the workflow nor the fixture script
+is modified by Team D. Changes are limited to Extensions-owned code, tests
+and this document.
+
