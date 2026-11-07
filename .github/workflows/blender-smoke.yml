@@ -64,6 +64,7 @@ on:
       - 'tests/test_glb_property_map.py'
       - 'tests/test_glb_property_usage.py'
       - 'scripts/blender_glb_render.py'
+      - 'scripts/build_synthetic_screenshot_gallery.py'
       - 'scripts/blender_make_glb_fixture.py'
       - 'scripts/blender_parameter_experiment_smoke.py'
       - 'fixtures/cbdk_parameter_experiment.py'
@@ -1034,6 +1035,15 @@ jobs:
             test -f reports/ci/glb_regression_e2e/repair_plan.json
           fi
           echo "GLB views, silhouettes, self-compare, same-bounds silhouette drift detection and e2e regression behavior PASSED." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build offline gallery from synthetic Blender PNGs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/build_synthetic_screenshot_gallery.py --ci-root reports/ci
+          test -s reports/ci/screenshot_gallery/index.html
+          test "$(find reports/ci/screenshot_gallery -maxdepth 1 -name '*.png' | wc -l)" -eq 13
+          echo "Synthetic Blender render gallery: 13 real PNGs (reference, drift, parts) in screenshot_gallery/index.html." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload evidence and log even when Blender fails
         if: always()
