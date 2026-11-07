@@ -161,3 +161,30 @@ R6 B [#54](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/54) `0c2
 2. R6の結合コミットだけを `feature/v0.18-shape-diagnostics` へ統合。旧R1〜R6個別PRは歴史参照として二重マージしない。開発SHAの**post-squash 7系統CI（Kit/Skill含む）**が全成功。
 3. Aが最新開発HEAD SHA（R6統合後およびこのdocs-only変更の後続を含む）とR6統合コミットの祖先関係を確認し、R7の基点を正式確定。B `work/v018-glb-analysis-r7`、C `work/v018-ui-builder-r7`、D `work/v018-extension-quality-r7` はそこで初めて作成。各専用draft PRは未統合最大1件。
 4. Codexは任意。privateソース/GLB、main、正式v0.17.0、将来v0.19有効化、Windows GUI、ライセンス/正式Extensions配布は触らない。AはR6節目STATE/生成Handoff/PROGRESS/既存Notionを追って同期し、R7開発中R8を先読みする。
+
+
+## 2026-11-08 JST — R7統合完了・R8ローリング正式割当（post-merge 7CI成功確認済み）
+
+- **R7入力:** B [PR #61](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/61) 最終 `182ae87a47ddd127c3ef1a2afc3c1ce502880722`、C [PR #62](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/62) 最終 `eef6bcea675f3198a19d9aea973c7dbeecf4e814`、D [PR #60](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/60) 最終 `040036c785d47229f735342352a2881157bd36ed`。各担当の5系統CI全成功、11ファイル重複0。
+- **重要な失敗と修正:** Bの初期テスト専用SHA `fff82a6d67e6b531d5f9da6244a3e91bc1f5522d` でゼロ長境界線分がR6 exact fastpathに誤って流れるケースを再現（Python負例失敗）。Bが生産matcherに厳密な正長ガードを追加し、ゼロ長時はR2保守的fallbackを使用、R3独立連結ガードは維持。実ユーザーGLBの穴位置/部品IDを証明しない。
+- **A結合:** [PR #63](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/63) 候補HEAD `52dea171587888be2c26045808bbaf24a76bee7c` にB4/C4/D3件を正確に取り込み、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415247)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415263)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415266)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415159)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415103) の5系統全成功を確認。R7開発統合コミット `687b2acdc920253d69eda8c5e9c1c102d02aaef3`。
+- **R8実装許可ゲートは確認済み:** R7開発統合コミット `687b2acdc920253d69eda8c5e9c1c102d02aaef3` に対する**別系統のpush CI全7系統success**：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646111) 3.11/3.12/3.13、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646149) 3.11/3.13、[Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646135) 4.4.3/4.5.15/5.2.1、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646129)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646222)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646126)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646165)。統合候補#63の5系統とは厳密に別に確認した。**本PR #64がv0.18開発ブランチにマージされ次第、R8正式実装可。**
+
+### R8候補 — B / GLB NEXT-008
+
+R7のゼロ長誤一致を修正済みのmatcherを基点に、最悪O(256²)の**非厳密一致時のR2双方向線分距離fallback**が安全な限定フィルタで早くなるかを合成ベンチマークで検証。セグメントbbox・距離下界などの候補除外は「R2許容範囲内の真陽性を一切捨てない」ことを先に数学的/負例で示し、形状が複雑/近接/非有限/退化した場合は元R2へfail-closed fallback。retriangulation、同一境界で異なる内部形状、near-notch、float32量子化、255/256/257辺、64部品・512面で差分辞書一致と測定。実測利得が無ければテスト/設計のみ（必ずしも本体実装を要求しない）。`auto_apply=false`、`cross_file_part_identity_proven=false`、R3グラフ検証と予算保持。担当 `cbdk/glb_*`・GLB専用tests/docs。共有CIや他担当に変更が必要ならAへ。
+
+### R8候補 — C / UI-001・BUILD-001
+
+R7のBlender実機・登録途中fail-closedを基に、**unregister_class途中の人工的失敗**、Scene property差替後のcleanup再試行、enable/disable・モジュールreload反復においてCBDK所有クラス・登録済みSceneを漏らさないか検証。加えてCBDK自作プレビューの編集operatorが検証/例外でキャンセルされた場合の**入力mesh/selection/modeの不変性**をheadless Blenderで計測。実際に再現した不具合のみ担当範囲で最小変更。R7の4つの `native_r7_*` markerを残し、R8専用マーカーをBlender3版の実ジョブで観測（`tests/blender_ui_lifecycle_r5.py` の既存呼び出しを活用）。5機能/6レシピ保持。GUI Ctrl+Z実機確認や第三者Addon実併用は未検証。担当 `templates/modular_preview/`、C専用test/docs、A管理の共通smoke/CIは変更禁止。
+
+### R8候補 — D / EXT-001
+
+CBDK自作fixtureのみを使い、**ビルド形式の妥当性、公式validator結果、作者の同意、SPDX/再配布権限、公開承認を独立した証拠**として保持する静的provenance判定の負例を設計・テスト。TOMLでの64項目はトップレベルに限る既存実装、32KiB byte予算、過度な入れ子・相反するログ・ZIPパス・manifestの不明な権利主張などで、`blocked_for_extension_release` を誤って解除しないことを検証。正式パッケージの署名や実インストールを捏造せず、未承認コードを実行しない。安全性の欠陥が観測されるまでは本体修正せずデータだけのtests/docs。担当 `cbdk/extension_*`・D専用tests/docs。公式validator共通CI/STATEはA管理。
+
+### ローリング規則
+
+1. **R7 post-merge 7CI実測合格後、Aがこの割当PRをマージしたときにR8正式有効。** BCDは着手の瞬間に最新の `feature/v0.18-shape-diagnostics` のHEAD SHAを取得し、`687b2acdc920253d69eda8c5e9c1c102d02aaef3` の子孫であることを確認。#60〜63や旧R7ソースSHAから再利用・スタック禁止。
+2. B: `work/v018-glb-analysis-r8`、C: `work/v018-ui-builder-r8`、D: `work/v018-extension-quality-r8`。各チーム未統合の追加ドラフトPR最大1件。targetは `feature/v0.18-shape-diagnostics`、担当専用ブランチと変更所有範囲を守る。共有STATE/Handoff/PROGRESS/Notion/CI/mainはA担当。
+3. Python/Windows/Blender3版の正確なHEAD CIを新規負例が**実際に走ったか**まで確認。個別成功とA結合成功、統合後7CIは別ゲート。Codexが使えなくても継続、基点・依存や所有権が不明なら実装せずAに設計を報告。
+4. 実ユーザーGLB、Windows GUI/Undoホットキー、第三者アドオン実併用、正式Extensionsの所有権・権利・ライセンス・公開許可、`main`と正式v0.17.0は引き続き承認待ち。R8はv0.18開発ブランチの範囲に限定。
