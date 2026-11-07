@@ -344,3 +344,52 @@ Only change production preflight, manifest review or diagnostic code when
 the new negative controls reproduce an actual unsafe escalation or privacy
 leak. Shared validator scripts, workflows, STATE, Handoff, Notion, main and
 the published v0.17.0 release stay owned by coordinator A.
+
+
+## R9 — self-consistent SHA inventory is not source authentication
+
+This round tests a narrowly scoped distinction between **file-integrity
+consistency** and **authentic, approved source provenance**. Only generated
+CBDK-authored legacy and modular ZIP previews are read, and the synthetic
+modification is an inert appended Python comment. No package Python is
+imported, executed, installed, signed, endorsed or redistributed.
+
+For each of the two representative authored preview families:
+
+1. An unchanged preview has the established
+   \`blocked_for_extension_release\` report, positive structure/hash checks,
+   and **false** source authenticity, consent, license compatibility and
+   release authority. The full seven-recipe positive R4/R8 regression
+   remains in place.
+2. A helper is modified without updating either the ZIP inventory digest
+   or per-part source digest: the result **fails closed** with the
+   \`archive_integrity/hash_mismatch\` diagnostic, no private payload/path.
+3. Updating the \`files_sha256\` member entry but not corresponding
+   \`parts[*].sha256\` (legacy) or \`parts[*].source_sha256\` (modular)
+   fails \`provenance/part_provenance_mismatch\`. Updating only the
+   per-part entries without the inventory fails \`hash_mismatch\`.
+4. Updating **both** the member hash and **all** corresponding part
+   source digests creates a synthetically *self-consistent* static ZIP.
+   \`provenance_hashes_verified=true\` only means the ZIP agrees with its
+   own mutable metadata: \`source_authenticity_verified=false\`,
+   \`preview_only=true\`, and \`blocked_for_extension_release\`
+   **must remain**. Validating hashes is *not* verifying authorship.
+5. Claiming author consent, SPDX validation, signature success,
+   redistribution and publication through newly added self-asserted JSON
+   flags must not affect status. For the legacy preview, both parts that
+   reference the same helper must agree with the same digest; partially
+   updated part declarations fail the dependency/provenance consistency
+   guard.
+
+These are data-only tests. The chosen helper comments are synthetic, not
+external/unauthorized code. Unit tests do not execute Blender. Official
+Blender manifest validator smoke against six unrelated **synthetic**
+fixtures remains a separate A-owned CI check across Blender 4.4.3,
+4.5.15 LTS and 5.2.1 LTS; those observations neither authenticate these
+packages nor authorize licenses or a release.
+
+This test does not establish that CBDK package contents are signed,
+authentic, copyright cleared, SPDX compatible or installable as an
+official Extension. EXT-001 remains \`partial\`. Production code should
+change only if a concrete unsafe permission escalation or privacy leak
+appears; common scripts/CI/STATE/Handoff/Notion/main are A-owned.

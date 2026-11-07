@@ -220,6 +220,10 @@ def unregister():
             # otherwise foreign RNA property with a matching name.
             if token is not None and current is token:
                 if hasattr(bpy.types.Scene, name):
+                    # If Blender RNA deletion raises, keep the ownership
+                    # ledger for a later explicit unregister() retry.
+                    # R9's CBDK-only probe shadows this module's builtin
+                    # delattr to simulate the error without altering Blender.
                     delattr(bpy.types.Scene, name)
         except Exception as error:
             failures.append(error)
