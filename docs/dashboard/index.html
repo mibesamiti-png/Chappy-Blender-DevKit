@@ -170,19 +170,20 @@
   function teamStatus(team,round,prs,runs){
     if(team==="A"){
       const ip=prs.filter(p=>isForRound(p,round,"A")&&/integration/i.test(p.title)).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))[0];
-      if(!ip)return {state:"waiting",text:"BCDの成果を先行レビュー／次ラウンド準備",pr:null,completedId:null};
+      if(!ip){const finished=["B","C","D"].filter(t=>{const p=latestPR(prs,round,t);return p&&ci(runs,REQUIRED,p.head&&p.head.sha,"pull_request",p.number).status==="done"}).length;
+        return {state:finished===3?"running":"waiting",text:finished===3?"BCD全員完了・Aの統合フェーズ":("BCD "+finished+"/3 完了・A先行レビュー中"),pr:null,completedId:null}}
       if(!ip.merged_at)return {state:"running",text:"統合候補PRの検証中",pr:ip,completedId:null};
       const c=ci(runs,REQUIRED.concat(EXTRA),ip.merge_commit_sha,"push");
       return {state:c.status==="done"?"done":c.status==="error"?"error":"running",
         text:c.status==="done"?"統合後7系統CI成功":c.status==="error"?"統合後CIに失敗":("統合済・検証 "+c.ok+"/7"),
-        pr:ip,completedId:c.status==="done"?round+":A:"+ip.merge_commit_sha:null}
+        pr:ip,completedId:c.status==="done"?round+":A":null}
     }
     const pr=latestPR(prs,round,team);
     if(!pr)return {state:"waiting",text:"R"+round+"担当PRの提出待ち",pr:null,completedId:null};
     const c=ci(runs,REQUIRED,pr.head&&pr.head.sha,"pull_request",pr.number);
     return {state:c.status==="done"?"done":c.status==="error"?"error":"running",
       text:c.status==="done"?"担当HEADの5系統CI成功":c.status==="error"?"担当HEADのCI失敗":("PR #"+pr.number+" / CI "+c.ok+"/5（未確認・実行中を含む）"),
-      pr,completedId:c.status==="done"?round+":"+team+":"+pr.head.sha:null}
+      pr,completedId:c.status==="done"?round+":"+team:null}
   }
   function showTeam(team,item){
     const labels={done:"完了",running:"作業・確認中",waiting:"待機・準備中",error:"要修正"};
