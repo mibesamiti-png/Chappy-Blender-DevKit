@@ -180,6 +180,58 @@ class GLBRegressionTests(unittest.TestCase):
                 self.assertEqual(result["surface_status"], "review_only")
 
 
+    def test_r7_adversarial_contour_never_approves_glb_regression(self):
+        """Same count but moved notch remains a review signal, not authority.
+
+        GLB-owned mocked facade control; native Blender export/import is
+        separately exercised by the existing triggered version matrix.
+        """
+        from cbdk.glb_part_match import suggest_spatial_part_matches
+        from test_glb_match_adversarial_r7 import split_edge_fan
+        from test_glb_match_fastpath_r6 import baseline_scan
+
+        ref = split_edge_fan(.30)
+        for name, cand, expected in (
+            ("collinear_split", split_edge_fan(.70), "suggested"),
+            ("inward_notch", split_edge_fan(.70, indentation=.03),
+             "ambiguous"),
+        ):
+            with self.subTest(geometry=name), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                observed = suggest_spatial_part_matches(ref, cand, [5], [5])
+                self.assertEqual(observed, baseline_scan(ref, cand, [5], [5]))
+                self.assertEqual(observed["reference_parts"][0]["status"], expected)
+                self.assertFalse(observed["auto_apply"])
+                self.assertFalse(observed["cross_file_part_identity_proven"])
+
+                surface = {
+                    "kind": "cbdk_glb_surface_review",
+                    "status": "review_only",
+                    "surface_observation": "no_difference_observed_at_samples",
+                    "part_match_candidates": observed,
+                }
+                metadata = {
+                    "kind": "cbdk_glb_scene_comparison",
+                    "passed": True,
+                    "summary": {"errors": 0},
+                    "differences": [],
+                }
+                with patch("cbdk.glb_regression.write_glb_inspection"), \
+                     patch("cbdk.glb_regression.render_glb_preview"), \
+                     patch("cbdk.glb_regression.write_scene_comparison",
+                           return_value=metadata), \
+                     patch("cbdk.glb_regression.run_glb_surface_review",
+                           return_value=surface):
+                    result = run_glb_regression(
+                        root / "blender", root / "reference.glb",
+                        root / "candidate.glb", root / "out",
+                        surface_review=True,
+                    )
+                self.assertIs(result["surface_does_not_auto_approve"], True)
+                self.assertIs(result["passed_is_metadata_only"], True)
+                self.assertEqual(result["surface_status"], "review_only")
+
+
     def test_optional_surface_stage_can_report_skipped_without_false_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
