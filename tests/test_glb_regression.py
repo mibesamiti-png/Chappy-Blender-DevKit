@@ -333,6 +333,60 @@ class GLBRegressionTests(unittest.TestCase):
                 self.assertEqual(result["surface_status"], "review_only")
 
 
+    def test_r10_adaptive_candidates_never_approve_a_glb_file(self):
+        """An adaptive R2 optimization is never a semantic file approval.
+
+        This is a GLB-owned mocked facade test. The existing headless
+        Blender CI separately checks authored GLB export/import smoke;
+        dense R10 geometry stress itself remains Python-only.
+        """
+        from cbdk.glb_part_match import suggest_spatial_part_matches
+        from test_glb_match_adaptive_r10 import always_box_report
+        from test_glb_match_adversarial_r7 import split_edge_fan
+
+        ref = split_edge_fan(.30)
+        for name, cand, expected in (
+            ("collinear", split_edge_fan(.70), "suggested"),
+            ("small_notch", split_edge_fan(.70, indentation=.0001),
+             "suggested"),
+            ("real_notch", split_edge_fan(.70, indentation=.03),
+             "ambiguous"),
+        ):
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                pairing = suggest_spatial_part_matches(ref, cand, [5], [5])
+                self.assertEqual(pairing, always_box_report(
+                    ref, cand, [5], [5]))
+                self.assertEqual(pairing["reference_parts"][0]["status"],
+                                 expected)
+                self.assertFalse(pairing["auto_apply"])
+                self.assertFalse(pairing["cross_file_part_identity_proven"])
+                surface = {
+                    "kind": "cbdk_glb_surface_review",
+                    "status": "review_only",
+                    "surface_observation": "no_difference_observed_at_samples",
+                    "part_match_candidates": pairing,
+                }
+                comparison = {
+                    "kind": "cbdk_glb_scene_comparison",
+                    "passed": True,
+                    "summary": {"errors": 0},
+                    "differences": [],
+                }
+                with patch("cbdk.glb_regression.write_glb_inspection"), \
+                     patch("cbdk.glb_regression.render_glb_preview"), \
+                     patch("cbdk.glb_regression.write_scene_comparison",
+                           return_value=comparison), \
+                     patch("cbdk.glb_regression.run_glb_surface_review",
+                           return_value=surface):
+                    result = run_glb_regression(
+                        root / "blender", root / "a.glb", root / "b.glb",
+                        root / "out", surface_review=True)
+                self.assertIs(result["surface_does_not_auto_approve"], True)
+                self.assertIs(result["passed_is_metadata_only"], True)
+                self.assertEqual(result["surface_status"], "review_only")
+
+
     def test_optional_surface_stage_can_report_skipped_without_false_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
