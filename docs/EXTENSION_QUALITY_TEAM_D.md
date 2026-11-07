@@ -244,3 +244,38 @@ returned in report JSON. The only official CLI executions remain the six
 A-owned data-only fixtures on Blender 4.4.3, 4.5.15 and 5.2.1 in CI.
 Owner/redistribution approval, real GUI and real user addons remain outside
 the scope. EXT-001 stays partial.
+
+
+## R7 — bounded TOML manifest-file review and private-value non-disclosure
+
+This stage is **data-only compatibility testing**, not approval of a real
+Blender Extension or license. Source files are generated synthetic TOML under
+temporary directories; the tests never import or execute any bundled source.
+
+The R7 fixture suite tests these exact existing limits:
+
+- Maximum **32 KiB input bytes**: syntactically valid TOML with long comments
+  is reviewed at 32 KiB minus one and exactly 32 KiB, and is rejected one byte
+  over. Comment bytes are harmless padding, not real confidential data.
+- Maximum **64 top-level TOML fields**: 63 and 64 known/unknown synthetic keys
+  are structurally reviewed, 65 is rejected before review output. Unknown key
+  identifiers are replaced with generic `unsupported_field`; nested unknown
+  TOML table names and source paths must not escape into reports.
+- Duplicate keys/tables/dotted-key definitions, malformed UTF-8 and malformed
+  TOML fail closed with no partial report, private values or absolute path in
+  the normalized error message. The underlying TOML exception can still be
+  retained as Python diagnostic context and is not a public report.
+- Create-only JSON reports remain confined to `reports/latest/`. Existing
+  outputs cannot be overwritten; symlink destination/source/parent and path
+  traversal examples must not produce output outside that directory.
+- A valid reviewed source is byte-for-byte unchanged and the JSON has all
+  approval flags false; R4's seven positive authored ZIP previews and R5/R6
+  known official validator observations still run in the full suite.
+
+Existing review logic must not change unless the tests actually reproduce
+an incorrect verdict or unsafe write. This does **not** authenticate a TOML
+file's author, select SPDX/maintainer, verify licenses, authorize redistribution,
+build an Extension ZIP, install untrusted Python or approve any publication.
+The official synthetic six-case validator remains run separately by the
+A-owned real Blender smoke on 4.4.3, 4.5.15 and 5.2.1; these TOML Python
+tests do not claim to execute Blender. EXT-001 remains partial.
