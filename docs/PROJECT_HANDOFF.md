@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18 PR #25: NEXT-003登録/依存/CI一覧監査とNEXT-002明示履歴Undo/Redoを実装。初回Windows CIの短縮パス拒否を修正、追加2件込み767テストを再検証。NEXT-003対象CI待ち、NEXT-002 GUI未検証。正式v0.17.0維持
+- 最新の節目: v0.18 PR #25: NEXT-003登録/依存/CI照合の受け入れ完了。NEXT-002は3版で明示履歴Native Undo/Redo2ケース成功、通常背景Undo不能・GUI未確認で継続。実装c80f2a0/テストb5d3273、Python767件×3/Windows2版ほか対象6系統成功。正式v0.17.0維持
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -40,8 +40,8 @@
 | `INST-001` | GitHubからBlenderへの直接インストール・更新 | 保留 | 未検証 | ユーザー希望で保留。UI確認段階まで実装しない |
 | `PERF-001` | 巨大メッシュ向け監査・効率化 | 一部実装 | Blender CI | 20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否 |
 | `GUI-001` | 実際のGUI Undo・操作感の自動検証 | 未実装 | 未検証 | ヘッドレスではUndoフラグと編集結果まで確認 |
-| `UNDO-001` | 背景BlenderでのネイティブUndo/Redo検査 | 一部実装 | Blender CI | PR #21でBlender 4.4.3/4.5.15/5.2.1の背景プローブを実行。背景ではundo.poll不可をunavailableとして正しく記録し、GUIショートカットは対象外 |
-| `PLAN-002` | 全レシピと部品依存の一括静的監査 | 一部実装 | Pythonテスト | 6レシピ・5機能・7部品の整合性と3版の静的互換性を照合。PR #21のPython 3.11/3.12/3.13全体テスト成功 |
+| `UNDO-001` | 背景BlenderでのネイティブUndo/Redo検査 | 一部実装 | Blender CI | c80f2a0/Blender42368190461の3版で明示ed.undo_pushの単一/複数頂点2ケースNative Undo/Redo成功。正確な接続/選択・取消無変更を確認。通常背景Undo不可、GUI/実ユーザー未検証でpartialを維持。 |
+| `PLAN-002` | 全レシピと部品依存の一括静的監査 | 一部実装 | Pythonテスト | 6レシピ・5機能・7部品の依存/3版互換性に加え、生成前AST相対import/export・登録衝突・実機KNOWN/CI一覧を照合。NEXT-003の受け入れ完了。固定自作previewのみで一般の新規登録/承認は未対応、全体partialを維持。Python767件×3/Windows2/Blender3版確認。 |
 | `REG-001` | 自作部品・機能の登録計画自動生成 | 一部実装 | Pythonテスト | 未登録ID・依存・ソース衝突を検査して非実行のレビュー計画を生成。コード/台帳の自動追加・承認は行わない。PR #21のPython 3版CIで回帰テスト成功 |
 | `REG-002` | 登録計画から未完成テストのひな形を安全に生成 | 一部実装 | Pythonテスト | 現行カタログと登録計画の完全一致を確認し、TODO失敗テストをignored領域に新規生成。Windows短縮パス差も修正し、PR #21のPython/Windows CI成功 |
 | `REG-003` | 読み取り専用・メッシュ編集で未完成テストの内容を切替 | 一部実装 | Pythonテスト | --behavior read_only/mesh_editを明示指定。共通項目に不変性・Undo・選択範囲・復元を追加。PR #21のPython 3版CIで回帰テスト成功 |
@@ -90,9 +90,9 @@
 ## 次にやること（優先順）
 
 1. `NEXT-006` **PR #18の公開リポジトリCI再検証とv0.16統合** (done)。完了条件: 公開化後にPython/Windows/Blender/パッケージ全CI成功を確認し、PR #18をmainへ統合済み
-2. `NEXT-002` **Blender Undo・Redoの実機検証を拡充** (in_progress)。完了条件: 通常背景プローブと、明示ed.undo_pushで履歴を準備した単一頂点1操作/複数頂点2操作のNative Undo/Redoを分離。座標・全接続・頂点/辺/面選択と取消無変更を検査。ローカル4.3.2の制御2ケース成功、対象3版CI待ち。GUI Ctrl+Z/Shift+Ctrl+Z・実ユーザー操作は未検証で継続。
+2. `NEXT-002` **Blender Undo・Redoの実機検証を拡充** (in_progress)。完了条件: c80f2a0/Blender42368190461の対象3版で、明示ed.undo_pushによる単一頂点1操作/複数頂点2操作のNative Undo/Redo成功。座標・全接続・全選択と取消無変更を確認。通常背景Undoは3版ともunavailable/Redo未試行。Windows GUI Ctrl+Z/Ctrl+Shift+Z・実ユーザー操作は未検証のため継続。
 3. `NEXT-005` **v0.17：ベンチマーク実測を比較して監査の追加最適化・Undo/Redo回帰テストを検討** (done)。完了条件: 2867ab3/Blender run42364085988の3版で70×70格子19,881要素の時間/割当ピークを比較しdocs/AUDIT_RUNTIME_REVIEW.mdへ記録。追加最適化や20万要素上限緩和の根拠はないため現行安全策を維持。背景Undo実行不能/Redo未試行/GUI未検証を明記しNEXT-002は継続。
-4. `NEXT-003` **機能登録と新レシピ構築の自動化を改善** (in_progress)。完了条件: 生成前にASTで相対依存/静的export/OPERATOR_CLASS/ID重複を検査。6レシピ実生成、カタログ/実機smokeの機能一覧/CIレシピ一覧を照合し不一致を拒否。追加回帰9件を含むローカルPython765件成功。対象CI確認待ちで継続。
+4. `NEXT-003` **機能登録と新レシピ構築の自動化を改善** (done)。完了条件: c80f2a0/b5d3273: 生成前AST相対依存/静的export/OPERATOR_CLASS/ID重複検査、6レシピ実生成と実機smoke機能一覧/CIレシピ一覧照合、不一致拒否を実装。Python767件×3版42368307965・Windows2版42368305584・Blender3版42368190461ほか対象6系統成功で受け入れ完了。任意部品の自動採用/権利承認は対象外。
 5. `NEXT-004` **GitHubからBlenderへ直接インストール・更新** (deferred)。完了条件: ユーザーがUI確認の必要性を示すまで作らない
 6. `NEXT-001` **v0.16：大きなメッシュ向け監査負荷軽減と上限時の安全な中断** (done)。完了条件: メモリ上限・タイミング・入力拒否をPython/Blenderの両方で測定し、意図しない編集を発生させない
 7. `NEXT-007` **GLB Visual Inspectorの3バージョンBlender CIと実データ精度確認** (in_progress)。完了条件: 合成fixtureの3バージョンBlender CIは完了。実ユーザーGLBでも必要に応じBlender Previewを生成し、Quick Previewとの部品対応と形状を照合する

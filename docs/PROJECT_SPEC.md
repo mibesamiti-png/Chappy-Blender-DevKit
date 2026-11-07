@@ -461,3 +461,9 @@ GLB-022条件に初期GLB-020集計の正規化SHAを省略可能フィールド
 Undo schema2は旧schema1読取互換を維持し、通常背景プローブと`explicit_ed_undo_push`制御条件を分離する。単一頂点1操作と複数頂点2連続操作について各段階をNative Undo/Redoし、座標・辺/面の接続順・全選択状態を完全比較する。ゼロoffsetのCANCELLEDで無変更も検査。毎回BMeshを再取得し、スナップショットでUndoを代用しない。手動pushの成功は通常の自動履歴、GUIショートカット、実ユーザープロジェクトの証拠にならない。
 
 今回ローカルPython765件成功、Blender4.3.2の明示履歴2ケースUndo/Redo成功・通常背景Undo不能。対象4.4.3/4.5.15/5.2.1とWindows CIはまだ未実行。最新の実測結果はSTATEの今回節目を参照する。
+
+### NEXT-003 / NEXT-002 最終CI判定（2026-11-07）
+
+実装コードc80f2a0a174a37074c283641ce288a378261e92dのBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium成功。テストだけUTF-8指定を修正したb5d32734d4a74e6acd7ff896baeb3aa3088e661aのPython767件×3版・Windows2版成功。両SHA間の変更はtests/test_registration_audit.pyだけで実装は同一。対象6系統の結果は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368307965)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368305584)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190461)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190510)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190490)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190614)。
+
+NEXT-003完了。NEXT-002は制御履歴2ケースの成功を確認したが通常背景Undo不能・GUI未検証で継続。初回Windowsのパス/文字コード失敗を修正し、テストだけの再実行はPython/Windowsへ限定。6レシピの生成ZIPは新AST検査の有無で同じSHA。負荷・既知制限・再開点は[検証記録](REGISTRATION_UNDO_VALIDATION.md)を参照。

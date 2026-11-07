@@ -10,12 +10,10 @@ Last handoff: 2026-11-07 JST.
 
 ## Current milestone sync (2026-11-07 JST)
 
-- Current canonical state: [development branch STATE](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/blob/feature/v0.18-shape-diagnostics/docs/project/STATE.json). Earlier snapshots below are history.
-- Existing project and GLB-019/020/021/022 task pages are accessible through the Notion connector; no connection setup is required for this session.
-- GitHub source inventory/count hints at code `e254aa7` have all six workflows successful. Report-integrity code `31bf3de18c357d796194dcac369c66e55b3973bf` passed all six workflows: Python707 tests x3 (`42359722780`), Windows2 (`42359722774`), Blender3 (`42359722777`, all four new inventory cases), Kit (`42359722842`), Handoff (`42359722778`), Chromium (`42359722853`). GLB-019 implemented/blender_ci; GLB-020/021/022 remain partial.
-- Sync status: **success**. Mirrored canonical evidence commit `c7306ced51f99c8e5765d46ef3d32ac5a5c841b1` into the existing project and all four GLB tasks. Every final update returned success without warnings. GLB-019 is complete/implemented/blender_ci, GLB-020/021/022 remain in progress/partial. Current summaries, CI links, remaining work and next plans were updated; older history was preserved. No new pages or private/personal data. No always-on sync job was installed. No new pages, private sources/models/reports, or personal data are included.
-- At every milestone: save canonical state and observed evidence on GitHub, update existing Notion records, then record the actual outcome here and in STATE. On connector failure leave pending with a reason and retry target; never mark unsaved changes synchronized.
-- If a future session has no Notion connection, connect Notion in the client Apps settings using the intended workspace and grant access to these existing pages; retry fetch before writing. Never request credentials in chat.
+- 今回のGitHub記録: NEXT-003完了、NEXT-002の明示履歴Undo/Redoを3版で成功確認、通常背景Undo不能/GUI未確認。23件中18完了/4継続/1保留。
+- 実装コードc80f2a0a174a37074c283641ce288a378261e92dのBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium成功。テストだけUTF-8指定を修正したb5d32734d4a74e6acd7ff896baeb3aa3088e661aのPython767件×3版・Windows2版成功。両SHA間の変更はtests/test_registration_audit.pyだけで実装は同一。対象6系統の結果は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368307965)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368305584)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190461)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190510)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190490)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190614)。
+- 同期状態: **pending**。GitHub記録保存後、既存CBDKプロジェクト/PR #25 CI判断ページへ同期し、実応答を記録する。新規ページ・私有データ同期なし。
+- 過去の同期は下記の履歴。常駐同期ではなく節目の実行。
 
 ## Linked Notion records
 
