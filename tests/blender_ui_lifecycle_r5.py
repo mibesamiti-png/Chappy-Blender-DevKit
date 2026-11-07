@@ -121,19 +121,21 @@ def run(path):
 
             for _ in range(3):
                 object_ui, _ = panel_events(module)
-                assert {key for key in object_ui} == set(
-                    IDS[f] for f in ("object_selection", "mesh_bounds",
-                                     "modifier_summary")), object_ui
-                assert all(object_ui.values())
+                assert set(object_ui) == set(IDS.values()), object_ui
+                assert all(object_ui[IDS[f]] for f in (
+                    "object_selection", "mesh_bounds", "modifier_summary"))
+                assert not any(object_ui[IDS[f]] for f in (
+                    "edit_selection", "vertex_nudge"))
                 assert bpy.ops.cbdk.modular_selected_meshes() == {"FINISHED"}
                 bpy.ops.object.mode_set(mode="EDIT")
                 assert bpy.context.mode == "EDIT_MESH"
                 bpy.ops.mesh.select_all(action="DESELECT")
                 edit_ui, edit_events = panel_events(module)
-                assert set(edit_ui) == {IDS["edit_selection"],
-                                       IDS["vertex_nudge"]}, edit_ui
+                assert set(edit_ui) == set(IDS.values()), edit_ui
                 assert edit_ui[IDS["edit_selection"]]
                 assert not edit_ui[IDS["vertex_nudge"]]
+                assert not any(edit_ui[IDS[f]] for f in (
+                    "object_selection", "mesh_bounds", "modifier_summary"))
                 assert ("prop", "cbdk_modular_nudge_offset", True) in edit_events
                 assert module._preview_unavailable_reason("vertex_nudge",
                                                           bpy.context) is not None
