@@ -88,3 +88,7 @@ Codexが必要な条件 / Codexなしの代替:
 
 「`AGENTS.md` と `docs/PARALLEL_DEVELOPMENT.md`、最新`STATE.json`、自分の担当PRを読んで、統合済み基点SHAと所有ファイルを確認。Codexが利用不可でも安全な実装を続け、未実測のCIは未実測と記録。担当ブランチのドラフトPRを提出し、共有台帳/Notionは司令塔Aへ報告。main/リリースは変更しない。」
 
+
+## Notion運用マニュアル（節目同期先）
+
+[CBDK — AI並行開発チーム運用マニュアル](https://app.notion.com/p/411948b749378108a044c697db6163d5) は本ファイルを読める形に要約した子ページ。GitHubを運用ルールの正本とし、Notionは手動の節目ミラー。Codex利用上限時でもA/B/C/Dは開発を継続する。
