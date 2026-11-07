@@ -49,8 +49,12 @@ freeze a task count, a release, or test metrics.
 
 - Run focused Python regressions first, then
   `python -m unittest discover -s tests -v` when the change warrants it.
-- For Blender/Windows/browser changes, check the actual GitHub Actions
-  workflow and version matrix *on the matching code commit*. The repository
+- For trusted authored part changes, review `catalog/authored_parts.json`,
+  run `python -m cbdk verify-parts` against a trusted Blender if available,
+  and use `evidence-status` to detect stale evidence. Neither proves approval.
+- For Blender/Windows/browser changes, inspect `.github/workflows/blender-smoke.yml`
+  and the actual GitHub Actions workflow results and version matrix
+  *on the matching code commit*. The repository
   currently maintains Python, Windows, Blender, kit, handoff, and Chromium
   workflow families; do not assume all six ran merely because one passed.
 - For GUI behavior, a headless Blender `Panel.draw` or Undo smoke is **not**
@@ -76,8 +80,7 @@ freeze a task count, a release, or test metrics.
   meaningful checkpoints; the Notion mirror is **not** permanently automatic.
   If unavailable, report sync as pending instead of successful.
 - Report changed files, feature/task IDs, real test outcomes and run links,
-  remaining blockers, current branch/PR status and what to do next. A pull
-  request may remain draft after successful tests.
+  remaining blockers, current branch/PR status and what to do next. A pull request may remain draft after successful tests.
 
 ## Further references
 
