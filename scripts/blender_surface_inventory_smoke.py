@@ -16,6 +16,62 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from cbdk.glb_surface_pipeline import run_glb_surface_review  # noqa: E402
+from cbdk.glb_part_match import suggest_spatial_part_matches  # noqa: E402
+from cbdk.glb_boundary_audit import boundary_audit  # noqa: E402
+
+
+def _topology_count_roundtrip(output):
+    """Verify numeric boundary guard after genuine Blender GLB export/import."""
+    vertices = [
+        (0., 0., 0.), (1., 0., 0.), (0., 1., 0.),
+        (1., 1., 0.), (.4, .7, 0.),
+    ]
+    variants = (
+        ("connected", [(0, 1, 2), (1, 3, 2)]),
+        ("disconnected", [(0, 1, 2), (0, 3, 4)]),
+    )
+    imported = []
+    for label, polygons in variants:
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        mesh = bpy.data.meshes.new("CBDK_Synthetic_Topology")
+        mesh.from_pydata(vertices, [], polygons)
+        mesh.update()
+        obj = bpy.data.objects.new("CBDK_Synthetic_Topology", mesh)
+        bpy.context.collection.objects.link(obj)
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        source = output / ("topology_" + label + ".glb")
+        bpy.ops.export_scene.gltf(
+            filepath=str(source), export_format="GLB", use_selection=True,
+        )
+        digest = hashlib.sha256(source.read_bytes()).digest()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        bpy.ops.import_scene.gltf(filepath=str(source))
+        assert hashlib.sha256(source.read_bytes()).digest() == digest
+        meshes = [item for item in bpy.context.scene.objects
+                  if item.type == "MESH"]
+        assert len(meshes) == 1, "Unexpected synthetic import mesh count"
+        item = meshes[0]
+        item.data.calc_loop_triangles()
+        faces = [[tuple(float(x) for x in
+                 (item.matrix_world @ item.data.vertices[index].co))
+                  for index in face.vertices]
+                 for face in item.data.loop_triangles]
+        assert len(faces) == 2, "Synthetic triangles did not survive GLB"
+        imported.append(faces)
+
+    reference, candidate = imported
+    ref_edges = boundary_audit(reference, [2])["parts"][0]
+    cand_edges = boundary_audit(candidate, [2])["parts"][0]
+    assert (ref_edges["boundary_edges"], cand_edges["boundary_edges"]) == (4, 6)
+    assert ref_edges["observed_boundary"] and cand_edges["observed_boundary"]
+    match = suggest_spatial_part_matches(reference, candidate, [2], [2])
+    row = match["reference_parts"][0]
+    assert row["status"] == "ambiguous", row
+    assert row["topology_review_reasons"] == ["boundary_edge_count_mismatch"], row
+    assert match["unpaired_candidate_part_ids"] == ["part_001"], match
+    assert match["cross_file_part_identity_proven"] is False
+    print("CBDK synthetic GLB topology-count roundtrip passed")
 
 
 def main():
@@ -69,6 +125,7 @@ def main():
             assert result["surface_observation"] == "not_measured"
             assert "fixed_surface" not in result
         print("CBDK inventory synthetic case passed: " + label)
+    _topology_count_roundtrip(output)
     print("CBDK_SURFACE_INVENTORY_PASS")
 
 
