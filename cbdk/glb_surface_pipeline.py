@@ -147,6 +147,16 @@ def run_glb_surface_review(
                 if (isinstance(value, bool) or not isinstance(value, (int, float))
                         or not math.isfinite(value) or value < 0):
                     raise ValueError("invalid surface metric")
+            measured_difference = max(
+                report["fixed_surface"]["symmetric_sampled_max"],
+                report["adaptive_surface"]["refined_symmetric_sampled_max"],
+            ) > 1e-6
+            if measured_difference != (observation == "sampled_difference_detected"):
+                raise ValueError("surface observation contradicts metrics")
+            if any(report[name] > 512 for name in (
+                "reference_triangles", "candidate_triangles"
+            )):
+                raise ValueError("measured triangle count exceeds safety cap")
         elif observation != "not_measured" or (
             "fixed_surface" in report or "adaptive_surface" in report
         ):
