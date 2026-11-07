@@ -297,6 +297,35 @@ class GLBSurfacePipelineTests(unittest.TestCase):
             with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
                 self.run_fake(report_override=bad)
 
+    def test_part_count_hints_accepted_when_recomputed(self):
+        from cbdk.glb_part_hints import count_based_part_hints
+        valid = report()
+        inventory = {
+            "reference_object_count": 2, "candidate_object_count": 2,
+            "reference_triangle_counts": [1, 1],
+            "candidate_triangle_counts": [6, 2],
+            "max_listed_per_side": 32,
+            "correspondence_verified": False,
+            "identifies_changed_part": False,
+            "notes": "Anonymous size-ranked inventory, not matched objects",
+        }
+        valid["part_inventory"] = inventory
+        valid["part_count_hints"] = count_based_part_hints(
+            inventory["reference_triangle_counts"],
+            inventory["candidate_triangle_counts"],
+            reference_total=2, candidate_total=2,
+        )
+        result, _ = self.run_fake(report_override=valid)
+        self.assertEqual(result["part_count_hints"]["candidate_count"], 0)
+        invalid = json.loads(json.dumps(valid))
+        invalid["part_count_hints"]["correspondence_verified"] = True
+        with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+            self.run_fake(report_override=invalid)
+        invalid = json.loads(json.dumps(valid))
+        invalid["part_count_hints"]["weak_candidate_triangle_counts"] = [1]
+        with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+            self.run_fake(report_override=invalid)
+
     def test_output_report_is_bounded(self):
         with patch("cbdk.glb_surface_pipeline.inspect_glb",
                    return_value=inspection()), \
