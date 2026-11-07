@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18 PR #25: NEXT-008双方向focusとNEXT-009複数宣言/実験triage・constructor別名shadowing拒否を実装。b17fa4dでPython787件×3/Windows2/Blender3版を含む全6CI成功。全体は実データ未確認で継続、次は現行UI-001。正式v0.17.0維持"
+    "milestone": "v0.18 PR #25: UI-001の固定5機能の宣言的Blenderパネル（見出し・ボタン・表示順）を追加。ea0a4bfのPython/Windows/Blender3版/Kit/Handoff/Chromium全6CI成功。汎用UI/Windows GUI/権利は未検証、正式v0.17.0維持"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -112,10 +112,10 @@
     {
       "id": "UI-001",
       "title": "汎用アドオンUI組み立て",
-      "status": "not_implemented",
-      "verification": "not_tested",
-      "source": "",
-      "note": "任意レイアウトの生成は未対応"
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "cbdk/ui_layout.py",
+      "note": "固定自作5機能の見出し・ボタン・表示順を宣言JSONから検証生成。未知/重複feature・余計なUIキー・JSON重複拒否、選択機能だけ表示。ea0a4bfのPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功。汎用UI・Windows GUI・正式Extensions/権利確認は未完成のためpartial。"
     },
     {
       "id": "EXT-001",
@@ -918,6 +918,11 @@
       "id": "DEC-055",
       "decision": "双方向の既存観測を調査順に使い、宣言曖昧さを維持して実験へ接続する",
       "note": "三角面割合は面積でも信頼度でもない。等しい境界観測だけで差分にせず、ID同一性を仮定しない。候補名全体の構文集計から複数宣言を選ばず、別名再束縛は安全側に除外。GLB-020任意拡張/自動実行/因果認定は行わない。"
+    },
+    {
+      "id": "DEC-056",
+      "decision": "UI-001は当面CBDK自作5機能の宣言的パネル表示に限定し、レシピから任意コードや未知operatorを登録させない",
+      "note": "catalog/ui_layouts.jsonの全5機能配置だけを受け付け、宣言をコードではなくリテラルに変換。ea0a4bfの対象6CIで生成ZIPとBlender3版Panel.draw/登録/無効化が成功。未知ボタンID、JSON重複キーなどは拒否。Windows GUI操作、自由なUI・正式Extensions・再配布は未完成。UI-001 partial/blender_ci、PRドラフト・正式v0.17.0維持。"
     }
   ],
   "last_verified": {
@@ -997,13 +1002,14 @@
     "feature_priority": "2026-11-07 GLB-018 code/docs SHA 676e92f8cc4ad48774ea6e0702710576fe97a286 all five GitHub CI SUCCESS: Python3 42246918798, Windows PowerShell 2 42246918818, Blender4.4.3/4.5.15/5.2.1 42246918883, Windows kit 42246918868, durable handoff 42246918953. Real synthetic 9-GLB: large panels with narrow small-part opening area-only max 0.0 vs feature-aware max 0.0657466 all Blender versions; review-only false defect-equivalence/auto-apply flags. GLB-018 implemented/blender_ci, NEXT-016 done. PR draft; formal v0.17.0 preserved.",
     "real_glb_surface_bridge": "2026-11-07 GLB-019 docs/implementation HEAD 5b6196a59f86318128c768507fea53237e3a6e11 ALL FIVE CI SUCCESS: Python3 42258076642, Windows PowerShell3.11/3.13 42258076781, Blender4.4.3/4.5.15/5.2.1 42258076658, Windows kit 42258076681, durable handoff 42258076822. Local opt-in GLB pair compares fixed BVH and adaptive feature-aware sampling; 512 triangle strict cap; external URI reject; no private model uploads or auto edits. GLB-019 implemented/blender_ci, NEXT-017 done. PR draft, official last_verified v0.17.0.",
     "milestone_notion_sync": "GitHub STATE更新→push/PRと実測検証→既存Notionプロジェクト/タスクへ状態と証拠を同期。失敗時はGitHubへpending記録。常駐同期なし、私有ソース/GLB/個人情報は対象外。",
-    "notion_sync_status": "pending: b17fa4dの今回全6CI成功とNEXT-008/009継続、次の現行UI-001/移行未達をGitHubへ保存後、既存CBDKプロジェクト/NEXT-008/NEXT-009へ節目同期する。",
+    "notion_sync_status": "pending 2026-11-07 JST: UI-001 ea0a4bf 6CI成功をGitHub記録。既存Notionプロジェクト同期は未実施、成功と記録しない。",
     "surface_inventory_integrity": "2026-11-07: code SHA 31bf3de18c357d796194dcac369c66e55b3973bf ALL SUCCESS: Python https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722780 (707 tests x 3), Windows 42359722774, Blender 42359722777 (4.4.3/4.5.15/5.2.1, 4 new synthetic cases), Kit 42359722842, Handoff 42359722778, Chromium 42359722853. Local Python3.12.14 707/707 and Blender4.3.2 synthetic4 passed separately. Release last_verified 0.17.0 unchanged.",
     "synthetic_run_review": "2026-11-07 code 5dc799ac6dd46ed27f249dfea694c67644d4ab22 all SUCCESS: Python https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082109 (727 x3), Windows42361081999, Blender42361082117 (4.4.3/4.5.15/5.2.1, normal4 + 14 checkpoints + real baseline with simulated candidate timeout), Kit42361082094, Handoff42361082165, Chromium42361082252. Local Python3.12.14 727/727; related56; local4.3.2 budget1 and controlled failure passed separately. Partial overall, last_verified0.17.0 unchanged.",
     "synthetic_comparison_first_ci": "2026-11-07 f4130ff: Python42363769046/Windows42363769107/Kit42363769048/Handoff42363769039/Chromium42363769071 success. Blender42363769064: 4.4.3 success, 4.5.15/5.2.1 failed because official declared version strings include LTS, rejected by new condition validator. Fix explicitly allows bounded LTS suffix, preserves full version as a comparison condition; final CI pending. Parent-symlink output escape guard also fixed with regression coverage.",
     "same_condition_comparison": "2026-11-07 code2867ab31cf355486232f1f1b257315c9e73146a1 all6 success: Python742x3 run42364086005, Windows42364086014, Blender42364085988 (4.4.3/4.5.15/5.2.1, independent4-trial repeat and failed-run exclusion), Kit42364085981, Handoff42364085980, Chromium42364085989. First f4130ff failed on LTS version labels and was fixed, not blindly rerun. Resource data: docs/GLB023_RUN_COMPARISON.md; audit/Undo review: docs/AUDIT_RUNTIME_REVIEW.md. Formal last_verified0.17.0 unchanged.",
     "bound_ast_experiment_review": "2026-11-07 code79fea17e70665392731780ed5a518982530b7323 ALL6 success: Python752x3 run42366055143, Windows42366055138, Blender42366055131 (4.4.3/4.5.15/5.2.1, bound complete/incomplete/controlled-timeout review and mismatched-baseline rejection), Kit42366055135, Handoff42366055133, Chromium42366055162. AST fixture never executed; private sheets stay outside uploaded artifacts; source/aggregate hashes unchanged. NEXT-019 done; real property identity/effect remains unverified.",
     "registration_undo_milestone": "実装コードc80f2a0a174a37074c283641ce288a378261e92dのBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium成功。テストだけUTF-8指定を修正したb5d32734d4a74e6acd7ff896baeb3aa3088e661aのPython767件×3版・Windows2版成功。両SHA間の変更はtests/test_registration_audit.pyだけで実装は同一。対象6系統の結果は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368307965)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368305584)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190461)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190510)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190490)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190614)。 初回Windows42368028009は短縮パス、42368190855はテスト文字コードで失敗。修正後のみ成功と記録。NEXT-003完了、NEXT-002はGUI待ち。",
-    "focus_ambiguity_triage": "コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。 既知shadowing負例4件の名前だけの旧判定4検出→新inventory0。7回のローカルtriage中央値0.00449秒/最大Python割当28,130bytes（RSSではない）。一般精度/速度最適化は未保証。NEXT-008/009全体継続、UI-001等の自動化が残り将来移行条件未達。詳細docs/GLB_DEBUG_TRIAGE.md。"
+    "focus_ambiguity_triage": "コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。 既知shadowing負例4件の名前だけの旧判定4検出→新inventory0。7回のローカルtriage中央値0.00449秒/最大Python割当28,130bytes（RSSではない）。一般精度/速度最適化は未保証。NEXT-008/009全体継続、UI-001等の自動化が残り将来移行条件未達。詳細docs/GLB_DEBUG_TRIAGE.md。",
+    "ui_declarative_preview": "2026-11-07 ea0a4bf code verified: Python 42379102139, Windows 42379102083, Blender3 versions 42379102168, Kit 42379102045, Handoff 42379102092, Chromium 42379102137 all success. UI-001 partial/blender_ci, authored five-feature preview-only."
   }
 }

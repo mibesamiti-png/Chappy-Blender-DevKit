@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18 PR #25: NEXT-008双方向focusとNEXT-009複数宣言/実験triage・constructor別名shadowing拒否を実装。b17fa4dでPython787件×3/Windows2/Blender3版を含む全6CI成功。全体は実データ未確認で継続、次は現行UI-001。正式v0.17.0維持
+- 最新の節目: v0.18 PR #25: UI-001の固定5機能の宣言的Blenderパネル（見出し・ボタン・表示順）を追加。ea0a4bfのPython/Windows/Blender3版/Kit/Handoff/Chromium全6CI成功。汎用UI/Windows GUI/権利は未検証、正式v0.17.0維持
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -35,7 +35,7 @@
 | `EDIT-001` | Edit Mode選択頂点の安全な移動 | 実装済 | Blender CI | 単一メッシュ/有限オフセット/Blender UNDOフラグ |
 | `EDIT-002` | 編集差分の監査とベストエフォート復元 | 一部実装 | Blender CI | 加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。PR #21のBlender 4.4.3/4.5.15/5.2.1 CIで実測成功 |
 | `TEST-001` | Python/Windows/Blender 3バージョンCI | 実装済 | Blender CI | リポジトリ公開化後、PR #21でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。mainの正式last_verifiedは未更新 |
-| `UI-001` | 汎用アドオンUI組み立て | 未実装 | 未検証 | 任意レイアウトの生成は未対応 |
+| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 固定自作5機能の見出し・ボタン・表示順を宣言JSONから検証生成。未知/重複feature・余計なUIキー・JSON重複拒否、選択機能だけ表示。ea0a4bfのPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功。汎用UI・Windows GUI・正式Extensions/権利確認は未完成のためpartial。 |
 | `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 未実装 | 未検証 | 法的/ライセンス確認を先に行う |
 | `INST-001` | GitHubからBlenderへの直接インストール・更新 | 保留 | 未検証 | ユーザー希望で保留。UI確認段階まで実装しない |
 | `PERF-001` | 巨大メッシュ向け監査・効率化 | 一部実装 | Blender CI | 20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否 |
@@ -180,6 +180,7 @@
 - `DEC-053` 3版の監査実測だけでは追加最適化・上限緩和を行わず、背景Undo不能をGUI成功へ昇格させない。NEXT-005の既存検討課題を実測比較して完了。70×70格子の単一CI観測、Python割当だけの測定、上限100への一時引下げ拒否テストの限界を明記。NEXT-002/GUI-001/UNDO-001や巨大メッシュ保証は未完了を維持。新しい開発タスク番号は追加しない。
 - `DEC-054` 生成前の静的登録整合性と、明示Undo履歴による制御実験を既存NEXT-003/002として拡充する。新規コードの自動採用/承認を行わない。AST検査は静的に明示したhelper exportのみ対応し動的exportは拒否。制御undo_push成功を通常の自動履歴/GUI成功に昇格しない。旧Undo schema1を読取互換で保持する。
 - `DEC-055` 双方向の既存観測を調査順に使い、宣言曖昧さを維持して実験へ接続する。三角面割合は面積でも信頼度でもない。等しい境界観測だけで差分にせず、ID同一性を仮定しない。候補名全体の構文集計から複数宣言を選ばず、別名再束縛は安全側に除外。GLB-020任意拡張/自動実行/因果認定は行わない。
+- `DEC-056` UI-001は当面CBDK自作5機能の宣言的パネル表示に限定し、レシピから任意コードや未知operatorを登録させない。catalog/ui_layouts.jsonの全5機能配置だけを受け付け、宣言をコードではなくリテラルに変換。ea0a4bfの対象6CIで生成ZIPとBlender3版Panel.draw/登録/無効化が成功。未知ボタンID、JSON重複キーなどは拒否。Windows GUI操作、自由なUI・正式Extensions・再配布は未完成。UI-001 partial/blender_ci、PRドラフト・正式v0.17.0維持。
 
 ## 更新・プライバシールール
 

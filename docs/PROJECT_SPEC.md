@@ -477,3 +477,8 @@ NEXT-003完了。NEXT-002は制御履歴2ケースの成功を確認したが通
 コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。
 
 今回の自動化追加は検証済み。NEXT-008/009全体は実データの実体/登録/因果・真の部品対応が未確認で継続。新規完了タスクIDなし、23件18完了/4継続/1保留、43要件26実装済/13一部/3未実装/1保留を維持。次はUI-001の固定自作5機能に限定した宣言的見出し/ボタン/表示順の検証・生成。現行自動化未完了なので将来計画は承認済み・未有効。
+
+
+## v0.18 UI-001 一部実装 — 自作5機能の宣言的パネル
+
+`catalog/ui_layouts.json` から見出し・ボタン名・順序を指定し、`cbdk/ui_layout.py` が未知/重複/欠落feature、JSON重複、余計なキー、不可視文字を拒否する。許可済み5機能・既存レシピの選択範囲からだけBlenderパネルを組み立て、オペレーターを任意指定できない。`ea0a4bf`のPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功、headless `Panel.draw`で表示順検査。実GUI/任意のUI作成/正式配布/ライセンスは未検証のまま。UI-001をpartial/blender_ciとする。詳細：[UI_DECLARATIVE_PREVIEW](UI_DECLARATIVE_PREVIEW.md)。

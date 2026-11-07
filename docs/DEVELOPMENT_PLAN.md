@@ -8,6 +8,12 @@
 
 両タスク全体は実データの実体・登録・因果・真の部品対応が未確認で継続。NEXT-003完了とNEXT-002明示履歴の3版成功は前回実測を維持し、GUIは未検証。現行UI-001の自作5機能/6レシピ選択・検証UI、Extensions準備も自動化未完了であるため次期移行条件は未達。将来計画は承認済み・未有効のまま。次の自動化優先はUI-001：固定自作5機能を対象に、見出し/ボタン/表示順を宣言データから検証・生成する。未知operator/任意コード/正式採用は対象外。
 
+## 現行UI-001の実装・実測（2026-11-07 JST）
+
+開発コミット [ea0a4bf](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/ea0a4bf42a6e001b83eca5959da905bab7e1660c) で、`catalog/ui_layouts.json`の安全な固定5機能の見出し/ボタン/順序からBlenderパネルを生成し、選択された機能だけを表示できるようにした。未知operator/JSON重複/余計なフィールドを拒否し、legacy/v2の後方互換を維持。
+
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102139)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102083)・[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102168)・[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102045)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102092)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102137)の全6CI成功。headless `Panel.draw`監査は実Windows GUIや任意UIの完成を意味しない。UI-001は`partial / blender_ci`。次世代は未有効、PR #25ドラフト、正式版v0.17.0を維持。
+
 ## 初回引き継ぎ基準（履歴）
 
 - 開始ブランチ `feature/v0.18-shape-diagnostics`、開始HEAD `7a021f5978302d21d02d51bbb4b4fc263284fa1e`。

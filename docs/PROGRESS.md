@@ -1153,3 +1153,8 @@ Notion節目同期も成功。正本73b5635を既存CBDKプロジェクトとPR/
 コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。
 
 今回の自動化追加は検証済み。NEXT-008/009全体は実データの実体/登録/因果・真の部品対応が未確認で継続。新規完了タスクIDなし、23件18完了/4継続/1保留、43要件26実装済/13一部/3未実装/1保留を維持。次はUI-001の固定自作5機能に限定した宣言的見出し/ボタン/表示順の検証・生成。現行自動化未完了なので将来計画は承認済み・未有効。
+
+
+## 2026-11-07 — v0.18 UI-001 宣言的パネルの限定実装
+
+固定5自作機能の見出し・ボタン名・表示順・空セクション除外を宣言JSONで制御。未知operator・重複機能・危険キーを拒否し、既存の生成レシピを保持。コード`ea0a4bf`の全6CI成功（Python/Windows/Blender3版/Kit/Handoff/Chromium）。実Windows GUI/汎用レイアウト/正式配布は未検証。UI-001 partial、PR #25ドラフト、正式v0.17.0維持。
