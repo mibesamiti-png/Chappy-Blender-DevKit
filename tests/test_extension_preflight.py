@@ -170,6 +170,26 @@ class ExtensionPreflightTests(unittest.TestCase):
         self.assertEqual(report, diagnose_preview_archive(modified))
         self.assertNotIn(str(modified), json.dumps(report))
 
+    def test_r10_checked_out_source_bytes_cannot_grant_release(self):
+        """Fixed CBDK source bytes are independent of archive-declared SHA."""
+        from cbdk.addon_builder import ROOT, _trusted_read
+        self.build("mesh_inspector")
+        with ZipFile(self.zip) as archive:
+            packaged = archive.read("cbdk_mesh_inspector_preview/helpers/context.py")
+        repository_bytes = _trusted_read("parts/blender/context.py", root=ROOT)
+        self.assertEqual(packaged, repository_bytes)
+        result = inspect_preview_archive(self.zip)
+        self.assertEqual(result["status"], "blocked_for_extension_release")
+        self.assertTrue(result["provenance_hashes_verified"])
+        self.assertFalse(result["source_authenticity_verified"])
+        self.assertFalse(result["official_blender_extension_validate_ran"])
+        self.assertFalse(result.get("release_authorized", False))
+        self.assertIn(
+            "owner_release_and_redistribution_authorization_required",
+            result["blockers"],
+        )
+        self.assertNotIn(str(ROOT), json.dumps(result))
+
     def test_all_feature_preview_is_verified_but_not_extension_approved(self):
         self.build()
         result = inspect_preview_archive(self.zip)
