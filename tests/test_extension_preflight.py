@@ -95,6 +95,42 @@ class ExtensionPreflightTests(unittest.TestCase):
                 self.assertNotIn("synthetic-hidden-tail", json.dumps(result))
                 self.assertNotIn(str(corrupt), json.dumps(result))
 
+    def test_r8_valid_preview_and_synthetic_validator_remain_independent(self):
+        """Two successful *technical* observations never imply release rights."""
+        from cbdk.extension_manifest import compare_official_validation
+        self.build("mesh_inspector")
+        inspected = inspect_preview_archive(self.zip)
+        self.assertEqual(inspected["status"], "blocked_for_extension_release")
+        self.assertTrue(inspected["archive_structure_checked"])
+        self.assertTrue(inspected["provenance_hashes_verified"])
+        self.assertFalse(inspected["source_authenticity_verified"])
+        self.assertFalse(inspected["official_blender_extension_validate_ran"])
+        self.assertFalse(inspected.get("release_authorized", False))
+
+        # A fabricated clean official-log string is not an authenticated
+        # official CLI execution or evidence of author/license permission.
+        fields = {
+            "schema_version": "1.0.0", "id": "cbdk_synthetic_fixture",
+            "version": "1.2.3", "name": "Synthetic fixture",
+            "tagline": "Synthetic validation fixture",
+            "maintainer": "Synthetic test", "type": "add-on",
+            "blender_version_min": "4.4.0",
+            "license": ["SPDX:GPL-3.0-or-later"],
+        }
+        compared = compare_official_validation(
+            fields, 0, 'Success parsing TOML in "synthetic"\nBlender quit',
+        )
+        self.assertEqual(compared["status"], "agreement")
+        self.assertTrue(compared["complete_diagnostic_agreement"])
+        self.assertFalse(compared["official_observation"]["authenticates_log"])
+        self.assertFalse(compared["owner_approval_verified"])
+        self.assertFalse(compared["license_compatibility_verified"])
+        self.assertIn(
+            "owner_release_and_redistribution_authorization_required",
+            inspected["blockers"],
+        )
+        self.assertFalse(inspected.get("release_authorized", False))
+
     def test_all_feature_preview_is_verified_but_not_extension_approved(self):
         self.build()
         result = inspect_preview_archive(self.zip)
