@@ -156,3 +156,44 @@ change before adding any parser allowance.
 identity authentication, SPDX license selection, redistribution approval,
 formal Extension build/install/uninstall, Windows GUI confirmation and
 publication. EXT-001 stays partial until the owner and A resolve those gates.
+
+
+## R5 — versioned official-validator observations and sanitized failures
+
+This is a development-only regression extension of R4's seven-recipe ZIP
+positive/negative matrix. There are no changes to the production ZIP or
+manifest parser unless an actual false acceptance/rejection is reproduced.
+
+### Data-only official-log fixture comparisons
+
+- A **3 × 6 × 2** matrix uses versioned Blender 4.4.3, 4.5.15 LTS and
+  5.2.1 LTS startup banners; the six existing official-validator manifest
+  categories (one valid and five known rejected); and LF/CRLF line endings.
+  Optional blank lines, startup and clean shutdown markers must not cause
+  false rejections. These are synthetic log fixtures, not executed addons.
+- A **3 × 9** matrix checks complete agreement versus partial diagnostic
+  agreement, known mismatch, duplicate fields, missing/invalid contradictions,
+  unknown field diagnostics, mixed success/error headers and unknown warnings.
+  Only the exact complete known pair may return complete agreement.
+- A position matrix injects an unknown value-bearing log line before, between
+  or after otherwise accepted output. The official observation must become
+  unclassified at every position and must not serialize the line, path or
+  synthetic marker.
+- Recognized field diagnostics may contain free-form official reasons.
+  Diagnostics keep only the allowlisted field identifier and code; they never
+  echo reasons or filesystem paths. A returned agreement is consistency
+  **only**, not proof of log authenticity, legal ownership or release approval.
+
+The existing Blender CI continues to execute the actual official Blender
+extension validator on six synthetic data-only manifest cases for each of
+the three supported versions. R5's new Python tests are **additional** and
+are not evidence of an executed official validator by themselves.
+
+### Unchanged constraints
+
+R4's all-seven authored preview tests and R2 ZIP envelope/provenance failures
+remain unchanged. Valid preview archives still return
+blocked_for_extension_release. Unexpected validator log lines never become
+complete_diagnostic_agreement=true. R5 neither chooses a license/maintainer,
+creates an Extension ZIP, installs code, modifies shared CI/scripts/STATE,
+nor authenticates source or authorizes publication. EXT-001 remains partial.
