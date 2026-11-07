@@ -430,3 +430,10 @@ CBDK自作ソケットだけで0.78〜1.70を0.01刻みで二分し、GLB-020で
 テスト対象コードSHA `37ee124aabb44df5ad9cb246342712bd9e0eb2ef`：[Python 42311608904](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608904)、[Windows 42311608916](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608916)、[Blender4.4.3/4.5.15/5.2.1 42311608910](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608910)、[Windows Kit 42311609353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609353)、[引き継ぎ 42311609070](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609070)、[Chromium 42311609211](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609211) **全6系統success**。
 
 **実ユーザー向けの最適寸法推薦・コード修正・実物の公差確認ではない**。モデル全体のサンプリング最大距離は厳密Hausdorffではない。GLB-022はpartial、正式版v0.17.0、ドラフトPR #25を維持。[実験仕様](GLB022_ADAPTIVE_SYNTHETIC.md)。
+
+
+## GLB-019 証拠整合性の補強（2026-11-07引き継ぎ）
+
+匿名部品一覧は上位32件を降順で保持する。完全一覧は総面数と一致、省略一覧は未列挙部品が列挙最小面数以下という境界を満たす。skipでもこの条件を適用する。測定は1〜512面/側、triangle_limit skipは少なくとも一方が512面超。弱い面数候補を再計算し、JSONの真偽値と整数も区別して検証する。
+
+CBDK自作のユニーク/曖昧/33部品/561面スキップの4ケースを実GLB生成・再読込の3版CIで確認する。完全な部品対応や幾何同一性は認定しない。[仕様](GLB_SURFACE_PIPELINE.md)、[全体計画](DEVELOPMENT_PLAN.md)、[同期運用](NOTION_SYNC.md)と台帳で、実装と検証状態を区別する。

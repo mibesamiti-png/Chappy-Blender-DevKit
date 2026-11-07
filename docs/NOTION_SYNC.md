@@ -12,8 +12,8 @@ Last handoff: 2026-11-07 JST.
 
 - Current canonical state: [development branch STATE](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/blob/feature/v0.18-shape-diagnostics/docs/project/STATE.json). Earlier snapshots below are history.
 - Existing project and GLB-019/020/021/022 task pages are accessible through the Notion connector; no connection setup is required for this session.
-- GitHub source inventory/count hints at code `e254aa7` have all six workflows successful. New report-integrity hardening is locally Python-tested (707 tests) and synthetic Blender4.3.2-tested; target Windows/Blender3-version CI is pending. GLB-019 temporarily partial until that gate; GLB-020/021/022 remain partial.
-- Sync status: **pending** until the new GitHub commit is saved and existing Notion summaries/tasks are written. No new pages, private sources/models/reports, or personal data are included.
+- GitHub source inventory/count hints at code `e254aa7` have all six workflows successful. Report-integrity code `31bf3de18c357d796194dcac369c66e55b3973bf` passed all six workflows: Python707 tests x3 (`42359722780`), Windows2 (`42359722774`), Blender3 (`42359722777`, all four new inventory cases), Kit (`42359722842`), Handoff (`42359722778`), Chromium (`42359722853`). GLB-019 implemented/blender_ci; GLB-020/021/022 remain partial.
+- Sync status: **pending final CI reflection**. Existing project and all four GLB tasks were updated successfully with interim status; now reflect the successful code CI after saving this GitHub evidence. No new pages, private sources/models/reports, or personal data are included.
 - At every milestone: save canonical state and observed evidence on GitHub, update existing Notion records, then record the actual outcome here and in STATE. On connector failure leave pending with a reason and retry target; never mark unsaved changes synchronized.
 - If a future session has no Notion connection, connect Notion in the client Apps settings using the intended workspace and grant access to these existing pages; retry fetch before writing. Never request credentials in chat.
 

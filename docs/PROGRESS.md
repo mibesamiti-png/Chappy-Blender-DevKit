@@ -1044,3 +1044,9 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - **実機:** ローカルBlender4.3.2で自作GLB4ケース（ユニーク、曖昧、33部品、33部品561面）を生成→実ランナーで再読込→台帳/候補/skip/入力SHA256不変を確認。対象3版の成功に代用しない。同じスクリプトを既存3版CIへ追加。
 - **状態:** GLB-019の今回の補強は対象CI完了までpartial/python。GLB-021/022は引き続きpartial、正式last_verified維持。人間の判断が必要なGUI操作/権利/正式公開の境界も計画書へ記録。
 - **Notion:** 既存プロジェクトと4タスクの読取成功。新規ページは作らない。GitHub保存後に既存要約/状態/検証/予定を同期するまでpending。私有ソース、GLB、ローカルレポート、個人情報は同期しない。
+
+### 引き継ぎ後の補強：対象CI実測成功
+
+- コードSHA `31bf3de18c357d796194dcac369c66e55b3973bf`： [Python 42359722780](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722780)（707件×3.11/3.12/3.13）、[Windows 42359722774](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722774)（3.11/3.13）、[Blender 42359722777](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722777)（4.4.3/4.5.15/5.2.1）、[Kit 42359722842](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722842)、[Handoff 42359722778](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722778)、[Chromium 42359722853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722853)の**全6系統success**。
+- 全Blender版の追加`Verify anonymous inventory and weak hints through real GLB imports`工程成功。ユニーク/曖昧/33部品/561面skip、元GLB SHA256不変を実際に検証。GLB-019をimplemented/blender_ciへ戻し、NEXT-021をdoneへ。一般の部品同一性や完全形状保証は追加しない。
+- Notionの既存プロジェクト/4タスクは中間状態を同期済み。このGitHub記録後に最終CI成功を反映する。正式v0.17.0、PR #25ドラフト、未マージ・未公開を維持。

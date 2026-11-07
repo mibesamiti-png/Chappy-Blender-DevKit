@@ -39,3 +39,7 @@
 - Windows GUIの操作感とUndo/Redoの合格条件、最終リリース/マージの判断。
 
 今回のレポート検証修正と合成CI追加は既存仕様内で実施する。マージ・正式公開は行わない。
+
+## 今回の到達点
+
+NEXT-021の実装・検証は完了。コード`31bf3de18c357d796194dcac369c66e55b3973bf`の全6CI成功、Python707件×3版/Windows2版/Blender3版合成4ケースを確認（[Blender実測](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722777)）。GLB-019はimplemented/blender_ci。次の実装は上記2のNEXT-019/020を優先。GLB-020/021/022はpartialを維持し、Notionへの実際の同期結果は`NOTION_SYNC.md`に記録する。
