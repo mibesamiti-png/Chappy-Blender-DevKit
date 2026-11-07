@@ -131,6 +131,45 @@ class ExtensionPreflightTests(unittest.TestCase):
         )
         self.assertFalse(inspected.get("release_authorized", False))
 
+    def test_r9_rehashed_helper_is_still_release_blocked(self):
+        """Changing self-asserted hashes cannot turn authored ZIP into release."""
+        import hashlib
+        self.build("mesh_inspector")
+        with ZipFile(self.zip) as source:
+            package = "cbdk_mesh_inspector_preview/"
+            info_name = package + "CBDK_BUILD_INFO.json"
+            metadata = json.loads(source.read(info_name))
+            helper_name = "helpers/context.py"
+            payload = source.read(package + helper_name) + b"\n# synthetic r9 only\n"
+            digest = hashlib.sha256(payload).hexdigest()
+            self.assertNotEqual(metadata["files_sha256"][helper_name], digest)
+            metadata["files_sha256"][helper_name] = digest
+            for part in metadata["parts"]:
+                if part["source"] == "parts/blender/context.py":
+                    part["sha256"] = digest
+            modified = self.root / "self-rehashed-r9.zip"
+            with ZipFile(modified, "x") as output:
+                for info in source.infolist():
+                    if info.filename == info_name:
+                        content = (json.dumps(metadata, sort_keys=True) + "\n").encode()
+                    elif info.filename == package + helper_name:
+                        content = payload
+                    else:
+                        content = source.read(info.filename)
+                    output.writestr(info, content)
+
+        report = inspect_preview_archive(modified)
+        self.assertTrue(report["provenance_hashes_verified"])
+        self.assertEqual(report["status"], "blocked_for_extension_release")
+        self.assertFalse(report["source_authenticity_verified"])
+        self.assertFalse(report["python_code_executed"])
+        self.assertFalse(report["official_blender_extension_validate_ran"])
+        self.assertFalse(report.get("release_authorized", False))
+        self.assertIn("owner_release_and_redistribution_authorization_required",
+                      report["blockers"])
+        self.assertEqual(report, diagnose_preview_archive(modified))
+        self.assertNotIn(str(modified), json.dumps(report))
+
     def test_all_feature_preview_is_verified_but_not_extension_approved(self):
         self.build()
         result = inspect_preview_archive(self.zip)
