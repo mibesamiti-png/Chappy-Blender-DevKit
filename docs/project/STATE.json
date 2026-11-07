@@ -371,7 +371,7 @@
       "status": "partial",
       "verification": "python",
       "source": "docs/dashboard/index.html",
-      "note": "v0.18開発ブランチのPR #68で公開データ読み取り専用MVPを追加。STATE/PR/CI/ローリングキューに基づく数値・ABCD・次の作業と5分自動/手動更新。ラウンド/チーム一回のopt-in音をNodeオフライン回帰で検証。dev SHA d656f62dのPython3版・Windows2版・Blender3版・Chromium・Handoff・Kit・Skill全7系統CI成功。実Edge/Chromeのネットワーク/通知音、GitHub Pages公開は未検証。 v2 PR #71（開発SHA dd8ae12b）でBCD完了件数/3、手動通知音試聴、Rawキュー失敗時のContents API読み取りfallbackを追加。Nodeオフライン検証と別途Chromium模擬データUIテストでC新規完了の一回通知を確認（GitHub実通信・Windows実機音は未検証）。 v3 PR #79（dev e60d48f1）でBCDのPR提出→全5CI成功、BCD完了→A統合、A統合PR所要をGitHub created_at/merged_at/Actions updated_atの実測メタデータから追加。各時刻は作業実時間でなくCI更新時刻近似。欠損/不一致SHAは―表示。Nodeオフライン速度計算テスト、独立したChromiumモックの画面・重複音テスト、ポータブルHTML/ZIP検証済み。実Windows Edge/可聴音・公開GitHub API通信/Pagesは未検証。"
+      "note": "v0.18開発にGitHub公開データ読取専用ライブボードを追加（#68）：STATE/PR/CI/キュー表示、手動/5分更新、チーム完了時の一度だけの通知。v2（#71）：BCD人数表示、音試聴、Raw取得失敗時の公開API fallback。v3（#79, dev e60d48f1）：PR/CI実測時刻由来のBCD提出→全員CI、BCD完了→Aマージ、A統合PR所要を追加。不足データは―、CI updated_atは近似。Node/ChromiumモックとポータブルHTML/ZIPを検証。実Windows Edge/可聴音/live GitHub通信/Pagesは未検証。"
     }
   ],
   "known_issues": [
