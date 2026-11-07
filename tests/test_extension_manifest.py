@@ -63,6 +63,130 @@ class ManifestReviewTests(unittest.TestCase):
                     self.assertNotIn("private-marker-42", str(blocked))
                     self.assertNotIn("synthetic fixture", str(blocked))
 
+    def test_r5_official_versioned_logs_are_stable_with_line_ending_variants(self):
+        """Known 3-version x 6-case observations must survive CRLF and blank lines.
+
+        Exact banner shapes were observed in prior official Blender CI runs.
+        Logs below are synthetic; the actual CLI is exercised separately in CI.
+        """
+        cases = (
+            ("valid_subset", {}, 0, None),
+            ("missing_license", {"license": None}, 1, 'missing "license"'),
+            ("punctuated_tagline", {"tagline": "Invalid tagline!"}, 1,
+             'key "tagline" invalid: synthetic detail'),
+            ("invalid_id", {"id": "invalid-id"}, 1,
+             'key "id" invalid: synthetic detail'),
+            ("invalid_version", {"version": "not-version"}, 1,
+             'key "version" invalid: synthetic detail'),
+            ("empty_maintainer", {"maintainer": ""}, 1,
+             'key "maintainer" invalid: synthetic detail'),
+        )
+        banners = (
+            "Blender 4.4.3 (hash 802179c51ccc built 2025-04-29 15:12:13)",
+            "Blender 4.5.15 LTS (hash 5afeabba6097 built 2026-10-22 01:33:47)",
+            "Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:12:34)",
+        )
+        for banner in banners:
+            for name, change, exitcode, diagnostic in cases:
+                for newline in ("\n", "\r\n"):
+                    with self.subTest(blender=banner.split()[1], case=name, newline=repr(newline)):
+                        status_line = (
+                            'Success parsing TOML in "/synthetic/private-token/manifest"'
+                            if diagnostic is None else
+                            'Error parsing TOML "/synthetic/private-token/manifest"')
+                        lines = ["", banner, status_line]
+                        if diagnostic:
+                            lines.append(diagnostic)
+                        lines += ["", "Blender quit", ""]
+                        output = newline.join(lines)
+                        report = compare_official_validation({**fields(), **change}, exitcode, output)
+                        self.assertEqual(report["status"], "agreement")
+                        self.assertTrue(report["complete_diagnostic_agreement"])
+                        self.assertEqual(report["official_observation"]["status"],
+                                         "accepted" if exitcode == 0 else "rejected")
+                        self.assertFalse(report["official_observation"]["has_unrecognized_diagnostics"])
+                        self.assertFalse(report["official_observation"]["authenticates_log"])
+                        self.assertFalse(report["owner_approval_verified"])
+                        self.assertFalse(report["license_compatibility_verified"])
+                        self.assertNotIn("private-token", str(report))
+                        self.assertNotIn("/synthetic/", str(report))
+
+    def test_r5_partial_wrong_and_ambiguous_official_logs_do_not_agree(self):
+        """Missing, mismatched, and unrecognized fields are separate outcomes."""
+        # The correct local findings are TWO missing fields. Do not promote a
+        # partial matching validator log to complete diagnostic agreement.
+        source = {**fields(), "license": None, "version": None}
+        cases = (
+            ("both_expected", 'missing "license"\nmissing "version"', "agreement", False),
+            ("only_one_expected", 'missing "license"', "partial_diagnostic_agreement", False),
+            ("wrong_known_field", 'missing "id"', "disagreement", False),
+            ("unexpected_field", 'missing "license"\nmissing "private_field"', "unclassified", True),
+            ("duplicate", 'missing "license"\nmissing "license"', "unclassified", True),
+            ("contradiction",
+             'missing "license"\nkey "license" invalid: conflicting data', "unclassified", True),
+            ("success_and_missing",
+             'Success parsing TOML in "synthetic"\nmissing "license"', "unclassified", True),
+            ("error_after_success",
+             'Success parsing TOML in "synthetic"\nError parsing TOML "synthetic"\nmissing "license"',
+             "unclassified", True),
+            ("new_warning", 'missing "license"\nWARNING: private-marker-r5', "unclassified", True),
+        )
+        banners = ("Blender 4.4.3", "Blender 4.5.15 LTS", "Blender 5.2.1 LTS")
+        for banner in banners:
+            for name, lines, expected, unknown in cases:
+                with self.subTest(blender=banner, case=name):
+                    output = banner + "\nError parsing TOML \"synthetic\"\n" + lines + "\nBlender quit"
+                    result = compare_official_validation(source, 1, output)
+                    # The success/error conflict is unclassified even when
+                    # the known field lines agree with the local findings.
+                    self.assertEqual(result["status"], expected)
+                    self.assertEqual(result["complete_diagnostic_agreement"], expected == "agreement")
+                    self.assertEqual(result["official_observation"]["has_unrecognized_diagnostics"], unknown)
+                    self.assertFalse(result["official_observation"]["authenticates_log"])
+                    self.assertNotIn("private-marker-r5", str(result))
+                    self.assertNotIn("private_field", str(result))
+                    self.assertNotIn("conflicting data", str(result))
+
+    def test_r5_unknown_output_position_and_value_never_leak(self):
+        """Unknown stdout/stderr lines cannot be silently ignored or echoed."""
+        from cbdk.extension_manifest import observe_official_validation
+        secret = "synthetic-secret-r5@example.invalid"
+        source = {**fields(), "maintainer": secret}
+        success = 'Success parsing TOML in "/private/synthetic-secret-r5/manifest.toml"'
+        known = "Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:12:34)"
+        self.assertEqual(compare_official_validation(source, 0, known + "\n" + success)["status"],
+                         "agreement")
+        for location in ("before", "between", "after"):
+            with self.subTest(location=location):
+                unexpected = "Unknown validator note: " + secret
+                lines = ([unexpected, known, success] if location == "before" else
+                         [known, unexpected, success] if location == "between" else
+                         [known, success, unexpected])
+                output = "\n".join(lines)
+                observed = observe_official_validation(0, output)
+                result = compare_official_validation(source, 0, output)
+                self.assertEqual(observed["status"], "unclassified")
+                self.assertEqual(result["status"], "unclassified")
+                self.assertTrue(observed["has_unrecognized_diagnostics"])
+                self.assertFalse(result["complete_diagnostic_agreement"])
+                self.assertFalse(observed["authenticates_log"])
+                for sanitized in (str(observed), str(result)):
+                    self.assertNotIn(secret, sanitized)
+                    self.assertNotIn("/private/", sanitized)
+                    self.assertNotIn("Unknown validator note", sanitized)
+
+        # An error description may carry the fixture's private value even
+        # when the *field identifier* is recognized. Never copy it to a report.
+        bad_tagline = {**fields(), "tagline": "Invalid tagline!"}
+        reason = 'key "tagline" invalid: ' + secret
+        rejected = compare_official_validation(bad_tagline, 1, 'Error parsing TOML "fixture"\n' + reason)
+        self.assertEqual(rejected["status"], "agreement")
+        self.assertTrue(rejected["complete_diagnostic_agreement"])
+        self.assertNotIn(secret, str(rejected))
+        # This is classification, not log authentication or a license decision.
+        self.assertFalse(rejected["official_observation"]["authenticates_log"])
+        self.assertFalse(rejected["license_compatibility_verified"])
+
     def test_official_fields_must_match_not_just_nonzero_exit(self):
         data = {**fields(), "license": None}
         matched = compare_official_validation(data, 1, 'Error parsing TOML "/private/source"\nmissing "license"')
