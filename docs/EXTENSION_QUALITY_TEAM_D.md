@@ -197,3 +197,50 @@ blocked_for_extension_release. Unexpected validator log lines never become
 complete_diagnostic_agreement=true. R5 neither chooses a license/maintainer,
 creates an Extension ZIP, installs code, modifies shared CI/scripts/STATE,
 nor authenticates source or authorizes publication. EXT-001 remains partial.
+
+
+## R6 — bounded ZIP budgets and official-log size boundary
+
+R6 extends the existing R4 seven-recipe positive suite and R5 3-version
+official synthetic-log suite without executing user source or broadening
+Blender's official-validator output allowlist. The goal is to verify the
+**existing budgets**, not to claim a new Extension release capability.
+
+The R6 Python negative fixture suite uses only CBDK-authored previews and
+generated, tiny synthetic ZIPs. For large logical sizes it edits only
+ZIP central-directory **size fields**; it never materializes or decompresses
+the alleged large entries. It also checks sparse-like local temporary
+files at the full-archive limit, which are rejected by the stat/envelope
+guard before any ZIP content inspection. All tests use temporary paths.
+
+- Archive physical bytes: 16 MiB minus one, exactly 16 MiB, and one over.
+  Under/equal malformed synthetic files are invalid ZIP envelopes; above the
+  hard cap fails as `archive_too_large` before opening the archive.
+- Entry size: 2 MiB minus one, exactly 2 MiB, and one over, by central
+  record metadata only. At/under the cap, intentionally forged local-vs-
+  central sizes fail the canonical-layout check; above cap fails the
+  `unsafe_member` guard before any payload decompression.
+- Aggregate declared uncompressed bytes: eight empty entries each claiming
+  2 MiB (equal to the 16-MiB budget), versus nine (exceeding the budget).
+  At the cap, forged sizes are rejected by structural checks; above it,
+  `uncompressed_budget` rejects before any content read.
+- Member count: 63, 64 and 65 tiny synthetic entries. The former two
+  proceed to provenance checks and fail for lack of a real CBDK inventory;
+  65 is rejected by `duplicate_or_count` before deeper work.
+- Canonical headers: a valid authored modular preview is a positive control;
+  corrupt local-version, central-marker and directory-length variants must
+  remain `invalid_preview_archive` with sanitized failure details.
+- Official-validator observation: the parser's 200,000-character limit
+  accepts harmless whitespace padding just below/at the limit, rejects
+  oversized input with a controlled exception, and classifies a late
+  unknown value-bearing line as unclassified rather than successful.
+
+Budget thresholds are part of a **read-only static preflight**, not a
+permission to create oversized input, authenticity proof, SPDX decision,
+Extension ZIP or installable release. CI timing variability is not evidence
+of a CPU-performance guarantee; these deliberately bounded fixtures are
+small except the stat-only temporary file. No private paths/strings are
+returned in report JSON. The only official CLI executions remain the six
+A-owned data-only fixtures on Blender 4.4.3, 4.5.15 and 5.2.1 in CI.
+Owner/redistribution approval, real GUI and real user addons remain outside
+the scope. EXT-001 stays partial.
