@@ -78,6 +78,17 @@ class ProjectHandoffTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unknown requirement"):
             validate_state(self.root)
 
+    def test_state_size_budget_is_bounded_above_128_kib(self):
+        # A checkpointing state file grows; both LF and Windows CRLF copies
+        # must remain readable without weakening small catalog input budgets.
+        state_path = self.root / STATE
+        self.assertLess(state_path.stat().st_size, 128 * 1024)
+        self.assertEqual(validate_state(self.root)["state"]["schema_version"], 1)
+        with state_path.open("ab") as stream:
+            stream.write(b" " * (128 * 1024 + 1))
+        with self.assertRaisesRegex(ValueError, "oversized state file"):
+            validate_state(self.root)
+
     def test_silent_approval_fails(self):
         path = self.root / "catalog/authored_parts.json"
         data = json.loads(path.read_text())

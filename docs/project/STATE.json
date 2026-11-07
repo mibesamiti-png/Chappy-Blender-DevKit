@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18: R1〜R4開発統合後、R5のB/C/DをPR #49で統合（a1c2f847）。GLB判定の並べ替え/微小摂動、UI所有権修正とBlender3版での実機反復、Extensionsログ分類を検証。初回R5 native UIテスト失敗はテスト期待値を修正し再実測成功。統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skillの7CI全成功。R6はPR #51で割当済み。実ユーザーGLB、Windows GUI、権利、正式Extensions/公開は未確認。v0.17.0維持。"
+    "milestone": "v0.18: R1〜R5に続きR6のB/C/D 12ファイルをPR #56で開発統合（e2f09e59）。GLB厳密無向境界署名による保守的高速化、Blender3版の実機addon reload/所有権保護、Extension ZIP/公式ログ上限の合成回帰を検証。R6結合5CI成功、統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skillの7CI全成功。R7はPR #57で割当済み。実ユーザーGLB、実Windows GUI、権利、正式Extensions/公開未確認。正式v0.17.0維持。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -968,6 +968,11 @@
       "id": "DEC-065",
       "decision": "R5統合候補で新設Blender実機検証を実行し失敗修正後の成功を確認して統合、7CI後にR6を割り当てる",
       "note": "B #47/C #48/D #46の各個別5CI成功。A統合#49初回b300e743は3版Blenderでテスト誤期待により失敗、修正106bf250の5系統全成功（Blender3版のnative UI反復含む）。dev SHA a1c2f847の7系統全成功後、R6キュー#51を正式統合。GUI/私有GLB/権利/公開は未検証。"
+    },
+    {
+      "id": "DEC-066",
+      "decision": "R6でGLBの厳密境界高速経路を保守的fallbackとともに統合し、Blender実機のreload/所有権・Extensionsの資源負例を検証してR7を割り当てる",
+      "note": "B #54/C #55/D #53各5系統success、A結合#56 HEAD7400516aの5系統成功。R2 fallback/R3別途ガード継続、UI native R6検証3版、EXT synthetic limitsは正式公開証明ではない。dev統合e2f09e59の全7CI成功を確認しR7 #57統合。GUI/私有GLB/権利/配布/mainは別承認。"
     }
   ],
   "last_verified": {
@@ -1062,6 +1067,7 @@
     "ui_modes_settings": "コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。 各Blender版の既存6レシピ+追加UI例で、モード表示切り替え・範囲±1のRNA入力制限・生成メタデータ一致を確認。未対応modeの空表示は模擬contextであり実Sculpt GUI未検証。静的計画は非実行で既定出力互換。置換語ラベルの不具合は失敗再現→修正後成功。通常の追加UI ZIPは修正前後byte-identical。詳細docs/UI_MODE_SETTINGS.md。",
     "extension_diagnostic_alignment": "実装ede29deb459232b3de4a64d32a8f73ec53103cb4でBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium/Skill成功。データ専用パーサーと回帰入力だけの修正1e18232379924939dd7529ad09c967b65018838aでPython839件×3.11/3.12/3.13・Windows3.11/3.13成功。影響のないBlenderを再実行せず、異なる検証SHAを区別する。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391763231)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391766410)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587199)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587164)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587159)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587181)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587167)。 各対象Blender版で6例の診断項目一致、未分類/不一致/部分一致を成功にしないPython回帰を確認。レビューCLIの値/パス/未知キー非出力、原本不変、fresh出力、symlink/重複/サイズ/深い入れ子拒否を検証。実部品ライセンス/実Extension/GUIは未確認。",
     "rolling_r4_integration": "2026-11-08 JST: B PR #41 e94febeb、C PR #42 ae6ad0b、D PR #39 f0fa735各個別5系統成功。A候補PR #43 667f2e4の5系統成功→devへsquash merge SHA a9a0a76a963ab4ae41b68126f419546b80871e2b。統合後Python42403131307/Windows42403131264/Blender42403131258/Chromium42403131308/Handoff42403131276/Kit42403131296/Skill42403131270の7系統success。R5をPR #44で正式割当、更新後HEAD af7a5f0436bce631cb7cddbd81b10d2d0c932619。正式リリースv0.17.0、last_verifiedは未変更。",
-    "rolling_r5_integration": "2026-11-08 JST: Team B PR #47 head0d388155、C PR #48 c56b641、D PR #46 a86ebdb各5系統成功。A PR #49初回b300e743 Blender3版失敗→テストのみ修正。修正SHA106bf250にPython42405240225/Windows42405240226/Blender42405240271/Chromium42405240247/Handoff42405240230の5系統成功（3版native UI marker）。dev squash a1c2f84715acce1f8cd33abaf003556708c13c07: Python42405529257/Windows42405529241/Blender42405529262/Chromium42405529203/Handoff42405529311/Kit42405529324/Skill42405529212 全7系統成功。R6キューPR #51統合 d2414e1cfa7a053d347637c77ddd6011447b5945。formal last_verified v0.17.0維持。"
+    "rolling_r5_integration": "2026-11-08 JST: Team B PR #47 head0d388155、C PR #48 c56b641、D PR #46 a86ebdb各5系統成功。A PR #49初回b300e743 Blender3版失敗→テストのみ修正。修正SHA106bf250にPython42405240225/Windows42405240226/Blender42405240271/Chromium42405240247/Handoff42405240230の5系統成功（3版native UI marker）。dev squash a1c2f84715acce1f8cd33abaf003556708c13c07: Python42405529257/Windows42405529241/Blender42405529262/Chromium42405529203/Handoff42405529311/Kit42405529324/Skill42405529212 全7系統成功。R6キューPR #51統合 d2414e1cfa7a053d347637c77ddd6011447b5945。formal last_verified v0.17.0維持。",
+    "rolling_r6_integration": "2026-11-08 JST: B #54 0c293687、C #55 4624c83c、D #53 d6263f4d各個別5系統成功。A結合PR #56 SHA 7400516a9ab8230eda60a0daea8141e0c03c2844でPython42410170293/Windows42410170317/Blender42410170354(3版)/Chromium42410170318/Handoff42410170290 all success。dev squash SHA e2f09e593d9c7bdff66695c7e8972eea98e160caでPython42410463309/Windows42410463276/Blender42410463269/Chromium42410463349/Handoff42410463353/Kit42410463251/Skill42410463244の7系統すべてsuccess。R7割当PR #57 merged d491fe30cec57cf5ca4b8db307c715c5e7073053。実GLB/GUI/配布/権利未検証、formal v0.17.0 last_verified維持。"
   }
 }
