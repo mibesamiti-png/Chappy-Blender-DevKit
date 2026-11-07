@@ -78,6 +78,15 @@ def _outside_expanded_boundary_segment_box(point, start, end, margin):
     )
 
 
+def _keep_r2_bbox_after_probe(rejected):
+    """Keep the safe R8 filter when >=8 of the first 64 boxes were rejected.
+
+    This is only a CPU-work choice, never a geometry-match decision. Bounded
+    geometry and the original R2 predicate still govern every candidate.
+    """
+    return rejected >= 8
+
+
 def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
     """Compare corresponding open-contour segments in part-local coordinates.
 
@@ -128,14 +137,32 @@ def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
 
     limit2 = BOUNDARY_LAYOUT_RELATIVE_TOLERANCE ** 2
 
+    # R10: the R8 conservative AABB may cost more than it saves when
+    # candidate boxes overlap almost every sample point. Observe only the
+    # first 64 *bounded* box checks, then disable the optional filter if
+    # fewer than 1/8 of them can exclude a segment. This decision affects
+    # performance only: the original R2 distance predicate still runs for
+    # every nonexcluded segment, including ALL segments after disabling.
+    # No geometry, probe counts or signatures are written into reports.
+    sampled_boxes = 0
+    rejected_boxes = 0
+    use_bbox = True
+
     def within_any(point, segments):
+        nonlocal sampled_boxes, rejected_boxes, use_bbox
         for start, end in segments:
-            # R8: reject only a definitely-outside AABB (two tolerance
-            # radii of padding). No potentially in-range segment is dropped:
-            # the original R2 closest-distance calculation still decides.
-            if _outside_expanded_boundary_segment_box(
-                    point, start, end, 2 * BOUNDARY_LAYOUT_RELATIVE_TOLERANCE):
-                continue
+            if use_bbox:
+                # R8: outside a 2*t expanded AABB guarantees that the
+                # original R2 Euclidean distance predicate cannot pass.
+                outside = _outside_expanded_boundary_segment_box(
+                    point, start, end, 2 * BOUNDARY_LAYOUT_RELATIVE_TOLERANCE)
+                if sampled_boxes < 64:
+                    sampled_boxes += 1
+                    rejected_boxes += int(outside)
+                    if sampled_boxes == 64:
+                        use_bbox = _keep_r2_bbox_after_probe(rejected_boxes)
+                if outside:
+                    continue
             direction = tuple(end[k] - start[k] for k in range(3))
             norm2 = sum(v * v for v in direction)
             if norm2 <= 0:
