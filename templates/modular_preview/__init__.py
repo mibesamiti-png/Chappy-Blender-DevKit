@@ -18,6 +18,14 @@ import importlib
 from math import isfinite
 import bpy
 
+# importlib.reload() re-executes a module in its existing namespace.  If the
+# preview is still registered, resetting the lists below would orphan Blender
+# classes and Scene declarations.  Require explicit unregister/disable first.
+# Place this check *before* recreating the operator/Panel classes and ledgers.
+if any(globals().get(key) for key in (
+        "_REGISTERED", "_OWNED_PROPERTIES", "_OWNED_PROPERTY_TOKENS")):
+    raise RuntimeError("CBDK preview must be unregistered before module reload")
+
 _FEATURE_IDS = __CBDK_FEATURE_IDS__
 _UI_SECTIONS = __CBDK_UI_SECTIONS__
 _UI_OPTIONS = __CBDK_UI_OPTIONS__
