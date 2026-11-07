@@ -9,6 +9,7 @@ import hashlib
 import json
 import re
 import stat
+import struct
 import zlib
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZIP_STORED, BadZipFile, ZipFile
@@ -46,6 +47,105 @@ def _clean_zip_envelope(path: Path) -> bool:
         tail = stream.read(22)
     return (len(tail) == 22 and tail[:4] == b"PK\x05\x06"
             and tail[-2:] == b"\x00\x00")
+
+
+
+def _verify_canonical_zip_layout(archive: ZipFile, infos: list) -> None:
+    """Require the exact contiguous, unextended ZIP layout emitted by CBDK.
+
+    zipfile intentionally accepts executable prefixes, concatenated archives,
+    and ignores some local/central header disagreements. CBDK's authored
+    builders emit none of those features. Read raw bytes from the SAME open
+    handle so ZIP member names, offsets and data cannot hide other records.
+    """
+    def mismatch():
+        raise PreviewArchiveError(
+            "archive_structure", "zip_layout_mismatch",
+            "Preview ZIP local headers or central directory disagree")
+
+    def metadata():
+        raise PreviewArchiveError(
+            "archive_structure", "unexpected_member_metadata",
+            "Unexpected ZIP member extra field or comment")
+
+    stream = archive.fp
+    if stream is None:
+        mismatch()
+    stream.seek(0)
+    data = stream.read(MAX_ARCHIVE_BYTES + 1)
+    if len(data) > MAX_ARCHIVE_BYTES or len(data) < 22:
+        mismatch()
+
+    try:
+        (signature, disk, dir_disk, entries_on_disk, entries_total,
+         dir_size, dir_offset, archive_comment) = struct.unpack_from(
+            "<4s4H2IH", data, len(data) - 22)
+        if (signature != b"PK\x05\x06" or disk or dir_disk
+                or archive_comment or entries_on_disk != len(infos)
+                or entries_total != len(infos) or dir_offset == 0xffffffff
+                or dir_size == 0xffffffff or dir_offset + dir_size != len(data) - 22):
+            mismatch()
+
+        central_pos = dir_offset
+        local_pos = 0
+        central_end = dir_offset + dir_size
+        for info in infos:
+            if central_pos + 46 > central_end:
+                mismatch()
+            (marker, _made, version, flags, method, mod_time, mod_date,
+             crc, compressed, expanded, name_len, extra_len, comment_len,
+             start_disk, _internal, _external, local_offset) = struct.unpack_from(
+                "<4s6H3I5H2I", data, central_pos)
+            if marker != b"PK\x01\x02":
+                mismatch()
+            if extra_len or comment_len or info.extra or info.comment:
+                metadata()
+            if (flags or start_disk or not name_len or
+                    local_offset != local_pos or local_offset != info.header_offset or
+                    compressed != info.compress_size or expanded != info.file_size or
+                    crc != info.CRC or method != info.compress_type):
+                mismatch()
+            central_name_start = central_pos + 46
+            central_next = central_name_start + name_len + extra_len + comment_len
+            if central_next > central_end:
+                mismatch()
+            try:
+                expected_name = info.filename.encode("ascii")
+            except UnicodeEncodeError:
+                mismatch()
+            central_name = data[central_name_start:central_name_start + name_len]
+            if central_name != expected_name:
+                mismatch()
+
+            if local_pos + 30 > dir_offset:
+                mismatch()
+            (local_marker, local_version, local_flags, local_method,
+             local_time, local_date, local_crc, local_compressed,
+             local_expanded, local_name_len, local_extra_len) = struct.unpack_from(
+                "<4s5H3I2H", data, local_pos)
+            if local_extra_len:
+                metadata()
+            content_start = local_pos + 30 + local_name_len + local_extra_len
+            content_end = content_start + compressed
+            if (local_marker != b"PK\x03\x04" or local_version != version
+                    or local_flags != flags or local_method != method
+                    or local_time != mod_time or local_date != mod_date
+                    or local_crc != crc or local_compressed != compressed
+                    or local_expanded != expanded or local_name_len != name_len
+                    or content_end > dir_offset
+                    or data[local_pos + 30:local_pos + 30 + name_len] != central_name):
+                mismatch()
+            # No hidden gap, descriptor, ZIP64 block, or second archive may
+            # intervene between consecutive authored files and the directory.
+            local_pos = content_end
+            central_pos = central_next
+
+        if local_pos != dir_offset or central_pos != central_end:
+            mismatch()
+    except struct.error as exc:
+        raise PreviewArchiveError(
+            "archive_structure", "zip_layout_mismatch",
+            "Invalid ZIP record bounds") from exc
 
 
 def _json_unique(pairs):
@@ -102,6 +202,7 @@ def inspect_preview_archive(source: str | Path) -> dict:
                     raise PreviewArchiveError("archive_structure", "unsafe_member", "Unsafe preview archive member")
             if sum(info.file_size for info in infos) > MAX_ARCHIVE_BYTES:
                 raise PreviewArchiveError("archive_structure", "uncompressed_budget", "Preview archive uncompressed size budget exceeded")
+            _verify_canonical_zip_layout(archive, infos)
             meta_path = prefix + "CBDK_BUILD_INFO.json"
             if meta_path not in names:
                 raise PreviewArchiveError("provenance", "missing_metadata", "Missing CBDK build provenance")
@@ -171,6 +272,20 @@ def inspect_preview_archive(source: str | Path) -> dict:
                     raise PreviewArchiveError("dependency_closure", "dependency_ids", "Preview dependency list mismatch")
             if rels != expected_files:
                 raise PreviewArchiveError("dependency_closure", "file_inventory", "Preview contains undeclared helper or file")
+            # Every part must agree with the trusted static source mapping
+            # AND with the already-verified packaged helper digest. Metadata
+            # itself remains self-asserted; no authorship or license clearance.
+            for part in parts:
+                source = TRUSTED_PART_SOURCES[part["part_id"]]
+                helper = HELPERS[source]
+                part_hash = part.get("source_sha256" if schema == 2 else "sha256")
+                if (part.get("source") != source or
+                        type(part_hash) is not str or
+                        not SHA.fullmatch(part_hash) or
+                        part_hash != digests[helper]):
+                    raise PreviewArchiveError(
+                        "provenance", "part_provenance_mismatch",
+                        "Preview part source or digest disagrees with package")
             # All validation above is structural. Never import any bundled source.
             source_count = len(rels)
     except (BadZipFile, UnicodeDecodeError, KeyError, OSError, RuntimeError,
