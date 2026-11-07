@@ -1240,3 +1240,14 @@ RNAが古いときの実選択再検査をPythonで確認。ローカル823テ�
 `STATE.json` の `last_verified` は正式v0.17.0リリース時の証拠を指すため、開発PR #38に自動で付け替えない。現行の実装到達点は依然 `UI-001` / `BUILD-001` / `EXT-001` 等 partial、NEXT-002の人間GUI、NEXT-007/008/009実GLB/因果、権利/正式Extensionsが未完了。v0.19以降はactive=falseのまま。
 
 次は[ローリングキュー](PARALLEL_ROLLING_QUEUE.md)のR4を、Aが整理済みの最新開発ブランチを基点にチーム別小PRで実装する。Codexの利用上限時にもB/C/Dは停止せず、重い実装だけ候補として残す。
+
+
+## 2026-11-08 JST — R4ローリング統合・R5着手ゲート
+
+- [Team B R4 PR #41](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/41) `e94febeb557be52474d5c17a08271d164cbef2d6`: 合成GLBの255/256/257境界辺・64部品/512面、リソース上限・保守的曖昧判定を検証。個別5系統CI成功。
+- [Team C R4 PR #42](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/42) `ae6ad0b77feafc5db052eb658538adf5ec50691d`: 固定5機能/6レシピの生成UIとoperator拒否の整合、部分的な安全側修正。合成Python試験は実Blender負例やWindows GUIの証拠ではない。個別5系統CI成功。
+- [Team D R4 PR #39](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/39) `f0fa73531ad3892040f5f01a64cb110fdb80e6b8`: 7種類のCBDK自作ZIP previewと公式validator形式の正常/異常合成fixture互換性。正式Extension配布/権利承認なし。個別5系統CI成功。
+- [Team A統合 PR #43](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/43): B/C/Dの11変更ファイル・重複0を統合候補 `667f2e4c9e4ad4b4e2b026c7fe1fd2464d2ca957` で5系統CI成功確認後、開発ブランチへsquash merge (`a9a0a76a963ab4ae41b68126f419546b80871e2b`)。
+- **統合後コミット7系統CIすべてsuccess**: [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131307) 3.11/3.12/3.13、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131264) 3.11/3.13、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131258) 4.4.3/4.5.15/5.2.1、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131308)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131276)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131296)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131270)。
+- [R5割当 PR #44](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/44) merged `af7a5f0436bce631cb7cddbd81b10d2d0c932619`。B=境界判定安定性、C=実Blender UI反復負例、D=validatorログ回帰。各チームは着手時点の最新版dev HEADから個別ドラフトPRを作成する。
+- **未完了**: 実ユーザーGLBの対応検証、実Windows GUI・Undoホットキー、未承認ソース/ライセンス、正式Extensions ZIP/公開。UI-001/BUILD-001/EXT-001/NEXT-008等はpartial継続。main・正式v0.17.0・リリース認可は変更しない。
