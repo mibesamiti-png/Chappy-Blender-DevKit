@@ -36,13 +36,16 @@ def _read_world_triangles(source: Path):
     if not mesh_objects:
         raise RuntimeError("Imported GLB has no mesh objects")
     face_total = 0
+    part_counts = []
     for obj in mesh_objects:
         mesh = obj.data
         if hasattr(mesh, "calc_loop_triangles"):
             mesh.calc_loop_triangles()
-        face_total += len(mesh.loop_triangles)
+        count = len(mesh.loop_triangles)
+        part_counts.append(count)
+        face_total += count
         if face_total > MAX_TRIANGLES:
-            return None, face_total
+            return None, face_total, part_counts
 
     triangles = []
     for obj in mesh_objects:
@@ -53,10 +56,10 @@ def _read_world_triangles(source: Path):
                     obj.matrix_world @ mesh.vertices[index].co))
                 for index in tri.vertices
             ])
-    return triangles, face_total
+    return triangles, face_total, part_counts
 
 
-def _safe_report(ref_faces, cand_faces, *, ref_count, cand_count):
+def _safe_report(ref_faces, cand_faces, *, ref_count, cand_count, ref_parts=None, cand_parts=None):
     report = {
         "schema_version": 1,
         "kind": "cbdk_glb_surface_review",
@@ -81,6 +84,19 @@ def _safe_report(ref_faces, cand_faces, *, ref_count, cand_count):
             "No automatic source changes or parameter approvals",
         ],
     }
+    # Anonymous counts preserve a useful inventory without leaking mesh names.
+    # Sorted counts are not a correspondence proof between GLB objects.
+    if ref_parts is not None and cand_parts is not None:
+        report["part_inventory"] = {
+            "reference_object_count": len(ref_parts),
+            "candidate_object_count": len(cand_parts),
+            "reference_triangle_counts": sorted(ref_parts, reverse=True)[:32],
+            "candidate_triangle_counts": sorted(cand_parts, reverse=True)[:32],
+            "max_listed_per_side": 32,
+            "correspondence_verified": False,
+            "identifies_changed_part": False,
+            "notes": "Anonymous size-ranked inventory, not matched objects",
+        }
     if ref_faces is None or cand_faces is None:
         report.update({
             "status": "skipped",
@@ -114,10 +130,11 @@ def main():
         raise RuntimeError("Provide reference.glb, candidate.glb, output.json")
     ref, cand, output = (Path(value).resolve() for value in args)
     # No user source scripts are imported or executed in this runner.
-    reference, ref_count = _read_world_triangles(ref)
-    candidate, cand_count = _read_world_triangles(cand)
+    reference, ref_count, ref_parts = _read_world_triangles(ref)
+    candidate, cand_count, cand_parts = _read_world_triangles(cand)
     report = _safe_report(
         reference, candidate, ref_count=ref_count, cand_count=cand_count,
+        ref_parts=ref_parts, cand_parts=cand_parts,
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
