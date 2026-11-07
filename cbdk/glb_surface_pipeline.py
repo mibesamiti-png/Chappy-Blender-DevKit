@@ -12,6 +12,7 @@ from pathlib import Path
 import subprocess
 
 from .glb_inspector import GLBInspectionError, inspect_glb
+from .glb_part_hints import count_based_part_hints
 
 MAX_INPUT_BYTES = 24 * 1024 * 1024
 MAX_VERTEX_REFERENCES = 100_000
@@ -181,6 +182,18 @@ def run_glb_surface_review(
                     sum(counts) != report[side + "_triangles"]
                 ):
                     raise ValueError("part inventory contradicts total triangles")
+        hints = report.get("part_count_hints")
+        if hints is not None:
+            if inventory is None or not isinstance(hints, dict):
+                raise ValueError("part hints require a valid inventory")
+            expected_hints = count_based_part_hints(
+                inventory["reference_triangle_counts"],
+                inventory["candidate_triangle_counts"],
+                reference_total=inventory["reference_object_count"],
+                candidate_total=inventory["candidate_object_count"],
+            )
+            if hints != expected_hints:
+                raise ValueError("part hints contradict anonymous inventory")
         observation = report.get("surface_observation")
         if payload["status"] == "review_only":
             if observation not in (
