@@ -1183,3 +1183,5 @@ CBDK自作のlegacy/modular preview ZIPの整合性・内容のSHA256/パスト�
 機能実装8d28b69を含む統合HEAD 63bddb9dcd47ca985995f000efb06b14f056a2cfでPython820件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761850)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761797)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761748)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761811)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761787)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761776)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761778)。
 
 [検証範囲・同時更新/失敗履歴・未確認・再開点](EXT_UI_VALIDATION.md)。合成fixtureの公式検証は実部品の権利/ライセンス/公開承認や正式Extension検証ではない。EXT-001/UI-001/BUILD-001は全体partialを維持。
+
+2026-11-08 JST: c89a10f正本を既存Notion CBDKプロジェクトへ同期成功。内容更新1応答が警告なし成功、部分実装/未確認/次回と全7CIを反映。旧履歴保持・新規ページ/私有データなし。
