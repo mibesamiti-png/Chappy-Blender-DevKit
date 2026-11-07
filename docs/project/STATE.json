@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18 UI-001/BUILD-001: モード別セクション表示、範囲を狭める型付き設定、静的UI計画と生成物記録を追加。置換語入りラベルの生成失敗も修正。ローカル830件/Blender4.3.2成功、今回対象CI未実行。正式v0.17.0/全体partial維持"
+    "milestone": "v0.18 UI-001/BUILD-001: 固定モード表示/範囲縮小設定、非実行UI計画/生成物記録、置換語入りラベルの生成修正。4b99068のPython830件×3/Windows2/Blender3を含む全7CI成功。実GUI/権利/汎用UI/実Extension未確認、正式v0.17.0維持"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -83,7 +83,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/modular_builder.py",
-      "note": "レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。ローカル成功/対象CI待ち。"
+      "note": "レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。"
     },
     {
       "id": "EDIT-001",
@@ -115,7 +115,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/ui_layout.py",
-      "note": "既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。ローカル成功/対象CI待ち。"
+      "note": "既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。"
     },
     {
       "id": "EXT-001",
@@ -1027,7 +1027,7 @@
     "feature_priority": "2026-11-07 GLB-018 code/docs SHA 676e92f8cc4ad48774ea6e0702710576fe97a286 all five GitHub CI SUCCESS: Python3 42246918798, Windows PowerShell 2 42246918818, Blender4.4.3/4.5.15/5.2.1 42246918883, Windows kit 42246918868, durable handoff 42246918953. Real synthetic 9-GLB: large panels with narrow small-part opening area-only max 0.0 vs feature-aware max 0.0657466 all Blender versions; review-only false defect-equivalence/auto-apply flags. GLB-018 implemented/blender_ci, NEXT-016 done. PR draft; formal v0.17.0 preserved.",
     "real_glb_surface_bridge": "2026-11-07 GLB-019 docs/implementation HEAD 5b6196a59f86318128c768507fea53237e3a6e11 ALL FIVE CI SUCCESS: Python3 42258076642, Windows PowerShell3.11/3.13 42258076781, Blender4.4.3/4.5.15/5.2.1 42258076658, Windows kit 42258076681, durable handoff 42258076822. Local opt-in GLB pair compares fixed BVH and adaptive feature-aware sampling; 512 triangle strict cap; external URI reject; no private model uploads or auto edits. GLB-019 implemented/blender_ci, NEXT-017 done. PR draft, official last_verified v0.17.0.",
     "milestone_notion_sync": "GitHub STATE更新→push/PRと実測検証→既存Notionプロジェクト/タスクへ状態と証拠を同期。失敗時はGitHubへpending記録。常駐同期なし、私有ソース/GLB/個人情報は対象外。",
-    "notion_sync_status": "pending: 今回のUI表示条件/設定計画のCI実測をGitHub保存後に既存CBDKへ同期。以前のガード節目は履歴。",
+    "notion_sync_status": "pending: 今回4b99068全7CIとUI表示条件/設定計画/文字列置換修正/partial・移行未達をGitHub保存後、既存CBDKプロジェクトへ同期する。",
     "surface_inventory_integrity": "2026-11-07: code SHA 31bf3de18c357d796194dcac369c66e55b3973bf ALL SUCCESS: Python https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722780 (707 tests x 3), Windows 42359722774, Blender 42359722777 (4.4.3/4.5.15/5.2.1, 4 new synthetic cases), Kit 42359722842, Handoff 42359722778, Chromium 42359722853. Local Python3.12.14 707/707 and Blender4.3.2 synthetic4 passed separately. Release last_verified 0.17.0 unchanged.",
     "synthetic_run_review": "2026-11-07 code 5dc799ac6dd46ed27f249dfea694c67644d4ab22 all SUCCESS: Python https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082109 (727 x3), Windows42361081999, Blender42361082117 (4.4.3/4.5.15/5.2.1, normal4 + 14 checkpoints + real baseline with simulated candidate timeout), Kit42361082094, Handoff42361082165, Chromium42361082252. Local Python3.12.14 727/727; related56; local4.3.2 budget1 and controlled failure passed separately. Partial overall, last_verified0.17.0 unchanged.",
     "synthetic_comparison_first_ci": "2026-11-07 f4130ff: Python42363769046/Windows42363769107/Kit42363769048/Handoff42363769039/Chromium42363769071 success. Blender42363769064: 4.4.3 success, 4.5.15/5.2.1 failed because official declared version strings include LTS, rejected by new condition validator. Fix explicitly allows bounded LTS suffix, preserves full version as a comparison condition; final CI pending. Parent-symlink output escape guard also fixed with regression coverage.",
@@ -1039,6 +1039,6 @@
     "extension_preflight": "2026-11-07 code 1f31506 verified: EXT-001 safe offline authored preview ZIP integrity + non-release manifest readiness blockers. Python 42383597364, Windows 42383597323, Blender3 versions 42383597324, Kit 42383597344, Handoff 42383597328, Chromium 42383597372 all success; no real Blender Extension ZIP or official validate; owner/license approval missing.",
     "extension_ui_validation": "機能実装8d28b69を含む統合HEAD 63bddb9dcd47ca985995f000efb06b14f056a2cfでPython820件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761850)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761797)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761748)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761811)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761787)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761776)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761778)。 各Blender版で合成公式validator3例、既存6レシピ+横並び/カスタムXYZ例、登録途中失敗/再登録/foreign property保存を確認。実レンダリング13枚のSHA/サイズ・同方向比較とChromium実画面4枚を保持。自己整合hashは出自認証ではなく、SPDX例は実部品へのライセンス適用ではない。",
     "ui_readiness_recovery": "コードeac7453b3e052267c45a83fa7c47180882d02419でPython823件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411841)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411842)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411863)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412044)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412165)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411889)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412036)。 各Blender版の既存6レシピ+追加UI例で、selection/zero/shared/shape-key理由表示とStringProperty/FloatVectorProperty割当失敗の後片付け/再登録を確認。RNAが古い場合も実行時の実選択を再検査するPython回帰あり。ローカル4.3.2は補助証拠、詳細docs/UI_GUARD_VALIDATION.md。",
-    "ui_modes_settings": "2026-11-08 JST: conditional sections/narrowed settings/static UI plan/provenance/single-pass renderingを実装。ローカル830件と4.3.2の追加UI例成功、対象CI未実行。"
+    "ui_modes_settings": "コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。 各Blender版の既存6レシピ+追加UI例で、モード表示切り替え・範囲±1のRNA入力制限・生成メタデータ一致を確認。未対応modeの空表示は模擬contextであり実Sculpt GUI未検証。静的計画は非実行で既定出力互換。置換語ラベルの不具合は失敗再現→修正後成功。通常の追加UI ZIPは修正前後byte-identical。詳細docs/UI_MODE_SETTINGS.md。"
   }
 }

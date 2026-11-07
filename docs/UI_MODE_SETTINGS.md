@@ -59,5 +59,13 @@ python -m cbdk addon-plan --recipe recipes/modular_all.json --with-ui --output r
 
 ローカルPython830件成功。Blender4.3.2でObject/Editのセクション切り替え、範囲±1の
 入力制限、既存operator動作と登録解除を確認。これは対象3版の代替ではない。
-今回の対象CIは未実行。最新の実測はSTATEと本書の追補を参照。
+今回の対象3版/Windowsは下記の実測で成功。最新の実測はSTATEと本書の追補を参照。
 汎用UI全体・実Windows GUI/Undo・実データ/権利・正式Extensionは未確認で、全体partialを維持。
+
+## 対象CIの実測
+
+コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。
+
+新規7回帰を含む830件成功。各版でモード切り替え・宣言範囲のRNA制限・メタデータ照合を確認。旧6レシピ・legacy生成・編集監査・登録復旧・実画像13+4を維持。実Windows GUIや任意UI全体は未検証。置換語入りラベルは修正前の生成失敗を再現し、修正後のAST literal検査で文字列保持を確認した。
+
+23タスク18完了/4継続/1保留、43要件26実装済/15一部/1未実装/1保留、新規完了IDなし。次はEXT-001の項目別診断と公式validatorの合成結果照合を強化し、現行UIの残受け入れ条件とowner/GUI待ちを整理する。現行自動化完了ゲートは未達のため将来計画は承認済み・未有効。後続文書コミットを新しいコード実測とは扱わない。

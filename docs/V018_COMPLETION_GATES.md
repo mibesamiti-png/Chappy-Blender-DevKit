@@ -46,3 +46,9 @@ EXT-001/UI-001/BUILD-001の今回拡充は63bddb9の全7CI成功。公式manifes
 UI-001/BUILD-001の今回拡充はeac7453の全7CI成功。助言UI/実行監査を区別し、型付きSceneプロパティ生成失敗の復旧も3版で確認。[証拠](UI_GUARD_VALIDATION.md)。全体partialと23タスク18完了/4継続/1保留を維持。
 
 移行ゲート：現行自動化完了=false（汎用UI/設定定義/実Extension経路に残り）、人間ブロッカー整理=true、最新PR #25実測確認=true、別承認/ドラフト統合方針=true。次期計画active=false、既存の開始承認は保持する。
+
+## 2026-11-08 JST UI表示条件/設定計画節目
+
+今回拡充は4b99068の全7CI成功。固定visible_in・範囲縮小・非実行UIレビューと生成物の計画を確認。旧仕様/レシピを維持し、実GUI/任意UI/実Extension/権利/実データを完了扱いしない。[証拠](UI_MODE_SETTINGS.md)。
+
+現行自動化完了=false（汎用UI/設定/実Extension経路の残り）、人間ブロッカー整理=true、最新PR #25実測確認=true、ドラフト継続/別承認方針=true。次期計画active=false、既存の開始承認は保持。次の自動化はEXT-001診断と公式validatorの合成結果照合。

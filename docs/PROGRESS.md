@@ -1205,3 +1205,9 @@ RNAが古いときの実選択再検査をPythonで確認。ローカル823テ�
 ## 2026-11-08 JST UI表示条件/設定計画
 
 [仕様と検証](UI_MODE_SETTINGS.md)。固定modeによる表示、型付き範囲縮小、配置矛盾/不正初期値拒否、addon-plan --with-uiによる非実行レビュー、生成ZIPの計画記録を追加。置換語入り表示名/ラベルの生成失敗を再現して単一置換へ修正。ローカル830件とBlender4.3.2追加例が成功、対象CIは今回未実行。全体partial、実GUI/権利/汎用UI/実Extensionは未確認。
+
+## 2026-11-08 JST UI表示条件/設定計画の実測
+
+コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。
+
+[検証範囲・不具合再現/修正・未確認・再開点](UI_MODE_SETTINGS.md)。旧出力/レシピを維持し、実GUI/権利/汎用UI等を閉じず全体partial。次の自動化はEXT-001の診断/公式validator合成結果照合を優先。

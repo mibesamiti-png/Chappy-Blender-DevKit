@@ -10,8 +10,8 @@ Last handoff: 2026-11-07 JST.
 
 ## Current milestone sync (2026-11-08 JST)
 
-- UI共通ガードとproperty割当失敗復旧を追加。コードeac7453b3e052267c45a83fa7c47180882d02419でPython823件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411841)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411842)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411863)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412044)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412165)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411889)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412036)。
-- 同期状態: **success**。正本787eb91を既存[CBDKプロジェクト](https://app.notion.com/p/410948b7493781449462ca76e9567e75)へ反映。内容更新1応答が警告なし成功。共通UIガード/823件と全7CI/property割当失敗復旧/部分実装/未確認/次回/移行未達を同期。旧節目保持、新規ページや私有データなし。
+- UI表示条件/範囲縮小/静的計画/生成物記録/ラベル置換修正を追加。コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。
+- 同期状態: **pending**。GitHub保存後、既存CBDKプロジェクトへ830件/全7CI/部分実装/未確認/次回/移行未達を反映する。新規ページや私有データなし。
 
 ## Linked Notion records
 
