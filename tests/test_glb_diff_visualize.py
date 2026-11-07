@@ -308,6 +308,9 @@ class ColoredGLBLauncherTests(unittest.TestCase):
         cases = (
             ("moved", ["boundary_spatial_layout_mismatch"], True, True),
             ("budget", ["boundary_layout_budget_exceeded"], True, True),
+            ("component", ["boundary_component_count_mismatch"], True, True),
+            ("out_of_order", ["boundary_component_count_mismatch",
+                               "boundary_spatial_layout_mismatch"], True, False),
             ("reversed", ["boundary_layout_budget_exceeded",
                           "boundary_spatial_layout_mismatch"], True, False),
             ("missing_flag", ["boundary_spatial_layout_mismatch"], False, False),
