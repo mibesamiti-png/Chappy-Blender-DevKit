@@ -196,6 +196,25 @@ class GLBSurfacePipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
             self.run_fake(status="skipped", report_override=invalid)
 
+    def test_rejects_observation_contradicting_measured_distance(self):
+        for observed, fixed, adaptive in (
+            ("no_difference_observed_at_samples", 0.2, 0.3),
+            ("sampled_difference_detected", 0.0, 0.0),
+        ):
+            with self.subTest(observed=observed):
+                invalid = report()
+                invalid["surface_observation"] = observed
+                invalid["fixed_surface"]["symmetric_sampled_max"] = fixed
+                invalid["adaptive_surface"]["refined_symmetric_sampled_max"] = adaptive
+                with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+                    self.run_fake(report_override=invalid)
+
+    def test_rejects_measured_triangle_count_over_cap(self):
+        invalid = report()
+        invalid["candidate_triangles"] = 513
+        with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+            self.run_fake(report_override=invalid)
+
     def test_output_report_is_bounded(self):
         with patch("cbdk.glb_surface_pipeline.inspect_glb",
                    return_value=inspection()), \
