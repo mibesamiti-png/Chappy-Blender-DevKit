@@ -33,8 +33,8 @@ def _features(faces, counts):
             "center": tuple((lower[k] + upper[k]) / 2.0 for k in range(3)),
             "size": tuple(upper[k] - lower[k] for k in range(3)),
             "triangles": n,
-            "observed_boundary": edge_parts[len(result)]["observed_boundary"],
-            "observed_nonmanifold_edge": edge_parts[len(result)]["observed_nonmanifold_edge"],
+            "boundary_edges": edge_parts[len(result)]["boundary_edges"],
+            "nonmanifold_edge_incidence": edge_parts[len(result)]["nonmanifold_edge_incidence"],
             "weld_collapsed_triangles": edge_parts[len(result)]["weld_collapsed_triangles"],
         })
         start += n
@@ -93,12 +93,19 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
             and ref_margin >= MIN_MARGIN
             and reverse_margin >= MIN_MARGIN
         )
-        topo_review = (
-            ref[i]["observed_boundary"] != cand[best_j]["observed_boundary"]
-            or ref[i]["observed_nonmanifold_edge"] != cand[best_j]["observed_nonmanifold_edge"]
-            or ref[i]["weld_collapsed_triangles"] > 0
-            or cand[best_j]["weld_collapsed_triangles"] > 0
-        )
+        # Boolean open/nonmanifold flags alone miss differences between two
+        # *already-open* or two *already-nonmanifold* synthetic meshes.
+        # These are coordinate-welded observations, not hole/identity proof.
+        topology_reasons = []
+        if ref[i]["boundary_edges"] != cand[best_j]["boundary_edges"]:
+            topology_reasons.append("boundary_edge_count_mismatch")
+        if (ref[i]["nonmanifold_edge_incidence"]
+                != cand[best_j]["nonmanifold_edge_incidence"]):
+            topology_reasons.append("nonmanifold_edge_count_mismatch")
+        if (ref[i]["weld_collapsed_triangles"] > 0
+                or cand[best_j]["weld_collapsed_triangles"] > 0):
+            topology_reasons.append("weld_collapsed_triangles_observed")
+        topo_review = bool(topology_reasons)
         if strong and not topo_review:
             used.add(best_j)
             status = "suggested"
@@ -119,7 +126,8 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
             "status": status,
             "candidate_part_ids": suggestions,
             "normalized_score": round(best, 6),
-            "topology_review_required": bool(topo_review),
+            "topology_review_required": topo_review,
+            "topology_review_reasons": topology_reasons,
         })
     return {
         "method": METHOD,
