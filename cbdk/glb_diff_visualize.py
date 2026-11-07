@@ -144,6 +144,23 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
                 raise ValueError("Invalid part candidate score")
             if type(row.get("topology_review_required")) is not bool:
                 raise ValueError("Missing conservative topology review flag")
+            # v1 reports created before this optional diagnostic field remain
+            # readable. New reports must not claim a topology-safe suggestion
+            # while supplying contradictory or fabricated reason categories.
+            reasons = row.get("topology_review_reasons")
+            if reasons is not None:
+                known = (
+                    "boundary_edge_count_mismatch",
+                    "nonmanifold_edge_count_mismatch",
+                    "weld_collapsed_triangles_observed",
+                    "boundary_spatial_layout_mismatch",
+                    "boundary_layout_budget_exceeded",
+                    "boundary_component_count_mismatch",
+                )
+                if (not isinstance(reasons, list)
+                        or reasons != [code for code in known if code in reasons]
+                        or bool(reasons) != row["topology_review_required"]):
+                    raise ValueError("Invalid topology review reason codes")
             if row["status"] == "suggested":
                 if row["topology_review_required"]:
                     raise ValueError("Cannot suggest topology-incompatible pairing")

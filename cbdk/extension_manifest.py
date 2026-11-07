@@ -78,31 +78,72 @@ def manifest_field_diagnostics(fields):
 
 
 def observe_official_validation(returncode, output):
-    """Normalize bounded CLI output, omitting paths, values and unknown text.
+    """Normalize bounded official CLI output; never trust exit status alone.
 
-    An exit code alone is insufficient. Unknown/new output formats are
-    unclassified, never silently promoted to validator success or rejection.
-    This recognizes observations; it does not authenticate the caller/log.
+    Treat unknown, repeated, or contradictory diagnostics and parser status
+    lines as unclassified. The only ignored noise is a known Blender version
+    banner, its clean shutdown line, and blank lines. Unknown free-form
+    messages cannot silently turn a partial result into full agreement.
+    Original validator values, paths and free-form log text are not returned.
+    This checks consistency, NOT authenticity of the supplied observation.
     """
     if type(returncode) is not int or not isinstance(output, str) or len(output) > 200_000:
         raise ValueError("Invalid or oversized official validation observation")
     diagnostics = set()
     success = False
+    error_header = False
+    unknown = False
     for line in output.splitlines():
         line = line.strip()
+        if not line:
+            continue
+        if line == "Blender quit" or re.fullmatch(
+                r"Blender \d+\.\d+\.\d+(?: LTS)?(?: \(hash [0-9a-f]{7,} built \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\))?", line):
+            continue
         if line.startswith('Success parsing TOML in "'):
+            if (not re.fullmatch(r'Success parsing TOML in "[^"]+"', line)
+                    or success or error_header or diagnostics):
+                unknown = True
             success = True
-        missing = re.fullmatch(r'missing "([a-z_]+)"', line)
-        invalid = re.match(r'key "([a-z_]+)" invalid:', line)
-        if missing and missing[1] in REQUIRED:
-            diagnostics.add((missing[1], "missing"))
-        if invalid and invalid[1] in REQUIRED:
-            diagnostics.add((invalid[1], "invalid"))
-    status = ("accepted" if returncode == 0 and success and not diagnostics else
-              "rejected" if returncode > 0 and diagnostics and not success else "unclassified")
+            continue
+        if line.startswith('Error parsing TOML '):
+            # A generic error header is only meaningful alongside recognized
+            # field diagnostics; duplicate headers and success conflicts are
+            # never a successful observation.
+            if (not re.fullmatch(r'Error parsing TOML "[^"]+"', line)
+                    or error_header or success or diagnostics):
+                unknown = True
+            error_header = True
+            continue
+        if line.startswith('missing "'):
+            match = re.fullmatch(r'missing "([a-z_]+)"', line)
+            if (match and match[1] in REQUIRED and not success
+                    and not any(field == match[1] for field, _ in diagnostics)):
+                diagnostics.add((match[1], "missing"))
+            else:
+                unknown = True
+            continue
+        if line.startswith('key "'):
+            match = re.match(r'key "([a-z_]+)" invalid:', line)
+            if (match and match[1] in REQUIRED and not success
+                    and not any(field == match[1] for field, _ in diagnostics)):
+                diagnostics.add((match[1], "invalid"))
+            else:
+                unknown = True
+            continue
+        # Fail closed even for unfamiliar wording such as "validator halted".
+        # Never echo this text in the observation or downstream comparison.
+        unknown = True
+    status = ("accepted" if returncode == 0 and success and not diagnostics
+              and not unknown and not error_header else
+              "rejected" if returncode > 0 and diagnostics and not success
+              and not unknown else
+              "unclassified")
     return {"status": status,
             "diagnostics": [{"field": field, "code": code} for field, code in sorted(diagnostics)],
+            "has_unrecognized_diagnostics": unknown,
             "authenticates_log": False}
+
 
 
 def compare_official_validation(fields, returncode, output):
