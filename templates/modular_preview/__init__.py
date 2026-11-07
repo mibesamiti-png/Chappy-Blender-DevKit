@@ -198,7 +198,9 @@ def register():
 def unregister():
     # A failing operator unregister must not prevent owned Scene property
     # cleanup. Entries are removed only after a successful detach so a caller
-    # can retry without touching foreign add-on registrations.
+    # can retry without touching foreign add-on registrations. R10 checks
+    # that simultaneous failures keep both independent class/property
+    # ledgers until each cleanup step succeeds, even across multiple retries.
     failures = []
     for cls in reversed(tuple(_REGISTERED)):
         try:
