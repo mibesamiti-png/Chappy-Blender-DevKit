@@ -69,7 +69,10 @@ def _records(items, label, allowed):
 
 def validate_state(root=ROOT):
     root = root.resolve()
-    state = _read_json(root / STATE)
+    # STATE is a growing, bounded milestone ledger. Git on Windows may
+    # checkout CRLF, which adds bytes without changing JSON semantics.
+    # Keep the 100 KB limit for small catalog inputs; bound STATE separately.
+    state = _read_json(root / STATE, max_bytes=128 * 1024)
     if state.get("schema_version") != 1 or state.get("repository") != "mibesamiti-png/Chappy-Blender-DevKit":
         raise ValueError("Unsupported project state schema or repository")
     release = state.get("release")
