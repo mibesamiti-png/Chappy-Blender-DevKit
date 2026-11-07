@@ -191,3 +191,7 @@ Receipt: [project](https://app.notion.com/p/410948b7493781449462ca76e9567e75) an
 ## Pending milestone: existing NEXT-023/NEXT-020
 
 Same-condition synthetic comparison and schema2 condition evidence are implemented; related71 and local independent-run checks passed. Target CI is not yet run. At the milestone, mirror canonical SHA/CI/resource observations/current task counts and remaining NEXT-019/009 into the existing project and GLB-022 task. No new pages or generated private report upload.
+
+## Current verified milestone — NEXT-023/020/005
+
+Code2867ab31cf355486232f1f1b257315c9e73146a1: all6 success (Python742x3 42364086005, Windows42364086014, Blender42364085988, Kit42364085981, Handoff42364085980, Chromium42364085989). Initial f4130ff LTS-label failure was corrected, not hidden. Same-condition comparison and independent real runs passed; audit/Undo resource review satisfies existing NEXT-005. Task counts:16 done/6 in progress/1 deferred, total23. Requirements:26 implemented/13 partial/3 not implemented/1 deferred, total43. GLB-021/022 remain partial. Next existing NEXT-019/009. Pending final mirror to existing Notion project and GLB-022 task after saving canonical GitHub evidence; no new pages/tasks or private data.

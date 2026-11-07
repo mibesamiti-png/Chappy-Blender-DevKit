@@ -1093,3 +1093,12 @@ GitHub正本の実測記録`c575834`を既存CBDKプロジェクト/GLB-022タ�
 - 最終点検で親シンボリックリンクにより出力先がignored領域外へ解決される余地も発見。正規のrepo内reportsパスに限定し、Windows権限に依存しないパス解決回帰で拒否を確認。
 - GitHub CLIの失敗artifact取得はリダイレクト先403。GitHub連携では取得可能で、診断は実ジョブログのLTS版名と再現回帰に基づく。私有データは扱っていない。
 - 関連71件は成功。初回失敗を合格扱いせず、上記の実際の修正を含むコードで必要な最終CIを行う。
+
+### NEXT-023/NEXT-020の実測完了と既存NEXT-005の検討完了
+
+- 修正コード`2867ab31cf355486232f1f1b257315c9e73146a1`：[Python742件×3版42364086005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364086005)、[Windows2版42364086014](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364086014)、[Blender3版42364085988](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085988)、[Kit42364085981](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085981)、[Handoff42364085980](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085980)、[Chromium42364085989](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085989)の全6系統success。
+- 全Blender版で独立した通常4試行2回の条件一致/観測差なしと、模擬タイムアウト失敗の除外を実検査。LTS版名を拒否した初回失敗を記録し、実修正後に合格。単純な再実行で合格扱いにしていない。
+- 比較の2件中央値2.152477〜2.914226ms、Python割当ピーク40,961〜40,981bytes。16件複製負荷は17.286411〜23.695476ms、215,491〜215,581bytes。ディスク/Blender除外、ホストPython3.11.18、速度保証なし。詳細GLB023_RUN_COMPARISON.md。
+- 既存NEXT-005の3版監査/メモリ/Undo検討をAUDIT_RUNTIME_REVIEW.mdへ記録して完了。追加最適化や上限緩和の根拠なし。背景Undoは全版unavailable、Redo未試行、GUI未検証。NEXT-002やGUI要件は完了へ変更しない。
+- 完了NEXT-023/020/005。作業台帳23件＝完了16/継続6/保留1。要件43件＝実装済26/一部13/未実装3/保留1。次は既存NEXT-019/009のGLB-021レビューと許可済み合成反復の対応。新規NEXT番号なし、正式v0.17.0/ドラフトPR/未マージを維持。
+- このGitHub正本保存後、既存Notionへ節目同期する。同期受領・文書コミットは上記コードCIの対象SHAと区別する。

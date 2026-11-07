@@ -52,3 +52,17 @@ schema 2の`conditions`には次を保存する。
 - 時間・メモリに速度向上の閾値を設けず、根拠のない最適化はしない。ローカルの予算1・Blender4.3.2の証拠は対象3版CIと分離する。
 
 実測のコードSHA・CI・性能値は成功確認後にSTATE/HANDOFF/PROGRESSへ記録する。現在ロードマップにない大規模構想や新しいNEXT番号は追加しない。
+
+## 対象CIの実測（2026-11-07 JST）
+
+コード`2867ab31cf355486232f1f1b257315c9e73146a1`の[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085988)で独立通常4試行の比較と失敗除外が全版成功。[Python742件×3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364086005)、[Windows2版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364086014)、Kit42364085981/Handoff42364085980/Chromium42364085989も成功。初回f4130ffでのLTS版名拒否を修正した後の結果であり、初回失敗を合格として扱わない。
+
+比較時間はウォームアップ後3回、tracemalloc有効、ホストPython3.11.18。ファイル読込/Blenderは計測外。16件は複製負荷。
+
+| Blender実験版 | 2件中央値ms | 2件割当ピークbytes | 16件中央値ms | 16件割当ピークbytes |
+| --- | ---: | ---: | ---: | ---: |
+| 4.4.3 | 2.152477 | 40,961 | 17.286411 | 215,491 |
+| 4.5.15 | 2.914226 | 40,981 | 23.695476 | 215,581 |
+| 5.2.1 | 2.870746 | 40,977 | 23.643185 | 215,563 |
+
+性能値はCIホスト依存の観測。速度の閾値・最適化効果・版間優劣は主張しない。NEXT-023/NEXT-020の受け入れ条件は達成、GLB-021/022全体はpartialのまま。
