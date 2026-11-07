@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R1〜R4開発統合後、R5のB/C/DをPR #49で統合（a1c2f847）。GLB判定の並べ替え/微小摂動、UI所有権修正とBlender3版での実機反復、Extensionsログ分類を検証。初回R5 native UIテスト失敗はテスト期待値を修正し再実測成功。統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skillの7CI全成功。R6はPR #51で割当済み。実ユーザーGLB、Windows GUI、権利、正式Extensions/公開は未確認。v0.17.0維持。
+- 最新の節目: v0.18: R1〜R5に続きR6のB/C/D 12ファイルをPR #56で開発統合（e2f09e59）。GLB厳密無向境界署名による保守的高速化、Blender3版の実機addon reload/所有権保護、Extension ZIP/公式ログ上限の合成回帰を検証。R6結合5CI成功、統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skillの7CI全成功。R7はPR #57で割当済み。実ユーザーGLB、実Windows GUI、権利、正式Extensions/公開未確認。正式v0.17.0維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -192,6 +192,8 @@
 - `DEC-064` R4をPR #43で統合し、統合後7CIの実測を経てR5をPR #44のローリングキューで正式割当する。B/C/DのR4専用SHAの5系統CI成功と11ファイル非重複を確認。R4 dev SHA a9a0a76のPython/Windows/Blender3版/Chromium/Handoff/Kit/Skill全7系統成功。旧PR再統合なし、R5は最新dev基点。実GUI、実ユーザーGLB、権利、正式公開とmainは別ゲート。
 
 - `DEC-065` R5統合候補で新設Blender実機検証を実行し失敗修正後の成功を確認して統合、7CI後にR6を割り当てる。B #47/C #48/D #46の各個別5CI成功。A統合#49初回b300e743は3版Blenderでテスト誤期待により失敗、修正106bf250の5系統全成功（Blender3版のnative UI反復含む）。dev SHA a1c2f847の7系統全成功後、R6キュー#51を正式統合。GUI/私有GLB/権利/公開は未検証。
+
+- `DEC-066` R6でGLBの厳密境界高速経路を保守的fallbackとともに統合し、Blender実機のreload/所有権・Extensionsの資源負例を検証してR7を割り当てる。B #54/C #55/D #53各5系統success、A結合#56 HEAD7400516aの5系統成功。R2 fallback/R3別途ガード継続、UI native R6検証3版、EXT synthetic limitsは正式公開証明ではない。dev統合e2f09e59の全7CI成功を確認しR7 #57統合。GUI/私有GLB/権利/配布/mainは別承認。
 
 ## 更新・プライバシールール
 
