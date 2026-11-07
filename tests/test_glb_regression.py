@@ -73,6 +73,62 @@ class GLBRegressionTests(unittest.TestCase):
             self.assertEqual(result["surface_observation"],
                              "sampled_difference_detected")
 
+    def test_r5_boundary_candidate_does_not_become_authoritative_regression(self):
+        """Candidate ordering and changed openings never approve a GLB regression.
+
+        Exercise the actual public regression orchestration return contract
+        using CBDK-authored surfaces and mocked subprocess/GLB preflight.
+        No third-party data or Blender code execution occurs in this unit test.
+        """
+        from cbdk.glb_part_match import suggest_spatial_part_matches
+        from test_glb_match_determinism_r5 import reorder_faces
+        from test_glb_part_match import square_frame
+
+        original = square_frame()
+        cases = (
+            ("equivalent_reordered", reorder_faces(original), "suggested"),
+            ("changed_opening", reorder_faces(square_frame(opening_x=.24)),
+             "ambiguous"),
+        )
+        comparison = {
+            "kind": "cbdk_glb_scene_comparison",
+            "passed": True,
+            "summary": {"errors": 0},
+            "differences": [],
+        }
+        for label, other, expected in cases:
+            with self.subTest(case=label), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                reference, candidate = root / "ref.glb", root / "cand.glb"
+                reference.write_bytes(b"x")
+                candidate.write_bytes(b"y")
+                pairing = suggest_spatial_part_matches(
+                    original, other, [8], [8],
+                )
+                self.assertEqual(pairing["reference_parts"][0]["status"], expected)
+                self.assertFalse(pairing["auto_apply"])
+                self.assertFalse(pairing["cross_file_part_identity_proven"])
+                surface = {
+                    "kind": "cbdk_glb_surface_review",
+                    "status": "review_only",
+                    "surface_observation": "no_difference_observed_at_samples",
+                    "part_match_candidates": pairing,
+                }
+                with patch("cbdk.glb_regression.write_glb_inspection"), \
+                     patch("cbdk.glb_regression.render_glb_preview"), \
+                     patch("cbdk.glb_regression.write_scene_comparison",
+                           return_value=comparison), \
+                     patch("cbdk.glb_regression.run_glb_surface_review",
+                           return_value=surface):
+                    result = run_glb_regression(
+                        root / "blender", reference, candidate, root / "out",
+                        surface_review=True,
+                    )
+                self.assertEqual(result["surface_status"], "review_only")
+                self.assertTrue(result["surface_does_not_auto_approve"])
+                self.assertTrue(result["passed_is_metadata_only"])
+
+
     def test_optional_surface_stage_can_report_skipped_without_false_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
