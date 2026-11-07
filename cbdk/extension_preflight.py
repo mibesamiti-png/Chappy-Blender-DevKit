@@ -9,9 +9,10 @@ import hashlib
 import json
 import re
 import stat
+import zlib
 from pathlib import Path
-from zipfile import BadZipFile, ZipFile
-from .extension_manifest import review_manifest_fields, manifest_field_diagnostics
+from zipfile import ZIP_DEFLATED, ZIP_STORED, BadZipFile, ZipFile
+from .extension_manifest import VERSION, review_manifest_fields, manifest_field_diagnostics
 
 KNOWN = {
     "cbdk_mesh_inspector_preview": (1, "mesh_inspector"),
@@ -21,6 +22,30 @@ MAX_ARCHIVE_BYTES = 16 * 1024 * 1024
 MAX_ENTRY_BYTES = 2 * 1024 * 1024
 MAX_MEMBERS = 64
 SHA = re.compile(r"^[0-9a-f]{64}$")
+
+
+class PreviewArchiveError(ValueError):
+    """A controlled, source-path-free preflight failure classification."""
+
+    def __init__(self, category: str, code: str, message: str):
+        super().__init__(message)
+        self.category = category
+        self.code = code
+
+
+def _clean_zip_envelope(path: Path) -> bool:
+    """Legacy CBDK builders write a plain ZIP, without prefix, trailer or comment.
+
+    Restricting the format rejects polyglot/overlaid archives that zipfile can
+    otherwise accept. This deliberately does not claim to prove authorship.
+    """
+    with path.open("rb") as stream:
+        if stream.read(4) != b"PK\x03\x04":
+            return False
+        stream.seek(-22, 2)
+        tail = stream.read(22)
+    return (len(tail) == 22 and tail[:4] == b"PK\x05\x06"
+            and tail[-2:] == b"\x00\x00")
 
 
 def _json_unique(pairs):
@@ -41,21 +66,27 @@ def inspect_preview_archive(source: str | Path) -> dict:
     """
     path = Path(source)
     if not path.is_file() or path.is_symlink():
-        raise ValueError("Missing or unsafe local preview ZIP")
+        raise PreviewArchiveError("archive_structure", "missing_or_unsafe_input", "Missing or unsafe local preview ZIP")
     if path.stat().st_size > MAX_ARCHIVE_BYTES:
-        raise ValueError("Preview ZIP exceeds archive byte budget")
+        raise PreviewArchiveError("archive_structure", "archive_too_large", "Preview ZIP exceeds archive byte budget")
     try:
+        if not _clean_zip_envelope(path):
+            raise PreviewArchiveError("archive_structure", "zip_envelope", "Unexpected ZIP prefix, trailer or comment")
         with ZipFile(path) as archive:
+            if archive.comment:
+                raise PreviewArchiveError("archive_structure", "zip_comment", "Unexpected ZIP archive comment")
             infos = archive.infolist()
             names = [info.filename for info in infos]
-            if not 3 <= len(infos) <= MAX_MEMBERS or len(names) != len(set(names)):
-                raise ValueError("Invalid or duplicate preview archive members")
+            if (not 3 <= len(infos) <= MAX_MEMBERS or
+                    len(names) != len(set(names)) or
+                    len(names) != len({name.casefold() for name in names})):
+                raise PreviewArchiveError("archive_structure", "duplicate_or_count", "Invalid or duplicate preview archive members")
             packages = {name.split("/")[0] for name in names}
             if len(packages) != 1:
-                raise ValueError("Preview archive must contain exactly one package")
+                raise PreviewArchiveError("archive_structure", "multiple_packages", "Preview archive must contain exactly one package")
             package = next(iter(packages))
             if package not in KNOWN:
-                raise ValueError("Not a CBDK-authored preview ZIP")
+                raise PreviewArchiveError("archive_identity", "unknown_package", "Not a CBDK-authored preview ZIP")
             prefix = package + "/"
             for info in infos:
                 name = info.filename
@@ -63,21 +94,23 @@ def inspect_preview_archive(source: str | Path) -> dict:
                 if (not name.startswith(prefix) or
                         len(components) < 2 or
                         any(x in ("", ".", "..") for x in components) or
-                        "\\" in name or info.is_dir() or
+                        "\\" in name or not name.isprintable() or info.is_dir() or
                         info.file_size > MAX_ENTRY_BYTES or
-                        stat.S_IFMT(info.external_attr >> 16) == stat.S_IFLNK):
-                    raise ValueError("Unsafe preview archive member")
+                        info.compress_type not in (ZIP_DEFLATED, ZIP_STORED) or
+                        info.flag_bits & (0x01 | 0x40) or
+                        stat.S_IFMT(info.external_attr >> 16) not in (0, stat.S_IFREG)):
+                    raise PreviewArchiveError("archive_structure", "unsafe_member", "Unsafe preview archive member")
             if sum(info.file_size for info in infos) > MAX_ARCHIVE_BYTES:
-                raise ValueError("Preview archive uncompressed size budget exceeded")
+                raise PreviewArchiveError("archive_structure", "uncompressed_budget", "Preview archive uncompressed size budget exceeded")
             meta_path = prefix + "CBDK_BUILD_INFO.json"
             if meta_path not in names:
-                raise ValueError("Missing CBDK build provenance")
+                raise PreviewArchiveError("provenance", "missing_metadata", "Missing CBDK build provenance")
             metadata = json.loads(
                 archive.read(meta_path).decode("utf-8"),
                 object_pairs_hook=_json_unique,
             )
             if not isinstance(metadata, dict):
-                raise ValueError("Invalid CBDK provenance")
+                raise PreviewArchiveError("provenance", "invalid_metadata", "Invalid CBDK provenance")
             schema, expected_template = KNOWN[package]
             if (type(metadata.get("schema_version")) is not int
                     or metadata["schema_version"] != schema
@@ -87,19 +120,19 @@ def inspect_preview_archive(source: str | Path) -> dict:
                     or metadata.get("approved") is not False
                     or metadata.get("redistribution_cleared") is not False
                     or metadata.get("blender_runtime_verified_for_this_build") is not False):
-                raise ValueError("Preview origin or approval state is not trusted")
+                raise PreviewArchiveError("provenance", "unsafe_approval_flag", "Preview origin or approval state is not trusted")
             digests = metadata.get("files_sha256")
             if not isinstance(digests, dict):
-                raise ValueError("Missing file hash inventory")
+                raise PreviewArchiveError("provenance", "missing_hash_inventory", "Missing file hash inventory")
             rels = {name.removeprefix(prefix) for name in names if name != meta_path}
             if set(digests) != rels or "__init__.py" not in rels:
-                raise ValueError("CBDK archive members disagree with provenance")
+                raise PreviewArchiveError("provenance", "member_inventory_mismatch", "CBDK archive members disagree with provenance")
             for rel in sorted(rels):
                 digest = digests[rel]
                 if not isinstance(digest, str) or not SHA.fullmatch(digest):
-                    raise ValueError("Invalid provenance SHA256")
+                    raise PreviewArchiveError("archive_integrity", "invalid_hash", "Invalid provenance SHA256")
                 if hashlib.sha256(archive.read(prefix + rel)).hexdigest() != digest:
-                    raise ValueError("CBDK preview file changed since build")
+                    raise PreviewArchiveError("archive_integrity", "hash_mismatch", "CBDK preview file changed since build")
             if schema == 2:
                 selected = metadata.get("features")
                 if (not isinstance(selected, list) or
@@ -108,45 +141,52 @@ def inspect_preview_archive(source: str | Path) -> dict:
                             "object_selection", "edit_selection", "mesh_bounds",
                             "modifier_summary", "vertex_nudge"} for s in selected)
                         or len(selected) != len(set(selected))):
-                    raise ValueError("Preview feature inventory is not allowlisted")
+                    raise PreviewArchiveError("dependency_closure", "feature_inventory", "Preview feature inventory is not allowlisted")
                 if {n.removeprefix("features/").removesuffix(".py")
                         for n in rels if n.startswith("features/") and
                         n != "features/__init__.py"} != set(selected):
-                    raise ValueError("Preview feature modules disagree with provenance")
+                    raise PreviewArchiveError("dependency_closure", "feature_modules", "Preview feature modules disagree with provenance")
             parts = metadata.get("parts")
             if (not isinstance(parts, list) or not parts or len(parts) > 7
                     or any(not isinstance(p, dict) or
                            p.get("catalog_approved") is not False or
                            p.get("license_review") not in ("pending", "not_reviewed")
                            for p in parts)):
-                raise ValueError("Preview part approvals or license metadata are unexpected")
+                raise PreviewArchiveError("provenance", "part_state", "Preview part approvals or license metadata are unexpected")
             from .feature_catalog import TRUSTED_FEATURES, TRUSTED_PART_SOURCES
             from .modular_builder import HELPERS
             expected_parts = ({p for f in selected for p in TRUSTED_FEATURES[f]["parts"]}
                               if schema == 2 else {"BLCTX-001", "BLCTX-002", "BME-001"})
             ids = [p.get("part_id") for p in parts]
             if any(type(p) is not str for p in ids) or len(set(ids)) != len(ids) or set(ids) != expected_parts:
-                raise ValueError("Preview part dependency inventory mismatch")
+                raise PreviewArchiveError("dependency_closure", "part_ids", "Preview part dependency inventory mismatch")
             expected_files = {"__init__.py", "README.txt", "helpers/__init__.py"}
             expected_files |= {HELPERS[TRUSTED_PART_SOURCES[p]] for p in expected_parts}
             if schema == 2:
                 expected_files |= {"features/__init__.py"} | {"features/" + f + ".py" for f in selected}
                 if metadata.get("part_ids") != sorted(expected_parts):
-                    raise ValueError("Preview dependency list mismatch")
+                    raise PreviewArchiveError("dependency_closure", "dependency_ids", "Preview dependency list mismatch")
             if rels != expected_files:
-                raise ValueError("Preview contains undeclared helper or file")
+                raise PreviewArchiveError("dependency_closure", "file_inventory", "Preview contains undeclared helper or file")
             # All validation above is structural. Never import any bundled source.
             source_count = len(rels)
-    except (BadZipFile, UnicodeDecodeError, KeyError) as exc:
-        raise ValueError("Invalid CBDK preview ZIP") from exc
+    except (BadZipFile, UnicodeDecodeError, KeyError, OSError, RuntimeError,
+            EOFError, zlib.error, RecursionError, json.JSONDecodeError) as exc:
+        raise PreviewArchiveError("archive_integrity", "corrupt_or_unreadable", "Invalid CBDK preview ZIP") from exc
 
+    minimum_blender = metadata.get("minimum_blender", "4.4.0")
+    if (type(minimum_blender) is not str or not VERSION.fullmatch(minimum_blender)
+            or tuple(map(int, minimum_blender.split("."))) < (4, 2, 0)):
+        raise PreviewArchiveError("provenance", "invalid_minimum_blender", "Invalid minimum Blender provenance")
     fields = {
         "schema_version": "1.0.0",
         "id": package,
-        "name": metadata.get("display_name", "CBDK Mesh Inspector Preview"),
+        # The recipe display name is self-asserted metadata, not a trusted
+        # identity field. Do not copy potentially private text into reports.
+        "name": "CBDK Authored Development Preview",
         "tagline": "Authored mesh inspection development preview",
         "type": "add-on",
-        "blender_version_min": metadata.get("minimum_blender", "4.4.0"),
+        "blender_version_min": minimum_blender,
         "version": None,
         "maintainer": None,
         "license": None,
@@ -193,6 +233,32 @@ def inspect_preview_archive(source: str | Path) -> dict:
             "request_explicit_owner_release_approval",
         ],
     }
+
+
+def diagnose_preview_archive(source: str | Path) -> dict:
+    """Data-only diagnostic API; an invalid archive never becomes release-blocked.
+
+    The normal CLI still fails closed on invalid inputs. This optional API
+    supplies stable failure categories without disclosing an input path,
+    archive member, parser payload, or private source.
+    """
+    try:
+        return inspect_preview_archive(source)
+    except ValueError as exc:
+        return {
+            "schema_version": 1,
+            "kind": "cbdk_extension_readiness_preflight",
+            "status": "invalid_preview_archive",
+            "failure_category": getattr(exc, "category", "unclassified_invalid_archive"),
+            "failure_code": getattr(exc, "code", "invalid_input"),
+            "archive_structure_checked": False,
+            "provenance_hashes_verified": False,
+            "source_authenticity_verified": False,
+            "python_code_executed": False,
+            "extension_zip_created": False,
+            "official_blender_extension_validate_ran": False,
+            "release_authorized": False,
+        }
 
 
 def write_preflight_report(source: str | Path, output: str | Path) -> dict:
