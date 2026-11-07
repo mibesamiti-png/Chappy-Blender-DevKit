@@ -11,6 +11,58 @@ def fields():
 
 
 class ManifestReviewTests(unittest.TestCase):
+    def test_r4_official_synthetic_matrix_preserves_known_good_classification(self):
+        """R3's fail-closed parser must not reject known Blender CLI output.
+
+        The six data-only cases match the existing A-owned official validator
+        script. These strings are synthetic, not a substitute for Blender CI.
+        """
+        variants = (
+            ("valid_subset", {}, None, 0),
+            ("missing_license", {"license": None}, 'missing "license"', 1),
+            ("punctuated_tagline", {"tagline": "Invalid tagline!"},
+             'key "tagline" invalid: synthetic validation detail', 1),
+            ("invalid_id", {"id": "invalid-id"},
+             'key "id" invalid: synthetic validation detail', 1),
+            ("invalid_version", {"version": "not-version"},
+             'key "version" invalid: synthetic validation detail', 1),
+            ("empty_maintainer", {"maintainer": ""},
+             'key "maintainer" invalid: synthetic validation detail', 1),
+        )
+        known_banners = (
+            "Blender 4.4.3 (hash 802179c51ccc built 2025-04-29 15:12:13)",
+            "Blender 4.5.15 LTS (hash 5afeabba6097 built 2026-10-22 01:33:47)",
+            "Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:12:34)",
+        )
+        for banner in known_banners:
+            for label, changes, diagnostic, exitcode in variants:
+                with self.subTest(version=banner.split()[1], case=label):
+                    example = {**fields(), **changes}
+                    core = ('Success parsing TOML in "synthetic fixture"'
+                            if diagnostic is None else
+                            'Error parsing TOML "synthetic fixture"\n' + diagnostic)
+                    output = banner + "\n" + core + "\nBlender quit\n"
+                    compared = compare_official_validation(example, exitcode, output)
+                    self.assertEqual(compared["status"], "agreement")
+                    self.assertTrue(compared["complete_diagnostic_agreement"])
+                    self.assertEqual(compared["official_observation"]["status"],
+                                     "accepted" if exitcode == 0 else "rejected")
+                    self.assertFalse(compared["official_observation"]["has_unrecognized_diagnostics"])
+                    self.assertFalse(compared["official_observation"]["authenticates_log"])
+                    self.assertFalse(compared["owner_approval_verified"])
+                    self.assertFalse(compared["license_compatibility_verified"])
+                    self.assertNotIn("synthetic fixture", str(compared))
+
+                    # The exact same valid/invalid observation becomes
+                    # unclassified when an unknown value-bearing line appears.
+                    injected = output + "Unknown validator note: private-marker-42\n"
+                    blocked = compare_official_validation(example, exitcode, injected)
+                    self.assertEqual(blocked["status"], "unclassified")
+                    self.assertFalse(blocked["complete_diagnostic_agreement"])
+                    self.assertTrue(blocked["official_observation"]["has_unrecognized_diagnostics"])
+                    self.assertNotIn("private-marker-42", str(blocked))
+                    self.assertNotIn("synthetic fixture", str(blocked))
+
     def test_official_fields_must_match_not_just_nonzero_exit(self):
         data = {**fields(), "license": None}
         matched = compare_official_validation(data, 1, 'Error parsing TOML "/private/source"\nmissing "license"')
