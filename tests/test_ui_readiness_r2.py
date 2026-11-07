@@ -309,7 +309,10 @@ class RetryAndCollisionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "controlled class registration") as caught:
             self.register()
         self.assertIsInstance(caught.exception.__cause__, RuntimeError)
-        self.assertIn("controlled Scene property deletion", str(caught.exception.__cause__))
+        self.assertIn("cleanup incomplete", str(caught.exception.__cause__))
+        self.assertIsNotNone(caught.exception.__cause__.__cause__)
+        self.assertIn("controlled Scene property deletion",
+                      str(caught.exception.__cause__.__cause__))
         self.assertEqual(self.namespace["_OWNED_PROPERTIES"],
                          ["cbdk_modular_nudge_offset"])
         self.assertFalse(self.utils.active)
