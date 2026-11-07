@@ -724,6 +724,183 @@ def run(path):
             module.unregister()
             assert_detached(module)
             checks.append("native_r9_owned_delete_retry_recovered")
+
+            # R10: in a SINGLE unregister() call fail both class removal
+            # and Scene RNA property removal, not two separate calls.  On
+            # the second retry, fail one remaining ownership kind again;
+            # replace the pending descriptor by a controlled foreign stub
+            # between retries, then recover and re-enable cleanly.
+            for failing_name in PROPERTIES:
+                other_name = next(name for name in PROPERTIES
+                                  if name != failing_name)
+                for second_failure in ("class", "scene"):
+                    module.register()
+                    owned_token = module._OWNED_PROPERTY_TOKENS[failing_name]
+                    failing_class = module._REGISTERED[-1]
+                    original_unregister = bpy.utils.unregister_class
+                    assert "delattr" not in module.__dict__
+                    class_attempts = [0]
+                    scene_attempts = [0]
+                    class_budget = 2 if second_failure == "class" else 1
+                    scene_budget = 2 if second_failure == "scene" else 1
+
+                    def r10_class_failure(cls):
+                        if (cls is failing_class
+                                and class_attempts[0] < class_budget):
+                            class_attempts[0] += 1
+                            raise RuntimeError(
+                                "CBDK R10 injected class detach failure")
+                        return original_unregister(cls)
+
+                    def r10_scene_failure(owner, name):
+                        if (owner is bpy.types.Scene and name == failing_name
+                                and scene_attempts[0] < scene_budget):
+                            scene_attempts[0] += 1
+                            raise RuntimeError(
+                                "CBDK R10 injected Scene deletion failure")
+                        return delattr(owner, name)
+
+                    bpy.utils.unregister_class = r10_class_failure
+                    module.__dict__["delattr"] = r10_scene_failure
+                    foreign = None
+                    try:
+                        # First attempt: both failures must be observed, and
+                        # neither failed ownership record may be forgotten.
+                        try:
+                            module.unregister()
+                        except RuntimeError as exc:
+                            assert "cleanup incomplete" in str(exc)
+                        else:
+                            raise AssertionError(
+                                "R10 simultaneous cleanup errors swallowed")
+                        assert class_attempts == [1]
+                        assert scene_attempts == [1]
+                        assert module._REGISTERED == [failing_class]
+                        assert module._OWNED_PROPERTIES == [failing_name]
+                        assert set(module._OWNED_PROPERTY_TOKENS) == {
+                            failing_name}
+                        assert (module._OWNED_PROPERTY_TOKENS[failing_name]
+                                is owned_token)
+                        assert (bpy.types.Scene.__dict__.get(failing_name)
+                                is owned_token)
+                        assert other_name not in bpy.types.Scene.__dict__
+
+                        def assert_r10_pending_blocks_reload():
+                            try:
+                                importlib.reload(module)
+                            except RuntimeError as exc:
+                                assert "unregistered before module reload" in str(exc)
+                            else:
+                                raise AssertionError(
+                                    "R10 reload reset a pending ownership ledger")
+                            try:
+                                module.register()
+                            except RuntimeError as exc:
+                                assert "already registered" in str(exc)
+                            else:
+                                raise AssertionError(
+                                    "R10 register accepted pending cleanup")
+
+                        assert_r10_pending_blocks_reload()
+
+                        def replace_pending_scene_with_foreign():
+                            if failing_name == PROPERTIES[0]:
+                                bpy.types.Scene.cbdk_modular_result = (
+                                    bpy.props.StringProperty(
+                                        default="CBDK R10 synthetic foreign"))
+                            else:
+                                bpy.types.Scene.cbdk_modular_nudge_offset = (
+                                    bpy.props.FloatVectorProperty(
+                                        size=3, default=(0.0, 0.0, 0.8)))
+                            value = bpy.types.Scene.__dict__.get(failing_name)
+                            assert value is not None and value is not owned_token
+                            return value
+
+                        if second_failure == "class":
+                            # Only the class failure recurs. The now-foreign
+                            # Scene name must leave CBDK's ledger on retry
+                            # without deleting the stand-in descriptor.
+                            foreign = replace_pending_scene_with_foreign()
+                        try:
+                            module.unregister()
+                        except RuntimeError as exc:
+                            assert "cleanup incomplete" in str(exc)
+                        else:
+                            raise AssertionError(
+                                "R10 second partial cleanup was not reported")
+
+                        if second_failure == "class":
+                            assert class_attempts == [2]
+                            assert scene_attempts == [1]
+                            assert module._REGISTERED == [failing_class]
+                            assert not module._OWNED_PROPERTIES
+                            assert not module._OWNED_PROPERTY_TOKENS
+                            assert bpy.types.Scene.__dict__.get(
+                                failing_name) is foreign
+                        else:
+                            assert class_attempts == [1]
+                            assert scene_attempts == [2]
+                            assert not module._REGISTERED
+                            assert module._OWNED_PROPERTIES == [failing_name]
+                            assert (module._OWNED_PROPERTY_TOKENS[failing_name]
+                                    is owned_token)
+                            assert bpy.types.Scene.__dict__.get(
+                                failing_name) is owned_token
+                            # Here the Scene failure recurs, so the foreign
+                            # replacement arrives before the final retry.
+                            foreign = replace_pending_scene_with_foreign()
+                        assert_r10_pending_blocks_reload()
+
+                        # Third call must complete every remaining class or
+                        # owned descriptor claim, preserving foreign RNA.
+                        module.unregister()
+                        assert not module._REGISTERED
+                        assert not module._OWNED_PROPERTIES
+                        assert not module._OWNED_PROPERTY_TOKENS
+                        assert not hasattr(
+                            bpy.types, "VIEW3D_PT_cbdk_modular_preview")
+                        assert bpy.types.Scene.__dict__.get(
+                            failing_name) is foreign
+                        try:
+                            module.register()
+                        except RuntimeError as exc:
+                            assert "Scene properties conflict" in str(exc)
+                        else:
+                            raise AssertionError(
+                                "R10 final register claimed foreign Scene")
+                        assert bpy.types.Scene.__dict__.get(
+                            failing_name) is foreign
+                    finally:
+                        bpy.utils.unregister_class = original_unregister
+                        module.__dict__.pop("delattr", None)
+                        if (foreign is not None and
+                                bpy.types.Scene.__dict__.get(failing_name)
+                                is foreign):
+                            delattr(bpy.types.Scene, failing_name)
+                    assert_detached(module)
+                    assert importlib.reload(module) is module
+                    module.register()
+                    module.unregister()
+                    assert_detached(module)
+            checks.append("native_r10_dual_failure_retains_both_ledgers")
+            checks.append("native_r10_class_retry_preserves_foreign")
+            checks.append("native_r10_scene_retry_preserves_foreign")
+            checks.append("native_r10_partial_retry_blocks_reload")
+
+            # Native addon_utils enable/disable, not only direct register(),
+            # after four controlled double-failure recoveries.
+            for _ in range(2):
+                module = addon_utils.enable(
+                    PACKAGE, default_set=False, persistent=False)
+                assert module is not None
+                enabled = True
+                assert len(module._REGISTERED) == len(module._CLASSES)
+                assert all(name in bpy.types.Scene.__dict__
+                           for name in PROPERTIES)
+                addon_utils.disable(PACKAGE, default_set=False)
+                enabled = False
+                assert_detached(module)
+            checks.append("native_r10_enable_disable_after_dual_recovery_2")
         finally:
             if enabled:
                 try:

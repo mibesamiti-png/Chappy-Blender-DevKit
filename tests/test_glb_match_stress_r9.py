@@ -107,7 +107,12 @@ class R9HostileFallbackTests(unittest.TestCase):
             counts["removed"] += int(far)
             return far
 
-        with patch("cbdk.glb_part_match._outside_expanded_boundary_segment_box",
+        # R10 changes the default by adaptively stopping low-selectivity
+        # AABB calls. Keep this R9 regression about the *static R8 filter*
+        # so the historical high-overlap cost remains independently tested.
+        with patch("cbdk.glb_part_match._keep_r2_bbox_after_probe",
+                   new=lambda _rejected: True), \
+             patch("cbdk.glb_part_match._outside_expanded_boundary_segment_box",
                    side_effect=observed):
             pruned = _boundary_layout_issue(source, target, part, part)
         self.assertEqual(pruned, original)
@@ -207,20 +212,28 @@ class R9HostileFallbackTests(unittest.TestCase):
     def test_dense_aabb_nonbenefit_benchmark_is_memory_bounded(self):
         """Benchmark only; do not fail CI on runner-dependent timing."""
         ref, cand, part = overlapping_boxes(128)
+
+        def forced_static_r8():
+            # Observe the original R8 design rather than the new R10
+            # adaptive selector. This also preserves the R9 log's meaning.
+            with patch("cbdk.glb_part_match._keep_r2_bbox_after_probe",
+                       new=lambda _rejected: True):
+                return _boundary_layout_issue(ref, cand, part, part)
+
         unpruned_layout(ref, cand, part)
-        _boundary_layout_issue(ref, cand, part, part)
+        forced_static_r8()
         old_times, new_times = [], []
         for _ in range(2):
             t0 = perf_counter()
             old = unpruned_layout(ref, cand, part)
             old_times.append((perf_counter() - t0) * 1000.)
             t0 = perf_counter()
-            new = _boundary_layout_issue(ref, cand, part, part)
+            new = forced_static_r8()
             new_times.append((perf_counter() - t0) * 1000.)
             self.assertEqual(new, old)
         tracemalloc.start()
         try:
-            _boundary_layout_issue(ref, cand, part, part)
+            forced_static_r8()
             peak = tracemalloc.get_traced_memory()[1]
         finally:
             tracemalloc.stop()
