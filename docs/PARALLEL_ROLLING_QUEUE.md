@@ -143,9 +143,11 @@
 4. B/C/D稼働中にAがR6 PR先行レビュー・競合とCI資源を点検しR7を設計する。実ユーザーGLB、実Windows GUI/Undo、ライセンス、正式Extension発行、private data、main、v0.19以降のゲートは従来のまま。Codexは任意、なくても停止しない。
 
 
-## 2026-11-08 JST — R7候補（Aの事前割当案、R6統合後7CIまで未発効）
+## 2026-11-08 JST — R7正式割当（R6統合後7CI検証済）
 
-R6 B [#54](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/54) `0c2936874c9759242d262512685ec616705993f4`、C [#55](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/55) `4624c83c1161c4a26761f92494a8ab96743bd47a`、D [#53](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/53) `d6263f4dc8029930ddfe76d647e984059a5ee846` は各5系統CI成功（Kit/Skillは未実行）。Aが専用統合PR [#56](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/56)を作成し、候補初期HEAD `7400516a9ab8230eda60a0daea8141e0c03c2844` でB4/C5/D3の12ファイルを結合した。**R6の結合PRおよび開発ブランチ統合後の独立7系統CIを確認するまでは、以下R7を実装・新規PR化しない。** この節は先読みの非発効仕様であり、正式なR7作業基点の確定記録はCI後のAの追記で行う。
+R6 B [#54](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/54) `0c2936874c9759242d262512685ec616705993f4`、C [#55](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/55) `4624c83c1161c4a26761f92494a8ab96743bd47a`、D [#53](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/53) `d6263f4dc8029930ddfe76d647e984059a5ee846` は各5系統CI成功（Kit/Skillは未実行）。Aが専用統合PR [#56](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/56)を作成し、候補初期HEAD `7400516a9ab8230eda60a0daea8141e0c03c2844` でB4/C5/D3の12ファイルを結合した。**上記ゲートは実測通過済み。** 本節のR7タスクは正式に割当済み。各チームは開始時に最新dev HEADとR6統合SHA祖先関係を再確認して、担当専用ブランチ・ドラフトPRを1件だけ作成する。
+
+**正式発効の検証記録:** AがR6統合PR #56の正確な候補SHA `7400516a9ab8230eda60a0daea8141e0c03c2844` の5系統全成功を確認してdevへsquash merge、**統合コードSHA `e2f09e593d9c7bdff66695c7e8972eea98e160ca`** でpost-mergeの**7系統全成功**を別途確認：[Python #42410463309](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463309)、[Windows #42410463276](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463276)、[Blender 3版 #42410463269](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463269)、[Chromium #42410463349](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463349)、[Handoff #42410463353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463353)、[Kit #42410463251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463251)、[Skill #42410463244](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463244)。R7作業はこのR6統合SHAの**子孫である着手時点の最新 `feature/v0.18-shape-diagnostics` HEAD**から開始する。Aによるキュー統合・節目文書追記でHEADが進んだ場合はその新しいHEADを優先し、R6の旧個別PRから分岐しない。
 
 ### R7候補・所有範囲
 
