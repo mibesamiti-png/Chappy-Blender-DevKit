@@ -17,8 +17,15 @@ def build(output):
             shutil.copytree(ROOT / folder, root / folder)
         path = root / "catalog/ui_layouts.json"
         data = json.loads(path.read_text(encoding="utf-8"))
-        data["sections"][0].update(layout="row", boxed=False, visible_in="object")
+        # Exercise one genuinely mixed Object/Edit section in every Blender CI version.
+        data["sections"][0].update(layout="row", boxed=False, visible_in="always")
         data["sections"][1]["visible_in"] = "edit_mesh"
+        nudge = data["sections"][1]["controls"].pop()
+        nudge["visible_in"] = "edit_mesh"
+        data["sections"][0]["controls"].append(nudge)
+        for control in data["sections"][0]["controls"]:
+            if control["feature_id"] != "vertex_nudge":
+                control["visible_in"] = "object"
         for section in data["sections"]:
             for control in section["controls"]:
                 if control["feature_id"] == "vertex_nudge":

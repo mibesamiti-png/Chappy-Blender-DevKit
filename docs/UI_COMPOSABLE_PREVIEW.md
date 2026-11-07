@@ -44,3 +44,13 @@ XYZ範囲と旧UIプラン形式は維持する。
 GitHub Actionsの実測結果が出るまで、Blender対象3版/Windows GUIの合格は主張しない。
 未知Pythonコードの実行、実ユーザーアドオンの登録、実Extension生成、正式
 ライセンス承認、mainマージ、直接インストールは引き続き行わない。
+
+## Blender合成UIテスト（CIに統合）
+
+既存の `scripts/build_ui_variant.py` が、Object専用の3操作と
+Edit専用の頂点移動を**同じInspectionセクション**に置いた一時カタログを
+作り、編集選択操作を別セクションへ残す。通常6レシピのカタログは変更しない。
+`scripts/blender_modular_addon_smoke.py` の合成`Panel.draw`記録を拡張し、
+モード別の操作個数/ラベル/有効状態・対象外modeの空セクション抑止・
+従来の登録/解除/Operator動作を照合する。共通CIワークフロー設定は変更なし。
+チェックの成否は対象commitのGitHub Actions実ジョブで別途確認する。
