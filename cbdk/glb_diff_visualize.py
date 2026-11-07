@@ -153,6 +153,8 @@ def run_glb_diff_visualize(blender, reference, candidate, output_dir, *, timeout
                     "boundary_edge_count_mismatch",
                     "nonmanifold_edge_count_mismatch",
                     "weld_collapsed_triangles_observed",
+                    "boundary_spatial_layout_mismatch",
+                    "boundary_layout_budget_exceeded",
                 )
                 if (not isinstance(reasons, list)
                         or reasons != [code for code in known if code in reasons]
