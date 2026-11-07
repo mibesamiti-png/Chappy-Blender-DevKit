@@ -23,6 +23,8 @@ from cbdk.glb_multires_surface import (  # noqa: E402
     compare_multires_triangle_surfaces,
 )
 
+from cbdk.glb_part_hints import count_based_part_hints  # noqa: E402
+
 MARKER = "CBDK_GLB_SURFACE_REVIEW_PASS "
 
 
@@ -97,6 +99,11 @@ def _safe_report(ref_faces, cand_faces, *, ref_count, cand_count, ref_parts=None
             "identifies_changed_part": False,
             "notes": "Anonymous size-ranked inventory, not matched objects",
         }
+        report["part_count_hints"] = count_based_part_hints(
+            report["part_inventory"]["reference_triangle_counts"],
+            report["part_inventory"]["candidate_triangle_counts"],
+            reference_total=len(ref_parts), candidate_total=len(cand_parts),
+        )
     if ref_faces is None or cand_faces is None:
         report.update({
             "status": "skipped",
