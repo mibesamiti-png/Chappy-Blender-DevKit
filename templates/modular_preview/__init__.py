@@ -178,6 +178,11 @@ def register():
             bpy.utils.register_class(cls)
             _REGISTERED.append(cls)
     except Exception as error:
+        # A class-registration callback may fail after one operator attaches,
+        # while a Scene declaration has been removed or replaced. Reuse the
+        # ownership-aware unregister path: preserve foreign replacements,
+        # release only still-owned declarations, and retain failed ledgers for
+        # an explicit retry instead of silently resetting them.
         try:
             unregister()
         except Exception as cleanup_error:
