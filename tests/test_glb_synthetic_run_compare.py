@@ -160,6 +160,8 @@ class RunComparisonTests(unittest.TestCase):
         self.assertEqual(compare_run_reviews([completed()] * 16)["eligible_runs"], 16)
 
     def test_condition_schema_rejects_flags_nan_paths_and_bad_hashes(self):
+        for version in ("4.4.3", "4.5.15 LTS", "5.2.1 LTS"):
+            self.assertEqual(validate_conditions(conditions(blender_version=version))["blender_version"], version)
         good = conditions()
         for key, value in (
             ("max_trials", True), ("samples_per_triangle", 24.0),
@@ -213,6 +215,20 @@ class RunComparisonTests(unittest.TestCase):
             self.assertEqual(code, 2)
         body = (self.root / "reports/latest/cli_inconclusive/synthetic_run_comparison.json").read_text()
         self.assertNotIn("missing-secret", body)
+        # Simulate an ignored parent resolving outside the repository, without
+        # requiring Windows symlink privileges or touching an external path.
+        original_resolve = Path.resolve
+        def escaped_parent(path, *args, **kwargs):
+            if path == self.root / "reports/latest":
+                return self.root / "outside_ignored_reports"
+            return original_resolve(path, *args, **kwargs)
+        with patch.object(module, "__file__", str(self.root / "cbdk/module.py")), \
+             patch.object(Path, "resolve", escaped_parent), \
+             contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            main(["--run", str(self.root / "1/synthetic_run_review.json"),
+                  "--run", str(self.root / "2/synthetic_run_review.json"),
+                  "--output", str(self.root / "reports/latest/escaped")])
+        self.assertFalse((self.root / "reports/latest/escaped").exists())
 
 
 if __name__ == "__main__":

@@ -55,7 +55,7 @@ def build_conditions(*, source_sha256, reference_sha256, baseline_sha256,
         if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
             raise ValueError("Invalid synthetic condition digest")
     if (not isinstance(blender_version, str)
-            or re.fullmatch(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}", blender_version) is None):
+            or re.fullmatch(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(?: LTS)?", blender_version) is None):
         raise ValueError("Invalid declared Blender version")
     for value, lower, upper in ((scale, 0, 1e6), (initial_max, .12, 1e5)):
         if type(value) not in (int, float) or not math.isfinite(value) or not lower < value <= upper:

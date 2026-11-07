@@ -157,20 +157,24 @@ class RunReviewTests(unittest.TestCase):
         self.assertFalse((self.root / "synthetic_run_review.json").exists())
 
     def test_runner_success_checkpoints_and_legacy_history(self):
-        output = self.output()
-        with self.mocked() as stdout:
-            history = runner.run(self.exe, output)
-        terminal = read_run_review(output / "synthetic_run_review.json")
-        self.assertEqual(history, terminal["checkpoint"])
-        self.assertTrue(terminal["run_completed"])
-        self.assertEqual(terminal["input_integrity"], "verified")
-        self.assertIn("CBDK_GLB022_ADAPTIVE_SYNTHETIC_PASS", stdout.getvalue())
-        self.assertTrue((output / "synthetic_adaptive_history.json").is_file())
-        files = sorted(output.glob("checkpoint_*.json"))
-        self.assertEqual(len(files), 14)
-        self.assertEqual([p.name for p in files], [f"checkpoint_{i:03d}.json" for i in range(14)])
-        for file in files:
-            self.assertFalse(read_run_review(file)["run_completed"])
+        for version in ("4.5.15", "4.5.15 LTS", "5.2.1 LTS"):
+            self.baseline["blender_version"] = version
+            for trial in self.trials.values():
+                trial["blender_version"] = version
+            output = self.output()
+            with self.mocked() as stdout:
+                history = runner.run(self.exe, output)
+            terminal = read_run_review(output / "synthetic_run_review.json")
+            self.assertEqual(history, terminal["checkpoint"])
+            self.assertTrue(terminal["run_completed"])
+            self.assertEqual(terminal["input_integrity"], "verified")
+            self.assertIn("CBDK_GLB022_ADAPTIVE_SYNTHETIC_PASS", stdout.getvalue())
+            self.assertTrue((output / "synthetic_adaptive_history.json").is_file())
+            files = sorted(output.glob("checkpoint_*.json"))
+            self.assertEqual(len(files), 14)
+            self.assertEqual([p.name for p in files], [f"checkpoint_{i:03d}.json" for i in range(14)])
+            for file in files:
+                self.assertFalse(read_run_review(file)["run_completed"])
 
     def test_runner_timeout_after_one_validated_candidate_is_durable(self):
         timeout = subprocess.TimeoutExpired("private-path.glb", 180)

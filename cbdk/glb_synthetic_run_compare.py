@@ -194,7 +194,7 @@ def main(argv=None):
         if not 2 <= len(args.run) <= MAX_RUNS:
             raise ValueError("Expected 2..16 reports")
         if (output.exists() or output.is_symlink() or output.parent.resolve() not in
-                ((root / "reports/latest").resolve(), (root / "reports/ci").resolve())):
+                (root / "reports/latest", root / "reports/ci")):
             raise ValueError("Expected a fresh ignored report folder")
         reviews = []
         for path in args.run:
