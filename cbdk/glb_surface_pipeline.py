@@ -151,6 +151,35 @@ def run_glb_surface_review(
             count = report.get(name)
             if isinstance(count, bool) or not isinstance(count, int) or count < 0:
                 raise ValueError("invalid triangle count")
+        inventory = report.get("part_inventory")
+        if inventory is not None:
+            if not isinstance(inventory, dict) or set(inventory) != {
+                "reference_object_count", "candidate_object_count",
+                "reference_triangle_counts", "candidate_triangle_counts",
+                "max_listed_per_side", "correspondence_verified",
+                "identifies_changed_part", "notes",
+            }:
+                raise ValueError("invalid part inventory schema")
+            if (inventory["max_listed_per_side"] != 32
+                    or inventory["correspondence_verified"] is not False
+                    or inventory["identifies_changed_part"] is not False
+                    or inventory["notes"] !=
+                    "Anonymous size-ranked inventory, not matched objects"):
+                raise ValueError("invalid part inventory disclaimers")
+            for side in ("reference", "candidate"):
+                total = inventory[side + "_object_count"]
+                counts = inventory[side + "_triangle_counts"]
+                if (isinstance(total, bool) or not isinstance(total, int)
+                        or total < 1 or not isinstance(counts, list)
+                        or len(counts) != min(total, 32)
+                        or any(isinstance(v, bool) or not isinstance(v, int)
+                               or v < 0 or v > 512 for v in counts)
+                        or counts != sorted(counts, reverse=True)):
+                    raise ValueError("invalid anonymous part counts")
+                if payload["status"] == "review_only" and total <= 32 and (
+                    sum(counts) != report[side + "_triangles"]
+                ):
+                    raise ValueError("part inventory contradicts total triangles")
         observation = report.get("surface_observation")
         if payload["status"] == "review_only":
             if observation not in (
