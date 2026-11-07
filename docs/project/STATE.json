@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18: R1〜R7に続きR8 B/C/Dの13ファイルをPR #73で開発統合（ded947f8）。非厳密R2 GLBのAABB padded 2×tol候補除外を安全回帰付きで追加、Blender3版の登録解除障害・Edit Mesh cancel無変更、Extensions静的正当性と公開権限の証拠分離を検証。結合PR #73の5系統CI全成功。統合後7系統CIも全成功。R9はPR #74で正式割当済み。実ユーザーGLB、Windows GUI、ライセンス/公式Extensions公開は未検証、正式v0.17.0・main維持。Dashboard v2のNEXT-024実Windowsブラウザ/音声確認も未完了。"
+    "milestone": "v0.18: R1〜R7に続きR8 B/C/Dの13ファイルをPR #73で開発統合（ded947f8）。非厳密R2 GLBのAABB padded 2×tol候補除外を安全回帰付きで追加、Blender3版の登録解除障害・Edit Mesh cancel無変更、Extensions静的正当性と公開権限の証拠分離を検証。結合PR #73の5系統CI全成功。統合後7系統CIも全成功。R9はPR #74で正式割当済み。実ユーザーGLB、Windows GUI、ライセンス/公式Extensions公開は未検証、正式v0.17.0・main維持。Dashboard v2のNEXT-024実Windowsブラウザ/音声確認も未完了。 Dashboard v3をPR #79で開発ブランチに統合（e60d48f1）。実測PR/CI時刻から速度3指標を追加。ブラウザ実機・配布公開は別受入。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -371,7 +371,7 @@
       "status": "partial",
       "verification": "python",
       "source": "docs/dashboard/index.html",
-      "note": "v0.18開発ブランチのPR #68で公開データ読み取り専用MVPを追加。STATE/PR/CI/ローリングキューに基づく数値・ABCD・次の作業と5分自動/手動更新。ラウンド/チーム一回のopt-in音をNodeオフライン回帰で検証。dev SHA d656f62dのPython3版・Windows2版・Blender3版・Chromium・Handoff・Kit・Skill全7系統CI成功。実Edge/Chromeのネットワーク/通知音、GitHub Pages公開は未検証。 v2 PR #71（開発SHA dd8ae12b）でBCD完了件数/3、手動通知音試聴、Rawキュー失敗時のContents API読み取りfallbackを追加。Nodeオフライン検証と別途Chromium模擬データUIテストでC新規完了の一回通知を確認（GitHub実通信・Windows実機音は未検証）。"
+      "note": "v0.18開発にGitHub公開データ読取専用ライブボードを追加（#68）：STATE/PR/CI/キュー表示、手動/5分更新、チーム完了時の一度だけの通知。v2（#71）：BCD人数表示、音試聴、Raw取得失敗時の公開API fallback。v3（#79, dev e60d48f1）：PR/CI実測時刻由来のBCD提出→全員CI、BCD完了→Aマージ、A統合PR所要を追加。不足データは―、CI updated_atは近似。Node/ChromiumモックとポータブルHTML/ZIPを検証。実Windows Edge/可聴音/live GitHub通信/Pagesは未検証。"
     }
   ],
   "known_issues": [
@@ -1008,6 +1008,11 @@
       "id": "DEC-070",
       "decision": "R8でGLB非厳密R2の保守的AABBフィルタとBlender実機登録解除回帰、Extensions静的provenance拒否を結合し、R9を統合後CI成功まで停止",
       "note": "B #66 HEAD0c81b10c、C #70 HEAD07a742f1、D #67 HEADa8f1b282 各5系統CI success。A #73 結合HEADf5fd6585488e7d69501caf2ed48c54ec81e0cc2aでPython42419473291/Windows42419473354/Blender42419473288(4.4.3/4.5.15/5.2.1, native_r8 5項目実測)/Chromium42419473271/Handoff42419473294の5系統全success。開発ブランチsquash SHA ded947f85f46fb8cce0943314d6e1a9fb41717ef、post-merge7系統CIも全success（Python42419734167、Windows42419734210、Blender42419734261（4.4.3/4.5.15/5.2.1）、Chromium42419734226、Handoff42419734193、Kit42419734233、Skill42419734172）。R9正式キューPR #74 merged SHA 4e40a16e71f0036c442e604c667036045172149a。実GLB、GUI、権利、正式v0.18公開は承認していない。"
+    },
+    {
+      "id": "DEC-071",
+      "decision": "Aの開発ライブボードv3にPR/CI時刻由来の3種類の観測速度指標を追加し、実機ネットワーク/音声とPages公開を別ゲートとして維持",
+      "note": "A PR #79 exact HEAD c52cc14fd74ab2a53245b6744b406960a7a8225a のPython42422092224、Windows42422092201、Chromium42422092185、Handoff42422092289の4発火CI success。Nodeテストが実走。dev squash e60d48f1461d3c57edaa7916731d19c5ede6b75b の独立post-merge7系統CIも全success（Python42422198759、Windows42422198754、Blender42422198841（4.4.3/4.5.15/5.2.1）、Chromium42422198751、Handoff42422198765、Kit42422198764、Skill42422198785）。Portable版21,353 bytesのHTML + ZIP(9,863 bytes)のファイル/JavaScript/ZIPを検査し、ChromiumモックでR9 B/D→C完了、A統合、チーム毎一回通知、390px表示を確認。実Windows音声とlive GitHub API/Pagesは未確認。"
     }
   ],
   "last_verified": {
@@ -1107,6 +1112,7 @@
     "rolling_r7_integration": "2026-11-08 JST: B #61 182ae87a、C #62 eef6bcea、D #60 040036c7各5系統成功。B初回zero-length負例 fff82a6 は意図した失敗、同一strict-positive segmentガードを追加して修正。A結合PR #63 52dea171587888be2c26045808bbaf24a76bee7cでPython42413415247/Windows42413415263/Blender42413415266(3版)/Chromium42413415159/Handoff42413415103 all success。dev squash 687b2acdc920253d69eda8c5e9c1c102d02aaef3でPython42413646111/Windows42413646149/Blender42413646135/Chromium42413646129/Handoff42413646222/Kit42413646126/Skill42413646165の7系統success。R8 queue PR #64 merged 91f89578ba038c6486e3a4150d8d0fd27e4744ad。formal last_verified v0.17.0維持。",
     "dashboard_mvp": "2026-11-08 JST: A単独PR #68 dev squash d656f62d2b70301ec34c667f89743d17e7168a1b。docs/dashboard/index.html・README.md、tests/test_dashboard_static.pyのスタンドアロンHTML GitHub API READ-ONLY画面。post-merge7 family success（Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995）。実ブラウザネットワーク接続/通知音/Pages配備は未確認でNEXT-024。",
     "dashboard_v2": "2026-11-08 JST: A専用PR #71 (98ec6972) merged to dev dd8ae12b; progress count, optional preview chime, queue fallback, Node regression and separate Chromium mocked browser UI tests. Exact-head Python/Windows/Chromium/Handoff passed. Post-merge seven workflow families success: Python42418153530 Windows42418153594 Blender42418153563 Chromium42418153533 Handoff42418153613 Kit42418153551 Skill42418153532. Browser real GitHub API/Windows sound/Pages NOT verified; DASH-001 stays partial and NEXT-024 open.",
-    "rolling_r8_integration": "2026-11-08 JST: B #66 0c81b10c C #70 07a742f1 D #67 a8f1b282 each five source CI families success. Combined A #73 HEAD f5fd6585488e7d69501caf2ed48c54ec81e0cc2a five CI families success (Python42419473291 Windows42419473354 Blender42419473288 3 versions, Chromium42419473271 Handoff42419473294). Dev squash SHA ded947f85f46fb8cce0943314d6e1a9fb41717ef. Post-merge seven families all SUCCESS: Python42419734167 Windows42419734210 Blender42419734261 Chromium42419734226 Handoff42419734193 Kit42419734233 Skill42419734172. R9 queue PR #74 officially merged SHA 4e40a16e71f0036c442e604c667036045172149a. Main/formal v0.17.0 unchanged."
+    "rolling_r8_integration": "2026-11-08 JST: B #66 0c81b10c C #70 07a742f1 D #67 a8f1b282 each five source CI families success. Combined A #73 HEAD f5fd6585488e7d69501caf2ed48c54ec81e0cc2a five CI families success (Python42419473291 Windows42419473354 Blender42419473288 3 versions, Chromium42419473271 Handoff42419473294). Dev squash SHA ded947f85f46fb8cce0943314d6e1a9fb41717ef. Post-merge seven families all SUCCESS: Python42419734167 Windows42419734210 Blender42419734261 Chromium42419734226 Handoff42419734193 Kit42419734233 Skill42419734172. R9 queue PR #74 officially merged SHA 4e40a16e71f0036c442e604c667036045172149a. Main/formal v0.17.0 unchanged.",
+    "dashboard_v3": "2026-11-08 JST A dashboard empirical speed v3 PR #79 merged dev e60d48f1461d3c57edaa7916731d19c5ede6b75b; exact HEAD four triggered families success. Post-merge seven workflow families all success: Python42422198759 Windows42422198754 Blender42422198841 Chromium42422198751 Handoff42422198765 Kit42422198764 Skill42422198785. Isolated portable HTML/ZIP browser mocked tests passed; no claim of real GitHub API or Windows audible chime. DASH-001 remains partial, NEXT-024 in_progress, no Pages/main mutation."
   }
 }
