@@ -108,7 +108,7 @@ def validate_ui_layout(data: object) -> tuple:
         entries = []
         for control in controls:
             if (type(control) is not dict or not {"feature_id", "label"} <= set(control)
-                    or set(control) - {"feature_id", "label", "parameters"}):
+                    or set(control) - {"feature_id", "label", "parameters", "visible_in"}):
                 raise ValueError("Unexpected authored UI control fields")
             feature_id = control["feature_id"]
             if (not isinstance(feature_id, str)
@@ -118,6 +118,9 @@ def validate_ui_layout(data: object) -> tuple:
                 raise ValueError("Unknown, repeated or invalid authored UI control")
             seen_features.add(feature_id)
             required_mode = "edit_mesh" if feature_id in {"edit_selection", "vertex_nudge"} else "object"
+            control_mode = control.get("visible_in", "always")
+            if type(control_mode) is not str or control_mode not in ("always", required_mode):
+                raise ValueError("Control visibility must be always or its authored operator mode")
             if section.get("visible_in", "always") not in ("always", required_mode):
                 raise ValueError("Section visibility would make an authored control unreachable")
             if "parameters" in control:
@@ -162,5 +165,12 @@ def plan_ui_layout(requested_features: object, *, root: Path, include_options=Fa
         for control in section["controls"]:
             if control["feature_id"] == "vertex_nudge" and "vertex_nudge" in chosen:
                 offset = control.get("parameters", {}).get("offset", offset)
+    control_visibility = tuple(
+        tuple(control.get("visible_in", "always") for control in section["controls"]
+              if control["feature_id"] in chosen)
+        for section in data["sections"]
+        if any(control["feature_id"] in chosen for control in section["controls"])
+    )
     return result, {"section_styles": styles,
+                    "control_visibility": control_visibility,
                     "nudge_offset": validate_nudge_settings(offset)}

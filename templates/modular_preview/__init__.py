@@ -32,6 +32,35 @@ assert set(_FEATURE_IDS) <= _OBJECT_MODE_FEATURES | _EDIT_MODE_FEATURES
 
 
 
+# This is only a cheap panel hint; every operator must revalidate its live
+# context and geometry during execute(). Never scan BMesh in Panel.draw.
+def _preview_unavailable_reason(feature_id, context):
+    active = getattr(context, "active_object", None)
+    mesh = getattr(active, "data", None)
+    if active is None or getattr(active, "type", None) != "MESH" or mesh is None:
+        return "An active mesh object is required"
+    required_mode = "EDIT_MESH" if feature_id in _EDIT_MODE_FEATURES else "OBJECT"
+    if getattr(context, "mode", None) != required_mode:
+        return "Switch to " + required_mode + " mode"
+
+    if feature_id == "mesh_bounds":
+        vertices = getattr(mesh, "vertices", None)
+        if vertices is None or len(vertices) == 0:
+            return "Active mesh must contain vertices"
+        corners = getattr(active, "bound_box", None)
+        if corners is None or len(corners) != 8:
+            return "Active mesh has no valid bounding box"
+    elif feature_id == "edit_selection":
+        objects = getattr(context, "objects_in_mode_unique_data", None)
+        if objects is None:
+            return "Cannot verify multi-object Edit Mode state"
+        if sum(1 for obj in objects if getattr(obj, "type", None) == "MESH") != 1:
+            return "Exactly one unique mesh must be in Edit Mode"
+    elif feature_id == "vertex_nudge":
+        return _FEATURE_MODULES[feature_id].ui_unavailable_reason(context)
+    return None
+
+
 class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
     bl_label = "CBDK Modular Preview"
     bl_idname = "VIEW3D_PT_cbdk_modular_preview"
@@ -46,27 +75,29 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
             style = _UI_OPTIONS["section_styles"][index]
             if style["visible_in"] not in ("always", context.mode.lower()):
                 continue
+            control_modes = _UI_OPTIONS["control_visibility"][index]
+            visible_buttons = [(feature_id, label) for (feature_id, label), mode in
+                               zip(buttons, control_modes)
+                               if mode in ("always", context.mode.lower())]
+            if not visible_buttons:
+                continue
             visible_sections += 1
             group = col.box() if style["boxed"] else col.column(align=True)
             group.label(text=title)
             body = group.row(align=True) if style["layout"] == "row" else group
-            for feature_id, label in buttons:
+            for feature_id, label in visible_buttons:
                 button_row = body.row(align=True)
-                active = context.active_object
-                has_mesh = active is not None and active.type == "MESH"
-                mode = "EDIT_MESH" if feature_id in _EDIT_MODE_FEATURES else "OBJECT"
-                button_row.enabled = has_mesh and context.mode == mode
-                reason = ("An active mesh object is required" if not has_mesh else
-                          "Switch to " + mode + " mode" if context.mode != mode else None)
+                reason = _preview_unavailable_reason(feature_id, context)
                 if feature_id == "vertex_nudge":
-                    # The built-in RNA property limits local offsets to +/-10.
-                    # This edits only the chosen operator arguments, never
-                    # executes user-supplied Python or alters the source mesh.
+                    # A disabled nudge action must not also disable its XYZ
+                    # editor. Only disable the input for invalid mesh/mode.
+                    active = getattr(context, "active_object", None)
+                    button_row.enabled = (
+                        getattr(active, "type", None) == "MESH"
+                        and getattr(active, "data", None) is not None
+                        and getattr(context, "mode", None) == "EDIT_MESH"
+                    )
                     button_row.prop(context.scene, "cbdk_modular_nudge_offset", text="XYZ")
-                    if reason is None:
-                        reason = _FEATURE_MODULES[feature_id].ui_unavailable_reason(context)
-                    # Keep XYZ editable when the vector is zero or nothing is
-                    # selected, so a disabled action cannot trap its input.
                     action = button_row.row(align=True)
                     action.enabled = reason is None
                     button = action.operator(
@@ -74,6 +105,7 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
                     )
                     button.offset = context.scene.cbdk_modular_nudge_offset
                 else:
+                    button_row.enabled = reason is None
                     button_row.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
                 if reason is not None:
                     body.label(text=label + ": " + reason)
@@ -109,16 +141,36 @@ def register():
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
             _REGISTERED.append(cls)
-    except Exception:
-        unregister()
+    except Exception as error:
+        try:
+            unregister()
+        except Exception as cleanup_error:
+            # Keep the original registration error and retain failed entries
+            # in the ownership lists so a later cleanup can be retried.
+            error.add_note("CBDK preview rollback was incomplete; retry unregister()")
+            raise error from cleanup_error
         raise
 
 
 def unregister():
-    for cls in reversed(_REGISTERED):
-        bpy.utils.unregister_class(cls)
-    _REGISTERED.clear()
-    for name in reversed(_OWNED_PROPERTIES):
-        if hasattr(bpy.types.Scene, name):
-            delattr(bpy.types.Scene, name)
-    _OWNED_PROPERTIES.clear()
+    # A failing operator unregister must not prevent owned Scene property
+    # cleanup. Entries are removed only after a successful detach so a caller
+    # can retry without touching foreign add-on registrations.
+    failures = []
+    for cls in reversed(tuple(_REGISTERED)):
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception as error:
+            failures.append(error)
+        else:
+            _REGISTERED.remove(cls)
+    for name in reversed(tuple(_OWNED_PROPERTIES)):
+        try:
+            if hasattr(bpy.types.Scene, name):
+                delattr(bpy.types.Scene, name)
+        except Exception as error:
+            failures.append(error)
+        else:
+            _OWNED_PROPERTIES.remove(name)
+    if failures:
+        raise RuntimeError("CBDK preview cleanup incomplete; retry unregister()") from failures[0]
