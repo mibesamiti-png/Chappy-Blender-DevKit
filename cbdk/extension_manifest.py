@@ -80,8 +80,10 @@ def manifest_field_diagnostics(fields):
 def observe_official_validation(returncode, output):
     """Normalize bounded official CLI output; never trust exit status alone.
 
-    Unknown or contradictory field diagnostics make the observation
-    unclassified rather than allowing a subset of errors to look complete.
+    Treat unknown, repeated, or contradictory diagnostics and parser status
+    lines as unclassified. The only ignored noise is a known Blender version
+    banner, its clean shutdown line, and blank lines. Unknown free-form
+    messages cannot silently turn a partial result into full agreement.
     Original validator values, paths and free-form log text are not returned.
     This checks consistency, NOT authenticity of the supplied observation.
     """
@@ -89,42 +91,59 @@ def observe_official_validation(returncode, output):
         raise ValueError("Invalid or oversized official validation observation")
     diagnostics = set()
     success = False
+    error_header = False
     unknown = False
     for line in output.splitlines():
         line = line.strip()
+        if not line:
+            continue
+        if line == "Blender quit" or re.fullmatch(
+                r"Blender \d+\.\d+\.\d+(?: \([A-Za-z0-9._ -]+\))?", line):
+            continue
         if line.startswith('Success parsing TOML in "'):
-            if not re.fullmatch(r'Success parsing TOML in "[^"]+"', line) or success:
+            if (not re.fullmatch(r'Success parsing TOML in "[^"]+"', line)
+                    or success or error_header or diagnostics):
                 unknown = True
             success = True
             continue
+        if line.startswith('Error parsing TOML '):
+            # A generic error header is only meaningful alongside recognized
+            # field diagnostics; duplicate headers and success conflicts are
+            # never a successful observation.
+            if (not re.fullmatch(r'Error parsing TOML "[^"]+"', line)
+                    or error_header or success or diagnostics):
+                unknown = True
+            error_header = True
+            continue
         if line.startswith('missing "'):
             match = re.fullmatch(r'missing "([a-z_]+)"', line)
-            if match and match[1] in REQUIRED and (match[1], "missing") not in diagnostics:
+            if (match and match[1] in REQUIRED and not success
+                    and not any(field == match[1] for field, _ in diagnostics)):
                 diagnostics.add((match[1], "missing"))
             else:
                 unknown = True
             continue
         if line.startswith('key "'):
             match = re.match(r'key "([a-z_]+)" invalid:', line)
-            if match and match[1] in REQUIRED and (match[1], "invalid") not in diagnostics:
+            if (match and match[1] in REQUIRED and not success
+                    and not any(field == match[1] for field, _ in diagnostics)):
                 diagnostics.add((match[1], "invalid"))
             else:
                 unknown = True
             continue
-        # Expected generic header precedes known field errors. It is not
-        # sufficient by itself to classify a rejection.
-        if line.startswith('Error parsing TOML '):
-            continue
-        if line.startswith(('Error:', 'ERROR:', 'Traceback', 'Exception:',
-                            'ValueError:', 'RuntimeError:', 'Permission denied:')):
-            unknown = True
-    status = ("accepted" if returncode == 0 and success and not diagnostics and not unknown else
-              "rejected" if returncode > 0 and diagnostics and not success and not unknown else
+        # Fail closed even for unfamiliar wording such as "validator halted".
+        # Never echo this text in the observation or downstream comparison.
+        unknown = True
+    status = ("accepted" if returncode == 0 and success and not diagnostics
+              and not unknown and not error_header else
+              "rejected" if returncode > 0 and diagnostics and not success
+              and not unknown else
               "unclassified")
     return {"status": status,
             "diagnostics": [{"field": field, "code": code} for field, code in sorted(diagnostics)],
             "has_unrecognized_diagnostics": unknown,
             "authenticates_log": False}
+
 
 
 def compare_official_validation(fields, returncode, output):
