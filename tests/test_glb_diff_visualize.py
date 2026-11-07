@@ -322,6 +322,40 @@ class ColoredGLBLauncherTests(unittest.TestCase):
         with self.assertRaisesRegex(GLBSurfacePipelineError, "failed"):
             self.run_ok(failure)
 
+    def test_optional_topology_reason_codes_reject_tampering(self):
+        # Old v1 aggregate reports may omit the new explanatory list.
+        # A present list must be a canonical subset consistent with the
+        # existing conservative review flag.
+        cases = (
+            ("legacy", None, True),
+            ("unknown", ["not_a_measured_reason"], False),
+            ("contradictory", ["boundary_edge_count_mismatch"], False),
+            ("bool", True, False),
+            ("duplicate", ["boundary_edge_count_mismatch",
+                           "boundary_edge_count_mismatch"], False),
+        )
+        for label, reasons, accepted in cases:
+            with self.subTest(case=label):
+                self.dest = self.root / ("colors_" + label)
+
+                def forged(cmd, **kwargs):
+                    result = self.fake_runner(cmd, **kwargs)
+                    output = Path(cmd[-1]) / "review.json"
+                    data = json.loads(output.read_text(encoding="utf-8"))
+                    row = data["part_match_candidates"]["reference_parts"][0]
+                    if reasons is None:
+                        row.pop("topology_review_reasons", None)
+                    else:
+                        row["topology_review_reasons"] = reasons
+                    output.write_text(json.dumps(data), encoding="utf-8")
+                    return result
+
+                if accepted:
+                    self.run_ok(forged)
+                else:
+                    with self.assertRaises(GLBSurfacePipelineError):
+                        self.run_ok(forged)
+
     def test_rejects_fake_files_or_unsafe_reports(self):
         def no_files(cmd, **kwargs):
             target = Path(cmd[-1])
