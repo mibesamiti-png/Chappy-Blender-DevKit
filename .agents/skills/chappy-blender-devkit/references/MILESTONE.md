@@ -24,6 +24,15 @@ This reference describes the **process**, not a fixed set of tasks.
 4. If a branch/PR is changing concurrently, reconcile before editing.
    Preserve existing changes; commit only intended files.
 
+### Parallel team coordinator exception
+
+If A/B/C/D are concurrently developing, consult `docs/PARALLEL_DEVELOPMENT.md`.
+A owns canonical STATE/HANDOFF and Notion, while B/C/D change only their
+assigned branch and draft PR. A verifies the combined tree separately.
+If Codex is unavailable or rate-limited, keep independent safe work moving
+and queue complex tasks with exact reproduction steps; never stall all
+specialists on Codex availability. Do not merge to `main` or release.
+
 ## B. Implement then verify with minimal redundant runs
 
 1. Add code and focused regression tests together. Prefer current

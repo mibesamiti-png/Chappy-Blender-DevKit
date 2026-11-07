@@ -1,75 +1,90 @@
-# CBDK — AI並行開発チーム運用マニュアル
+# CBDK AI並行開発チーム運用マニュアル
 
-適用：Chappy Blender DevKit（CBDK）の開発ブランチ。運用初版：2026-11-08 JST。
-**GitHubの本ファイルを正本**とし、Notionは人間向けの閲覧用ミラーにする。
-開発コードと検証済み状態の正本は `docs/project/STATE.json`、生成引き継ぎは `docs/PROJECT_HANDOFF.md`。
-この運用書は安全な分業のための手順であり、未承認のリリース・ライセンス決定・私有データ実行の許可ではない。
+> GitHubを唯一の開発状態の正本にする。Notionは確認用の節目ミラー。複数のChatGPT会話は互いに直接同期されず、GitHubのブランチ・PR・CIが受け渡しの仕組みになる。
 
-## 役割・所有ファイル・ブランチ
+## 1. 適用範囲・権限
 
-| 担当 | 役割 | 原則として編集できる範囲 | ブランチ |
-|---|---|---|---|
-| A（司令塔） | 要件分割、編集範囲の調整、PRレビュー、統合CI、STATE/引き継ぎ/Notion同期、次ラウンドの発行 | 共通ドキュメント・CI・共有基盤（専任で変更する場合のみ） | `feature/v0.18-shape-diagnostics`、検証時の `work/v018-integration-*` |
-| B（GLB解析） | 形状・部品対応・比較/差分・BVH・合成fixture | `cbdk/glb_*`、GLB固有テストとBlender smoke、GLB専用文書 | `work/v018-glb-analysis` |
-| C（UI生成） | UI-001/BUILD-001、モード/入力/登録/解除/生成テンプレート | `cbdk/ui_layout.py`、`cbdk/modular_builder.py`、`templates/modular_preview/`、関連UI固有テスト/文書 | `work/v018-ui-builder` |
-| D（Extensions品質） | EXT-001、ZIP/manifestのfail-closed診断、公式validatorの合成検証 | `cbdk/extension_*`、関連テスト/Extensions専用文書 | `work/v018-extension-quality` |
-| Codex（追加戦力） | 必要時のみ重い実装、性能測定、複雑なCI障害、独立した大規模改修 | **Aが割り当てた専用ブランチ・明示ファイルのみ** | `work/v018-codex-<task>`（例。実際のtask名を指定） |
+- 対象リポジトリ: https://github.com/mibesamiti-png/Chappy-Blender-DevKit
+- v0.18開発基点: `feature/v0.18-shape-diagnostics`、ドラフトPR [#25](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/25) → `main`。
+- 最優先は `AGENTS.md`、`docs/project/STATE.json`、`docs/PROJECT_HANDOFF.md`、`docs/V018_COMPLETION_GATES.md`、既存 [Codexスキル](../.agents/skills/chappy-blender-devkit/SKILL.md)。本書はチーム間の調整方法。古いHEAD/タスク数を真実扱いしない。
+- 専門チャットには **専用作業ブランチへのコミットとドラフトPRの提出**を許す。司令塔Aは個別PRをレビューし、統合候補の作成と実測検証、統合方針を決める。
+- `main`へのマージ、正式リリース、正式Extension公開、権利/ライセンス決定、未承認ソース/私有アドオンの実行・採用・公開、保留されたGitHub→Blender直接インストールには**別途明示承認が必要**。CI成功はこの承認ではない。
+- 現行v0.18の自動化可能ゲートが未達の間、v0.19〜0.22は承認済みだが未有効。実データ/GUI/権利ブロッカーをタスク完了に書き換えない。
 
-**共通ファイルの所有権はAに一本化**する。`AGENTS.md`、`.agents/skills/`、`docs/project/STATE.json`、`docs/PROJECT_HANDOFF.md`、`docs/DEVELOPMENT_PLAN.md`、`docs/V018_COMPLETION_GATES.md`、`docs/PROGRESS.md`、`docs/NOTION_SYNC.md`、`.github/workflows/`、`cbdk/__main__.py` は原則Aが変更する。専門担当が共通ファイルの更新を要するときは PR 説明に提案し、Aが単独で担当割当する。既存の所有者間でファイルが重なる場合も先にAが調整する。
+## 2. 担当表と編集境界
 
-## 1. 開発ラウンド開始（Aが指示）
+| 担当 | 開発範囲 | ブランチ例 | 主な所有コード | 共通ファイル |
+| --- | --- | --- | --- | --- |
+| **A: 司令塔（ChatGPT）** | タスク整理、依存関係、統合PR、正本更新、Notion節目同期 | `feature/v0.18-shape-diagnostics`; 検証用は `work/v018-integration-*` | `docs/project/STATE.json`, `docs/PROJECT_HANDOFF.md`, `docs/PROGRESS.md`, 共通CI | Aが管理 |
+| **B: GLB解析** | 形状差分、部品対応、数値的トポロジー、合成GLBテスト | `work/v018-glb-analysis` | `cbdk/glb_*`, GLB専用テスト・文書・smoke | 直接変更しない |
+| **C: UI・アドオン生成** | `UI-001`、`BUILD-001`、宣言UI、登録・解除・復元 | `work/v018-ui-builder` | `cbdk/ui_layout.py`, `cbdk/modular_builder.py`, `templates/modular_preview/`, UI専用テスト | 直接変更しない |
+| **D: Extensions・品質** | `EXT-001`、ZIP安全性、マニフェスト診断、公式合成validator | `work/v018-extension-quality` | `cbdk/extension_*`, Extensions専用テスト・文書 | 直接変更しない |
+| **Codex: 任意の追加戦力** | 大規模実装、難しいデバッグ、反復負荷測定・CI修正、統合不具合 | 専用ブランチ/worktree | Aが割り当てた**限定領域だけ** | 単独で正本変更・統合しない |
 
-1. 現在の `feature/v0.18-shape-diagnostics`、PR #25、`AGENTS.md`、`STATE.json`、`PROJECT_HANDOFF.md`、`V018_COMPLETION_GATES.md`、Codexスキルを読み、**最新ブランチの実測**を確認する。歴史的な完了数や旧コミットを現在の証拠にしない。
-2. B/C/Dにそれぞれ衝突しない変更可能なファイル、機能ID、合格条件、禁止事項、作業ブランチ、成果物を指定する。必要に応じてGitHub Issueでタスクを固定する。
-3. 専門担当は基点SHAを記録し、専用ブランチの**現状を確認**してから編集。既存の変更や他担当のコミットを上書き/強制pushしない。PRは `feature/v0.18-shape-diagnostics` 宛のドラフト。
-4. 1ラウンドで関連する変更を1つのレビュー可能なPRに収める。Codexには同じファイルを並行で編集させない。
+**ファイル所有権の競合に注意:** `cbdk/__main__.py`, `catalog/`, `scripts/` の一部、`.github/workflows/` は共同依存になりやすい。どの担当が編集するか、着手前にPR/タスク票でAが決定する。必要なら「共通ファイルの変更要求」をAへ渡す。担当外ファイルを上書きしない。
 
-## 2. 専門チームの完了条件
+## 3. 1サイクルの実行手順
 
-- 新旧機能の互換性、異常系、明示された受け入れ条件を実装と単体テストで確認する。
-- Blender実行が必要なら**信頼できるCBDK自作合成fixtureのみ**を実行し、対象 Blender 版の実際のGitHub Actions結果を確認する。ヘッドレス検査をWindows実GUIの成功と呼ばない。
-- PR本文に「今回の変更」「変更ファイル」「基点SHA/コードSHA」「CI名/実行URL」「失敗/保留」「実データ・GUI・ライセンス等の未検証事項」「Aに必要な共通文書変更」を書く。
-- `main`への変更、正式配布、未承認の部品採用、私有GLB/アドオンの実行・公開、GitHub→Blender直接自動インストールは担当権限に含めない。
-- `STATE.json`、生成引き継ぎ、共通CI、Notionは**専門チームが直接同期しない**。最新の担当ブランチと実測リンクをAに渡す。
+1. **Aが現状を確認**: 現行開発HEAD、PR #25、個別PR、`STATE.json`、CI結果、前回のブランチ所有者を確認。作業をB/C/Dへ振り、編集可能パス・テスト・受け入れ条件・私有データ禁止を明示する。
+2. **B/C/Dが独立して作業**: 読み込み元の基点SHAを記録し、個別ブランチだけ変更。小さく焦点を絞った実装と回帰テストを加え、実際の実行環境と「未検証」を区別する。完了したらv0.18開発ブランチ向け**ドラフトPR**を提出する。
+3. **AがPRを比較**: PRのhead SHA、変更ファイル一覧、現在のbase SHA、CI、衝突・共通API依存を比較。未解決なら担当へ修正を依頼。ファイル非重複でも動作の依存衝突は起こりうる。
+4. **統合検証**: 原PRを改変せず必要に応じ `work/v018-integration-*` 上でコードを合わせ、**統合後の正確なcommit SHAで**Python/Windows/Blender 4.4.3・4.5.15・5.2.1/Chromiumなど影響するCIを確認する。旧PRの成功を統合CI成功と取り違えない。
+5. **統合ゲート**: 統合テストが緑でも、変更内容/安全境界/未検証項目をレビューしてからAが統合判断を行う。取り込み手順と承認に従ってv0.18開発ブランチへ移す。**`main`や正式リリースへ自動マージしない。**
+6. **Aが正本を更新**: `STATE.json`、`docs/PROJECT_HANDOFF.md`（`python scripts/project_handoff.py --write` と `--check`）、関係仕様・`docs/PROGRESS.md`を実測で更新し、節目だけ既存Notionへ安全な要約を同期。Notion失敗は成功扱いしない。
+7. **第2ラウンド**: 統合済みSHAを次の共通基点にして担当を再割当。前回PRに未統合変更がある間、古い基点から同じ修正を重複作成しない。
 
-## 3. Aの統合ゲート（個別成功と統合成功は別）
+### 開始前のタスク票（Issue またはPR説明に記録）
 
-1. 全PRの現行HEAD、変更ファイルの交差、draft状態と既存ベースからの差分を確認する。必要ならAが取り込み順序・競合ファイルの所有者を再指定する。
-2. **本流に先にマージしない**。独立の統合候補ブランチにB/C/Dの変更を組み合わせ、ドラフトPRで検証する。GitHubの自動マージを使わない。
-3. 統合した**同一コードSHA**でPython/Windows/Blender（4.4.3, 4.5.15, 5.2.1）/Chromium/Handoff、変更が関係する場合はKit/Skillを確認。失敗・取消・未実施・旧SHAの緑表示を成功に数えない。
-4. 本当に合格した場合のみAが統合方法を判断する。ソースPRを個別に取り込む場合は統合候補と二重適用しない。ファイルのblobコピーだけの候補PRは、元PRのマージ履歴を自動では閉じない。
-5. 共通の進捗更新は `STATE.json` → `python scripts/project_handoff.py --write` → `--check` → 仕様/進捗記録 → GitHubコミット。Notionは確認済み・私有情報を含まない節目だけ更新し、結果が確認できなければ pending とする。
-6. `v0.19` 以降の計画承認は**開始ゲートの省略ではない**。現行 `v0.18` の自動化可能な仕事と未確認の人間ブロッカーを正しく区別して判定する。正式版はv0.17.0維持（将来の変更はライブ正本で確認）。
+```text
+Task ID:
+担当 / PR / 開発ブランチ:
+基点SHA:
+編集可能ファイル:
+編集してはいけない共有ファイル:
+依存PR・先に統合すべき変更:
+目的・受け入れ条件:
+検証コマンド・必要なBlender版:
+未検証（GUI/実ユーザーデータ/権利など）:
+Codexが必要な条件 / Codexなしの代替:
+完了時の成果物（コミット、PR、CI、次アクション）:
+```
 
-### 初回ラウンドの参照（歴史的な実例。常に最新HEADを確認）
+## 4. Codexは**任意**：上限・障害・未接続でも開発を継続
 
-- B: [PR #27](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/27) GLBの数値トポロジー不一致レビュー。
-- C: [PR #26](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/26) 宣言的UI混合モード・登録解除復旧。
-- D: [PR #28](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/28) ZIP安全性・validator診断の境界。
-- A: [PR #29](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/29) 独立統合候補 `work/v018-integration-bcd`、SHA `e445b12c9a66541ba13bfb10ee6bc0007078c24b`。合計17ファイルの変更は互いに重複せず、対象コードSHAでPython859件×3版、Windows、Chromium、Handoff、Blender3版の**5ワークフロー成功**。ただし別の個別PRのマージ・正式v0.18統合は行われていない。
+**重要: Codexが利用上限や通信エラーで使えなくても、開発停止の条件にしない。** ChatGPT専門チームB/C/Dと司令塔Aだけで開発可能な範囲を進める。Codexの枠が復活する時刻・量を推測しない。
 
-## 4. Codexの利用上限・利用不可時の代替ルート（必須）
+| 状況 | 実行する方針 |
+| --- | --- |
+| Codex利用可能 | 大量のファイルにまたがる修正、負荷試験の整理、大きなリファクタ、統合後の複雑な不具合など**独立した高価値タスク**を依頼。担当ブランチ・対象パス・完了条件を指定 |
+| Codexの利用上限・障害 | B/C/Dは担当範囲の小規模実装・静的検査・回帰テスト・文書化・CIの結果分析を継続。AはPRレビューと組合せ検証を進める |
+| 変更が大きすぎる | `Codex候補`としてIssue/タスク票に入力例、再現条件、対象ファイル、未確認事項、受け入れ条件を記録。安全な小単位に分割できる部分はB/C/Dが担当 |
+| 手元でBlenderやWindowsの実測不可 | CIが実行できればその結果を使い、できなければ `blocked/needs-runtime` として正確な実行コマンドを保存。テスト成功を偽装しない |
+| 並行開発が混雑 | B/C/Dの作業数を減らす。競合率・レビュー待ち・CI待ちが改善するか測る。並列数を増やすこと自体を成果にしない |
 
-**Codexが使えることを開発の必須条件にしない。** 上限や利用不能の期間は予測せず、復活を待つ指示だけで止めない。
+**再開手順:** Codexが使える状態になったら、まず最新GitHub/PR/CIを読み、以前の未着手タスク票が現状に適合するか再確認。すでにB/C/Dが解決したタスクを繰り返さない。Codexに古いHEADを強制pushさせない。
 
-| 状況 | 作業の進め方 |
-|---|---|
-| Codexが利用可能・大規模な独立タスクがある | Aが範囲・基点・受け入れ条件・専用ブランチを指定。Codexはコード+テスト+ドラフトPRを返す。 |
-| Codexの使用量上限・利用不可 | **B/C/Dが既存の担当範囲で作業継続**。Aはタスクを小さく分割し、軽量な修正・仕様/テスト/CI診断を割り振る。Codex専任の作業がクリティカルパスにならないようにする。 |
-| 重い計算・Blender検証が必要 | CodexなしでもGitHub Actionsなど**既存の独立CI**で合成fixtureを検証。必要に応じて処理範囲を縮小し、測定不能なら未検証として記録する。 |
-| Codexでしか実施できない範囲、または必要な道具がない | Aが `blocked_needs_codex` などの**運用上のブロッカーとしてPR/Issueに記録**し、独立した他の仕事を進める。これは既存の `STATE.json` の正式ステータス値に勝手に追加しない。 |
-| Codexが再利用可能になった | GitHubに残るタスク説明・未解決ログ・現行ブランチ差分から再開。古い作業ブランチをそのまま上書きせず最新状態へ整合する。 |
+## 5. CI・品質・プライバシー
 
-Codexの代替は「チェックなしの手動マージ」ではない。**安全検証・CIが通らなければ保留する**。ChatGPTチャットだけで得られない実Windows GUI確認、ユーザーデータ実験、ライセンス承認も自動的には完了しない。
+- CIを約束したのではなく、**実測した成功/失敗/取消/未実行**を必ず分ける。head SHA一致と各matrix jobの完了を確認。必要なら差分を統合ブランチで再テスト。
+- 合成モデルでの成功を任意ユーザーGLB精度と混同しない。ヘッドレスBlender UIとWindows GUI/Undoショートカットは別の証拠。公式validatorの合成例は実部品のライセンス/Extension配布許可を証明しない。
+- 自作合成GLB/PNGは許可範囲でCIへ。私有GLB、派生HTML/画像、`input_sources_private/`、元コード/私有レポート、資格情報は公開GitHub・Actions artifact・Notionへ送らない。
+- PRの個別CIが成功しても統合後のテストは必要。スキル/Kit workflowが未起動なら成功数に算入しない。
+- 統合後に履歴を残す。不要なrebase/force pushで他チームの作業を破壊しない。
 
-## 5. 中断・会話喪失時の再開
+## 6. 初回運用実績（2026-11-08 JST時点のスナップショット）
 
-- 新しいA/B/C/Dチャットは `AGENTS.md` → この文書 → `.agents/skills/chappy-blender-devkit/SKILL.md` → `STATE.json` → `PROJECT_HANDOFF.md` → 自分のPR/ブランチ/CIを確認。前のチャットの記憶に依存しない。
-- Aが所有者割当、前回の統合候補PR、取り込み済み/未取り込みのPR、未検証結果を再点検。各専門チームは元の専用ブランチと未マージ変更を上書きしない。
-- Notionは人間向け手順・概要、GitHubは**コードと最新実測の正本**。同期していない場合はそれを明記する。
+- [Team C PR #26](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/26): UIの混合モード表示・後片付け復旧。基準SHA `c9163fa39e30`。
+- [Team B PR #27](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/27): 数値的境界/非多様体エッジ差分の保守的な候補判定。SHA `606fd99c622b`。
+- [Team D PR #28](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/28): ZIP安全監査・公式ログの厳格検査。SHA `e0ad30d2f525`。
+- [Team A統合候補 PR #29](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/29): 変更17ファイルが重複せず、合体SHA `e445b12c9a66541ba13bfb10ee6bc0007078c24b`。
+- 統合候補の[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028094) は859件×Python3版、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028160)、[Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028123)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028146)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028095)の5系統を全て成功確認。Skill/Kitはこの統合候補に対する実行証拠がないため5系統に算入しない。
+- この時点で**個別/統合PRはドラフト・未マージ**。検証済みでも、統合許可やmainマージではない。進捗/次期移行の判定は最新`STATE.json`を再読して確定する。
 
-## 6. 効率測定と次ラウンド
+## 7. 継続観測と改善
 
-ラウンド単位で (a) PR1件がレビュー可能になるまでの期間、(b) 共通ファイル衝突件数、(c) 統合CI再実行/失敗数、(d) Aの手動調整量、(e) Codexの投入有無とその理由を**実測のみ**短く記録し、分業が本当に効率化しているか判断する。件数・テスト数自体の増加を目的にしない。
+1サイクルごとに、独立PR数、統合時に実際に衝突したファイル数、CI再試行数、実装・レビューに費やした所要時間（分かる場合）、人間確認待ち件数を残す。**単純なコミット/テスト数はスピードの代理指標にしない。**初回の「編集ファイル重複0」は成功だが、今後の運用でも同じと仮定しない。
 
-次の作業候補は各担当のPRと `docs/V018_COMPLETION_GATES.md` の最新残条件から選ぶ。特にBは数が同じでも位置の違う穴・エッジなどの誤認、CはUI側のモード判定と生成テストの境界、DはExtensionsの既知/未知診断と安全な未承認拒否が候補。**具体的なタスクは必ず最新ベースに合わせてAが再選定する**。
+## 8. 別チャットの再開指示
+
+「`AGENTS.md` と `docs/PARALLEL_DEVELOPMENT.md`、最新`STATE.json`、自分の担当PRを読んで、統合済み基点SHAと所有ファイルを確認。Codexが利用不可でも安全な実装を続け、未実測のCIは未実測と記録。担当ブランチのドラフトPRを提出し、共有台帳/Notionは司令塔Aへ報告。main/リリースは変更しない。」
+

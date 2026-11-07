@@ -86,6 +86,20 @@ class SkillPackageTests(unittest.TestCase):
                 self.assertIn("skills/chappy-blender-devkit/SKILL.md", archive.namelist())
                 self.assertEqual(len(archive.namelist()), 7)
 
+    def test_parallel_development_codex_optional_and_authority(self):
+        manual = (ROOT / "docs" / "PARALLEL_DEVELOPMENT.md").read_text(encoding="utf-8")
+        agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        milestone = (SKILL / "references" / "MILESTONE.md").read_text(encoding="utf-8")
+        for text in (self.main, agents, milestone):
+            self.assertIn("docs/PARALLEL_DEVELOPMENT.md", text)
+            self.assertIn("Codex", text)
+        self.assertIn("Codexは**任意**", manual)
+        self.assertIn("Codexの利用上限", manual)
+        self.assertIn("work/v018-integration-", manual)
+        self.assertIn("STATE.json", manual)
+        self.assertIn("ドラフトPR", manual)
+        self.assertIn("main", manual)
+
     def test_current_milestone_reference_is_included(self):
         milestone = (SKILL / "references" / "MILESTONE.md").read_text(encoding="utf-8")
         self.assertIn("docs/project/STATE.json", milestone)

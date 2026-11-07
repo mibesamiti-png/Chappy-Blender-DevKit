@@ -73,6 +73,21 @@ Do not merge independently verified PRs without combined-sha regression checks.
   do not fabricate captures or upload GLB-derived private HTML.
 - Check [quality gates](references/QUALITY_GATES.md).
 
+## Parallel specialist teams and optional Codex
+
+When multiple ChatGPT conversations are assigned to A (coordinator),
+B (GLB), C (UI/build), and D (Extensions/quality), follow the repository
+`docs/PARALLEL_DEVELOPMENT.md` first. Specialist branches may only change
+assigned files and open draft PRs; the coordinator owns the shared STATE,
+generated handoff, common CI, and Notion milestone mirror. A successful
+specialist PR does not replace combined-branch verification.
+
+**Codex is optional** and can hit usage limits. Do not wait for it or treat
+its absence as an implementation blocker: specialists continue small safe
+fixes, tests, evidence review, and docs. Record genuinely heavy tasks with
+reproduction, ownership, acceptance tests, and fresh branch SHA for later
+Codex use. Never promise Codex availability or silently duplicate work.
+
 ## 4. Commit, hand off, mirror
 
 - Work on the current development branch, keep the PR draft unless the user

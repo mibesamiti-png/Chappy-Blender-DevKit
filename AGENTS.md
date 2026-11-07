@@ -415,3 +415,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 
 - Existing GLB aggregate observations may drive review priority only. Preserve both sides and side-qualified anonymous IDs, unverified associations, 512-triangle caps and no raw geometry. Triangle fractions are not area/confidence; equal boundary counts alone are not differences or watertightness proof.
 - glb_experiment_triage reads validated bound reviews, never executes source/next trials. Preserve multiple declarations, family-aggregate syntax counts and false cause/selection flags. Constructor alias rebinding is conservatively excluded, not runtime-resolved. New JSON/Markdown stays private under reports/latest; never upload private candidate sheets to artifacts/Notion.
+
+
+## CBDK AI並行開発運用（チームA/B/C/D・任意Codex）
+
+**必読:** `docs/PARALLEL_DEVELOPMENT.md` を読み、現行の担当ブランチ・PR・権限境界・統合ゲートを確認する。Aは司令塔として共有STATE/生成HANDOFF/共通CI/Notionを管理。BはGLB、CはUI・生成、DはExtensions検証を担当し、専用ブランチとドラフトPRだけを編集する。編集ファイルの重複、共通API依存、PR間の基点SHA差を照合してから統合候補を作る。個別PRの成功は統合CI成功と同義ではない。
+
+**Codexは任意・利用上限時でも停止しない:** B/C/Dは安全に小分けした実装/回帰テスト/CI結果分析を続け、重い変更は再現条件・受け入れ条件つきのCodex候補タスクとしてGitHubに残す。Codexが戻ったら最新状態を読み直し、既に完了した仕事を繰り返さない。専門担当は共有`STATE.json`やNotionを直接更新しない。ドラフトPRの統合、`main`マージ、正式配布は別のゲートであり、自動実施しない。
