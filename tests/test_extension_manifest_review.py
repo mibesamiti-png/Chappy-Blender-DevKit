@@ -31,7 +31,8 @@ class ManifestFileReviewTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), before)
 
     def test_duplicates_and_oversize_are_rejected(self):
-        for value in ('maintainer="private"\nmaintainer="again"', 'x="'+'p'*33000+'"'):
+        for value in ('maintainer="private"\nmaintainer="again"', 'x="'+'p'*33000+'"',
+                      'value='+'['*1200+'0'+']'*1200):
             self.source.write_text(value, encoding='utf-8')
             with self.assertRaises(ValueError):
                 review_manifest_file(self.source)

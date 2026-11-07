@@ -22,7 +22,7 @@ def review_manifest_file(source):
         raise ValueError("Manifest exceeds review byte limit")
     try:
         fields = tomllib.loads(data.decode("utf-8"))
-    except (UnicodeError, tomllib.TOMLDecodeError) as exc:
+    except (UnicodeError, tomllib.TOMLDecodeError, RecursionError) as exc:
         raise ValueError("Manifest TOML could not be parsed; no values accepted") from exc
     if len(fields) > 64:
         raise ValueError("Manifest field count exceeds review limit")
