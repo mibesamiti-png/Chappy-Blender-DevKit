@@ -10,10 +10,9 @@ Last handoff: 2026-11-07 JST.
 
 ## Current milestone sync (2026-11-07 JST)
 
-- 今回のGitHub記録: NEXT-003完了、NEXT-002の明示履歴Undo/Redoを3版で成功確認、通常背景Undo不能/GUI未確認。23件中18完了/4継続/1保留。
-- 実装コードc80f2a0a174a37074c283641ce288a378261e92dのBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium成功。テストだけUTF-8指定を修正したb5d32734d4a74e6acd7ff896baeb3aa3088e661aのPython767件×3版・Windows2版成功。両SHA間の変更はtests/test_registration_audit.pyだけで実装は同一。対象6系統の結果は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368307965)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368305584)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190461)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190510)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190490)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190614)。
-- 同期状態: **success**。GitHub正本73b5635を既存[CBDKプロジェクト](https://app.notion.com/p/410948b7493781449462ca76e9567e75)と[PR #25 CI判断](https://app.notion.com/p/410948b749378174ac0bfe3633681584)へ同期。内容2件/プロパティ1件の全3応答が警告なし成功。NEXT-003完了、NEXT-002制御2ケース/3版成功とGUI未確認、検証SHA/リンク、18完了/4継続/1保留、次回開始点を反映。新規ページ・私有データ同期なし。
-- 過去の同期は下記の履歴。常駐同期ではなく節目の実行。
+- 今回はNEXT-008/009の双方向focus・AST曖昧さ・合成実験triageを拡充。全体は実データ未確認で継続、23件18完了/4継続/1保留。
+- コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。
+- 同期状態: **pending**。GitHub正本を保存後、既存CBDKプロジェクト/NEXT-008/NEXT-009へ反映し、実応答を追記する。新規ページや私有データを同期しない。常駐同期は未導入。
 
 ## Linked Notion records
 

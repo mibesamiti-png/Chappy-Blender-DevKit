@@ -471,3 +471,9 @@ NEXT-003完了。NEXT-002は制御履歴2ケースの成功を確認したが通
 ## NEXT-008/009 双方向focus・宣言曖昧さ・実験triage（2026-11-07）
 
 [仕様と使い方](GLB_DEBUG_TRIAGE.md)。生成側設定候補が空でも参照側観測を保持し、三角面数で正規化した調査順を表示。既存測定元一致の合成実験を再利用して候補の複数宣言・直前試行との差分を表示する。constructor別名の再代入/クラス内shadowingを安全側に除外。自作GLBの完了/未完了/模擬失敗でローカル接続成功。対象CIは今回未実行、全体NEXT-008/009は継続。GLB-020測定上限は維持し、実ユーザー因果・GUI・権利・現行UI等を未完了で残す。
+
+### 双方向focus / AST曖昧さtriageの実測判定
+
+コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。
+
+今回の自動化追加は検証済み。NEXT-008/009全体は実データの実体/登録/因果・真の部品対応が未確認で継続。新規完了タスクIDなし、23件18完了/4継続/1保留、43要件26実装済/13一部/3未実装/1保留を維持。次はUI-001の固定自作5機能に限定した宣言的見出し/ボタン/表示順の検証・生成。現行自動化未完了なので将来計画は承認済み・未有効。

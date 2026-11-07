@@ -35,3 +35,9 @@ python -m cbdk.glb_experiment_triage --visual-review <GLB-020 review.json> --lin
 - 参照側だけの差分、等しい開放境界、異なる部品ID対応、面数で正規化した調査順は制御されたPythonケースで確認。任意の細穴・内部空洞・実ユーザー・面積精度は未検証。
 
 NEXT-008/009全体は継続。NEXT-002 GUI、実データ使用/実行、ライセンス/正式採用、現行UI-001/Extensions準備は未完了。将来計画は承認済みだが現行の自動化残作業があるため未有効。
+
+## 対象CI確認済み
+
+コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。
+
+今回20件を追加し、787件の回帰を各環境で確認。既存ソース/原本/私有データは自動採用せず、私有triageはreports/latestに限定したため公開CI artifactへ含めない。コード後の文書コミットを新しいコード実測と扱わない。
