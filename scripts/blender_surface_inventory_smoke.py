@@ -74,6 +74,98 @@ def _topology_count_roundtrip(output):
     print("CBDK synthetic GLB topology-count roundtrip passed")
 
 
+def _boundary_layout_roundtrip(output):
+    """End-to-end equal-count moved-hole and retessellation negative controls."""
+    from time import perf_counter
+
+    outer = [(-1., -1., 0.), (1., -1., 0.),
+             (1., 1., 0.), (-1., 1., 0.)]
+
+    def make_faces(*, opening_shift=0., opening_half_width=.3,
+                   alternate=False, mirrored=False):
+        inner = [
+            (opening_shift - opening_half_width, -.3, 0.),
+            (opening_shift + opening_half_width, -.3, 0.),
+            (opening_shift + opening_half_width, .3, 0.),
+            (opening_shift - opening_half_width, .3, 0.),
+        ]
+        vertices = outer + inner
+        if mirrored:
+            vertices = [(-x, y, z) for x, y, z in vertices]
+        polygons = []
+        for index in range(4):
+            nxt = (index + 1) % 4
+            if alternate:
+                polygons.extend(((index, nxt, index + 4),
+                                 (nxt, nxt + 4, index + 4)))
+            else:
+                polygons.extend(((index, nxt, nxt + 4),
+                                 (index, nxt + 4, index + 4)))
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        mesh = bpy.data.meshes.new("CBDK_Synthetic_Hole_Layout")
+        mesh.from_pydata(vertices, [], polygons)
+        mesh.update()
+        obj = bpy.data.objects.new("CBDK_Synthetic_Hole_Layout", mesh)
+        bpy.context.collection.objects.link(obj)
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        return obj
+
+    variants = (
+        ("reference", {}),
+        ("moved", {"opening_shift": .24}),
+        ("wider", {"opening_half_width": .5}),
+        ("retessellated", {"alternate": True}),
+        ("symmetric", {"alternate": True, "mirrored": True}),
+    )
+    loaded = {}
+    for label, kwargs in variants:
+        make_faces(**kwargs)
+        source = output / ("layout_" + label + ".glb")
+        bpy.ops.export_scene.gltf(
+            filepath=str(source), export_format="GLB", use_selection=True,
+        )
+        before = hashlib.sha256(source.read_bytes()).digest()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        bpy.ops.import_scene.gltf(filepath=str(source))
+        assert hashlib.sha256(source.read_bytes()).digest() == before
+        meshes = [obj for obj in bpy.context.scene.objects
+                  if obj.type == "MESH"]
+        assert len(meshes) == 1
+        mesh = meshes[0]
+        mesh.data.calc_loop_triangles()
+        faces = [[tuple(float(x) for x in
+                  (mesh.matrix_world @ mesh.data.vertices[idx].co))
+                  for idx in tri.vertices]
+                 for tri in mesh.data.loop_triangles]
+        assert len(faces) == 8
+        assert boundary_audit(faces, [8])["parts"][0]["boundary_edges"] == 8
+        loaded[label] = faces
+
+    reference = loaded["reference"]
+    for label, expected, reasons in (
+        ("reference", "suggested", []),
+        ("moved", "ambiguous", ["boundary_spatial_layout_mismatch"]),
+        ("wider", "ambiguous", ["boundary_spatial_layout_mismatch"]),
+        ("retessellated", "suggested", []),
+        ("symmetric", "suggested", []),
+    ):
+        start = perf_counter()
+        report = suggest_spatial_part_matches(
+            reference, loaded[label], [8], [8],
+        )
+        elapsed_ms = (perf_counter() - start) * 1000
+        row = report["reference_parts"][0]
+        assert row["status"] == expected, (label, row)
+        assert row["topology_review_reasons"] == reasons, (label, row)
+        assert row["normalized_score"] == 0., (label, row)
+        assert report["cross_file_part_identity_proven"] is False
+        assert report["auto_apply"] is False
+        print(f"CBDK boundary-layout synthetic {label}: {expected} "
+              f"({elapsed_ms:.3f} ms)")
+    print("CBDK_GLB_BOUNDARY_LAYOUT_ROUNDTRIP_PASS")
+
+
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if len(args) != 1:
@@ -126,6 +218,7 @@ def main():
             assert "fixed_surface" not in result
         print("CBDK inventory synthetic case passed: " + label)
     _topology_count_roundtrip(output)
+    _boundary_layout_roundtrip(output)
     print("CBDK_SURFACE_INVENTORY_PASS")
 
 
