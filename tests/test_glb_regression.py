@@ -129,6 +129,57 @@ class GLBRegressionTests(unittest.TestCase):
                 self.assertTrue(result["passed_is_metadata_only"])
 
 
+    def test_r6_exact_contour_shortcut_never_authorizes_file_regression(self):
+        """New R6 fast path cannot change the facade's review-only contract.
+
+        This GLB-owned regression test triggers the existing headless Blender
+        workflow but uses mocked IO here; no private GLB is executed.
+        """
+        from cbdk.glb_part_match import suggest_spatial_part_matches
+        from test_glb_match_fastpath_r6 import baseline_scan
+        from test_glb_part_match import square_frame
+
+        original = square_frame()
+        for label, candidate, expected in (
+            ("same_contour", square_frame(flip_diagonal=True), "suggested"),
+            ("moved_opening", square_frame(opening_x=.24), "ambiguous"),
+        ):
+            with self.subTest(case=label), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                pairing = suggest_spatial_part_matches(
+                    original, candidate, [8], [8])
+                self.assertEqual(pairing, baseline_scan(
+                    original, candidate, [8], [8]))
+                self.assertEqual(pairing["reference_parts"][0]["status"],
+                                 expected)
+                self.assertFalse(pairing["cross_file_part_identity_proven"])
+                self.assertFalse(pairing["auto_apply"])
+                report = {
+                    "kind": "cbdk_glb_surface_review",
+                    "status": "review_only",
+                    "surface_observation": "no_difference_observed_at_samples",
+                    "part_match_candidates": pairing,
+                }
+                comparison = {
+                    "kind": "cbdk_glb_scene_comparison",
+                    "passed": True,
+                    "summary": {"errors": 0},
+                    "differences": [],
+                }
+                with patch("cbdk.glb_regression.write_glb_inspection"), \
+                     patch("cbdk.glb_regression.render_glb_preview"), \
+                     patch("cbdk.glb_regression.write_scene_comparison",
+                           return_value=comparison), \
+                     patch("cbdk.glb_regression.run_glb_surface_review",
+                           return_value=report):
+                    result = run_glb_regression(
+                        root / "blender", root / "ref.glb",
+                        root / "cand.glb", root / "out", surface_review=True)
+                self.assertTrue(result["surface_does_not_auto_approve"])
+                self.assertTrue(result["passed_is_metadata_only"])
+                self.assertEqual(result["surface_status"], "review_only")
+
+
     def test_optional_surface_stage_can_report_skipped_without_false_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
