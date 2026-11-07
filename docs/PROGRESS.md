@@ -1211,3 +1211,5 @@ RNAが古いときの実選択再検査をPythonで確認。ローカル823テ�
 コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。
 
 [検証範囲・不具合再現/修正・未確認・再開点](UI_MODE_SETTINGS.md)。旧出力/レシピを維持し、実GUI/権利/汎用UI等を閉じず全体partial。次の自動化はEXT-001の診断/公式validator合成結果照合を優先。
+
+2026-11-08 JST: 正本9cc05daを既存Notion CBDKプロジェクトへ同期成功。内容更新1応答警告なし、旧履歴保持・新規ページ/私有データなし。受領記録だけの後続コミットにコードCIを帰属させない。
