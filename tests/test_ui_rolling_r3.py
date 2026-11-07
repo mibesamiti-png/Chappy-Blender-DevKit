@@ -6,6 +6,7 @@ This is not a real GUI, native Blender OOM, or registration crash test.
 from __future__ import annotations
 
 import unittest
+from math import isfinite
 from types import SimpleNamespace
 
 from test_ui_readiness_r2 import (
@@ -17,6 +18,7 @@ from test_ui_readiness_r2 import (
 class PreviewRollingModeTests(unittest.TestCase):
     def setUp(self):
         self.namespace = {
+            "isfinite": isfinite,
             "_EDIT_MODE_FEATURES": EDIT_FEATURES,
             "_FEATURE_MODULES": {"vertex_nudge": SimpleNamespace(
                 ui_unavailable_reason=lambda ctx:
