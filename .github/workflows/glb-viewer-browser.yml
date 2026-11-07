@@ -29,4 +29,19 @@ jobs:
       - name: Exercise real browser rotation, zoom, part suggestion and filtering
         run: |
           node scripts/glb_viewer_browser_smoke.mjs reports/ci/browser_synthetic.html
-      # Never upload artifact. HTML contains (synthetic here) derived mesh data.
+      - name: Capture actual Chromium screenshot gallery (CBDK synthetic fixture only)
+        run: |
+          node scripts/glb_viewer_screenshot_gallery.mjs \
+            reports/ci/browser_synthetic.html reports/ci/browser_screenshot_gallery
+          test -s reports/ci/browser_screenshot_gallery/index.html
+          test -s reports/ci/browser_screenshot_gallery/manifest.json
+          test "$(find reports/ci/browser_screenshot_gallery -maxdepth 1 -name '*.png' | wc -l)" -eq 4
+      - name: Publish only safe synthetic Chromium PNG screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-chromium-screenshots-${{ github.run_id }}
+          path: reports/ci/browser_screenshot_gallery/
+          retention-days: 14
+          if-no-files-found: error
+      # Never upload browser_synthetic.html or any private GLB-derived viewer.
+
