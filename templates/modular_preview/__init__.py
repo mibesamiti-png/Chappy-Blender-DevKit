@@ -18,10 +18,18 @@ import importlib
 import bpy
 
 _FEATURE_IDS = __CBDK_FEATURE_IDS__
-_OPERATORS = [
-    importlib.import_module("." + feature, __name__ + ".features").OPERATOR_CLASS
-    for feature in _FEATURE_IDS
-]
+_UI_SECTIONS = __CBDK_UI_SECTIONS__
+_UI_OPTIONS = __CBDK_UI_OPTIONS__
+_FEATURE_MODULES = {feature: importlib.import_module("." + feature, __name__ + ".features")
+                    for feature in _FEATURE_IDS}
+_OPERATORS = [_FEATURE_MODULES[feature].OPERATOR_CLASS for feature in _FEATURE_IDS]
+_OPERATORS_BY_FEATURE = dict(zip(_FEATURE_IDS, _OPERATORS))
+# Fixed context map for the five reviewed CBDK-authored operators.
+# Recipes/JSON cannot inject a new context or an arbitrary operator.
+_OBJECT_MODE_FEATURES = frozenset(("object_selection", "mesh_bounds", "modifier_summary"))
+_EDIT_MODE_FEATURES = frozenset(("edit_selection", "vertex_nudge"))
+assert set(_FEATURE_IDS) <= _OBJECT_MODE_FEATURES | _EDIT_MODE_FEATURES
+
 
 
 class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
@@ -33,8 +41,44 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
 
     def draw(self, context):
         col = self.layout.column(align=True)
-        for cls in _OPERATORS:
-            col.operator(cls.bl_idname)
+        visible_sections = 0
+        for index, (title, buttons) in enumerate(_UI_SECTIONS):
+            style = _UI_OPTIONS["section_styles"][index]
+            if style["visible_in"] not in ("always", context.mode.lower()):
+                continue
+            visible_sections += 1
+            group = col.box() if style["boxed"] else col.column(align=True)
+            group.label(text=title)
+            body = group.row(align=True) if style["layout"] == "row" else group
+            for feature_id, label in buttons:
+                button_row = body.row(align=True)
+                active = context.active_object
+                has_mesh = active is not None and active.type == "MESH"
+                mode = "EDIT_MESH" if feature_id in _EDIT_MODE_FEATURES else "OBJECT"
+                button_row.enabled = has_mesh and context.mode == mode
+                reason = ("An active mesh object is required" if not has_mesh else
+                          "Switch to " + mode + " mode" if context.mode != mode else None)
+                if feature_id == "vertex_nudge":
+                    # The built-in RNA property limits local offsets to +/-10.
+                    # This edits only the chosen operator arguments, never
+                    # executes user-supplied Python or alters the source mesh.
+                    button_row.prop(context.scene, "cbdk_modular_nudge_offset", text="XYZ")
+                    if reason is None:
+                        reason = _FEATURE_MODULES[feature_id].ui_unavailable_reason(context)
+                    # Keep XYZ editable when the vector is zero or nothing is
+                    # selected, so a disabled action cannot trap its input.
+                    action = button_row.row(align=True)
+                    action.enabled = reason is None
+                    button = action.operator(
+                        _OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label
+                    )
+                    button.offset = context.scene.cbdk_modular_nudge_offset
+                else:
+                    button_row.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
+                if reason is not None:
+                    body.label(text=label + ": " + reason)
+        if not visible_sections:
+            col.label(text="No preview controls for this mode")
         col.label(text=context.scene.cbdk_modular_result)
 
 
@@ -42,21 +86,31 @@ _CLASSES = tuple(_OPERATORS) + (VIEW3D_PT_cbdk_modular_preview,)
 _REGISTERED = []
 
 
+_PROPERTY_NAMES = ("cbdk_modular_result", "cbdk_modular_nudge_offset")
+_OWNED_PROPERTIES = []
+
+
 def register():
-    # Roll back even if a later operator/panel fails to register.
-    bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
-        name="Last CBDK preview result", default="No inspection yet"
-    )
+    # Refuse collisions before touching another add-on's Scene data.
+    if _REGISTERED or _OWNED_PROPERTIES or any(hasattr(bpy.types.Scene, name) for name in _PROPERTY_NAMES):
+        raise RuntimeError("CBDK preview is already registered or Scene properties conflict")
     try:
+        bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
+            name="Last CBDK preview result", default="No inspection yet"
+        )
+        _OWNED_PROPERTIES.append("cbdk_modular_result")
+        parameter = _UI_OPTIONS["nudge_offset"]
+        bpy.types.Scene.cbdk_modular_nudge_offset = bpy.props.FloatVectorProperty(
+            name="Local Nudge XYZ", description="Local-space offset for selected vertices",
+            size=parameter["size"], default=parameter["default"],
+            min=parameter["min"], max=parameter["max"], subtype="TRANSLATION",
+        )
+        _OWNED_PROPERTIES.append("cbdk_modular_nudge_offset")
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
             _REGISTERED.append(cls)
     except Exception:
-        for cls in reversed(_REGISTERED):
-            bpy.utils.unregister_class(cls)
-        _REGISTERED.clear()
-        if hasattr(bpy.types.Scene, "cbdk_modular_result"):
-            del bpy.types.Scene.cbdk_modular_result
+        unregister()
         raise
 
 
@@ -64,5 +118,7 @@ def unregister():
     for cls in reversed(_REGISTERED):
         bpy.utils.unregister_class(cls)
     _REGISTERED.clear()
-    if hasattr(bpy.types.Scene, "cbdk_modular_result"):
-        del bpy.types.Scene.cbdk_modular_result
+    for name in reversed(_OWNED_PROPERTIES):
+        if hasattr(bpy.types.Scene, name):
+            delattr(bpy.types.Scene, name)
+    _OWNED_PROPERTIES.clear()

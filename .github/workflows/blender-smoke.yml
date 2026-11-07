@@ -13,6 +13,19 @@ on:
       - 'scripts/blender_parts_smoke.py'
       - 'cbdk/addon_builder.py'
       - 'cbdk/modular_builder.py'
+      - 'cbdk/extension_preflight.py'
+      - 'cbdk/extension_manifest.py'
+      - 'cbdk/extension_manifest_review.py'
+      - 'tests/test_extension_manifest_review.py'
+      - 'tests/test_extension_manifest.py'
+      - 'scripts/verify_extension_manifest.py'
+      - 'scripts/build_ui_variant.py'
+      - 'tests/test_extension_preflight.py'
+      - 'cbdk/ui_layout.py'
+      - 'catalog/ui_layouts.json'
+      - 'tests/test_ui_layout.py'
+      - 'templates/modular_preview/__init__.py'
+      - 'cbdk/registration_audit.py'
       - 'cbdk/feature_catalog.py'
       - 'catalog/addon_features.json'
       - 'recipes/**'
@@ -28,9 +41,46 @@ on:
       - 'tests/test_glb_regression.py'
       - 'tests/test_glb_compare.py'
       - 'cbdk/glb_regression.py'
+      - 'cbdk/glb_surface_pipeline.py'
+      - 'scripts/blender_glb_surface_review.py'
+      - 'scripts/blender_surface_inventory_smoke.py'
+      - 'cbdk/glb_part_hints.py'
+      - 'cbdk/glb_synthetic_adaptive.py'
+      - 'cbdk/glb_synthetic_run_review.py'
+      - 'cbdk/glb_synthetic_conditions.py'
+      - 'cbdk/glb_visual_experiment_review.py'
+      - 'cbdk/glb_debug_focus.py'
+      - 'cbdk/glb_experiment_triage.py'
+      - 'cbdk/glb_visual_review_markdown.py'
+      - 'tests/fixtures/glb021_ambiguous_settings.py'
+      - 'tests/test_glb_debug_focus.py'
+      - 'tests/test_glb_experiment_triage.py'
+      - 'scripts/verify_glb021_experiment_link.py'
+      - 'tests/test_glb_visual_experiment_review.py'
+      - 'cbdk/glb_synthetic_run_compare.py'
+      - 'scripts/verify_glb023_run_comparison.py'
+      - 'tests/test_glb_synthetic_run_compare.py'
+      - 'scripts/run_glb022_synthetic_adaptive.py'
+      - 'scripts/verify_glb022_failure_review.py'
+      - 'tests/test_glb_synthetic_adaptive.py'
+      - 'tests/test_glb_synthetic_run_review.py'
+      - 'tests/test_glb_part_hints.py'
+      - 'tests/test_glb_surface_pipeline.py'
       - 'cbdk/glb_compare.py'
+      - 'tests/test_glb_diagnose.py'
+      - 'cbdk/glb_diagnose.py'
+      - 'cbdk/glb_repair_plan.py'
+      - 'cbdk/glb_property_map.py'
+      - 'cbdk/glb_property_usage.py'
+      - 'tests/test_glb_repair_plan.py'
+      - 'tests/test_glb_property_map.py'
+      - 'tests/test_glb_property_usage.py'
       - 'scripts/blender_glb_render.py'
+      - 'scripts/build_synthetic_screenshot_gallery.py'
       - 'scripts/blender_make_glb_fixture.py'
+      - 'scripts/blender_parameter_experiment_smoke.py'
+      - 'fixtures/cbdk_parameter_experiment.py'
+      - 'tests/test_glb_parameter_experiment.py'
       - 'tests/test_glb_inspector.py'
       - '.github/workflows/blender-smoke.yml'
 
@@ -115,8 +165,12 @@ jobs:
           set -euo pipefail
           python -m cbdk.recipe_matrix --output reports/ci/recipe_matrix.json \
             2>&1 | tee reports/ci/recipe_matrix.log
+          python -m cbdk.registration_audit \
+            2>&1 | tee reports/ci/registration_audit.log
           python -m cbdk feature-list --output reports/ci/feature_catalog.json             2>&1 | tee reports/ci/feature_catalog.log
-          python -m cbdk addon-plan --recipe recipes/modular_all.json             --target-blender "$BLENDER_VERSION" --output reports/ci/addon_plan.json             2>&1 | tee reports/ci/addon_plan.log
+          python -m cbdk addon-plan --recipe recipes/modular_all.json --with-ui \
+            --target-blender "$BLENDER_VERSION" --output reports/ci/addon_plan.json \
+            2>&1 | tee reports/ci/addon_plan.log
       - name: Build private development-preview addon ZIP
         shell: bash
         run: |
@@ -154,6 +208,38 @@ jobs:
             grep -F 'CBDK_MODULAR_ADDON_PASS ' "reports/ci/${recipe}_smoke.log"
           done
           echo 'Modular preview variants: objects, edit, combined, geometry, nudge and all PASSED.' >> "$GITHUB_STEP_SUMMARY"
+          python scripts/build_ui_variant.py reports/ci/CBDK_UI_Variant.zip
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec --python-exit-code 7 \
+            --python scripts/blender_modular_addon_smoke.py -- reports/ci/CBDK_UI_Variant.zip \
+            2>&1 | tee reports/ci/ui_variant_smoke.log
+          grep -F 'CBDK_MODULAR_ADDON_PASS ' reports/ci/ui_variant_smoke.log
+      - name: Audit extension compatibility blockers on authored CI previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cbdk extension-preflight reports/ci/CBDK_modular_all_Preview.zip \
+            --output reports/ci/extension_readiness_modular.json
+          python -m cbdk extension-preflight reports/ci/CBDK_Mesh_Inspector_Preview.zip \
+            --output reports/ci/extension_readiness_legacy.json
+          python scripts/verify_extension_manifest.py --blender "$BLENDER_PATH" \
+            --output reports/ci/official_manifest_fixtures
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for kind in ('modular', 'legacy'):
+              report = json.loads(Path(
+                  f'reports/ci/extension_readiness_{kind}.json').read_text())
+              assert report['status'] == 'blocked_for_extension_release'
+              assert report['provenance_hashes_verified'] is True
+              assert report['python_code_executed'] is False
+              assert report['extension_zip_created'] is False
+              assert report['manifest_toml_emitted'] is False
+              assert report['official_blender_extension_validate_ran'] is False
+              assert report['manifest_fields_review_only']['license'] is None
+              assert 'owner_release_and_redistribution_authorization_required' in report['blockers']
+          PY
+          echo 'Both preview ZIPs passed safe extension readiness inspection; formal release remains BLOCKED.' >> "$GITHUB_STEP_SUMMARY"
+
       - name: Probe native Undo and Redo (background only, not GUI hotkeys)
         shell: bash
         run: |
@@ -188,6 +274,603 @@ jobs:
           Path('reports/ci/audit_scaling.json').write_text(json.dumps(data, indent=2) + '\n')
           PY
           echo "Real Blender guarded audit scaling and mutation-free over-limit reject PASSED." >> "$GITHUB_STEP_SUMMARY"
+      - name: Experiment with trusted addon property changes and real GLB roundtrip
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci/parameter_experiment
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_parameter_experiment_smoke.py \
+            -- reports/ci/parameter_experiment \
+            2>&1 | tee reports/ci/parameter_experiment.log
+          grep -F 'CBDK_PARAMETER_EXPERIMENT_PASS ' reports/ci/parameter_experiment.log
+          for variant in baseline sphere_radius_changed bevel_width_changed sphere_probe_up sphere_probe_down bevel_probe_up bevel_probe_down; do
+            python -m cbdk glb-inspect "reports/ci/parameter_experiment/${variant}.glb" \
+              --output "reports/ci/parameter_experiment/${variant}_structure.json"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/parameter_experiment')
+          result = json.loads((root / 'parameter_experiment.json').read_text())
+          assert result['kind'] == 'cbdk_trusted_blender_parameter_experiment', result
+          assert result['source_fixture'] == 'cbdk_authored_only', result
+          assert len(result['variants']) == 7, result
+          assert all(result['controls'].values()), result
+          assert all(v is False for v in result['safety'].values()), result
+          directions = result['direction_probe_evidence']
+          assert set(directions) == {'generated', 'imported'}, result
+          for stage in ('generated', 'imported'):
+              assert set(directions[stage]) == {'sphere_radius', 'bevel_width'}, result
+              for evidence in directions[stage].values():
+                  assert evidence['decision'] == 'increase', evidence
+                  score = evidence['reference_error']
+                  assert score['increase_probe'] < score['baseline'] < score['decrease_probe'], evidence
+                  assert all(count == 0 for count in evidence['unrelated_probe_changed_vertices'].values()), evidence
+                  assert evidence['suggested_numeric_value'] is None
+                  assert evidence['score_metric'] == 'sorted_local_origin_radius_mean_absolute_difference'
+                  assert evidence['score_invariant_to_vertex_order'] is True
+                  assert evidence['general_geometry_equivalence_verified'] is False
+                  assert evidence['auto_apply'] is False
+                  assert evidence['verified_for_arbitrary_user_addons'] is False
+          evidence = result['quantified_vertex_displacement']
+          sphere = 'CBDK_Param_Sphere'
+          cube = 'CBDK_Param_BevelCube'
+          for stage in ('generated', 'imported'):
+              assert evidence[stage]['sphere_radius_changed'][sphere]['max_local_displacement'] > .2
+              assert evidence[stage]['sphere_radius_changed'][cube]['changed_vertex_count'] == 0
+              assert evidence[stage]['bevel_width_changed'][cube]['max_local_displacement'] > .01
+              assert evidence[stage]['bevel_width_changed'][sphere]['changed_vertex_count'] == 0
+              assert all(not row['valid_for_arbitrary_glb']
+                         for variant in evidence[stage].values()
+                         for row in variant.values())
+          for variant in ('baseline', 'sphere_radius_changed', 'bevel_width_changed',
+                          'sphere_probe_up', 'sphere_probe_down',
+                          'bevel_probe_up', 'bevel_probe_down'):
+              assert (root / f'{variant}.glb').stat().st_size > 100
+              data = json.loads((root / f'{variant}_structure.json').read_text())
+              assert data['kind'] == 'cbdk_glb_static_inspection', data
+              assert data['counts']['meshes'] == 2, data
+          PY
+          if [ "$BLENDER_VERSION" = "4.5.15" ]; then
+            set +e
+            python -m cbdk glb-regression \
+              reports/ci/parameter_experiment/baseline.glb \
+              reports/ci/parameter_experiment/sphere_radius_changed.glb \
+              --blender "$BLENDER_PATH" \
+              --output reports/ci/parameter_experiment/radius_regression \
+              --resolution 256 --timeout 180 \
+              --scene-rel-tol 0.02 --dimension-rel-tol 0.10 --center-rel-tol 0.02 \
+              --silhouette-iou-min 0.90 --surface-review
+            status=$?
+            set -e
+            test "$status" -eq 1
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/parameter_experiment/radius_regression')
+          comparison = json.loads((root / 'comparison.json').read_text())
+          diagnosis = json.loads((root / 'diagnosis.json').read_text())
+          repair = json.loads((root / 'repair_plan.json').read_text())
+          surface = json.loads((root / 'surface_review.json').read_text())
+          assert surface['status'] in ('review_only', 'skipped'), surface
+          assert surface['complete_surface_equivalence_proven'] is False
+          assert surface['auto_apply'] is False
+          codes = {x['code'] for x in comparison['differences']
+                   if x['severity'] == 'error'}
+          assert not comparison['passed'], comparison
+          assert 'object_dimensions' in codes, comparison
+          assert any(x['category'] == 'part_size_parameter'
+                     for x in diagnosis['hypotheses']), diagnosis
+          assert repair['recommendation_count'] > 0, repair
+          assert repair['safety']['applies_parameters'] is False, repair
+          PY
+          fi
+          echo "Trusted additive parameter GLB generation and roundtrip controls passed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Benchmark BVH and verify feature-prioritized small-hole detection
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci/surface_distance
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_surface_distance_smoke.py \
+            -- reports/ci/surface_distance \
+            2>&1 | tee reports/ci/surface_distance.log
+          grep -F 'CBDK_SURFACE_DISTANCE_PASS ' reports/ci/surface_distance.log
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/surface_distance')
+          report = json.loads((root / 'surface_distance_experiment.json').read_text())
+          assert report['kind'] == 'cbdk_trusted_glb_surface_distance_experiment', report
+          assert report['source'] == 'repository_authored_synthetic_only', report
+          assert len(report['variants']) == 9, report
+          assert all(report['checks'].values()), report
+          assert all(v is False for v in report['safety'].values()), report
+          a = report['comparisons']['alternate_triangulation']
+          h = report['comparisons']['open_hole']
+          t = report['comparisons']['raised']
+          grid = report['comparisons']['grid_256']
+          narrow = report['multires']['narrow_hole']
+          panels_old = report['multires']['large_panels_tiny_hole_area_only']
+          panels_new = report['multires']['large_panels_tiny_hole_features']
+          assert panels_old['refined_symmetric_sampled_max'] == 0, panels_old
+          assert panels_new['refined_symmetric_sampled_max'] > .01, panels_new
+          assert panels_new['reference_to_candidate']['feature_exploration_face_count'] == 1
+          assert panels_new['reference_to_candidate']['area_fallback_face_count'] == 1
+          assert panels_new['geometry_feature_prioritization_enabled'] is True
+          assert panels_old['geometry_feature_prioritization_enabled'] is False
+          assert not panels_new['auto_approve'] and not panels_new['complete_surface_coverage']
+          assert all(x is False for x in panels_new['safety'].values())
+          assert report['comparisons']['narrow_hole_legacy']['symmetric_sampled_max'] == 0, report
+          assert narrow['coarse_symmetric_sampled_max'] == 0, narrow
+          assert narrow['refined_symmetric_sampled_max'] > .005, narrow
+          assert narrow['new_nonzero_sample_after_refinement'] is True
+          assert narrow['coarse_samples_per_triangle'] == 8
+          assert narrow['fine_samples_per_selected_triangle'] == 48
+          assert narrow['auto_approve'] is False
+          assert narrow['complete_surface_coverage'] is False
+          assert all(value is False for value in narrow['safety'].values())
+          assert report['triangles']['grid_256'] == 256, report
+          assert report['triangles']['grid_512'] == 512, report
+          assert report['comparisons']['grid_512']['symmetric_mean'] == 0, report
+          timings = report['timings']
+          small = timings['grid_64_same_input_bvh_vs_bruteforce']
+          large = timings['grid_512_bvh_only']
+          assert small['reference_triangles'] == 64
+          assert large['reference_triangles'] == 512
+          assert small['scores_agree_with_brute_force'] is True
+          assert large['scores_agree_with_brute_force'] is False
+          assert set(small['benchmarks']) == {'bvh', 'brute_force'}
+          assert set(large['benchmarks']) == {'bvh'}
+          assert all(value['median_elapsed_ms'] >= 0
+                     for record in (small, large)
+                     for value in record['benchmarks'].values())
+          assert all(record['performance_regression_gate'] is False
+                     and record['relative_timings_portable'] is False
+                     for record in (small, large))
+          assert grid['symmetric_mean'] == 0.0, grid
+          assert grid['search_acceleration'] == 'deterministic_median_split_triangle_aabb_bvh', grid
+          assert grid['reference_to_candidate']['triangle_distance_evaluations'] * 4 < grid['reference_to_candidate']['brute_force_evaluations'], grid
+          assert a['symmetric_mean'] < 1e-6, a
+          assert h['candidate_to_reference']['mean'] > .01, h
+          assert h['symmetric_sampled_max'] > .10, h
+          assert 0.249 <= t['symmetric_mean'] <= 0.251, t
+          assert all(not v['exact_surface_equivalence_verified']
+                     and not v['watertight_solid_equivalence_verified']
+                     and not v['safety']['auto_approves']
+                     for v in (a, h, t)), report
+          for variant in report['variants']:
+              assert (root / (variant + '.glb')).stat().st_size > 100
+          PY
+          echo "Synthetic nine-GLB feature-aware small-cutout controls passed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run local GLB-019 integrated surface-review CLI on imported synthetic pairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_distance
+          python -m cbdk glb-surface-review \
+            "$root/filled_main.glb" "$root/with_open_hole.glb" \
+            --blender "$BLENDER_PATH" \
+            --output "$root/integrated_open_hole.json" --timeout 180
+          python -m cbdk glb-surface-review \
+            "$root/filled_main.glb" "$root/filled_other.glb" \
+            --blender "$BLENDER_PATH" \
+            --output "$root/integrated_same_surface.json" --timeout 180
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/surface_distance')
+          hole = json.loads((root / 'integrated_open_hole.json').read_text())
+          same = json.loads((root / 'integrated_same_surface.json').read_text())
+          for report in (hole, same):
+              assert report['kind'] == 'cbdk_glb_surface_review'
+              assert report['source'] == 'local_blender_import_aggregate_only'
+              assert report['status'] == 'review_only'
+              assert report['complete_surface_equivalence_proven'] is False
+              assert report['auto_apply'] is False
+              assert all(flag is False for flag in report['safety'].values())
+              assert 'fixed_surface' in report and 'adaptive_surface' in report
+              assert 'source_name' not in report
+          assert hole['surface_observation'] == 'sampled_difference_detected'
+          assert hole['fixed_surface']['symmetric_sampled_max'] > .10
+          assert hole['adaptive_surface']['refined_symmetric_sampled_max'] > 0
+          assert same['surface_observation'] == 'no_difference_observed_at_samples'
+          assert same['fixed_surface']['symmetric_sampled_max'] < 1e-6
+          assert same['adaptive_surface']['refined_symmetric_sampled_max'] < 1e-6
+          PY
+          echo "GLB-019 imported local pair pipeline, exact source privacy and review-only caps passed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify anonymous inventory and weak hints through real GLB imports
+        shell: bash
+        run: |
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 --python scripts/blender_surface_inventory_smoke.py \
+            -- reports/ci/surface_inventory
+
+      - name: GLB-020 review-only colored 3D difference exports and reimport
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_distance
+          python -m cbdk glb-diff-visualize \
+            "$root/filled_main.glb" "$root/with_open_hole.glb" \
+            --blender "$BLENDER_PATH" --output "$root/diff_colors" \
+            --timeout 180
+          python -m cbdk glb-diff-visualize \
+            "$root/filled_main.glb" "$root/filled_other.glb" \
+            --blender "$BLENDER_PATH" --output "$root/diff_same" \
+            --timeout 180
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/surface_distance')
+          hole = json.loads((root / 'diff_colors/review.json').read_text())
+          same = json.loads((root / 'diff_same/review.json').read_text())
+          for row, folder in ((hole, 'diff_colors'), (same, 'diff_same')):
+              assert row['kind'] == 'cbdk_glb_diff_visualization'
+              assert row['status'] == 'review_only'
+              assert row['sampled_only'] is True
+              assert row['complete_surface_equivalence_proven'] is False
+              assert row['auto_apply'] is False
+              assert all(not flag for flag in row['safety'].values())
+              for key in ('reference', 'candidate'):
+                  assert 1 <= sum(row[key].values()) <= 512
+              for name in row['outputs']:
+                  p = root / folder / name
+                  assert p.exists() and p.stat().st_size > 100
+              assert 'filled_main' not in str(row)
+          assert same['reference']['low'] == sum(same['reference'].values())
+          assert same['candidate']['low'] == sum(same['candidate'].values())
+          assert (hole['reference']['high'] + hole['reference']['medium'] +
+                  hole['candidate']['high'] + hole['candidate']['medium']) >= 1
+          PY
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_verify_glb_diff_visualize.py -- \
+            "$root/diff_colors/reference_diff.glb" "$root/diff_colors/candidate_diff.glb" \
+            2>&1 | tee "$root/glb_diff_reimport.log"
+          grep -F 'CBDK_GLB_DIFF_VISUALIZATION_REIMPORT_PASS' "$root/glb_diff_reimport.log"
+          echo "GLB-020 directional colored GLB outputs and Blender reimport passed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: GLB-020 preserve private multipart mesh grouping in colored exports
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_distance
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_make_glb_diff_parts_fixture.py -- \
+            "$root/multipart_inputs" \
+            2>&1 | tee "$root/glb_diff_parts_fixture.log"
+          grep -F 'CBDK_GLB_DIFF_PARTS_FIXTURE_PASS' "$root/glb_diff_parts_fixture.log"
+          python -m cbdk glb-diff-visualize \
+            "$root/multipart_inputs/multipart_reference.glb" \
+            "$root/multipart_inputs/multipart_candidate.glb" \
+            --blender "$BLENDER_PATH" --output "$root/diff_multipart" \
+            --timeout 180
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          review = json.loads(Path('reports/ci/surface_distance/diff_multipart/review.json').read_text())
+          assert review['part_count_limit_per_scene'] == 64
+          assert review['cross_file_part_identity_proven'] is False
+          assert review['part_id_scheme'] == 'anonymous_sequential_by_imported_object_name'
+          assert review['sampled_only'] and not review['auto_apply']
+          assert not review['complete_surface_equivalence_proven']
+          assert len(review['parts']['reference']) == 2
+          assert len(review['parts']['candidate']) == 2
+          for side in ('reference', 'candidate'):
+              first, second = review['parts'][side]
+              assert first['part_id'] == 'part_001'
+              assert second['part_id'] == 'part_002'
+              assert first['triangle_count'] == second['triangle_count'] == 1
+              assert first['low'] == 1 and second['high'] == 1
+              assert all(sum(x[key] for x in review['parts'][side]) == review[side][key]
+                         for key in ('low', 'medium', 'high'))
+          # Private-looking *input* object names never enter the public-safe report.
+          assert 'PRIVATE_SOURCE' not in str(review)
+          assert 'multipart_reference.glb' not in str(review)
+          assert 'multipart_candidate.glb' not in str(review)
+          assert review['viewer'] == 'compare_viewer.html'
+          assert review['viewer_contains_derived_geometry'] is True
+          assert review['viewer_local_only'] is True
+          assert review['viewer_shared_camera'] is True
+          assert review['viewer_browser_interaction_verified'] is False
+          assert review['unobserved_regions_verified'] is False
+          audit = review['sampling_sensitivity_audit']
+          assert audit['method'] == 'extra_halton_24_probe_sensitivity_v1'
+          assert audit['initial_samples_per_triangle'] == 24
+          assert audit['additional_samples_per_triangle'] == 24
+          assert audit['unobserved_regions_verified'] is False
+          for side in ('reference', 'candidate'):
+              assert audit[side]['face_count'] == sum(review[side].values())
+              assert sum(audit['per_part_sensitive_faces'][side]) == audit[side]['sensitive_faces']
+          html = Path('reports/ci/surface_distance/diff_multipart/compare_viewer.html').read_text()
+          assert html.count('id="canvas-reference"') == 1
+          assert html.count('id="canvas-candidate"') == 1
+          assert "connect-src 'none'" in html
+          assert '__CBDK_VIEWER_DATA__' not in html
+          assert 'PRIVATE_SOURCE_ALPHA' not in html
+          assert 'PRIVATE_SOURCE_BETA' not in html
+          assert 'multipart_reference.glb' not in html
+          assert 'multipart_candidate.glb' not in html
+          PY
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('reports/ci/surface_distance/diff_multipart/compare_viewer.html').read_text()
+          source = re.findall(r'<script>(.*?)</script>', html, re.S)
+          assert len(source) == 1, 'Offline viewer must have exactly one executable script'
+          Path('reports/ci/surface_distance/diff_multipart/viewer_syntax.js').write_text(source[0])
+          PY
+          node --check "$root/diff_multipart/viewer_syntax.js"
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_verify_glb_diff_visualize.py -- \
+            "$root/diff_multipart/reference_diff.glb" \
+            "$root/diff_multipart/candidate_diff.glb" 2 \
+            2>&1 | tee "$root/glb_diff_parts_reimport.log"
+          grep -F 'CBDK_GLB_DIFF_VISUALIZATION_REIMPORT_PASS' "$root/glb_diff_parts_reimport.log"
+          echo "GLB-020 anonymous 2-part material/reimport checks passed without publishing private sources." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: GLB-020 synthetic closed versus uncapped tetrahedron boundary audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_distance
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_make_glb_boundary_fixture.py -- \
+            "$root/boundary_inputs" \
+            2>&1 | tee "$root/boundary_fixture.log"
+          grep -F 'CBDK_BOUNDARY_GLBS_GENERATED_PASS' "$root/boundary_fixture.log"
+          python -m cbdk glb-diff-visualize \
+            "$root/boundary_inputs/closed_tetra.glb" \
+            "$root/boundary_inputs/open_tetra.glb" \
+            --blender "$BLENDER_PATH" --output "$root/boundary_review" \
+            --timeout 180
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path(
+              'reports/ci/surface_distance/boundary_review/review.json'
+          ).read_text())
+          audit = report['boundary_edge_audit']
+          assert audit['method'] == 'world_space_quantized_triangle_edge_incidence_v1'
+          assert audit['fully_watertight_proven'] is False
+          assert audit['internal_voids_verified'] is False
+          assert audit['coordinate_welding_is_approximate'] is True
+          assert audit['reference']['triangle_count'] == 4
+          assert audit['candidate']['triangle_count'] == 3
+          assert audit['reference']['boundary_edges'] == 0
+          assert audit['candidate']['boundary_edges'] == 3
+          matches = report['part_match_candidates']
+          assert matches['cross_file_part_identity_proven'] is False
+          row = matches['reference_parts'][0]
+          assert row['status'] == 'ambiguous'
+          assert row['topology_review_required'] is True
+          html = Path(
+              'reports/ci/surface_distance/boundary_review/compare_viewer.html'
+          ).read_text(encoding='utf-8')
+          assert 'id="show-boundaries"' in html
+          assert '__CBDK_VIEWER_DATA__' not in html
+          data = json.loads(html.split(
+              '<script id="cbdk-viewer-data" type="application/json">', 1
+          )[1].split('</script>', 1)[0])
+          assert data['boundary_overlay_approximate'] is True
+          assert data['boundary_location_proven'] is False
+          assert len(data['boundary_overlay']['reference']) == 0
+          assert len(data['boundary_overlay']['candidate']) == 3
+          assert all(len(line) == 7 and line[0] == 1
+                     for line in data['boundary_overlay']['candidate'])
+          assert 'SYNTHETIC_BOUNDARY_TEST' not in html
+          assert 'SYNTHETIC_BOUNDARY_TEST' not in str(report)
+          assert 'closed_tetra.glb' not in str(report)
+          assert 'open_tetra.glb' not in str(report)
+          assert all(Path('reports/ci/surface_distance/boundary_review', name).exists()
+                     for name in ('reference_diff.glb', 'candidate_diff.glb',
+                                  'compare_viewer.html'))
+          PY
+          echo "GLB-020 closed/open triangle edge warnings remain review-only." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: GLB-020 MVP joint-like 3-part end-to-end regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/joint_mvp
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 \
+            --python scripts/blender_make_glb_joint_mvp_fixtures.py -- \
+            "$root/inputs" 2>&1 | tee "reports/ci/joint_mvp_fixture.log"
+          grep -F 'CBDK_JOINT_MVP_FIXTURES_PASS' "reports/ci/joint_mvp_fixture.log"
+          sha256sum "$root/inputs/"*.glb > "$root/source_sha256.txt"
+          for mode in identical narrow shifted uncapped narrow_placebo; do
+            python -m cbdk glb-diff-visualize \
+              "$root/inputs/reference.glb" "$root/inputs/$mode.glb" \
+              --blender "$BLENDER_PATH" \
+              --output "$root/review_$mode" --timeout 180
+          done
+          python scripts/verify_glb_joint_mvp.py "$root"
+          python scripts/verify_glb021_joint_review.py "$root"
+          python scripts/verify_glb021_synthetic_counterfactual.py "$root"
+          # GLB-022: actual staged re-generation and re-comparison, not a
+          # replay of cached JSON scores; only CBDK-owned fixed trial names.
+          python scripts/run_glb022_synthetic_iteration.py \
+            --blender "$BLENDER_PATH" \
+            --output reports/ci/glb022_iteration
+          # GLB-022 stage 2: generate an additional candidate that fixes the
+          # socket but regresses the ball. Both negative cases must be rejected.
+          python scripts/run_glb022_synthetic_iteration.py \
+            --blender "$BLENDER_PATH" --protocol cross_part \
+            --output reports/ci/glb022_multi_iteration
+          # GLB-022 stage 3: measure partial improvement via existing
+          # aggregated bidirectional sampled maxima; reject shifted-ball
+          # regression, accept intermediate improvement, then sampled zero.
+          python scripts/run_glb022_synthetic_iteration.py \
+            --blender "$BLENDER_PATH" --protocol progressive \
+            --output reports/ci/glb022_progress_iteration
+          # GLB-022 stage 4: candidate values are computed arithmetically
+          # from a hard-bounded CBDK synthetic range, not handwritten IDs.
+          python scripts/run_glb022_synthetic_grid.py \
+            --blender "$BLENDER_PATH" \
+            --output reports/ci/glb022_generated_grid
+          # GLB-022 stage 5: measured feedback determines the NEXT numeric
+          # candidate, within a CBDK-owned hard 0.78..1.70 test bracket.
+          python scripts/run_glb022_synthetic_adaptive.py \
+            --blender "$BLENDER_PATH" \
+            --output reports/ci/glb022_adaptive
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("reports/ci/glb022_iteration")
+          h = json.loads((root / "synthetic_iteration_history.json").read_text())
+          assert h["status"] == "synthetic_test_only"
+          assert h["attempts_executed"] == 2
+          assert [row["accepted"] for row in h["attempts"]] == [False, True]
+          assert h["stop_reason"] == "observed_zero_and_no_other_part_regression"
+          assert h["final_observations"] == {
+              "socket_sampled_affected_faces": 0,
+              "other_parts_sampled_affected_faces": 0,
+          }
+          md = (root / "synthetic_iteration_history.md").read_text()
+          assert "不採用" in md and "採用（合成実験のみ）" in md
+          assert not any(h["safety"].values())
+          for mode in ("narrow", "narrow_placebo", "identical"):
+              assert (root / ("review_" + mode) / "review.json").is_file()
+              assert (root / "synthetic_inputs" / mode / (mode + ".glb")).is_file()
+          assert (root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
+          # Stage-2 actual generation and cross-part safety checks
+          multi_root = Path("reports/ci/glb022_multi_iteration")
+          multi = json.loads((multi_root / "synthetic_multi_iteration_history.json").read_text())
+          assert multi["status"] == "synthetic_test_only"
+          assert multi["attempts_executed"] == 3
+          assert [a["accepted"] for a in multi["attempts"]] == [False, False, True]
+          assert [a["decision"] for a in multi["attempts"]] == [
+              "socket_not_improved",
+              "unrelated_part_regression",
+              "strict_sampled_socket_improvement_no_observed_regression",
+          ]
+          assert multi["accepted_candidate_id"] == "identical"
+          assert multi["final_observations"] == {
+              "socket_sampled_affected_faces": 0,
+              "other_parts_sampled_affected_faces": 0,
+          }
+          assert multi["stop_reason"] == "sampled_zero_without_other_part_regression"
+          assert not any(multi["safety"].values())
+          multi_md = (multi_root / "synthetic_multi_iteration_history.md").read_text()
+          assert "棄却（他部品が悪化）" in multi_md
+          assert "採用（合成モデル限定）" in multi_md
+          for name in ("narrow", "narrow_placebo", "shifted", "identical"):
+              assert (multi_root / ("review_" + name) / "review.json").is_file()
+              assert (multi_root / "synthetic_inputs" / name / (name + ".glb")).is_file()
+          assert (multi_root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
+          progress_root = Path("reports/ci/glb022_progress_iteration")
+          progress = json.loads((progress_root / "synthetic_progress_history.json").read_text())
+          assert progress["status"] == "synthetic_test_only"
+          assert progress["metric"] == "global_bidirectional_sampled_max_distance_input_units"
+          assert progress["metric_is_part_specific"] is False
+          assert progress["metric_is_exact_hausdorff"] is False
+          assert [step["accepted"] for step in progress["attempts"]] == [False, True, True]
+          assert [step["baseline_before"] for step in progress["attempts"]] == [
+              "narrow", "narrow", "narrow_mid",
+          ]
+          assert progress["attempts"][0]["decision"] == "other_part_regression"
+          assert (progress["attempts"][1]["sampled_max_candidate"]
+                  < progress["attempts"][1]["sampled_max_before"])
+          assert progress["accepted_trial_id"] == "identical"
+          assert progress["stop_reason"] == "observed_sampled_zero"
+          assert progress["final_sampled_max"] <= 0.000001
+          assert not any(progress["safety"].values())
+          md = (progress_root / "synthetic_progress_history.md").read_text()
+          assert "段階的改善" in md and "棄却（他部品悪化）" in md
+          for name in ("narrow", "narrow_mid_shifted", "narrow_mid", "identical"):
+              assert (progress_root / ("review_" + name) / "review.json").is_file()
+              assert (progress_root / "synthetic_inputs" / name / (name + ".glb")).is_file()
+          grid_root = Path("reports/ci/glb022_generated_grid")
+          grid = json.loads((grid_root / "synthetic_grid_history.json").read_text())
+          assert grid["kind"] == "cbdk_glb022_bounded_generated_grid_v1"
+          assert grid["generated_candidate_values"] == [1.01, 1.24, 1.47, 1.7]
+          assert grid["max_attempts"] == 4
+          assert len(grid["attempts"]) == 4
+          assert grid["accepted_trial_id"] == "grid_170"
+          assert grid["stop_reason"] == "observed_sampled_zero"
+          assert grid["final_sampled_max"] <= 0.000001
+          assert grid["safety"]["only_repo_owned_synthetic_fixtures"] is True
+          assert all(not v for k, v in grid["safety"].items()
+                     if k != "only_repo_owned_synthetic_fixtures")
+          assert "未完了" in (grid_root / "synthetic_grid_history.md").read_text()
+          for name in ("grid_101", "grid_124", "grid_147", "grid_170"):
+              assert (grid_root / ("review_" + name) / "review.json").is_file()
+              assert (grid_root / "synthetic_inputs" / name / "grid_candidate.glb").is_file()
+          assert (grid_root / "synthetic_inputs" / "reference" / "reference.glb").is_file()
+          assert (grid_root / "synthetic_inputs" / "narrow" / "narrow.glb").is_file()
+          adaptive_root = Path("reports/ci/glb022_adaptive")
+          adaptive = json.loads((adaptive_root / "synthetic_adaptive_history.json").read_text())
+          assert adaptive["kind"] == "cbdk_glb022_adaptive_synthetic_v1"
+          assert adaptive["status"] == "synthetic_test_only"
+          assert adaptive["target_sampled_max"] == 0.12
+          assert adaptive["target_is_real_tolerance"] is False
+          assert adaptive["attempts_executed"] == 4
+          assert [row["trial_id"] for row in adaptive["steps"]] == [
+              "adaptive_124", "adaptive_147", "adaptive_135", "adaptive_141",
+          ]
+          assert [row["target_met"] for row in adaptive["steps"]] == [
+              False, True, False, False,
+          ]
+          assert adaptive["final_bracket"] == [1.41, 1.47]
+          assert adaptive["measured_feasible_trial_id"] == "adaptive_147"
+          assert adaptive["stop_reason"] == "attempt_budget_exhausted"
+          from cbdk.glb_synthetic_run_review import read_run_review, render_run_review
+          run_review = read_run_review(adaptive_root / "synthetic_run_review.json")
+          assert run_review["status"] == "completed"
+          assert run_review["run_completed"] is True
+          assert run_review["validated_attempts"] == 4
+          assert run_review["input_integrity"] == "verified"
+          assert run_review["checkpoint"] == adaptive
+          assert "最適性は未証明" in render_run_review(run_review)
+          checkpoints = sorted(adaptive_root.glob("checkpoint_*.json"))
+          assert len(checkpoints) == 14
+          assert all(read_run_review(p)["run_completed"] is False for p in checkpoints)
+          assert adaptive["safety"]["only_cbdk_owned_synthetic_generator"] is True
+          assert not any(v for k, v in adaptive["safety"].items()
+                         if k != "only_cbdk_owned_synthetic_generator")
+          adaptive_md = (adaptive_root / "synthetic_adaptive_history.md").read_text()
+          assert "より小さい値へ" in adaptive_md
+          assert "より大きい値へ" in adaptive_md
+          for name in ("adaptive_124", "adaptive_147", "adaptive_135", "adaptive_141"):
+              assert (adaptive_root / ("review_" + name) / "review.json").is_file()
+              assert (adaptive_root / "synthetic_inputs" / name
+                      / "adaptive_candidate.glb").is_file()
+          PY
+          sha256sum --check "$root/source_sha256.txt"
+          echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve synthetic adaptive review after controlled comparison timeout
+        shell: bash
+        run: |
+          python scripts/verify_glb022_failure_review.py \
+            --blender "$BLENDER_PATH" --output reports/ci/glb022_controlled_failure
+
+      - name: Compare independent same-condition synthetic runs and measure review resources
+        shell: bash
+        run: |
+          python scripts/run_glb022_synthetic_adaptive.py \
+            --blender "$BLENDER_PATH" --output reports/ci/glb022_adaptive_repeat
+          python scripts/verify_glb023_run_comparison.py \
+            --first reports/ci/glb022_adaptive/synthetic_run_review.json \
+            --second reports/ci/glb022_adaptive_repeat/synthetic_run_review.json \
+            --failed reports/ci/glb022_controlled_failure/synthetic_run_review.json \
+            --output reports/ci/glb023_comparison
+
+      - name: Link private AST review to its measured synthetic experiment baseline
+        shell: bash
+        run: |
+          python scripts/verify_glb021_experiment_link.py \
+            --run reports/ci/glb022_adaptive --failed-run reports/ci/glb022_controlled_failure
+
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
         run: |
@@ -262,6 +945,125 @@ jobs:
           assert 'scene_silhouette' in codes or 'object_silhouette' in codes, report
           assert 'object_dimensions' not in codes, report
           PY
+          python -m cbdk glb-diagnose reports/ci/glb_drift_compare.json --output reports/ci/glb_drift_diagnosis.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('reports/ci/glb_drift_diagnosis.json').read_text())
+          assert d['hypothesis_count'] >= 1, d
+          cats={x['category'] for x in d['hypotheses']}
+          assert 'part_profile_boolean_or_cutout' in cats or 'assembly_shape_mismatch' in cats, d
+          assert d['safety']['edits_code'] is False, d
+          silhouette = [item for item in d['hypotheses']
+                        if item['category'] in ('part_profile_boolean_or_cutout',
+                                                'assembly_shape_mismatch')]
+          assert silhouette, d
+          assert any(0 <= item['evidence_summary']['worst_iou'] < 0.90
+                     and item['evidence_summary']['affected_views']
+                     and item['evidence_summary']['evidence_count'] >= 1
+                     for item in silhouette), d
+          assert d['evidence_summary']['errors'] >= 1, d
+          assert d['safety']['auto_approves'] is False, d
+          PY
+          python -m cbdk glb-repair-plan reports/ci/glb_drift_compare.json \
+            --output reports/ci/glb_drift_repair_plan.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('reports/ci/glb_drift_repair_plan.json').read_text())
+          assert p['kind'] == 'cbdk_glb_repair_plan', p
+          assert p['status'] == 'review_only', p
+          assert p['recommendation_count'] >= 1, p
+          assert any(x['worst_iou'] is not None and x['worst_iou'] < 0.90
+                     and x['affected_views']
+                     and x['requires_human_parameter_mapping']
+                     for x in p['recommendations']), p
+          assert p['safety']['edits_code'] is False, p
+          assert p['safety']['applies_parameters'] is False, p
+          PY
+          # This is a synthetic fixture. The source is NEVER imported or run.
+          cat > reports/ci/synthetic_property_declarations.py <<'PY'
+          import bpy
+          from bpy.props import FloatProperty
+
+          class CBDKFixtureProperties:
+              profile_shape: FloatProperty(name="Profile shape", default=1.0)
+              boolean_cutter: FloatProperty(name="Boolean cutter", default=1.0)
+              visible_profile: FloatProperty(name="Visible profile", default=1.0)
+              part_arrangement: FloatProperty(name="Part arrangement", default=1.0)
+
+              def read_profile(self):
+                  return self.profile_shape + self.visible_profile
+
+              def alter_profile(self):
+                  self.profile_shape += 0.1
+                  self.profile_shape = 1.0
+                  self.boolean_cutter += 0.1
+                  self.boolean_cutter = 1.0
+                  self.visible_profile += 0.1
+                  self.visible_profile = 1.2
+                  self.part_arrangement += 0.1
+                  self.part_arrangement = 1.0
+
+              def build_geometry(self):
+                  radius = self.boolean_cutter / 2
+                  bpy.ops.mesh.primitive_uv_sphere_add(radius=radius)
+                  bpy.ops.mesh.primitive_cube_add(size=self.profile_shape)
+
+              def configure_modifiers(self, modifier):
+                  modifier.width = self.profile_shape
+                  modifier.thickness = self.boolean_cutter
+          PY
+          python -m cbdk glb-map-properties \
+            reports/ci/glb_drift_repair_plan.json \
+            --source reports/ci/synthetic_property_declarations.py \
+            --output reports/latest/ci_property_mapping.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m = json.loads(Path('reports/latest/ci_property_mapping.json').read_text())
+          assert m['kind'] == 'cbdk_glb_property_mapping', m
+          assert m['static_property_declarations_found'] == 4, m
+          hits = [match for rec in m['recommendations']
+                  for match in rec['exact_name_matches']]
+          assert hits, m
+          assert all(match['match'] == 'exact_declaration_name_only' for match in hits), m
+          assert m['static_possible_attribute_references_found'] == 14, m
+          assert m['static_possible_geometry_paths_found'] >= 2, m
+          linked = [hit for hit in hits
+                    if hit['possible_geometry_dataflow']['possible_path_count'] > 0]
+          assert linked, m
+          assert any(site['geometry_operation_category'] == 'mesh_primitive'
+                     for hit in linked
+                     for site in hit['possible_geometry_dataflow']['examples']), m
+          assert any(site['geometry_operation_category'] == 'possible_modifier_setting_assignment'
+                     and site['recognized_api'] in ('modifier.width', 'modifier.thickness')
+                     for hit in linked
+                     for site in hit['possible_geometry_dataflow']['examples']), m
+          assert all(hit['possible_geometry_dataflow']['receiver_binding_verified'] is False
+                     and hit['possible_geometry_dataflow']['geometry_effect_verified'] is False
+                     for hit in hits), m
+          assert any(x['possible_code_references']['possible_reference_count'] > 0
+                     and x['possible_code_references']['access_counts']['read'] > 0
+                     for x in hits), m
+          assert any(x['possible_code_references']['access_counts']['read_write'] > 0
+                     for x in hits), m
+          assert any(x['possible_code_references']['access_counts']['write'] > 0
+                     for x in hits), m
+          assert all(x['possible_code_references']['runtime_effect_verified'] is False
+                     for x in hits), m
+          # Same-class self references narrow the inspection scope, but are
+          # syntactic hints only, NOT proven Blender property usage.
+          assert any(x['same_class_reference_review']['possible_same_source_class_self_count'] > 0
+                     for x in hits), m
+          assert all(x['same_class_reference_review']['actual_receiver_binding_verified'] is False
+                     and x['same_class_reference_review']['registered_in_blender_verified'] is False
+                     and x['same_class_reference_review']['geometry_effect_verified'] is False
+                     for x in hits), m
+          assert m['safety']['source_executed'] is False, m
+          assert m['safety']['applies_parameters'] is False, m
+          assert m['safety']['private_source_committed'] is False, m
+          PY
 
           if [ "$BLENDER_VERSION" = "4.5.15" ]; then
             set +e
@@ -275,8 +1077,35 @@ jobs:
             regression_status=$?
             set -e
             test "$regression_status" -eq 1
+            test -f reports/ci/glb_regression_e2e/diagnosis.json
+            test -f reports/ci/glb_regression_e2e/repair_plan.json
           fi
           echo "GLB views, silhouettes, self-compare, same-bounds silhouette drift detection and e2e regression behavior PASSED." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build offline gallery from synthetic Blender PNGs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/build_synthetic_screenshot_gallery.py --ci-root reports/ci
+          test -s reports/ci/screenshot_gallery/index.html
+          test "$(find reports/ci/screenshot_gallery -maxdepth 1 -name '*.png' | wc -l)" -eq 13
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root = Path('reports/ci/screenshot_gallery')
+          report = json.loads((root / 'manifest.json').read_text(encoding='utf-8'))
+          assert report['image_count'] == 13 and len(report['images']) == 13
+          for row in report['images']:
+              data = (root / row['file']).read_bytes()
+              assert len(data) == row['bytes']
+              assert hashlib.sha256(data).hexdigest() == row['sha256']
+          hashes = {row['file']: row['sha256'] for row in report['images']}
+          assert hashes['glb_preview_front.png'] != hashes['glb_drift_preview_front.png']
+          assert report['comparative_views'] == ['front', 'right', 'top', 'iso']
+          assert report['gui_screenshot'] is False
+          print('CBDK_SYNTHETIC_GALLERY_INTEGRITY_PASS: 13 renders and distinct front comparison')
+          PY
+          echo "Synthetic Blender render gallery: 13 real PNGs (reference, drift, parts) in screenshot_gallery/index.html." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload evidence and log even when Blender fails
         if: always()

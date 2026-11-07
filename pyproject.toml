@@ -21,3 +21,6 @@ cbdk = "cbdk.__main__:main"
 
 [tool.setuptools]
 packages = ["cbdk", "parts", "parts.common", "parts.blender"]
+
+[tool.setuptools.package-data]
+cbdk = ["glb_diff_viewer_template.html"]

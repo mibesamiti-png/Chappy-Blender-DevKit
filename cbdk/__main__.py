@@ -15,6 +15,7 @@ from .contracts import make_blender_contracts, write_contracts
 from .evidence import verify_authored_parts, save_evidence, check_evidence_freshness
 from .part_matrix import evidence_paths, summarize_parts, write_matrix, render_matrix_markdown
 from .addon_builder import build_addon
+from .extension_preflight import write_preflight_report
 from .feature_catalog import load_feature_catalog, plan_features
 from .modular_builder import validate_modular_recipe
 from .registration_draft import propose_registration, write_draft
@@ -24,6 +25,12 @@ from .glb_render import render_glb_preview
 from .glb_quick_render import quick_render_glb
 from .glb_compare import write_scene_comparison
 from .glb_regression import run_glb_regression
+from .glb_surface_pipeline import run_glb_surface_review
+from .glb_diff_visualize import run_glb_diff_visualize
+from .glb_diagnose import write_diagnosis
+from .glb_repair_plan import plan_from_comparison
+from .glb_property_map import map_properties_from_file
+from .glb_visual_property_review import review_visual_file
 from .dedup import duplicates
 from .report import write_json, write_report
 from .scanner import scan
@@ -116,6 +123,16 @@ def main(argv=None) -> int:
     addon_cmd.add_argument('--preview-unapproved', action='store_true',
                            help='Required explicit opt-in; output is NOT a release or approved component')
 
+    ext_cmd = sub.add_parser('extension-preflight',
+                             help='Static, blocked-for-release compatibility audit of a CBDK preview ZIP')
+    ext_cmd.add_argument('preview_zip', help='Local CBDK-authored legacy preview ZIP')
+    ext_cmd.add_argument('--output', default='reports/latest/extension_readiness.json',
+                         help='New private review report, never an extension package')
+    manifest_cmd = sub.add_parser('extension-manifest-review',
+                                 help='Review TOML data without addon execution or revealing manifest values')
+    manifest_cmd.add_argument('manifest')
+    manifest_cmd.add_argument('--output', default='reports/latest/extension_manifest_review.json')
+
     feature_cmd = sub.add_parser('feature-list', help='List trusted authored preview features; no approval implied')
     feature_cmd.add_argument('--output', default=None)
 
@@ -123,6 +140,8 @@ def main(argv=None) -> int:
     plan_cmd.add_argument('--recipe', default='recipes/modular_combined.json')
     plan_cmd.add_argument('--target-blender', default=None)
     plan_cmd.add_argument('--output', default=None)
+    plan_cmd.add_argument('--with-ui', action='store_true',
+                          help='Include static authored UI visibility and bounded settings, without building or running')
 
     draft_cmd = sub.add_parser('registration-draft',
                                help='Propose manual registration steps without approving or executing code')
@@ -199,6 +218,55 @@ def main(argv=None) -> int:
     glb_regression_cmd.add_argument('--center-rel-tol', type=float, default=0.03)
     glb_regression_cmd.add_argument('--scene-rel-tol', type=float, default=0.05)
     glb_regression_cmd.add_argument('--silhouette-iou-min', type=float, default=0.90)
+    glb_regression_cmd.add_argument('--surface-review', action='store_true',
+                                    help='Opt in to bounded local 3D surface diagnostics (512 triangles per GLB)')
+
+    glb_surface_cmd = sub.add_parser(
+        'glb-surface-review',
+        help='Compare two local .glb files using bounded Blender 3D surface sampling (review only)',
+    )
+    glb_surface_cmd.add_argument('reference', help='Local reference .glb')
+    glb_surface_cmd.add_argument('candidate', help='Local generated .glb')
+    glb_surface_cmd.add_argument('--blender', required=True, help='Trusted local Blender executable path')
+    glb_surface_cmd.add_argument('--output', default='reports/latest/glb_surface_review.json')
+    glb_surface_cmd.add_argument('--timeout', type=int, default=180)
+
+    glb_diff_cmd = sub.add_parser(
+        'glb-diff-visualize',
+        help='Export two color-coded local 3D GLBs for sampled difference review (opt-in)',
+    )
+    glb_diff_cmd.add_argument('reference', help='Reference local .glb')
+    glb_diff_cmd.add_argument('candidate', help='Candidate local .glb')
+    glb_diff_cmd.add_argument('--blender', required=True, help='Trusted local Blender executable')
+    glb_diff_cmd.add_argument('--output', default='reports/latest/glb_diff_visualization')
+    glb_diff_cmd.add_argument('--timeout', type=int, default=180)
+
+    glb_diagnose_cmd = sub.add_parser('glb-diagnose', help='Turn GLB comparison differences into review-only diagnostic hypotheses')
+    glb_diagnose_cmd.add_argument('comparison')
+    glb_diagnose_cmd.add_argument('--output', default='reports/latest/glb_diagnosis.json')
+
+    glb_repair_cmd = sub.add_parser('glb-repair-plan', help='Suggest review-only parameter families from GLB comparison JSON')
+    glb_repair_cmd.add_argument('comparison', help='Comparison JSON (no source addon execution)')
+    glb_repair_cmd.add_argument('--output', default='reports/latest/glb_repair_plan.json')
+
+    glb_map_cmd = sub.add_parser('glb-map-properties', help='AST-only lookup of real property declarations against GLB repair candidates')
+    glb_map_cmd.add_argument('repair_plan', help='Local repair_plan.json (never executes addon source)')
+    glb_map_cmd.add_argument('--source', action='append', required=True, help='Explicit local .py source file; repeat for multiple files')
+    glb_map_cmd.add_argument('--output', default='reports/latest/glb_property_mapping.json', help='Fresh ignored reports/latest/*.json only')
+
+    visual_review_cmd = sub.add_parser(
+        'glb-visual-property-review',
+        help='GLB-021: anonymous GLB-020 evidence plus explicit AST-only addon settings review',
+    )
+    visual_review_cmd.add_argument('review', help='Local GLB-020 review.json (aggregate only)')
+    visual_review_cmd.add_argument('--source', action='append', required=True,
+                                   help='Explicit private Python source to statically inspect; repeat for up to 16 files')
+    visual_review_cmd.add_argument('--role', action='append', default=[],
+                                   help='Optional human-declared candidate part role, e.g. part_003=socket')
+    visual_review_cmd.add_argument('--output', default='reports/latest/glb_visual_property_review.json',
+                                   help='Fresh private JSON under ignored reports/latest only')
+    visual_review_cmd.add_argument('--markdown', action='store_true',
+                                   help='Create a matching private human-review .md checklist next to JSON')
 
     addon_cmd.add_argument('--target-blender', default=None,
                            help='Optional target version, e.g. 4.4.3; fail if incompatible')
@@ -387,9 +455,81 @@ def main(argv=None) -> int:
                 center_rel_tol=args.center_rel_tol,
                 scene_rel_tol=args.scene_rel_tol,
                 silhouette_iou_min=args.silhouette_iou_min,
+                surface_review=args.surface_review,
             )
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0 if report['passed'] else 1
+        if args.command == 'glb-surface-review':
+            report = run_glb_surface_review(
+                args.blender, args.reference, args.candidate, args.output,
+                timeout=args.timeout,
+            )
+            print(json.dumps({
+                'kind': report['kind'],
+                'status': report['status'],
+                'surface_observation': report.get('surface_observation'),
+                'reference_triangles': report['reference_triangles'],
+                'candidate_triangles': report['candidate_triangles'],
+                'output': str(Path(args.output)),
+                'complete_surface_equivalence_proven': False,
+            }, ensure_ascii=False, indent=2))
+            return 0 if report['status'] == 'review_only' else 2
+        if args.command == 'glb-diff-visualize':
+            report = run_glb_diff_visualize(
+                args.blender, args.reference, args.candidate, args.output,
+                timeout=args.timeout,
+            )
+            print(json.dumps({
+                'kind': report['kind'], 'status': report['status'],
+                'outputs': [str(Path(args.output) / name) for name in report['outputs']],
+                'linked_viewer': str(Path(args.output) / report['viewer']),
+                'viewer_contains_derived_geometry': True,
+                'viewer_browser_interaction_verified': False,
+                'reference': report['reference'], 'candidate': report['candidate'],
+                'thresholds': report['thresholds'],
+                'complete_surface_equivalence_proven': False,
+            }, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'glb-diagnose':
+            report = write_diagnosis(args.comparison, args.output)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'glb-visual-property-review':
+            result = review_visual_file(args.review, args.source, args.output,
+                                        role_labels=args.role, markdown=args.markdown)
+            # Do not print candidate source names, AST symbols or role labels.
+            print(json.dumps({
+                'kind': result['kind'], 'status': result['status'],
+                'link_kind': result['link_kind'],
+                'recommendation_count': result['recommendation_count'],
+                'cause_and_effect_proven': False, 'source_executed': False,
+                'output': 'reports/latest/ (private local JSON)',
+            }, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'glb-map-properties':
+            report = map_properties_from_file(args.repair_plan, args.source, args.output)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'glb-repair-plan':
+            report = plan_from_comparison(args.comparison, args.output)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'extension-manifest-review':
+            from .extension_manifest_review import write_manifest_review
+            report = write_manifest_review(args.manifest, args.output)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'extension-preflight':
+            report = write_preflight_report(args.preview_zip, args.output)
+            print(json.dumps({
+                'kind': report['kind'], 'status': report['status'],
+                'package_id': report['package_id'],
+                'provenance_hashes_verified': report['provenance_hashes_verified'],
+                'blockers': report['blockers'],
+                'output': args.output,
+                'extension_zip_created': False,
+            }, ensure_ascii=False, indent=2))
+            return 0
         if args.command == 'feature-list':
             catalog = load_feature_catalog(root=Path(__file__).resolve().parent.parent)
             report = {'schema_version': 1, 'kind': 'trusted_preview_features',
@@ -404,6 +544,12 @@ def main(argv=None) -> int:
             _name, selected = validate_modular_recipe(recipe)
             report = plan_features(selected, root=Path(__file__).resolve().parent.parent,
                                    target_blender=args.target_blender)
+            if args.with_ui:
+                from .ui_layout import plan_ui_layout
+                sections, options = plan_ui_layout(report['ordered_features'],
+                    root=Path(__file__).resolve().parent.parent, include_options=True)
+                report['ui_layout'] = {'sections': sections, 'options': options,
+                                       'runtime_verified': False}
             print(json.dumps(report, ensure_ascii=False, indent=2))
             if args.output:
                 write_json(Path(args.output), report)

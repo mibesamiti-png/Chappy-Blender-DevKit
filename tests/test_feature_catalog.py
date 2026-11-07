@@ -1,10 +1,13 @@
 """Safety/compatibility tests for CBDK's static, allowlisted feature registry."""
 import copy
+import contextlib
+import io
 import json
 import shutil
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from cbdk.__main__ import main
 from cbdk.addon_builder import ROOT, build_addon
@@ -14,6 +17,21 @@ from cbdk.feature_catalog import (
 
 
 class TrustedFeatureCatalogTests(unittest.TestCase):
+    def test_cli_ui_plan_is_opt_in_and_does_not_build_or_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'plan.json'
+            with patch('cbdk.__main__.build_addon') as builder, patch('subprocess.run') as runtime, \
+                 contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(main(['addon-plan', '--recipe', str(ROOT / 'recipes/modular_nudge.json'),
+                                       '--with-ui', '--output', str(output)]), 0)
+            builder.assert_not_called()
+            runtime.assert_not_called()
+            plan = json.loads(output.read_text(encoding='utf-8'))
+            self.assertEqual(plan['ui_layout']['sections'][0][1][0][0], 'vertex_nudge')
+            self.assertEqual(plan['ui_layout']['options']['nudge_offset']['max'], 10)
+            self.assertFalse(plan['ui_layout']['runtime_verified'])
+            self.assertFalse(plan['approved'])
+            self.assertEqual(len(list(Path(directory).iterdir())), 1)
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
@@ -168,6 +186,7 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
             self.assertEqual(len(f['features']), 5)
             self.assertEqual(p['part_ids'], ['BLCTX-001', 'BLCTX-002', 'BME-001'])
             self.assertEqual(p['target_blender'], '4.4.3')
+            self.assertNotIn('ui_layout', p)
 
     def test_cli_incompatible_target_rejected_without_output(self):
         with tempfile.TemporaryDirectory() as out:

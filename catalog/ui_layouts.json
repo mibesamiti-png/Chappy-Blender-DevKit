@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "kind": "cbdk_authored_preview_ui_layout",
+  "preview_only": true,
+  "sections": [
+    {
+      "id": "inspect",
+      "title": "Inspection",
+      "controls": [
+        {
+          "feature_id": "object_selection",
+          "label": "Selected Meshes"
+        },
+        {
+          "feature_id": "mesh_bounds",
+          "label": "Mesh Bounds"
+        },
+        {
+          "feature_id": "modifier_summary",
+          "label": "Modifier Stack"
+        }
+      ]
+    },
+    {
+      "id": "edit",
+      "title": "Edit Mode",
+      "controls": [
+        {
+          "feature_id": "edit_selection",
+          "label": "Selection Counts"
+        },
+        {
+          "feature_id": "vertex_nudge",
+          "label": "Nudge Vertices"
+        }
+      ]
+    }
+  ]
+}

@@ -1,25 +1,27 @@
-# Trigger examples and boundaries
+# When to invoke the CBDK skill
 
-## Invoke this skill
+Use on requests such as:
 
-- 「このBlenderアドオン、既存のCBDK部品を再利用して作って」
-- 「Surface Stampの面の処理を共通化できるか、ソースを実行せず調べて」
-- 「Ball Joint Makerの修正をして、重複候補とbmeshの依存を確認して」
-- 「CBDK v0.9の開発を続けて、テストしてGitHubにPRを作って」
-- "Use CBDK to inspect helper reuse before building a Blender add-on."
-- "The Blender 4.5 GitHub smoke job failed; diagnose it and fix the regression."
+- 「CBDKの開発をGitHubから引き継いで続けて」
+- 「今のv0.18の残タスクをまとめて実装して」
+- 「UI-001の生成パネルの挙動をBlender 3版で検証して」
+- 「EXT-001のextension-preflightがリリース不可と判定する理由を調べて」
+- 「GLB-020/021/022の合成差分を見て誤検出を減らして」
+- 「Codexでの進捗・CI・Notion同期まで実施して」
+- "Continue CBDK from its GitHub state, implement and verify a batch."
 
-## Do not invoke this skill merely for
+Do not invoke just for:
 
-- General Blender modeling tips or 3D-print painting advice.
-- Arbitrary Python projects not using the CBDK repo or reusable helper workflow.
-- Searching for Blender addons/products online with no development task.
-- Requests to run arbitrary uploaded scripts; never treat such scripts as trusted without review.
+- An unrelated Blender modeling or sculpting tutorial.
+- Buying products, painting 3D prints or searching for 3D meshes.
+- Running arbitrary third-party source without explicit review.
+- General Python development in a different repository.
 
-## Example expected result
-
-Request: 「CBDKで選択メッシュのヘルパーを改善して」
-
-Workflow: inspect current `parts/blender/context.py`, search catalog for a competing helper, preserve context/selection semantics, add Python regression tests, run actual Python test suite, run Blender smoke CI if relevant, review no private sources got committed, update progress and open/merge a PR only when permitted.
-
-Report the verified status precisely. Do not present `selected`, `blender_smoke_passed`, or unchanged old CI evidence as an unconditional quality certification.
+Expected behavior for "CBDKの開発を続けて":
+read the *live* GitHub handoff and project state; choose the most
+valuable open safe batch; implement and test it; distinguish Python,
+real Blender, Chromium and human GUI results; update state/handoff
+and progress; preserve draft PR/preview-only gates; sync public-safe
+milestone to existing Notion page if connected. If blocked, describe
+the exact missing evidence and next action. Do not silently invent
+rights or close real-data tasks with synthetic-only evidence.

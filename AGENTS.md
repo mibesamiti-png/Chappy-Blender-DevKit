@@ -167,3 +167,247 @@ When a comparison fails, use its structured diagnostics to guide a reviewed code
 ## v0.18 — silhouette regression evidence
 
 Silhouette signatures are deterministic Blender-derived evidence, not AI-generated reconstruction. Keep the grid bounded (32x32 by default), enforce triangle limits before expensive rasterization, and record unavailable signatures explicitly. IoU below threshold is a diagnostic failure; IoU above threshold is not proof of exact geometry, watertightness, mechanical fit, or internal cavities. Never auto-approve/merge code from silhouette score alone.
+
+## v0.18 draft — quantitative GLB diagnostic evidence (GLB-005)
+
+Treat `glb-diagnose` as a review-only hypothesis generator for valid `cbdk_glb_scene_comparison` JSON. Validate boolean `passed`, error/warning/info counts, numeric and finite metrics, bounded difference arrays, duplicate JSON keys and input size *before* claiming a diagnosis. Do not promote unknown diagnostic codes to a clean bill of health: preserve their identity and flag review work.
+
+Each grouped hypothesis should carry the affected camera views, worst silhouette IoU and relevant relative/volume errors for reviewers. Neither an in-tolerance comparison nor a silhouette match proves identical solids, cavities or exact surface geometry. Do not run private source addons, rewrite code, auto-approve components or upload private GLB data to public GitHub. Keep `last_verified` at the last fully observed CI release until tests on the current PR head actually pass.
+
+## v0.18 — diagnosis-to-parameter review plans (GLB-006)
+
+`glb-repair-plan` maps validated GLB comparison evidence to static, review-only *possible parameter families*. Treat role hints from part names like Ball/Socket/Hinge as unverified guesses, not verified property identifiers; do not synthesize exact numeric fixes or units from bounding boxes alone. A suggested family does NOT mean that parameter exists in user code.
+
+The `glb-regression` pipeline may produce `repair_plan.json` alongside comparison and diagnosis, but must never import untrusted addon source, set Blender properties, change any source code, auto-approve or auto-merge. Keep user-provided GLBs and derived reports local/ignored. Review stage is: inspect actual source manually, change one candidate in an isolated copy, regenerate GLB, recompare, and run full CI.
+
+Track GLB-006 under the canonical STATE.json and generated PROJECT_HANDOFF.md with factual CI verification. Do not update release last_verified until a separately verified release.
+
+## v0.18 — GLB repair property AST mapping (GLB-007)
+
+`glb-map-properties` inspects ONLY user-explicit local Python files via `ast.parse`, without importing/executing the user's addon, dynamic property registration, or Blender GUI. Recognize only syntactically explicit `bpy.props` constructor declarations at class scope; do not infer that a match is actually registered or geometrically relevant.
+
+Report exact declaration-name matches separately from unmatched candidates. Treat every match as requiring human review. Do not infer a numeric correction from GLB bounds, infer a source code change, or automatically apply settings. Strip source body, default values, local filenames and absolute paths from output; only anonymous source labels/class names/line numbers/property constructor metadata may be recorded. The report must stay exclusively under ignored `reports/latest/`, never overwritten and never published. Keep private user models and addons entirely out of the public repository.
+
+Synthetic fixtures in CI are repository-authored and are not user input. Document Python/Windows/Blender CI evidence accurately; retain official release last_verified at v0.17.0 until a verified release. Additional workflow details: `docs/GLB_PROPERTY_MAPPING.md`.
+
+## v0.18 — AST-only potential property usage evidence (GLB-008)
+
+Track same-name Python attribute occurrences conservatively and only in explicitly selected local files. `read`, `write`, `read_write`, `delete` describe the **syntax**, never proved Blender property binding or geometry effect. Capture bounded anonymous source labels, function/class names and line numbers; no source expressions, constants, default values, raw file paths or source bodies.
+
+`receiver_binding_verified` and `runtime_effect_verified` remain false. An incidental `obj.property` that shares the declaration name may be unrelated; dynamic `getattr` and cross-module flow are unknown. Avoid claiming that a candidate parameter changes geometry until separately verified. Don't import, exec, modify, run or publish private addon sources. Any generated report remains in ignored `reports/latest/`.
+
+Use 23 new Python regression cases plus the synthetic multi-version Blender fixture to verify the non-executing behavior; record CI success only after the actual relevant commit's jobs complete.
+
+## v0.18 — GLB-009 syntactic class/self relevance
+
+Distinguish same-anonymous-file + same-class `self.property` AST references from other/unresolved attribute uses. Maintain total counts independently of capped display examples, and separately count read/write/read_write/delete. Do NOT promote the syntactic correlation into verified receiver identity, Blender property registration, geometry effects or numeric correction advice. Prevent redacted/overlong class names from matching the real class.
+
+Tests must cover other receivers, other classes, same class names across files, declaration-only classes, counts beyond the example cap, nonexecution and private data suppression. Keep all reports ignored and never import/execute user-provided addon code. `docs/GLB_PROPERTY_MAPPING.md` describes the current evidence limitations.
+
+## v0.18 GLB-011 — modifier-like attributes are unverified hints
+
+GLB-010 geometry-flow may identify property-dependent assignments to common modifier-style fields (width, thickness, object, operation, segments, levels) as `possible_modifier_setting_assignment`. Names are not type evidence: any Python receiver may expose these attributes. Do not call such a result a verified Blender modifier or a proven Boolean/Bevel/Solidify geometric change. Compound assignment remains an AST hint, not runtime proof.
+
+Cover irrelevant expressions, overwritten aliases, nested functions and branches, and intentional nonexecution of private addons with tests. Keep source code, defaults, paths and private GLBs out of reports and public GitHub; do not change source or auto-approve parts. Track the actual CI outcomes in STATE/HANDOFF without changing the formally verified v0.17.0 release.
+
+## v0.18 GLB-012 — trusted synthetic parameter experiment
+
+Never execute a user's source addon or GLB within the trusted CI parameter experiment. The only allowable runtime fixture is the repository-authored `fixtures/cbdk_parameter_experiment.py`. Compare baseline, sphere-only change and bevel-only change after generation and real GLB reimport; assert the unchanged object's indexed vertex displacement is zero. Record maximum/mean distances and changed vertex count, not raw XYZ coordinates. Reject topology mismatch and nonfinite coordinates. Indexed local vertex displacement is a narrow synthetic-fixture metric, NOT a general geometric similarity score or causal claim about user addons. Keep PR draft until verified; retain last_verified at v0.17.0.
+
+## v0.18 GLB-013 — two-sided trusted GLB parameter probing
+
+Use ONLY the repository-owned synthetic Blender fixture. Run seven fixed GLB variants (baseline, two references, four directional probes) and compare each probe to the same reference by sorted local-origin radial distribution mean absolute difference, independent of vertex order. Require the increase/decrease evidence to be sufficiently separated and the unrelated mesh to remain unchanged for both probes, in both generated and round-tripped GLB stages. An inconclusive result is valid when differences are small or ambiguous; never auto-apply settings or infer an optimal numeric value for user models. Keep private addon sources and GLBs out of public GitHub and tests. Preserve formal release last_verified=v0.17.0 until an actual release.
+
+## v0.18 GLB-014 — bounded sampled triangle surface comparison
+
+`cbdk/glb_surface_distance.py` implements an approximate bidirectional area-weighted mean and sampled maximum of real point-to-triangle distances, independent of vertex indexing and some triangulation differences. Bound each mesh to 128 triangles, 24 deterministic Halton samples per triangle; refuse degenerate/nonfinite/oversized input. These are sample-derived diagnostics, NOT exact Hausdorff bounds, watertightness proofs, enclosed-cavity checks or exact surface equivalence. Do not mark user addons auto-approved or infer safe fixes from near-zero scores.
+
+Only repository-authored four-GLB synthetic meshes may be executed in `scripts/blender_surface_distance_smoke.py` CI. Keep untrusted addon sources and private GLBs out of CI and public repo. Preserve last_verified=v0.17.0 until a separate release. See `docs/GLB_SURFACE_DISTANCE.md`.
+
+## v0.18 GLB-015 — deterministic BVH optimization
+
+Use deterministic median-split AABB BVH to prune point-to-triangle candidates without changing the exact point-to-triangle distance routine. The approximation remains the 24 point-per-triangle surface sampling. Bound to 512 triangles/mesh; test BVH results against unaccelerated brute force and reject oversized inputs. Instrument `triangle_distance_evaluations` vs `brute_force_evaluations` as a **work count**, never claim elapsed-time speedups from counts alone.
+
+CI may execute only repository-authored 256-triangle synthetic `grid_256.glb` among five fixed surface fixtures (Blender 4.4.3/4.5.15/5.2.1). It must reimport the GLB, verify identical surface score zero, and show the precise distance evaluation count below 25% of brute force. Do not load private user GLBs or run arbitrary addons in public CI. Document CI evidence under STATE/HANDOFF. The sampled surface score never proves exact geometry or internal cavities; release last_verified=v0.17.0 until a separate verified release.
+
+## v0.18 GLB-016 — observational wall-clock benchmark
+
+Benchmark only repository-authored synthetic GLBs. `surface_benchmark.benchmark_surface_search` times warm-start single-direction `_directed`, including BVH build and sampling, using alternating order and 3 trial medians. Permit exhaustive brute-force timing only when source_faces*target_faces <=4096; for 512 faces time BVH only. Keep geometry scores identical where brute force is available. Record elapsed milliseconds and exact triangle operation counts separately; never assert any speedup threshold in CI, and never describe a ratio as portable to user hardware.
+
+Blender CI exports/reimports six CBDK synthetic surface GLBs including new `grid_512.glb`. The raw vertices, private GLBs and arbitrary addons must never enter public CI, benchmarks or reports. GLB-016 status must follow observed CI results; retain release v0.17.0 until independently released. Details: `docs/GLB_SURFACE_DISTANCE.md`.
+
+## v0.18 GLB-017 — bounded multi-resolution surface probes
+
+A new review-only coarse-to-fine surface score starts with 8 Halton points per face, refines at most 8 coarse-suspect and 2 large exploratory faces per direction to 48 points each, and reports both stages' results and the unrefined count. The exploration quota is necessary because a coarse zero can be a missed narrow hole. It is not proof of coverage; the method can still miss defects on unselected faces or between samples. Never mark exact equivalence or approve addon fixes from sampled zero scores.
+
+Blender CI may only run seven CBDK-owned GLBs, including a narrow synthetic opening that the legacy 24-sample comparator misses. Preserve previous BVH and 512-face benchmarks and test results. Never import user addons or upload private GLB/code. Record verified CI evidence in STATE/HANDOFF, maintain release last_verified v0.17.0 while PR #25 stays draft.
+
+## v0.18 GLB-018 — conservative feature-aware refinement
+
+`cbdk/glb_feature_priority.py` computes only hints from validated canonical triangle geometry: possible bbox-interior boundary, adjacent sharp crease, small triangle relative to median area, high shared-vertex neighbor count and oversubscribed edge. These are NOT proven holes/defects and may correspond to regular external borders or seams. Use one of two exploratory face slots for a strong geometric hint if present, retain one independent large-area fallback; existing coarse discrepancy faces remain highest priority. Keep the historical behavior accessible through `feature_aware=False`. Do not reveal raw private face coordinates in reports or approve any automatic fixes.
+
+CI must demonstrate the prior area-only selection misses a tiny opening among two very large panels while feature-aware selection reveals it, using repository-authored GLBs only. Keep previous seven synthetic GLB cases and 512-face BVH checks. No source execution, uploading private user models, or arbitrary GLB generalized approval. Update STATE/HANDOFF with measured evidence and retain formal release v0.17.0 until independently released.
+
+## v0.18 GLB-019 — local opt-in real GLB surface review bridge
+
+`python -m cbdk glb-surface-review <reference.glb> <candidate.glb> --blender <executable>` must use the static local glb_inspector preflight before invoking the repository-owned `scripts/blender_glb_surface_review.py` with factory startup, disabled Python autoexec and a time limit. Reject external-resource URIs, files >24 MiB and >100,000 approximate vertex references. Do not execute any user addon Python. Aggregate every imported object's world-coordinate triangles but only up to 512 triangles *per GLB*. Beyond that emit explicit `skipped` evidence (not passed, not equivalent). Never emit original private model vertices, textures, absolute GLB paths or raw data to GitHub/CI.
+
+`glb-regression --surface-review` is **opt-in** and must preserve the metadata/silhouette/diagnosis/repair outputs. Existing `passed` applies only to metadata evidence, not exact surface geometry. Report separate `surface_status`, `surface_observation` and `surface_review.json`. Fixed sampled BVH distances, feature-aware adaptive distances and the zero-score-not-equal caveat all remain review-only.
+
+Blender CI uses only repo-authored small synthetic GLBs to show actual new command end-to-end shape hole detection versus alternate triangulation equivalence. Do not claim arbitrary 3D user asset readiness; retain PR draft and last_verified v0.17.0 until separately released. See `docs/GLB_SURFACE_PIPELINE.md`.
+
+## GLB-020: reviewed local colored 3D difference outputs
+
+- `glb-diff-visualize` is opt-in and emits 2 **derived local GLBs** plus an aggregate-only JSON; **do not upload the derived GLBs from private users to public GitHub, Notion, or CI artifacts**. The JSON contains no original source paths or raw mesh vertices.
+- The material colors are based on sampled per-face distance relative to the combined world-space bounding-box diagonal, not exact surface correspondence. Low/error-zero does NOT prove exact shape, closed cavities or volumetric identity.
+- Preserve static GLB preflight, 512-triangle cap, disabled autoexec, factory startup, new-output-directory overwrite protection and source non-modification. Do not execute addon Python or automatically apply proposed fixes.
+- Keep GLB-020 partial until linked-view/object-specific/unknown-region requirements are implemented and verified. Formal release stays v0.17.0 until separately reviewed.
+
+
+## GLB-020 offline linked 3D viewer privacy and test boundary
+
+- The generated `compare_viewer.html` is intentionally **derived private geometry** (two numeric triangle arrays in a self-contained HTML page), unlike the aggregate-only `review.json`. It is local-only and must never be committed, uploaded to Notion or attached to public CI artifacts for real user data.
+- The viewer HTML template is trusted CBDK-owned static markup/script. Populate only finite bounded validated coordinates and anonymous integer part/color data. Keep Content-Security-Policy and no remote dependencies/network connections.
+- A software Canvas 2D triangle painter is an approximate 3D view (imperfect depth ordering); never present it as an exact geometric comparison, GUI-verified result, proof of correspondence or auto-repair.
+- Python tests and Node syntax checks do not establish end-user browser interaction. Real browser GUI checks and GLB-020 completion criteria remain outstanding.
+
+## GLB-020 spatial suggestion and Chromium smoke safety
+
+- \`suggest_spatial_part_matches\` returns **review-only, tentative** IDs. Do not claim true cross-GLB part correspondence, automatic addon parameter matching, or self-repair. Missing, overlapping or symmetric parts may be ambiguous and must remain unbound.
+- Viewer candidate navigation requires an explicit user click. Never mutate user addon settings, meshes or original GLB files in this workflow.
+- \`review.json\` may include only anonymous candidate IDs and bounded dimensionless scores, **not raw geometry or source object names**. \`compare_viewer.html\` itself contains derived geometry: private user HTML must not enter public logs, GitHub, Notion, or uploaded CI artifacts.
+- The browser CI uses CBDK-authored synthetic 3D geometry only. A passing headless Chromium interaction smoke does not certify arbitrary private GLBs or exact geometric identity.
+
+## GLB-020 second-pass sampling audit guardrails
+
+- The second-pass Halton samples are a bounded **sensitivity probe**, not a full coverage map or a true Hausdorff bound. Do not claim purple outlines detect all holes or that absence of purple proves similarity.
+- Maintain the initial 24-sample color classification independently: secondary probes may set a Boolean visual outline and only aggregate counts in `review.json`, never automatically change addon code/parameters or escalate color classifications without a separate reviewed specification.
+- Preserve per-source anonymous part alignment, up-to-512 triangle and 64-part caps, disabled Blender auto-execution and local-only derived GLB/HTML. `review.json` must not include original coordinates, source paths, per-face flags or private names.
+- Differentiate Python tests, real Blender synthetic import tests, Chromium GUI checks, and real-user file validation. Passing those synthetic tests is not a proof of full geometric equivalence.
+
+## GLB-020 coordinate-welded edge incidence safety
+
+- The per-part boundary edge incidence is an **approximate observation**, not a proof of holes, watertightness, correct winding, enclosed cavity identity, or a matching addon parameter.
+- Normalize only anonymous per-part, bounded world coordinates; retain 512 triangles / 64 part caps. Do not store raw source vertices, edges, paths or original part names in public-safe JSON. Private HTML and colored GLBs still contain derived geometry and must remain local.
+- A mismatch in observed boundary/nonmanifold status *demotes* a spatial part pairing to **ambiguous**. It never approves a new corresponding part, edits Blender data or applies an addon parameter.
+- Synthetic closed/uncapped tetra tests (Python and real Blender GLBs) are evidence for these cases only. Arbitrary models, T-junctions, floating-point welding errors and internal cavities remain out of scope.
+
+## GLB-020 local-only boundary segment overlay
+
+- `local_boundary_segments` produces derived **private world-space line coordinates**, restricted to the local offline HTML. The public-safe JSON report must contain only counts, Boolean flags and anonymous IDs; never add lines, raw vertices or source paths to that report or Notion.
+- The canvas overlay draws observed boundary segments in cyan after approximate face rendering (X-ray-like). It does NOT provide reliable occlusion, physical hole localization, watertightness or a verified model discrepancy.
+- Maintain source non-modification, anonymous per-part alignment, maximum 512 triangles / 64 parts, disabled Blender auto-execution, private artifact locality, and the existing sample/part-identity caveats.
+- Check synthetic closed-versus-open tetrahedron in Python and Blender 3-version CI. Use headless Chromium to verify both overlay toggles without permitting any network traffic. CI success must be attributed to its exact tested SHA.
+
+## GLB-020 MVP scope freeze after synthetic joint regression
+
+- The review-only MVP acceptance suite is `scripts/blender_make_glb_joint_mvp_fixtures.py` and `scripts/verify_glb_joint_mvp.py`, run in the Blender 3-version CI matrix. Validate an identical control, socket mouth narrowing, ball displacement, and socket lip cap removal; unchanged parts must not be falsely flagged.
+- The baseline synthetic shaft must be capped at both ends; an uncapped baseline was a real fixture bug found by the initial gate. Do not suppress this result by weakening diagnostics.
+- Keep the original input GLBs unchanged (SHA-256) and private derived GLBs/HTML local. JSON must not include raw geometry, input names or source addon code.
+- GLB-020 review MVP is accepted but the full requirement is `partial`. **Stop adding optional GLB-020 enhancements for now**; prioritize GLB-021 human-review parameter hints, then GLB-022 allowlisted synthetic iterations. Do not claim perfect geometry recognition, private-user test coverage, or arbitrary addon execution.
+
+## GLB-021 visual-to-AST review-only safety
+
+- Source model: only a **GLB-020 aggregate JSON** with explicit unapproved flags and no raw vertices or source object names. Never import/execute the original Blender addon, infer parameter values, or silently match reference/candidate part identities.
+- `--source` is a user-specified local Python file parsed with AST. `--role part_003=socket` is a **manual assertion**, not semantic part recognition. A syntactic declaration/name/reference/geometry path remains unverified without separately reviewed Blender execution evidence.
+- The output AST property hints may be private: write only new, untracked `reports/latest/*.json` files; no overwrite, no user source content/defaults/paths in stdout, GitHub or Notion. Never commit user's private code or actual GLB/derived HTML.
+- Real Blender 3-version CI uses only CBDK-owned synthetic joint GLBs and synthetic Python property declarations; the automation does not register user addons. GLB-021 is `partial`, GLB-022 remains unimplemented. Proceed toward human-review accuracy, not optional GLB-020 scope expansion.
+
+## GLB-021 private Markdown review-sheet rules
+
+- `glb-visual-property-review --markdown` writes a companion human-readable Japanese Markdown into ignored, local `reports/latest` only. The document contains AST candidate names/class labels and is **private**; do not upload user-derived .md/.json, source code, GLBs or offline HTML to public GitHub/Notion or CI artifacts.
+- Always separate observed surface/boundary differences, syntactic name/reference hints, and unverified causal hypotheses. Never present AST declarations, possible geometry paths, a manually supplied part role or a zero-difference result as proof of cause, effect or exact equivalence.
+- Refuse unsafe flags, nonanonymous part IDs, existing destination files, symlink escapes, or output outside ignored directories. The original addon is not executed or modified; do not infer numeric parameter changes.
+- Keep GLB-020 review MVP scope frozen, GLB-021 partial, GLB-022 unimplemented until an explicitly allowlisted synthetic experiment is built and verified.
+
+## GLB-021 synthetic history privacy and claims guardrails
+
+- The history builder in `cbdk/glb_synthetic_trial_history.py` is **not an arbitrary addon runner or parameter optimizer**. It consumes aggregate GLB-020 reports for the three exact CBDK-owned tests only: `narrow`, `narrow_placebo`, `identical`.
+- Output local test history JSON and Markdown must never include private user coordinates, original addon source, file paths or claimed recommended values. Do not automatically upload generated histories, GLBs or geometry-bearing HTML to public GitHub/Notion.
+- A decrease in sampled yellow/red triangle counts is **not** proof of complete geometric equivalence. The fixed 0.78/1.70 socket values are exclusively synthetic control values, never recommendations for real joints.
+- Preserve fail-closed unknown trial names, contradictory scores and forged safety guarantees, input GLB SHA-256 invariance, local-only fresh files and the six-way CI evidence at its tested code SHA.
+- GLB-021 remains partial and GLB-022 remains unimplemented until an independently reviewed, allowlisted *iterative* runner is actually implemented and verified.
+
+## GLB-022 bounded synthetic iteration only
+
+- Only CBDK-controlled fixed fixture variants may be regenerated. Runner `scripts/run_glb022_synthetic_iteration.py` operates exclusively inside a **new** `reports/ci` folder, uses `--factory-startup --disable-autoexec`, launches only the trusted source-controlled synthetic generator, and compares each regenerated GLB through the validated GLB-020 pipeline. Arbitrary add-ons, user GLBs and unreviewed parameter values are prohibited.
+- The two candidate steps are intentionally fixed (unrelated ball move **reject**, known synthetic socket restoration **accept**). Strict observed reduction in sampled socket error without new sampled errors elsewhere is required. Stop at observed zero or maximum attempts. Neither this metric nor static AST mapping proves physical function, complete geometry, or real code causality.
+- Keep trial history and colored/geometry-bearing outputs local; share only aggregate CI outcomes and the tested commit SHA. Do not auto-edit user code, change source GLBs, merge PR #25 or release v0.18 without authorization.
+- GLB-022 is partial (bounded synthetic MVP) until independently validated for wider opt-in workflows; avoid claiming general automatic parameter optimization.
+
+## GLB-022 allowlisted synthetic iteration safety
+
+- Iterative generator accepts **only** the repo-owned fixed synthetic Blender fixture script and 2 candidate IDs: `narrow_placebo` (expected rejection) and `identical` (expected acceptance). No arbitrary source path, user addon import or execution; no inferred repair parameter value for real models.
+- Compare **freshly regenerated** GLBs under strict input SHA-256 checks. Stop at 2 attempts or observed sampled yellow/red count zero without new other-part regressions. Rejection must leave accepted baseline unchanged.
+- Synthetic local JSON/Markdown records anonymous sampled face counts and accept/reject reasons; never publish derived geometry, private input GLB, AST property mappings, source paths or user code to GitHub/Notion.
+- CI synthetic success is not proof of watertightness, 100% surface equivalence, true part correspondence, or user addon optimization. GLB-022 remains `partial` until broader explicit permission and tests. Formal release v0.17.0 and draft PR #25 unchanged.
+
+## GLB-022 phase 2 multi-candidate synthetic regression guard
+
+- `cbdk/glb_synthetic_multi.py` is a strict finite, synthetic-only protocol with exactly 3 candidates: `narrow_placebo`, `shifted`, `identical`. The cross-part regression case `shifted` must be rejected despite the socket being restored because the ball is displaced.
+- Do not describe sampled yellow/red face reductions as continuous distance optimization, guaranteed complete geometry match, causal explanation for an arbitrary addon, or recommended joint sizes.
+- Bounded 1/2/3 budget tests must not report success on an unresolved socket, and old 2-candidate CI must remain intact. Keep all model geometry, local AST paths and HTML/GLB artifacts private. No arbitrary addon execution or automatic source writes.
+- GLB-022 remains partial / blender_ci. Tested CI SHA and run IDs are recorded in `docs/GLB022_MULTI_CANDIDATE.md`; the subsequent docs-only commits are not treated as newly code-tested.
+
+## GLB-022 phase 3 progressive sampled-distance synthetic protocol
+
+- The `progressive` protocol is **synthetic only**, adding explicit CBDK fixture variants `narrow_mid_shifted` and `narrow_mid` at fixed socket diameter 1.24. Reject cross-part ball regression, accept an intermediate decrease in the **global bidirectional sampled maximum** even when colored triangle counts stay unchanged, then accept restored synthetic 1.70 and stop at sampled zero.
+- The metric is not per-part or exact Hausdorff distance. Keep the separate changed-part classification veto, finite values, consistent coordinate scale, strict attempt budget, input integrity checks and non-overwriting local JSON/Markdown. Do not generalize it to user GLBs or claim precise geometry equivalence.
+- All three protocols (`basic`, `cross_part`, `progressive`) must stay CI-tested on Blender 4.4.3 / 4.5.15 / 5.2.1. GLB-022 remains partial. Never execute arbitrary user addons, mutate originals, or upload derived geometry/private AST data to public GitHub/Notion.
+
+## GLB-022 phase 4 generated bounded synthetic numeric grid
+
+- The CBDK-owned synthetic socket generator may accept `--single grid_candidate --socket-diameter N` **only** for the four lattice values computed from 0.78..1.70 at 0.23 steps: 1.01, 1.24, 1.47, 1.70. Never treat this as a user-chosen free-form parameter API or source of optimal real joint settings.
+- `scripts/run_glb022_synthetic_grid.py` executes only the trusted repo fixture generator with factory-startup/no autoexec Blender. Rebuilds new candidate GLBs, verifies hashes, rejects other-part observed regression and nonimproving candidates, enforces a four-trial cap and incomplete lower-budget states, and writes only local fresh JSON/Markdown.
+- Never publish actual GLB/HTML derived private geometry, user source or local AST. Metrics are the globally aggregated bidirectional sampled maximum, **not exact Hausdorff or per-part geometry**. The grid is computed but is not adaptive to measured results.
+- Keep all old `basic`, `cross_part`, `progressive` workflows in the 3-version Blender matrix. GLB-022 status remains partial; formal v0.17.0, v0.18 PR #25 draft.
+
+## GLB-022 phase 5 adaptive synthetic-feedback guardrails
+
+- Adaptive synthetic-only bisection uses CBDK-owned 0.78..1.70 socket range, 0.01 increments, at most 4 trials, and hardcoded synthetic sampled-max goal 0.12. A measured pass updates the upper bracket; a fail updates the lower bracket. This is a test target, **not** a printed joint tolerance or recommended user setting.
+- `cbdk/glb_synthetic_adaptive.py` replays and validates the feedback-driven candidate order and anonymous, local-only history. `scripts/run_glb022_synthetic_adaptive.py` runs only the trusted CBDK fixture generator with factory startup/no autoexec, recomputes GLB-020 aggregate review every candidate, and checks all generated GLB/source SHA-256 integrity.
+- A measured target-feasible candidate is **not a proven optimum**, nor evidence of actual addon causality, true part identity or exact surface equivalence. Unknown values, boundary violations, false safety flags and forged score/decision histories must fail closed. Never access or publish user private geometry or code.
+- All previous `basic`, `cross_part`, `progressive`, `generated_grid` paths must remain tested across Blender 4.4.3/4.5.15/5.2.1. Keep GLB-022 partial, v0.17.0 current release and draft v0.18 PR #25.
+
+## GLB-019 inventory evidence integrity and milestone sync
+
+- Validate the exact JSON scalar types in recomputed count-only hypotheses; Python's False==0 / True==1 equality is insufficient. A truncated size-ranked inventory constrains the scene total to listed_sum..listed_sum+unlisted_count*smallest_listed_count; apply total checks to skipped reports too.
+- Measured scenes require 1..512 triangles each. A triangle_limit skip needs an actually over-limit scene. Preserve ambiguous and insufficient-inventory states and all review-only flags.
+- Run `scripts/blender_surface_inventory_smoke.py` only on CBDK-authored synthetic fixtures under fresh reports/ci output directories. Four cases cover unique counts, duplicate ambiguity, 33-object truncation and 561-face skipped truncation. Never substitute local Blender 4.3.2 for the CI target matrix.
+- At development milestones, mirror the canonical GitHub STATE into the existing Notion project/tasks per docs/NOTION_SYNC.md. No duplicate pages, private reports, source/geometry or personal data. Record connector failures and pending sync in GitHub; no always-on sync is installed.
+
+## GLB-022 phase 6 — durable failed/interrupted synthetic run review
+
+- Keep immutable numbered checkpoint pairs and a terminal review under the fresh local reports/ci run directory. Validate partial traces independently; never pass them to the legacy completed-history API as finished runs.
+- Failed generation/comparison, invalid measurement, cross-part regression, changed scale/input, interruption and I/O failures must preserve only the previously validated measurement prefix. An observed feasible candidate is not successful run completion. Unvalidated slots include failed/in-flight candidates and are not automatic retry allowance.
+- Never save exception text/commands/private paths/geometry in the run review. Use fixed diagnostic codes and a nonzero CLI exit; no automatic retry/resume or user addon execution. Missing final evidence means incomplete, not completed or a live process.
+- The extra Blender CI failure probe uses real CBDK-generated GLBs and baseline comparison, with an explicitly simulated candidate-comparison timeout. Do not claim a naturally occurring hang was reproduced. Local4.3.2 evidence is separate from target4.4.3/4.5.15/5.2.1 CI. See docs/GLB022_RUN_REVIEW.md.
+
+## NEXT-023 — same-condition synthetic experiment comparison
+
+- Read schema-1 run reviews for compatibility, but never assume missing experiment conditions. New schema-2 reviews bind fixed protocol/metric, source manifest SHA, declared Blender version, reference/baseline GLB SHA and initial observations. Monitor trusted source changes without executing arbitrary files.
+- Compare only completed, integrity-verified runs with equal conditions and budgets. Failed/incomplete/changed/invalid/legacy evidence is excluded from success comparisons. Opposing distance/count changes remain mixed observations; do not select a winner or claim causality/exact geometry.
+- Keep comparison inputs 2..16, outputs fresh under ignored local reports/latest or reports/ci, and omit raw paths/unknown labels/invalid content. No source/Blender execution in the comparison CLI, auto-adoption or retry.
+- Verify two independent real synthetic four-trial runs in the existing Blender matrix and exclude the controlled-failure run. Record median time/peak Python allocation for in-memory 2-input comparison and replicated 16-input load, without speed thresholds or claims of 16 independent experiments. Do not add unrelated roadmap tasks. See docs/GLB023_RUN_COMPARISON.md.
+
+## Current v0.18 work and approved future transition
+
+- Prioritize existing NEXT-019/NEXT-009 and remaining automatable v0.18 requirements. The future CBDK-FUTURE-019-022 plan is approved but NOT ACTIVE; keep it independently in docs/future/CBDK-FUTURE-019-022.json, not current requirements/NEXT/priorities.
+- The user has already authorized transition after automatable current work is complete, human blockers are documented and PR #25 evidence/integration policy is recorded. Do not request the same transition approval again. Current registry/UI work and human/data/GUI/license boundaries are listed in docs/V018_COMPLETION_GATES.md; do not falsely close or drop them.
+- Main merge, formal release/distribution, unapproved adoption and private-data use/execution still require separate explicit approval. Future approval does not activate direct installation or remove review gates.
+
+## GLB-021 bound AST / synthetic experiment review
+
+- Bind the visual baseline using its canonical aggregate SHA stored by the trusted adaptive runner. Old condition/run reviews remain readable, but a missing baseline binding cannot authorize a linked review.
+- Parse only explicit source via AST. A manually asserted socket role plus exact socket_opening_diameter name is a review link to the synthetic socket_diameter control, never proof that the actual property drove the generator. Preserve false causality/approval flags and no recommended property values.
+- Successful, incomplete and failed verified prefixes may be displayed with their actual status. Reject changed inputs and a different baseline before reading private Python. Write fresh private JSON/Markdown under reports/latest only; do not upload these candidate sheets to public CI artifacts/Notion. Verify with repository-owned fixture and existing real Blender runs only.
+
+## Current NEXT-003 / NEXT-002 evidence boundaries
+
+- Run `python -m cbdk.registration_audit` after authored feature/part/recipe changes. It builds disposable previews and checks static relative-import/export closure, registration collisions, runtime KNOWN IDs and the explicit Blender CI recipe loop. Keep these independent inventories synchronized; do not weaken the audit to admit unknown/private code. Static export support is deliberately limited; dynamic exports require separate reviewed design.
+- Undo schema2 retains schema1 reader compatibility. `prepared_stack_cases` uses explicit `ed.undo_push`, never snapshot-based restoration. Keep ordinary background availability separate from controlled-stack passes. Verify each single/multi-step native Undo/Redo state and cancellation invariance; no GUI hotkey/user-project certification. Record actual target-version CI before promoting completion.
+
+## NEXT-008/009 focus and ambiguity boundaries
+
+- Existing GLB aggregate observations may drive review priority only. Preserve both sides and side-qualified anonymous IDs, unverified associations, 512-triangle caps and no raw geometry. Triangle fractions are not area/confidence; equal boundary counts alone are not differences or watertightness proof.
+- glb_experiment_triage reads validated bound reviews, never executes source/next trials. Preserve multiple declarations, family-aggregate syntax counts and false cause/selection flags. Constructor alias rebinding is conservatively excluded, not runtime-resolved. New JSON/Markdown stays private under reports/latest; never upload private candidate sheets to artifacts/Notion.

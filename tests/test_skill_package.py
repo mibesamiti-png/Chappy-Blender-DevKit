@@ -33,7 +33,7 @@ class SkillPackageTests(unittest.TestCase):
 
     def test_all_local_reference_links_resolve(self):
         refs = re.findall(r"\]\((references/[^)]+\.md)\)", self.main)
-        self.assertEqual(len(set(refs)), 3)
+        self.assertEqual(len(set(refs)), 4)
         for ref in refs:
             with self.subTest(ref=ref):
                 path = (SKILL / ref).resolve()
@@ -71,20 +71,40 @@ class SkillPackageTests(unittest.TestCase):
                 check=False, capture_output=True, text=True, cwd=ROOT,
             )
             self.assertEqual(proc.returncode, 0, proc.stdout + "\n" + proc.stderr)
-            source = Path(folder) / "CBDK_Skill_v1.0.0.zip"
-            plugin = Path(folder) / "CBDK_Skill_Plugin_v1.0.0.zip"
+            source = Path(folder) / "CBDK_Skill_v1.1.0.zip"
+            plugin = Path(folder) / "CBDK_Skill_Plugin_v1.1.0.zip"
             self.assertTrue(source.exists())
             self.assertTrue(plugin.exists())
             with ZipFile(source) as archive:
                 self.assertIn("chappy-blender-devkit/SKILL.md", archive.namelist())
-                self.assertEqual(len(archive.namelist()), 5)
+                self.assertEqual(len(archive.namelist()), 6)
                 self.assertNotIn(b"\r\n", archive.read("chappy-blender-devkit/SKILL.md"))
             with ZipFile(plugin) as archive:
                 info = json.loads(archive.read("plugin.json").decode("utf-8"))
                 self.assertEqual(info["name"], "chappy-blender-devkit")
-                self.assertEqual(info["version"], "1.0.0")
+                self.assertEqual(info["version"], "1.1.0")
                 self.assertIn("skills/chappy-blender-devkit/SKILL.md", archive.namelist())
-                self.assertEqual(len(archive.namelist()), 6)
+                self.assertEqual(len(archive.namelist()), 7)
+
+    def test_current_milestone_reference_is_included(self):
+        milestone = (SKILL / "references" / "MILESTONE.md").read_text(encoding="utf-8")
+        self.assertIn("docs/project/STATE.json", milestone)
+        self.assertIn("docs/V018_COMPLETION_GATES.md", milestone)
+        self.assertIn("python scripts/project_handoff.py --write", milestone)
+        self.assertIn("Notion", milestone)
+        self.assertIn("private GLB", milestone)
+        self.assertIn("v0.19", milestone)
+        self.assertIn("draft PR", milestone)
+
+    def test_no_stale_three_part_claim_in_runbook(self):
+        runbook = (SKILL / "references" / "WORKFLOW.md").read_text(encoding="utf-8")
+        quality = (SKILL / "references" / "QUALITY_GATES.md").read_text(encoding="utf-8")
+        self.assertNotIn("only three authored parts", runbook)
+        self.assertNotIn("checks BLCTX-001, BLCTX-002 and BME-001 only", quality)
+        self.assertIn("4.4.3", runbook)
+        self.assertIn("5.2.1", runbook)
+        self.assertIn("extension-preflight", runbook)
+        self.assertIn("not", quality.lower())
 
     def test_metadata_is_nonexecuting_and_skill_only(self):
         metadata = (SKILL / "agents" / "openai.yaml").read_text(encoding="utf-8")

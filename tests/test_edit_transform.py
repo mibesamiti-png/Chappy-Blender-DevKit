@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from parts.blender.context import BlenderContextError
 from parts.blender.edit_transform import (
-    MAX_ABS_COORD, VertexTranslationResult, translate_selected_vertices,
+    MAX_ABS_COORD, VertexTranslationResult, translate_selected_vertices, translation_unavailable_reason,
 )
 
 
@@ -55,6 +55,37 @@ def setup(verts=None, *, updater=None):
 
 
 class EditTransformTests(unittest.TestCase):
+    def test_panel_advisory_uses_cached_selection_without_bmesh_or_writes(self):
+        context, bm, module, updates = setup()
+        context.active_object.data.total_vert_sel = 1
+        with patch.dict(sys.modules, {"bmesh": None}):
+            self.assertIsNone(translation_unavailable_reason(context, (0, 0, .1)))
+            context.active_object.data.total_vert_sel = 0
+            self.assertIn("Select at least one", translation_unavailable_reason(context, (0, 0, .1)))
+            self.assertIn("nonzero", translation_unavailable_reason(context, (0, 0, 0)))
+        self.assertEqual(updates, [])
+        self.assertEqual(bm.verts[0].co, (1, 2, 3))
+
+    def test_panel_and_execute_share_structural_rejections(self):
+        for field, value, message in (("users", 2, "Shared mesh"),
+                                      ("shape_keys", object(), "shape keys"),
+                                      ("library", object(), "Linked-library")):
+            context, bm, module, updates = setup()
+            context.active_object.data.total_vert_sel = 1
+            setattr(context.active_object.data, field, value)
+            self.assertIn(message, translation_unavailable_reason(context, (0, 0, .1)))
+            with self.assertRaisesRegex(BlenderContextError, message):
+                self.perform(context, module, (0, 0, .1))
+            self.assertEqual(updates, [])
+
+    def test_ready_panel_does_not_bypass_actual_selection_audit(self):
+        context, bm, module, updates = setup([FakeVertex((1, 2, 3), selected=False)])
+        context.active_object.data.total_vert_sel = 1  # Deliberately stale RNA.
+        self.assertIsNone(translation_unavailable_reason(context, (0, 0, .1)))
+        with self.assertRaisesRegex(BlenderContextError, "Select at least one"):
+            self.perform(context, module, (0, 0, .1))
+        self.assertEqual(updates, [])
+
     def perform(self, context, module, offset):
         with patch.dict(sys.modules, {"bmesh": module}):
             return translate_selected_vertices(context, offset)
