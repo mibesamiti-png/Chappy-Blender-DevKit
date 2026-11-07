@@ -19,7 +19,8 @@ class ModularBuilderTests(unittest.TestCase):
         self.addCleanup(self.work.cleanup)
         self.root = Path(self.work.name)
         sources = [
-            'catalog/authored_parts.json', 'catalog/addon_features.json', 'parts/blender/context.py',
+            'catalog/authored_parts.json', 'catalog/addon_features.json',
+            'catalog/ui_layouts.json', 'parts/blender/context.py',
             'parts/blender/edit_mesh.py', 'parts/blender/measure.py',
             'parts/blender/modifiers.py', 'parts/blender/edit_transform.py',
             'parts/blender/edit_audit.py',
@@ -111,6 +112,26 @@ class ModularBuilderTests(unittest.TestCase):
             self.assertIn(f'{PACKAGE_ID}/helpers/measure.py', z.namelist())
             self.assertIn(f'{PACKAGE_ID}/helpers/modifiers.py', z.namelist())
             self.assertEqual(len(json.loads(z.read(f'{PACKAGE_ID}/CBDK_BUILD_INFO.json'))['features']), 5)
+
+    def test_ui_sections_are_safe_and_subset_only(self):
+        import ast
+        self.build()
+        with ZipFile(self.output) as archive:
+            source = archive.read(f'{PACKAGE_ID}/__init__.py').decode('utf-8')
+            manifest = json.loads(archive.read(f'{PACKAGE_ID}/CBDK_BUILD_INFO.json'))
+        tree = ast.parse(source)
+        section_assignments = [node.value for node in tree.body
+                               if isinstance(node, ast.Assign)
+                               and any(isinstance(t, ast.Name) and t.id == '_UI_SECTIONS'
+                                       for t in node.targets)]
+        self.assertEqual(len(section_assignments), 1)
+        layout = ast.literal_eval(section_assignments[0])
+        self.assertEqual(layout, (
+            ('Inspection', (('object_selection', 'Selected Meshes'),)),
+            ('Edit Mode', (('edit_selection', 'Selection Counts'),)),
+        ))
+        self.assertEqual(manifest['ui_section_titles'], ['Inspection', 'Edit Mode'])
+        self.assertNotIn('__CBDK_UI_SECTIONS__', source)
 
     def test_feature_order_does_not_affect_zip(self):
         self.build()

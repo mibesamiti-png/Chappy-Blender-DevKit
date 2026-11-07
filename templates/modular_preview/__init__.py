@@ -18,10 +18,12 @@ import importlib
 import bpy
 
 _FEATURE_IDS = __CBDK_FEATURE_IDS__
+_UI_SECTIONS = __CBDK_UI_SECTIONS__
 _OPERATORS = [
     importlib.import_module("." + feature, __name__ + ".features").OPERATOR_CLASS
     for feature in _FEATURE_IDS
 ]
+_OPERATORS_BY_FEATURE = dict(zip(_FEATURE_IDS, _OPERATORS))
 
 
 class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
@@ -33,8 +35,11 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
 
     def draw(self, context):
         col = self.layout.column(align=True)
-        for cls in _OPERATORS:
-            col.operator(cls.bl_idname)
+        for title, buttons in _UI_SECTIONS:
+            group = col.box()
+            group.label(text=title)
+            for feature_id, label in buttons:
+                group.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
         col.label(text=context.scene.cbdk_modular_result)
 
 

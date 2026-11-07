@@ -81,6 +81,42 @@ def run(path):
             assert operator_ids == expected_ops, (operator_ids, expected_ops)
             checks.append("only_selected_operators_registered")
 
+            # Exercise actual Blender panel.draw with a recording layout.
+            # Never claim manual Windows UI coverage from this headless smoke.
+            class RecordingLayout:
+                def __init__(self):
+                    self.events = []
+
+                def column(self, align=False):
+                    return self
+
+                def box(self):
+                    self.events.append(("box",))
+                    return self
+
+                def label(self, *, text):
+                    self.events.append(("label", text))
+
+                def operator(self, identifier, *, text):
+                    self.events.append(("operator", identifier, text))
+
+            layout = RecordingLayout()
+            preview = type("CBDK_Synthetic_Panel", (), {"layout": layout})()
+            module.VIEW3D_PT_cbdk_modular_preview.draw(preview, bpy.context)
+            visible = []
+            for title, buttons in module._UI_SECTIONS:
+                visible.append(("box",))
+                visible.append(("label", title))
+                for feature_id, label in buttons:
+                    visible.append((
+                        "operator", module._OPERATORS_BY_FEATURE[feature_id].bl_idname,
+                        label,
+                    ))
+            visible.append(("label", bpy.context.scene.cbdk_modular_result))
+            assert layout.events == visible, (layout.events, visible)
+            assert {event[1] for event in layout.events if event[0] == "operator"} == expected_ops
+            checks.append("declarative_ui_layout_and_selected_button_order")
+
             mesh = bpy.data.meshes.new("CBDK_Modular_Triangle")
             mesh.from_pydata([(0, 0, 0), (1, 0, 0), (0, 1, 0)], [], [(0, 1, 2)])
             mesh.update()

@@ -14,6 +14,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 from .addon_builder import _sha, _trusted_read
 from .feature_catalog import TRUSTED_FEATURES, TRUSTED_PART_SOURCES, plan_features
 from .registration_audit import validate_registration_assets
+from .ui_layout import plan_ui_layout
 
 PACKAGE_ID = "cbdk_modular_preview"
 TEMPLATE = "modular_preview"
@@ -70,18 +71,20 @@ def build_modular(
         raise ValueError("Not approved for release: --preview-unapproved is required for LOCAL builds")
     plan = plan_features(feature_ids, root=root, target_blender=target_blender)
     resolved_features = tuple(plan["ordered_features"])
+    ui_sections = plan_ui_layout(resolved_features, root=root)
     part_ids = plan["part_ids"]
     # Keep authored-part metadata separate from proof of approval.
     from .addon_builder import _read_catalog
     catalog = _read_catalog(root=root)
 
     init_template = _trusted_read("templates/modular_preview/__init__.py", root=root).decode("utf-8")
-    for marker in ("__CBDK_DISPLAY_NAME__", "__CBDK_FEATURE_IDS__"):
+    for marker in ("__CBDK_DISPLAY_NAME__", "__CBDK_FEATURE_IDS__", "__CBDK_UI_SECTIONS__"):
         if init_template.count(marker) != 1:
             raise ValueError("Modular template placeholder must occur exactly once: " + marker)
     init_code = (init_template
                  .replace("__CBDK_DISPLAY_NAME__", repr(name))
-                 .replace("__CBDK_FEATURE_IDS__", repr(resolved_features)))
+                 .replace("__CBDK_FEATURE_IDS__", repr(resolved_features))
+                 .replace("__CBDK_UI_SECTIONS__", repr(ui_sections)))
     # Python repr is an escaped Python *literal*, not code supplied by recipes.
     sources = sorted({PART_SOURCES[part_id] for part_id in part_ids})
     assets: dict[str, bytes] = {
@@ -112,6 +115,8 @@ def build_modular(
         "schema_version": 2, "template": TEMPLATE, "package_id": PACKAGE_ID,
         "display_name": name, "features": list(resolved_features),
         "requested_features": list(feature_ids), "part_ids": part_ids,
+        "ui_layout": "catalog/ui_layouts.json",
+        "ui_section_titles": [section[0] for section in ui_sections],
         "minimum_blender": plan["minimum_blender"], "maximum_blender": plan["maximum_blender"],
         "target_blender": target_blender,
         "preview_only": True, "redistribution_cleared": False, "approved": False,
