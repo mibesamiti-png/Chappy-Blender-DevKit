@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>CBDK | 開発ライブボード</title>
+<title>CBDK | 開発ライブボード v3</title>
 <style>
   :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#0b101b;color:#edf3ff;color-scheme:dark}
   *{box-sizing:border-box}body{margin:0;min-height:100vh}a{color:#9cc3ff;text-decoration:none}a:hover{text-decoration:underline}
@@ -47,7 +47,7 @@
   <header class="top">
     <div>
       <div class="eyebrow">CHAPPY BLENDER DEVKIT / GITHUB LIVE</div>
-      <h1>開発ライブボード</h1>
+      <h1>開発ライブボード <small style="font-size:.4em;color:#9cc3ff;vertical-align:middle">v3</small></h1>
       <p class="sub">GitHubの公開データを読み取り専用で表示。評価値ではなく、確認できたPR・CI・状態台帳を基準にします。</p>
     </div>
     <div class="controls">
@@ -70,6 +70,9 @@
     <div class="panel"><div class="metric-label">開発ラウンド</div><div class="metric" id="round">―</div><div class="metric-note" id="roundNote">ローリングキュー基準</div></div>
     <div class="panel"><div class="metric-label">コード統合 / 直近24時間</div><div class="metric" id="mergeRate">―</div><div class="metric-note">Aの統合PR（実測件数）</div></div>
     <div class="panel"><div class="metric-label">統合間隔 / 直近3区間</div><div class="metric" id="cadence">―</div><div class="metric-note">A統合PRの実測時刻から算出</div></div>
+    <div class="panel"><div class="metric-label">BCD提出→全員CI成功</div><div class="metric" id="teamLead">―</div><div class="metric-note" id="teamLeadNote">現在のラウンド / PR作成時刻から計測</div></div>
+    <div class="panel"><div class="metric-label">BCD完了→Aマージ</div><div class="metric" id="waitAfterBCD">―</div><div class="metric-note" id="waitAfterBCDNote">CI最終更新時刻を完了時刻の近似に使用</div></div>
+    <div class="panel"><div class="metric-label">A統合PRの所要</div><div class="metric" id="aLead">―</div><div class="metric-note" id="aLeadNote">PR作成→マージの所要時間</div></div>
   </section>
 
   <section class="section">
@@ -91,6 +94,7 @@
     <div>● 音が鳴るか試したいときは「♪ 通知音」をONにして「♫ 試聴」をクリック。初回読込済みの完了・すでに通知したラウンドでは鳴らしません。</div>
     <div>● 画面を開いている間のみ5分ごとに更新。閉じたタブでは監視しません。通知音は「♪ 通知音」を押して有効化した後に、新しく完了を確認したA/B/C/Dにつき一度だけ鳴ります。初回表示の過去の完了は鳴りません。ブラウザの省電力・音声制限が優先されます。</div>
     <div>● 完了 = B/C/Dは担当PRのHEADで5系統CI成功、Aは統合PRのマージ後に別SHAの7系統push CI成功。未実行のCIを成功扱いしません。数字は自動推定を含み、一般ユーザー向け完成・ライセンス承認を意味しません。</div>
+    <div>● v3の速度値はGitHubのPR created_at / merged_at とActions updated_atから計算します。Actions最終更新は厳密なテスト終了時刻ではないため、BCD完了→Aマージ時間は近似値です。PR/CIが取得できない場合は「―」を表示します。開発着手時刻や作業時間そのものではありません。</div>
     <div>● 公開GitHub APIのみ使用。トークン不要・送信データなし。通常の未認証API上限は60回/時。 <a href="https://github.com/mibesamiti-png/Chappy-Blender-DevKit" target="_blank" rel="noopener noreferrer">GitHubリポジトリ</a> / <a href="https://github.com/mibesamiti-png/Chappy-Blender-DevKit/blob/feature/v0.18-shape-diagnostics/docs/PARALLEL_ROLLING_QUEUE.md" target="_blank" rel="noopener noreferrer">作業キュー</a></div>
   </div>
   <span id="live" role="status" aria-live="polite"></span>
@@ -219,6 +223,42 @@
       const time=addItem("div",fmtDate(p.merged_at||p.updated_at),"recenttime",div);div.insertBefore(a,time);root.appendChild(div)
     })
   }
+  function completionTime(pr,runs,required,event){
+    if(!pr)return null;
+    const sha=event==="push"?pr.merge_commit_sha:(pr.head&&pr.head.sha);
+    if(!sha)return null;
+    const results=required.map(name=>latestWorkflow(runs,name,sha,event,pr.number));
+    if(results.some(x=>!x||x.status!=="completed"||x.conclusion!=="success"||!x.updated_at))return null;
+    const times=results.map(x=>Date.parse(x.updated_at));
+    return times.every(Number.isFinite)?Math.max(...times):null
+  }
+  function speedMetrics(round,prs,runs,now){
+    const teams=["B","C","D"].map(team=>latestPR(prs,round,team));
+    const completed=teams.map(pr=>completionTime(pr,runs,REQUIRED,"pull_request"));
+    const first=teams.every(Boolean)?Math.min(...teams.map(pr=>Date.parse(pr.created_at))):NaN;
+    const last=completed.every(t=>Number.isFinite(t)&&t!==null)?Math.max(...completed):null;
+    const a=prs.filter(pr=>isForRound(pr,round,"A")&&/integration/i.test(pr.title||""))
+      .sort((x,y)=>new Date(y.updated_at)-new Date(x.updated_at))[0];
+    const mergedAt=a&&a.merged_at?Date.parse(a.merged_at):null;
+    const startedAt=a?Date.parse(a.created_at):null;
+    const lead=Number.isFinite(first)&&last!==null&&last>=first?(last-first)/60000:null;
+    const waiting=last!==null?(Number.isFinite(mergedAt)&&mergedAt>=last
+      ?(mergedAt-last)/60000:!mergedAt&&now>=last?(now-last)/60000:null):null;
+    const integration=Number.isFinite(startedAt)&&Number.isFinite(mergedAt)&&mergedAt>=startedAt
+      ?(mergedAt-startedAt)/60000:null;
+    return {teamLeadMinutes:lead,waitMinutes:waiting,aLeadMinutes:integration,
+      waitingLive:!mergedAt&&waiting!==null,complete:completed.filter(Number.isFinite).length}
+  }
+  function displayMinutes(v){return v===null||!Number.isFinite(v)?"―":(v>=120?(v/60).toFixed(1)+"時間":Math.round(v)+"分")}
+  function renderSpeed(round,prs,runs){
+    const t=speedMetrics(round,prs,runs,Date.now());
+    setText("teamLead",displayMinutes(t.teamLeadMinutes));
+    setText("teamLeadNote",t.complete+"/3人のHEAD CI確認済。PR作成から最後のCI更新まで");
+    setText("waitAfterBCD",displayMinutes(t.waitMinutes));
+    setText("waitAfterBCDNote",t.waitingLive?"BCD全員成功後、Aマージまで経過中（更新時点）":"BCD全員成功からAマージまで（CI更新時刻の近似）");
+    setText("aLead",displayMinutes(t.aLeadMinutes));
+    setText("aLeadNote","Aの統合PR作成→マージ。未マージなら―");
+  }
   function renderMetrics(state,round,prs){
     const list=state.requirements||[],total=list.length,done=list.filter(x=>x.status==="implemented").length,partial=list.filter(x=>x.status==="partial").length;
     const percent=total?Math.round(100*(done+partial*.5)/total):0;
@@ -273,7 +313,7 @@
       ]);
       const state=decodeContent(fetched[0]),prs=fetched[1],runs=(fetched[2]||{}).workflow_runs||[],q=roundFromQueue(fetched[3]);
       if(!Array.isArray(prs)||!Array.isArray(runs)||!q.round)throw Error("GitHub応答・作業キューを解析できません");
-      renderMetrics(state,q.round,prs);renderTasks(q.section,q.round,state);renderRecent(prs);
+      renderMetrics(state,q.round,prs);renderSpeed(q.round,prs,runs);renderTasks(q.section,q.round,state);renderRecent(prs);
       const items=["A","B","C","D"].map(team=>({team,item:teamStatus(team,q.round,prs,runs)}));
       items.forEach(x=>showTeam(x.team,x.item));renderSummary(items,q.round);announce(items);
       setConnection("更新成功","ok");setText("checked","最終確認: "+fmtDate(new Date().toISOString()))
