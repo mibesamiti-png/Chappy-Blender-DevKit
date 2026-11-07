@@ -12,7 +12,7 @@ Last handoff: 2026-11-07 JST.
 
 - 今回のGitHub記録: NEXT-003完了、NEXT-002の明示履歴Undo/Redoを3版で成功確認、通常背景Undo不能/GUI未確認。23件中18完了/4継続/1保留。
 - 実装コードc80f2a0a174a37074c283641ce288a378261e92dのBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium成功。テストだけUTF-8指定を修正したb5d32734d4a74e6acd7ff896baeb3aa3088e661aのPython767件×3版・Windows2版成功。両SHA間の変更はtests/test_registration_audit.pyだけで実装は同一。対象6系統の結果は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368307965)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368305584)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190461)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190510)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190490)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190614)。
-- 同期状態: **pending**。GitHub記録保存後、既存CBDKプロジェクト/PR #25 CI判断ページへ同期し、実応答を記録する。新規ページ・私有データ同期なし。
+- 同期状態: **success**。GitHub正本73b5635を既存[CBDKプロジェクト](https://app.notion.com/p/410948b7493781449462ca76e9567e75)と[PR #25 CI判断](https://app.notion.com/p/410948b749378174ac0bfe3633681584)へ同期。内容2件/プロパティ1件の全3応答が警告なし成功。NEXT-003完了、NEXT-002制御2ケース/3版成功とGUI未確認、検証SHA/リンク、18完了/4継続/1保留、次回開始点を反映。新規ページ・私有データ同期なし。
 - 過去の同期は下記の履歴。常駐同期ではなく節目の実行。
 
 ## Linked Notion records
