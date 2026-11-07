@@ -39,21 +39,21 @@ jobs:
           python - <<'PY'
           from zipfile import ZipFile
           import json
-          with ZipFile('dist/CBDK_Skill_v1.0.0.zip') as a:
+          with ZipFile('dist/CBDK_Skill_v1.1.0.zip') as a:
               assert 'chappy-blender-devkit/SKILL.md' in a.namelist()
-              assert len(a.namelist()) == 5
-          with ZipFile('dist/CBDK_Skill_Plugin_v1.0.0.zip') as a:
+              assert len(a.namelist()) == 6
+          with ZipFile('dist/CBDK_Skill_Plugin_v1.1.0.zip') as a:
               manifest = json.loads(a.read('plugin.json'))
               assert manifest['name'] == 'chappy-blender-devkit'
-              assert manifest['version'] == '1.0.0'
+              assert manifest['version'] == '1.1.0'
               assert 'skills/chappy-blender-devkit/SKILL.md' in a.namelist()
-              assert len(a.namelist()) == 6
+              assert len(a.namelist()) == 7
           print('CBDK skill package checks passed')
           PY
       - name: Upload installable packages
         uses: actions/upload-artifact@v4
         with:
-          name: cbdk-skill-v1
+          name: cbdk-skill-v1-1
           path: dist/CBDK_Skill*.zip
           retention-days: 30
           if-no-files-found: error
