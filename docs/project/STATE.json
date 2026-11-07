@@ -927,7 +927,7 @@
     {
       "id": "DEC-057",
       "decision": "UI-001の固定自作機能プレビューでモード別有効化とBlender RNAの安全な頂点移動XYZ入力を追加する",
-      "note": "対象は既存5自作operatorのみ。active meshとOBJECT/EDIT_MESHで押下可否を制御し、移動値はScene FloatVectorProperty[-10,10]で既存operator.offsetへ渡す。596ではなく597ed5cの対象全6CIと3版Blender headless Panel.draw成功。Windows GUI操作や任意UI・自動承認の証拠にはしない。UI-001 partial、正式v0.17.0、PR #25ドラフト維持。"
+      "note": "対象は既存5自作operatorのみ。active meshとOBJECT/EDIT_MESHで押下可否を制御し、移動値はScene FloatVectorProperty[-10,10]で既存operator.offsetへ渡す。597ed5cの対象全6CIと3版Blender headless Panel.draw成功。Windows GUI操作や任意UI・自動承認の証拠にはしない。UI-001 partial、正式v0.17.0、PR #25ドラフト維持。"
     }
   ],
   "last_verified": {

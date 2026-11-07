@@ -181,7 +181,7 @@
 - `DEC-054` 生成前の静的登録整合性と、明示Undo履歴による制御実験を既存NEXT-003/002として拡充する。新規コードの自動採用/承認を行わない。AST検査は静的に明示したhelper exportのみ対応し動的exportは拒否。制御undo_push成功を通常の自動履歴/GUI成功に昇格しない。旧Undo schema1を読取互換で保持する。
 - `DEC-055` 双方向の既存観測を調査順に使い、宣言曖昧さを維持して実験へ接続する。三角面割合は面積でも信頼度でもない。等しい境界観測だけで差分にせず、ID同一性を仮定しない。候補名全体の構文集計から複数宣言を選ばず、別名再束縛は安全側に除外。GLB-020任意拡張/自動実行/因果認定は行わない。
 - `DEC-056` UI-001は当面CBDK自作5機能の宣言的パネル表示に限定し、レシピから任意コードや未知operatorを登録させない。catalog/ui_layouts.jsonの全5機能配置だけを受け付け、宣言をコードではなくリテラルに変換。ea0a4bfの対象6CIで生成ZIPとBlender3版Panel.draw/登録/無効化が成功。未知ボタンID、JSON重複キーなどは拒否。Windows GUI操作、自由なUI・正式Extensions・再配布は未完成。UI-001 partial/blender_ci、PRドラフト・正式v0.17.0維持。
-- `DEC-057` UI-001の固定自作機能プレビューでモード別有効化とBlender RNAの安全な頂点移動XYZ入力を追加する。対象は既存5自作operatorのみ。active meshとOBJECT/EDIT_MESHで押下可否を制御し、移動値はScene FloatVectorProperty[-10,10]で既存operator.offsetへ渡す。596ではなく597ed5cの対象全6CIと3版Blender headless Panel.draw成功。Windows GUI操作や任意UI・自動承認の証拠にはしない。UI-001 partial、正式v0.17.0、PR #25ドラフト維持。
+- `DEC-057` UI-001の固定自作機能プレビューでモード別有効化とBlender RNAの安全な頂点移動XYZ入力を追加する。対象は既存5自作operatorのみ。active meshとOBJECT/EDIT_MESHで押下可否を制御し、移動値はScene FloatVectorProperty[-10,10]で既存operator.offsetへ渡す。597ed5cの対象全6CIと3版Blender headless Panel.draw成功。Windows GUI操作や任意UI・自動承認の証拠にはしない。UI-001 partial、正式v0.17.0、PR #25ドラフト維持。
 
 ## 更新・プライバシールール
 
