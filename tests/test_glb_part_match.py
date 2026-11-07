@@ -35,6 +35,23 @@ def square_frame(*, opening_x=0., opening_half_width=.3,
     return faces
 
 
+def nearly_touching_triangles(*, touch=False, offset_x=0., reverse=False):
+    """Two 3-edge open triangles: a shared endpoint or a 0.2mm gap.
+
+    Both have 2 triangles, six open edges, identical extents and scene center.
+    The gap exceeds coordinate-weld tolerance but falls below R2 layout
+    sampling tolerance; only the boundary-graph connectivity distinguishes.
+    """
+    tip = (0., 0., 0.) if touch else (.0002, -.0002, 0.)
+    faces = [
+        [(0., 0., 0.), (1., 0., 0.), (0., 1., 0.)],
+        [tip, (-1., 0., 0.), (0., -1., 0.)],
+    ]
+    if reverse:
+        faces = [list(reversed(face)) for face in reversed(faces)]
+    return [[(x + offset_x, y, z) for x, y, z in face] for face in faces]
+
+
 class PartCandidatesTests(unittest.TestCase):
     def test_reordered_meshes_are_suggested_by_position_not_index(self):
         ref = [triangle(0), triangle(3)]
@@ -214,6 +231,59 @@ class PartCandidatesTests(unittest.TestCase):
                          [["part_002"], ["part_001"]])
         self.assertTrue(all(not row["topology_review_reasons"]
                             for row in result["reference_parts"]))
+
+    def test_sub_tolerance_point_contact_changes_boundary_components(self):
+        from cbdk.glb_boundary_audit import boundary_audit
+        from cbdk.glb_part_match import (
+            _boundary_layout_issue, _features,
+        )
+        from cbdk.glb_boundary_audit import local_boundary_segments
+
+        separated = nearly_touching_triangles()
+        touching = nearly_touching_triangles(touch=True)
+        self.assertEqual(
+            [boundary_audit(faces, [2])["parts"][0]["boundary_edges"]
+             for faces in (separated, touching)], [6, 6])
+        # Prove this is genuinely missed by the R2 *spatial* probe.
+        self.assertIsNone(_boundary_layout_issue(
+            local_boundary_segments(separated, [2]),
+            local_boundary_segments(touching, [2]),
+            _features(separated, [2])[0],
+            _features(touching, [2])[0],
+        ))
+        result = suggest_spatial_part_matches(
+            separated, touching, [2], [2])
+        row = result["reference_parts"][0]
+        self.assertEqual(row["normalized_score"], 0.0)
+        self.assertEqual(row["status"], "ambiguous")
+        self.assertEqual(row["topology_review_reasons"],
+                         ["boundary_component_count_mismatch"])
+        self.assertEqual(result["unpaired_candidate_part_ids"], ["part_001"])
+        self.assertFalse(result["cross_file_part_identity_proven"])
+
+    def test_point_contact_component_guard_is_bidirectional(self):
+        separated, touching = (
+            nearly_touching_triangles(),
+            nearly_touching_triangles(touch=True),
+        )
+        for left, right in ((separated, touching), (touching, separated)):
+            with self.subTest(direction=(left is separated)):
+                row = suggest_spatial_part_matches(left, right, [2], [2])[
+                    "reference_parts"][0]
+                self.assertEqual(row["status"], "ambiguous")
+                self.assertEqual(row["topology_review_reasons"],
+                                 ["boundary_component_count_mismatch"])
+
+    def test_same_component_graph_with_winding_and_order_changes(self):
+        for touch in (False, True):
+            source = nearly_touching_triangles(touch=touch)
+            unchanged = nearly_touching_triangles(
+                touch=touch, reverse=True, offset_x=.02,
+            )
+            row = suggest_spatial_part_matches(source, unchanged, [2], [2])[
+                "reference_parts"][0]
+            self.assertEqual(row["status"], "suggested")
+            self.assertEqual(row["topology_review_reasons"], [])
 
     def test_boundary_budget_demotes_without_expensive_pairwise_scan(self):
         # 90 disconnected triangles have 270 distinct open edges.
