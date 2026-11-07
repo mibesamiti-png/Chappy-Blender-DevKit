@@ -67,6 +67,7 @@ const b = { number:71,title:'[Team B R8] Safety test',
   head:{sha:'source-b'},updated_at:'2026-11-08T04:00:00Z' };
 const runs = runsFor(five,'source-b','pull_request');
 assert.equal(dashboard.teamStatus('B',8,[b],runs).state,'done');
+assert.equal(dashboard.teamStatus('B',8,[b],runs).completedId,'8:B');
 assert.equal(dashboard.ci(runs,five,'different','pull_request',71).status,'unknown');
 assert.equal(dashboard.ci(runs.slice(1),five,'source-b','pull_request',71).status,'unknown');
 const failed = runs.map(x=>({...x}));
@@ -76,13 +77,14 @@ const a = {number:72,title:'[Team A][R8 integration] Combine',
   updated_at:'2026-11-08T05:00:00Z',merged_at:'2026-11-08T05:00:00Z',
   merge_commit_sha:'merge-a'};
 assert.equal(dashboard.teamStatus('A',8,[a],runsFor(seven,'merge-a','push')).state,'done');
+assert.equal(dashboard.teamStatus('A',8,[a],runsFor(seven,'merge-a','push')).completedId,'8:A');
 assert.equal(dashboard.teamStatus('A',8,[a],runsFor(five,'merge-a','push')).state,'running');
-dashboard.announce([{team:'B',item:{completedId:'8:B:source-b'}}]);
+dashboard.announce([{team:'B',item:{completedId:'8:B'}}]);
 assert.equal(elements.flash.textContent,''); // existing completion on initial page load
-dashboard.announce([{team:'B',item:{completedId:'8:B:source-b'}},
-  {team:'C',item:{completedId:'8:C:source-c'}}]);
+dashboard.announce([{team:'B',item:{completedId:'8:B'}},
+  {team:'C',item:{completedId:'8:C'}}]);
 assert.match(elements.flash.textContent,/C 完了を新規検出/);
-dashboard.announce([{team:'C',item:{completedId:'8:C:source-c'}}]);
+dashboard.announce([{team:'C',item:{completedId:'8:C'}}]);
 assert.equal(elements.flash.textContent,''); // no duplicate alert
 console.log('dashboard offline checks passed');
 """
