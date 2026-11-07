@@ -256,6 +256,47 @@ class GLBSurfacePipelineTests(unittest.TestCase):
             with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
                 run_glb_surface_review(self.blender, self.ref, self.cand, self.out)
 
+    def test_valid_anonymous_part_inventory(self):
+        valid = report()
+        valid["part_inventory"] = {
+            "reference_object_count": 2,
+            "candidate_object_count": 2,
+            "reference_triangle_counts": [1, 1],
+            "candidate_triangle_counts": [6, 2],
+            "max_listed_per_side": 32,
+            "correspondence_verified": False,
+            "identifies_changed_part": False,
+            "notes": "Anonymous size-ranked inventory, not matched objects",
+        }
+        result, _ = self.run_fake(report_override=valid)
+        self.assertEqual(result["part_inventory"]["reference_object_count"], 2)
+
+    def test_rejects_unverified_part_correspondence_and_mismatched_counts(self):
+        valid = report()
+        valid["part_inventory"] = {
+            "reference_object_count": 2,
+            "candidate_object_count": 2,
+            "reference_triangle_counts": [1, 1],
+            "candidate_triangle_counts": [6, 2],
+            "max_listed_per_side": 32,
+            "correspondence_verified": False,
+            "identifies_changed_part": False,
+            "notes": "Anonymous size-ranked inventory, not matched objects",
+        }
+        for mutation in (
+            lambda p: p.update(correspondence_verified=True),
+            lambda p: p.update(identifies_changed_part=True),
+            lambda p: p.update(reference_triangle_counts=[2, 2]),
+            lambda p: p.update(candidate_triangle_counts=[2, 6]),
+            lambda p: p.update(candidate_object_count=3),
+            lambda p: p.update(reference_triangle_counts=[True, 1]),
+            lambda p: p.update(private_object_name="secret"),
+        ):
+            bad = json.loads(json.dumps(valid))
+            mutation(bad["part_inventory"])
+            with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+                self.run_fake(report_override=bad)
+
     def test_output_report_is_bounded(self):
         with patch("cbdk.glb_surface_pipeline.inspect_glb",
                    return_value=inspection()), \
