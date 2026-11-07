@@ -9,7 +9,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 from cbdk.__main__ import main
 from cbdk.addon_builder import ROOT, build_addon
-from cbdk.extension_preflight import inspect_preview_archive, write_preflight_report
+from cbdk.extension_preflight import diagnose_preview_archive, inspect_preview_archive, write_preflight_report
 
 
 class ExtensionPreflightTests(unittest.TestCase):
@@ -159,6 +159,85 @@ class ExtensionPreflightTests(unittest.TestCase):
         result = json.loads(report.read_text())
         self.assertEqual(result["kind"], "cbdk_extension_readiness_preflight")
         self.assertEqual(result["status"], "blocked_for_extension_release")
+
+
+    def test_clean_zip_envelope_rejects_prefix_trailer_and_comment(self):
+        self.build()
+        original = self.zip.read_bytes()
+        for label, payload in (("prefix", b"#!/bin/sh\\n" + original),
+                               ("trailer", original + b"hidden payload")):
+            with self.subTest(label=label):
+                path = self.root / (label + ".zip")
+                path.write_bytes(payload)
+                report = diagnose_preview_archive(path)
+                self.assertEqual(report["status"], "invalid_preview_archive")
+                self.assertEqual(report["failure_category"], "archive_structure")
+                self.assertEqual(report["failure_code"], "zip_envelope")
+                self.assertFalse(report["provenance_hashes_verified"])
+        path = self.root / "comment.zip"
+        with ZipFile(self.zip) as source, ZipFile(path, "x") as target:
+            for info in source.infolist():
+                target.writestr(info, source.read(info.filename))
+            target.comment = b"not expected in CBDK builder"
+        self.assertEqual(diagnose_preview_archive(path)["failure_code"], "zip_envelope")
+
+    def test_archive_member_special_modes_and_compression_are_rejected(self):
+        self.build()
+        for kind in ("device", "bzip2"):
+            with self.subTest(kind=kind):
+                path = self.root / (kind + ".zip")
+                with ZipFile(self.zip) as source, ZipFile(path, "x") as target:
+                    for old in source.infolist():
+                        info = ZipInfo(old.filename)
+                        info.compress_type = old.compress_type
+                        info.external_attr = old.external_attr
+                        if old.filename.endswith("/README.txt"):
+                            if kind == "device":
+                                info.external_attr = 0o020644 << 16
+                            else:
+                                from zipfile import ZIP_BZIP2
+                                info.compress_type = ZIP_BZIP2
+                        target.writestr(info, source.read(old.filename))
+                result = diagnose_preview_archive(path)
+                self.assertEqual(result["failure_code"], "unsafe_member")
+                self.assertFalse(result["python_code_executed"])
+
+    def test_tampered_manifest_name_not_reflected_in_report(self):
+        self.build()
+        name = "cbdk_modular_preview/CBDK_BUILD_INFO.json"
+        with ZipFile(self.zip) as archive:
+            metadata = json.loads(archive.read(name))
+        metadata["display_name"] = "Private Person email@example.invalid"
+        changed = self.replace_zip_member(name, json.dumps(metadata).encode())
+        report = inspect_preview_archive(changed)
+        self.assertNotIn("Private Person", json.dumps(report))
+        self.assertNotIn("email@example", json.dumps(report))
+        self.assertEqual(report["status"], "blocked_for_extension_release")
+
+    def test_invalid_minimum_blender_metadata_is_provenance_error(self):
+        self.build()
+        name = "cbdk_modular_preview/CBDK_BUILD_INFO.json"
+        with ZipFile(self.zip) as archive:
+            metadata = json.loads(archive.read(name))
+        metadata["minimum_blender"] = "danger/private/5.0"
+        changed = self.replace_zip_member(name, json.dumps(metadata).encode())
+        result = diagnose_preview_archive(changed)
+        self.assertEqual(result["failure_code"], "invalid_minimum_blender")
+        self.assertNotIn("danger/private", json.dumps(result))
+        with self.assertRaises(ValueError):
+            inspect_preview_archive(changed)
+
+    def test_invalid_archive_distinct_from_legal_approval_blockers(self):
+        self.build()
+        legitimate = diagnose_preview_archive(self.zip)
+        self.assertEqual(legitimate["status"], "blocked_for_extension_release")
+        self.assertIn("license", legitimate["blocker_categories"]["owner_metadata"])
+        bad = self.root / "missing.zip"
+        result = diagnose_preview_archive(bad)
+        self.assertEqual(result["status"], "invalid_preview_archive")
+        self.assertEqual(result["failure_category"], "archive_structure")
+        self.assertEqual(result["failure_code"], "missing_or_unsafe_input")
+        self.assertNotIn(str(bad), json.dumps(result))
 
 
 if __name__ == "__main__":
