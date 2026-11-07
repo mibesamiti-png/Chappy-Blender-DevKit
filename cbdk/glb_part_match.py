@@ -48,6 +48,20 @@ def _distance(a, b):
     return math.sqrt(sum((a[k] - b[k]) ** 2 for k in range(3)))
 
 
+def _exact_undirected_contour_signature(segments):
+    """Canonical, collision-free key for bounded, part-local open segments.
+
+    This is an *exact* equality shortcut, not a tolerance hash, proof of
+    hole topology, or public/reportable geometry signature. Call only after
+    the existing per-part boundary-edge budget is enforced. Canonicalize
+    both endpoint orientation and edge ordering, preserving multiplicity.
+    """
+    return tuple(sorted(
+        (start, end) if start <= end else (end, start)
+        for start, end in segments
+    ))
+
+
 def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
     """Compare corresponding open-contour segments in part-local coordinates.
 
@@ -77,6 +91,18 @@ def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
 
     left = centered(ref_lines, ref_part)
     right = centered(cand_lines, cand_part)
+
+    # A canonical *exact* undirected contour match proves that every R2
+    # point sample lies on an identical opposing segment. It is therefore
+    # equivalent to the normal R2 distance guard returning no issue. Any
+    # float32 drift, changed edge subdivision, moved opening or other
+    # difference falls through to the original bidirectional distance scan.
+    # The R3 boundary-graph connectivity guard is evaluated by the caller
+    # independently and MUST NOT be bypassed by this optimization.
+    if (_exact_undirected_contour_signature(left)
+            == _exact_undirected_contour_signature(right)):
+        return None
+
     limit2 = BOUNDARY_LAYOUT_RELATIVE_TOLERANCE ** 2
 
     def within_any(point, segments):
