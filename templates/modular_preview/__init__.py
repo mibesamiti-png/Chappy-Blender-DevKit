@@ -199,7 +199,11 @@ def unregister():
             # replacement has a different descriptor even with the same name.
             # Releasing a lost ownership claim must NOT delete the new value.
             current = bpy.types.Scene.__dict__.get(name)
-            if current is _OWNED_PROPERTY_TOKENS.get(name):
+            token = _OWNED_PROPERTY_TOKENS.get(name)
+            # A missing descriptor is never proof of ownership. In particular
+            # "None is None" must not authorize deleting an inherited or
+            # otherwise foreign RNA property with a matching name.
+            if token is not None and current is token:
                 if hasattr(bpy.types.Scene, name):
                     delattr(bpy.types.Scene, name)
         except Exception as error:
