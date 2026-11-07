@@ -43,11 +43,11 @@ class ManifestReviewTests(unittest.TestCase):
         from cbdk.extension_manifest import observe_official_validation
         missing_license = {**fields(), "license": None}
         logs = (
-            'missing "license"\\nmissing "unknown_private"',
-            'missing "license"\\nkey "unreviewed_field" invalid: unexpected',
-            'missing "license"\\nmissing "license"',
-            'missing "license"\\nError: other validator problem',
-            'missing "license"\\nTraceback (most recent call last):',
+            'missing "license"\nmissing "unknown_private"',
+            'missing "license"\nkey "unreviewed_field" invalid: unexpected',
+            'missing "license"\nmissing "license"',
+            'missing "license"\nError: other validator problem',
+            'missing "license"\nTraceback (most recent call last):',
         )
         for log in logs:
             with self.subTest(log=log):
