@@ -1223,3 +1223,5 @@ RNAが古いときの実選択再検査をPythonで確認。ローカル823テ�
 実装ede29deb459232b3de4a64d32a8f73ec53103cb4でBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium/Skill成功。データ専用パーサーと回帰入力だけの修正1e18232379924939dd7529ad09c967b65018838aでPython839件×3.11/3.12/3.13・Windows3.11/3.13成功。影響のないBlenderを再実行せず、異なる検証SHAを区別する。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391763231)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391766410)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587199)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587164)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587159)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587181)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587167)。
 
 [範囲・パーサー修正・未確認・再開点](EXTENSION_DIAGNOSTICS.md)。6合成例の項目一致と値を出さない非実行レビューを確認。実部品ライセンス/正式Extension/実GUI/実ユーザー因果は未確認で全体partial。
+
+2026-11-08 JST: 正本02702b8を既存Notion CBDKプロジェクトへ同期成功。内容更新1応答警告なし、旧節目保持・新規ページ/私有データなし。受領記録だけの後続コミットを新しいコードCIとは扱わない。
