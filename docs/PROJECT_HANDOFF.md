@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18 UI-001/BUILD-001: 操作不可理由・入力/実行の分離、cached選択数と編集処理共通ガード、プロパティ割当失敗復旧を拡充。ローカル823件/Blender4.3.2成功、今回対象CI未実行。正式v0.17.0/全体partial維持
+- 最新の節目: v0.18 UI-001/BUILD-001: 操作不可理由・入力/実行分離、cached選択数/編集共通ガード、property割当失敗復旧を拡充。eac7453のPython823件×3/Windows2/Blender3版を含む全7CI成功。正式v0.17.0、GUI/権利/汎用UI等は未完了
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -31,11 +31,11 @@
 | `AUD-001` | Blender API静的監査・契約 | 実装済 | Pythonテスト | 実機検査とは分離 |
 | `PART-001` | 再利用自作部品の台帳と実機スモーク | 実装済 | Blender CI | 7部品。実行証拠はPR #16のCI。台帳は承認を与えない |
 | `PLAN-001` | 機能依存閉包・Blender互換性チェック | 実装済 | Pythonテスト | 5機能。許可リストにないコードは実行しない |
-| `BUILD-001` | レシピからのBlenderアドオン生成 | 一部実装 | Blender CI | レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。対象CI待ち、GUI/正式採用未確認でpartial維持。 |
+| `BUILD-001` | レシピからのBlenderアドオン生成 | 一部実装 | Blender CI | レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 |
 | `EDIT-001` | Edit Mode選択頂点の安全な移動 | 実装済 | Blender CI | 単一メッシュ/有限オフセット/Blender UNDOフラグ |
 | `EDIT-002` | 編集差分の監査とベストエフォート復元 | 一部実装 | Blender CI | 加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。PR #21のBlender 4.4.3/4.5.15/5.2.1 CIで実測成功 |
 | `TEST-001` | Python/Windows/Blender 3バージョンCI | 実装済 | Blender CI | リポジトリ公開化後、PR #21でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。mainの正式last_verifiedは未更新 |
-| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。ローカル検証済み、対象CI待ち。 |
+| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 |
 | `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | 必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 |
 | `INST-001` | GitHubからBlenderへの直接インストール・更新 | 保留 | 未検証 | ユーザー希望で保留。UI確認段階まで実装しない |
 | `PERF-001` | 巨大メッシュ向け監査・効率化 | 一部実装 | Blender CI | 20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否 |

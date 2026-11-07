@@ -1193,3 +1193,9 @@ UIに操作不可理由を表示し、ゼロ値でもXYZを修正できるよう
 RNAが古いときの実選択再検査をPythonで確認。ローカル823テスト成功、Blender4.3.2で
 選択なし/ゼロ値/共有/shape key表示とStringProperty/FloatVectorProperty割当失敗の復旧に成功。
 対象3版/Windowsの今回CIは未実行。全体partialと実GUI/私有データ/権利/正式公開の未完了を維持。
+
+## 2026-11-08 JST UI共通ガード/プロパティ復旧の実測
+
+コードeac7453b3e052267c45a83fa7c47180882d02419でPython823件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411841)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411842)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411863)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412044)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412165)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411889)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412036)。
+
+[検証範囲・負荷観測・未確認・再開点](UI_GUARD_VALIDATION.md)。全3版で理由表示と両property factory失敗からの復旧を確認。UIのcached選択数は助言、実行時監査を維持。全体partial、実GUI/権利/汎用UIは未確認のまま。
