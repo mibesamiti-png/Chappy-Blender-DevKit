@@ -1,5 +1,7 @@
 # Chappy Blender DevKit (CBDK)
 
+> **開発ライブボード:** [ブラウザ用HTML](docs/dashboard/index.html)（ファイル保存→Edge/Chrome等で開く。GitHub Pages公開は未設定。読み取り専用・5分自動/手動更新）
+>
 > **現在の開発状態を見る:** [新チャット用の引き継ぎ](docs/PROJECT_HANDOFF.md) · [正本の開発状態台帳](docs/project/STATE.json) · [現行仕様書](docs/PROJECT_SPEC.md)
 >
 > **v0.15.0以降、最新の進捗とテスト結果は上記が優先。** 以下にはv0.1から積み重ねた説明・旧計画が混在するため、古い「未実装」欄を最新版とは判断しないでください。
