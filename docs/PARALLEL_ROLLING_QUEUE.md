@@ -250,3 +250,15 @@ CBDK自作fixtureのみを使い、**ビルド形式の妥当性、公式validat
 - **許可候補:** `cbdk/extension_*`、D専用tests/docs。公式validator共通script・CI・STATEはA。
 
 **R10はまだNOT ACTIVE。** Aが上記ゲート後に正式基点・ブランチ名・受入基準を再公布するまで、B/C/Dは現在のR9 PR以外に新たな実装PRを作らない。Codex不在でも設計/負例候補調査は可能。main、正式v0.17.0、GitHub Pages、実ユーザー資産、Windows GUI、権利決定は変更しない。
+
+## 2026-11-08 JST — R9統合成功・R10正式割当（本PR #82の開発ブランチ統合後に有効）
+
+**R9のゲートは成立済み:** B [#78](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/78) SHA `60fcda39`、C [#77](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/77) SHA `a525fa8e`、D [#76](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/76) SHA `b29de167` は各5系統CIが成功し、変更10ファイル重複0。A結合 [#81](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/81) 最終HEAD `b5978eac7fde14387ca50e36569a1128fae9610d` の別5系統CIも成功（Blender3版の`native_r9_*`四項目を実ジョブログ確認）。開発squash SHA **`914f1c8ab8cf8dfe104f46054bfd4c84fc101e61`** の独立7系統CIもすべてsuccess：[Python #42423898180](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898180)、[Windows #42423898189](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898189)、[Blender3版 #42423898177](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898177)、[Chromium #42423898202](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898202)、[Handoff #42423898215](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898215)、[Kit #42423898188](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898188)、[Skill #42423898183](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898183)。これらは開発統合後に実行されたGitHubの`pull_request`イベントで、旧個別PRのCIではない。
+
+**正式な実装開始条件:** このA所有のR10正式割当PR #82が`feature/v0.18-shape-diagnostics`へマージされ、担当者が着手直前に最新dev HEADと `914f1c8ab8cf8dfe104f46054bfd4c84fc101e61` が祖先であることを確認した場合に限りR10を開始。#82がdraft/CI赤/未統合なら上のプレ設計どおり**設計のみ**。専門R9個別PR #76–#78は統合済みコードの履歴資料で、二重マージ/force-pushをしない。各チームに新しい未統合ドラフトPRは最大1件。
+
+- **B / NEXT-008:** 新ブランチ `work/v018-glb-analysis-r10`。上記プレ設計の疎/密AABB合成モデルで、危険な誤棄却がない適応的R2 AABB回避の数学的条件とPython3版同条件メモリ/時間測定を先に検証。密集モデルで繰り返し利益がなければtest/docsのみ。 `cbdk/glb_*`、GLB専用tests/docsだけ。R2/R3/256辺・64部品・512面、`auto_apply=false`維持。
+- **C / UI-001・BUILD-001:** 新ブランチ `work/v018-ui-builder-r10`。クラス解除とScene RNA削除の二重失敗、失敗途中のforeign差替、所有token/ledgerを保持した複数retryを合成して、Blender 4.4.3/4.5.15/5.2.1の実ジョブで`native_r10_*`を確認。R5〜R9マーカー、既存5機能6レシピ保持。 `templates/modular_preview/`、C専用tests/docsだけ。
+- **D / EXT-001:** 新ブランチ `work/v018-extension-quality-r10`。CBDK自作のrepo管理helperソースと、生成プレビューZIPのhash自己申告を、読み取り専用・上限付き・trusted-root固定で照合する負例/正例を検討。一致も真正性/作者同意/公開権限にならず、`blocked_for_extension_release`維持。実行/インストール・私有ソース公開禁止。 `cbdk/extension_*`、D専用tests/docsだけ。
+
+各チームは着手時の最新dev SHAと作業対象ファイルをPR本文へ明記。正確なHEADでPython3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1、Chromium、Handoffの発火5系統CIを実測し、追加負例が本当に実行されたか区別する。Aが統合ブランチで再度5CIを確認し、開発squash後7CIで次ラウンドを許可。共通STATE/HANDOFF/PROGRESS/CI/Notionと`main`、正式リリースはA所有。Codex不在でも専門チームを止めない。Windows GUI/Undo、実ユーザーGLB、真の第三者Addon、ライセンス、正式Extensions、Pagesは引き続き別承認。

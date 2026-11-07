@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R1〜R7に続きR8 B/C/Dの13ファイルをPR #73で開発統合（ded947f8）。非厳密R2 GLBのAABB padded 2×tol候補除外を安全回帰付きで追加、Blender3版の登録解除障害・Edit Mesh cancel無変更、Extensions静的正当性と公開権限の証拠分離を検証。結合PR #73の5系統CI全成功。統合後7系統CIも全成功。R9はPR #74で正式割当済み。実ユーザーGLB、Windows GUI、ライセンス/公式Extensions公開は未検証、正式v0.17.0・main維持。Dashboard v2のNEXT-024実Windowsブラウザ/音声確認も未完了。 Dashboard v3をPR #79で開発ブランチに統合（e60d48f1）。実測PR/CI時刻から速度3指標を追加。ブラウザ実機・配布公開は別受入。
+- 最新の節目: v0.18: R9 B #78/C #77/D #76の10ファイルをA結合PR #81で検証（HEAD b5978eac、5系統CI成功）、開発統合914f1c8aの独立7系統CIも全成功。密集GLB AABB非利得の検証、Scene RNA削除失敗時の所有台帳保全、ZIP自己再hashと作者真正性の分離をレビュー専用で確認。R10はA正式割当PR #82の統合後のみ新ブランチ着手可。main/正式v0.17.0維持、実ユーザーGLB・Windows GUI・権利/公式Extensions公開は未承認。DASH-001の実Windows通信/音声・Pagesも未検証。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -205,6 +205,7 @@
 - `DEC-070` R8でGLB非厳密R2の保守的AABBフィルタとBlender実機登録解除回帰、Extensions静的provenance拒否を結合し、R9を統合後CI成功まで停止。B #66 HEAD0c81b10c、C #70 HEAD07a742f1、D #67 HEADa8f1b282 各5系統CI success。A #73 結合HEADf5fd6585488e7d69501caf2ed48c54ec81e0cc2aでPython42419473291/Windows42419473354/Blender42419473288(4.4.3/4.5.15/5.2.1, native_r8 5項目実測)/Chromium42419473271/Handoff42419473294の5系統全success。開発ブランチsquash SHA ded947f85f46fb8cce0943314d6e1a9fb41717ef、post-merge7系統CIも全success（Python42419734167、Windows42419734210、Blender42419734261（4.4.3/4.5.15/5.2.1）、Chromium42419734226、Handoff42419734193、Kit42419734233、Skill42419734172）。R9正式キューPR #74 merged SHA 4e40a16e71f0036c442e604c667036045172149a。実GLB、GUI、権利、正式v0.18公開は承認していない。
 
 - `DEC-071` Aの開発ライブボードv3にPR/CI時刻由来の3種類の観測速度指標を追加し、実機ネットワーク/音声とPages公開を別ゲートとして維持。A PR #79 exact HEAD c52cc14fd74ab2a53245b6744b406960a7a8225a のPython42422092224、Windows42422092201、Chromium42422092185、Handoff42422092289の4発火CI success。Nodeテストが実走。dev squash e60d48f1461d3c57edaa7916731d19c5ede6b75b の独立post-merge7系統CIも全success（Python42422198759、Windows42422198754、Blender42422198841（4.4.3/4.5.15/5.2.1）、Chromium42422198751、Handoff42422198765、Kit42422198764、Skill42422198785）。Portable版21,353 bytesのHTML + ZIP(9,863 bytes)のファイル/JavaScript/ZIPを検査し、ChromiumモックでR9 B/D→C完了、A統合、チーム毎一回通知、390px表示を確認。実Windows音声とlive GitHub API/Pagesは未確認。
+- `DEC-072` R9統合で密集AABB非利得・Scene RNA削除失敗回復・ZIP自己hashの真正性非証明を確認し、R10を安全ゲート付きで割り当てる。B #78 HEAD60fcda39、C #77 HEADa525fa8e、D #76 HEADb29de167各5系統CI成功。A #81 HEADb5978eacもPython/Windows/Blender3版(native_r9四項目)/Chromium/Handoffの5系統成功。開発squash 914f1c8aの別7系統成功（Python42423898180、Windows42423898189、Blender42423898177、Chromium42423898202、Handoff42423898215、Kit42423898188、Skill42423898183）。実行イベントはpull_request。実GLB/GUI/ライセンス/正式公開未検証。R10は#82正式割当の統合後のみ着手可。
 
 ## 更新・プライバシールール
 
