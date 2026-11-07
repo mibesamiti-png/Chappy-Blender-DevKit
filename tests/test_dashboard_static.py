@@ -44,11 +44,11 @@ class DashboardStaticTests(unittest.TestCase):
             "  return {roundFromQueue,taskText,ci,teamStatus,announce};",
             1,
         )
-        js = StringLike = """
+        js = """
 const assert = require('node:assert/strict');
 const elements = {};
 global.document = { getElementById(id) {
-  return elements[id] || (elements[id] = {textContent:''});
+  return elements[id] || (elements[id] = {textContent:'',addEventListener(){},setAttribute(){}});
 }};
 const dashboard = """ + script + """;
 const queue = '## 2026-11-08 — R7統合完了・R8正式割当\\n### R8候補 — B / GLB\\n境界検証\\n\\n### R8候補 — C / UI\\nUIの復元';
