@@ -38,6 +38,81 @@ class ManifestReviewTests(unittest.TestCase):
         self.assertEqual(result['status'], 'outside_supported_subset')
         self.assertFalse(result['complete_diagnostic_agreement'])
 
+
+    def test_unknown_diagnostics_do_not_appear_to_agree(self):
+        from cbdk.extension_manifest import observe_official_validation
+        missing_license = {**fields(), "license": None}
+        logs = (
+            'missing "license"\nmissing "unknown_private"',
+            'missing "license"\nkey "unreviewed_field" invalid: unexpected',
+            'missing "license"\nmissing "license"',
+            'missing "license"\nError: other validator problem',
+            'missing "license"\nTraceback (most recent call last):',
+        )
+        for log in logs:
+            with self.subTest(log=log):
+                report = compare_official_validation(missing_license, 1, log)
+                self.assertEqual(report["status"], "unclassified")
+                self.assertTrue(report["official_observation"]["has_unrecognized_diagnostics"])
+                self.assertFalse(report["complete_diagnostic_agreement"])
+                self.assertNotIn("unknown_private", str(report))
+
+        malformed_success = 'Success parsing TOML in "fixture" unexpected suffix'
+        observed = observe_official_validation(0, malformed_success)
+        self.assertEqual(observed["status"], "unclassified")
+        self.assertTrue(observed["has_unrecognized_diagnostics"])
+        self.assertEqual(observe_official_validation(0, 'Success parsing TOML in "fixture"')["status"], "accepted")
+
+
+    def test_r3_unexpected_or_contradictory_validator_output_is_unclassified(self):
+        """Unknown or inconsistent logs must not be mistaken for agreement."""
+        from cbdk.extension_manifest import observe_official_validation
+        incomplete = {**fields(), "license": None}
+        cases = (
+            ("unknown_rejection_line", incomplete, 1,
+             'Error parsing TOML "synthetic"\nmissing "license"\nNew diagnostic: hidden private value'),
+            ("unknown_rejection_footer", incomplete, 1,
+             'missing "license"\nvalidation status unavailable'),
+            ("conflicting_field_diagnostics", incomplete, 1,
+             'missing "license"\nkey "license" invalid: synthetic contradiction'),
+            ("success_plus_error_header", fields(), 0,
+             'Success parsing TOML in "synthetic"\nError parsing TOML "synthetic"'),
+            ("error_header_then_success", fields(), 0,
+             'Error parsing TOML "synthetic"\nSuccess parsing TOML in "synthetic"'),
+            ("success_plus_warning", fields(), 0,
+             'Success parsing TOML in "synthetic"\nWARNING: hidden private value'),
+            ("success_plus_unknown_line", fields(), 0,
+             'Success parsing TOML in "synthetic"\nunexpected private line'),
+            ("duplicate_generic_error_header", incomplete, 1,
+             'Error parsing TOML "synthetic"\nError parsing TOML "synthetic"\nmissing "license"'),
+        )
+        for label, source, exitcode, output in cases:
+            with self.subTest(case=label):
+                report = compare_official_validation(source, exitcode, output)
+                self.assertEqual(report["status"], "unclassified")
+                self.assertFalse(report["complete_diagnostic_agreement"])
+                self.assertEqual(report["official_observation"]["status"], "unclassified")
+                self.assertTrue(report["official_observation"]["has_unrecognized_diagnostics"])
+                self.assertNotIn("hidden private value", str(report))
+                self.assertNotIn("private line", str(report))
+
+        # Harmless known Blender startup and shutdown lines may accompany
+        # real official-validator results. Synthetic test, no Blender executed.
+        for version, suffix in (
+            ("4.4.3", ""),
+            ("4.5.15", " LTS"),
+            ("5.2.1", " LTS"),
+        ):
+            with self.subTest(version=version):
+                output = ('Blender ' + version + suffix
+                          + ' (hash deadbeef1234 built 2026-01-01 00:00:00)\n'
+                          + 'Success parsing TOML in "synthetic"\nBlender quit')
+                report = compare_official_validation(fields(), 0, output)
+                self.assertEqual(report["status"], "agreement")
+                self.assertTrue(report["complete_diagnostic_agreement"])
+                observed = observe_official_validation(0, output)
+                self.assertFalse(observed["has_unrecognized_diagnostics"])
+
     def test_guidance_never_copies_owner_values(self):
         data = {**fields(), 'maintainer': 'Private Person email@example.invalid', 'version': None}
         rows = manifest_field_diagnostics(data)
