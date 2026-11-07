@@ -98,7 +98,7 @@ def observe_official_validation(returncode, output):
         if not line:
             continue
         if line == "Blender quit" or re.fullmatch(
-                r"Blender \d+\.\d+\.\d+(?: \([A-Za-z0-9._ -]+\))?", line):
+                r"Blender \d+\.\d+\.\d+(?: LTS)?(?: \(hash [0-9a-f]{7,} built \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\))?", line):
             continue
         if line.startswith('Success parsing TOML in "'):
             if (not re.fullmatch(r'Success parsing TOML in "[^"]+"', line)
