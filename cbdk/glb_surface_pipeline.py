@@ -7,6 +7,7 @@ triangle coordinates enter the generated JSON or any network workflow.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 import subprocess
 
@@ -125,6 +126,31 @@ def run_glb_surface_review(
             raise ValueError("missing surface evidence")
         if payload["status"] == "skipped" and report.get("reason") != "triangle_limit":
             raise ValueError("unknown skip reason")
+        # A Blender process is an external evidence producer, not an authority.
+        # Reject malformed aggregate metrics instead of passing through NaN,
+        # non-finite scores or clearly inconsistent status fields.
+        for name in ("reference_triangles", "candidate_triangles"):
+            count = report.get(name)
+            if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+                raise ValueError("invalid triangle count")
+        observation = report.get("surface_observation")
+        if payload["status"] == "review_only":
+            if observation not in (
+                "sampled_difference_detected", "no_difference_observed_at_samples"
+            ):
+                raise ValueError("invalid surface observation")
+            for group, metric in (
+                ("fixed_surface", "symmetric_sampled_max"),
+                ("adaptive_surface", "refined_symmetric_sampled_max"),
+            ):
+                value = report[group].get(metric)
+                if (isinstance(value, bool) or not isinstance(value, (int, float))
+                        or not math.isfinite(value) or value < 0):
+                    raise ValueError("invalid surface metric")
+        elif observation != "not_measured" or (
+            "fixed_surface" in report or "adaptive_surface" in report
+        ):
+            raise ValueError("skipped evidence must not contain measurements")
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         raise GLBSurfacePipelineError("Untrusted or corrupt Blender surface report") from exc
     return report
