@@ -279,3 +279,68 @@ build an Extension ZIP, install untrusted Python or approve any publication.
 The official synthetic six-case validator remains run separately by the
 A-owned real Blender smoke on 4.4.3, 4.5.15 and 5.2.1; these TOML Python
 tests do not claim to execute Blender. EXT-001 remains partial.
+
+
+## R8 — separation of technical checks, ownership, rights and release
+
+R8 tests the **provenance-evidence boundary** only. Existing preview ZIP
+preflight can confirm canonical CBDK-style ZIP layout and matching included
+hashes. Those are self-contained technical checks, not proof of author
+identity, consent, SPDX/license compatibility, signing authority or
+authorization to redistribute or publicly release.
+
+### Five independent findings, never promoted into one approval
+
+| Observation | May be measured now | Cannot infer |
+| --- | --- | --- |
+| Static authored-preview ZIP structural/hash check | Yes, on seven CBDK-authored development preview recipes | Source authenticity or permission to ship |
+| Blender official manifest validator output | Yes, on six **synthetic data-only** fixtures in each of three Blender CI versions | That any real authored ZIP passed official validation or was executed |
+| Real author/owner consent | No authenticated evidence | Consent from a self-asserted JSON/TOML field |
+| Actual SPDX licensing and redistribution clearance | Only syntactic license shape on synthetic TOML | Compatibility, attribution clearance or license selection |
+| Explicit release authorization | No authorization | Publishing permission based on successful technical checks |
+
+The R8 tests assert this separation on all seven authored recipes, including
+legacy mesh_inspector and six modular previews, while checking that every
+valid preflight report retains \`blocked_for_extension_release\`,
+\`preview_only=true\`, \`source_authenticity_verified=false\`, empty owner
+version/maintainer/license, and pending owner/approval/packaging/verification
+blocker categories.
+
+Negative fixture cases retain the same explicit lack of authority:
+
+- Inject forged positive evidence fields (author consent, SPDX compatibility,
+  redistribution permission, signing, official-validation claim and release)
+  into the preview's own \`CBDK_BUILD_INFO.json\`. The source package may still
+  be structurally valid; these **self-asserted new fields** must never become
+  trusted report flags or remove publication blockers.
+- Attempt to alter **existing mandatory protective flags** such as
+  \`preview_only\`, \`approved\`, \`redistribution_cleared\` and
+  \`blender_runtime_verified_for_this_build\` on both legacy and modular
+  previews. Each attempt must fail closed as invalid provenance.
+- Add a synthetic traversal path to a ZIP. It must not be accepted as a
+  canonical preview, even with otherwise valid package file content.
+- Feed realistic-looking but **synthetically constructed** official-validator
+  success text. An accepted parser observation is still
+  \`authenticates_log=false\`; unknown, duplicate or contradictory official
+  diagnostics must remain unclassified, and neither case proves authorship
+  or licensing.
+- Feed structurally valid TOML with a syntactically well-formed SPDX example,
+  a claimed maintainer, and additional self-asserted owner-consent/release
+  fields. Review remains \`review_only\` with \`release_authorized=false\`.
+  Unknown keys, including nested ones, are sanitized. A bounded TOML
+  nested-fanout example illustrates that the existing **64-field limit is
+  on top-level fields**, not 64 recursive descendants; it does not authorize
+  deeper claims or promise a worst-case resource bound.
+
+The existing Python tests run **without any Blender executable**; the
+separate A-owned Blender CI must still perform its existing six data-only
+official extension-manifest checks in 4.4.3, 4.5.15 LTS and 5.2.1 LTS.
+No private source is imported/executed, no formal Extension ZIP is built,
+no author consent or license compatibility is assumed, and no release
+approval is fabricated. All fixtures are temporary synthetic data from this
+repository. EXT-001 remains \`partial\`.
+
+Only change production preflight, manifest review or diagnostic code when
+the new negative controls reproduce an actual unsafe escalation or privacy
+leak. Shared validator scripts, workflows, STATE, Handoff, Notion, main and
+the published v0.17.0 release stay owned by coordinator A.
