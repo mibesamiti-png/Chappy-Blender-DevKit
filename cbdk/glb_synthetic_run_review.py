@@ -13,6 +13,7 @@ from .glb_surface_pipeline import _strict_json
 from .glb_synthetic_adaptive import (
     MAX_TRIALS, SAFETY, next_candidate, render_adaptive_checkpoint, trial_id,
 )
+from .glb_synthetic_conditions import validate_conditions
 
 KIND = "cbdk_glb022_synthetic_run_review_v1"
 MAX_CHECKPOINTS = 16
@@ -37,7 +38,8 @@ ACTIONS = {
 
 
 def build_run_review(checkpoint, *, budget, stage, status="incomplete",
-                     active_trial=None, failure_code=None, integrity="not_checked"):
+                     active_trial=None, failure_code=None, integrity="not_checked",
+                     conditions=None):
     if type(budget) is not int or not 1 <= budget <= MAX_TRIALS:
         raise ValueError("Invalid review budget")
     if stage not in STAGES or status not in ("incomplete", "failed", "completed"):
@@ -92,7 +94,7 @@ def build_run_review(checkpoint, *, budget, stage, status="incomplete",
     elif stage == "completed":
         raise ValueError("Completed stage requires completed status")
     feasible = None if checkpoint is None else checkpoint["measured_feasible_trial_id"]
-    return {
+    output = {
         "kind": KIND, "schema_version": 1, "status": status, "stage": stage,
         "attempt_budget": budget, "validated_attempts": attempts,
         "unvalidated_attempts": budget - attempts, "active_trial_id": active_trial,
@@ -102,6 +104,15 @@ def build_run_review(checkpoint, *, budget, stage, status="incomplete",
         "checkpoint": checkpoint, "safety": dict(SAFETY),
         "automatic_retry": False, "automatic_resume": False,
     }
+    if conditions is not None:
+        conditions = validate_conditions(conditions)
+        if (checkpoint is None
+                or conditions["initial_sampled_max"] != checkpoint["initial_sampled_max"]
+                or conditions["initial_socket_affected_faces"] != checkpoint["initial_socket_affected_faces"]):
+            raise ValueError("Conditions contradict validated baseline")
+        output.update(kind="cbdk_glb022_synthetic_run_review_v2", schema_version=2,
+                      conditions=conditions)
+    return output
 
 
 def render_run_review(report):
@@ -113,6 +124,7 @@ def render_run_review(report):
             stage=report["stage"], status=report["status"],
             active_trial=report["active_trial_id"], failure_code=report["failure_code"],
             integrity=report["input_integrity"],
+            conditions=report.get("conditions"),
         )
         if json.dumps(report, sort_keys=True, allow_nan=False) != json.dumps(
             expected, sort_keys=True, allow_nan=False

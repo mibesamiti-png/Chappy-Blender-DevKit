@@ -34,6 +34,10 @@ on:
       - 'cbdk/glb_part_hints.py'
       - 'cbdk/glb_synthetic_adaptive.py'
       - 'cbdk/glb_synthetic_run_review.py'
+      - 'cbdk/glb_synthetic_conditions.py'
+      - 'cbdk/glb_synthetic_run_compare.py'
+      - 'scripts/verify_glb023_run_comparison.py'
+      - 'tests/test_glb_synthetic_run_compare.py'
       - 'scripts/run_glb022_synthetic_adaptive.py'
       - 'scripts/verify_glb022_failure_review.py'
       - 'tests/test_glb_synthetic_adaptive.py'
@@ -790,6 +794,17 @@ jobs:
         run: |
           python scripts/verify_glb022_failure_review.py \
             --blender "$BLENDER_PATH" --output reports/ci/glb022_controlled_failure
+
+      - name: Compare independent same-condition synthetic runs and measure review resources
+        shell: bash
+        run: |
+          python scripts/run_glb022_synthetic_adaptive.py \
+            --blender "$BLENDER_PATH" --output reports/ci/glb022_adaptive_repeat
+          python scripts/verify_glb023_run_comparison.py \
+            --first reports/ci/glb022_adaptive/synthetic_run_review.json \
+            --second reports/ci/glb022_adaptive_repeat/synthetic_run_review.json \
+            --failed reports/ci/glb022_controlled_failure/synthetic_run_review.json \
+            --output reports/ci/glb023_comparison
 
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash

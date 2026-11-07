@@ -633,7 +633,7 @@ GLB-007は実装済/Blender CI確認済みとして記録。正式バージョ�
 
 実装コミット `2c000dad0980ee76562576ba63c0e7b568284748` に対して、GitHub Actions 5ワークフローの成功を確認。
 
-- Python 3.11/3.12/3.13： [run 42210546730](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546730)。GLB-009の新規14回帰テストを含む。
+- Python 3.11/3.12/3.13： [run 42210546730](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546730)。GLB-009の新規15回帰テストを含む。
 - Windows PowerShell 3.11/3.13： [run 42210546742](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546742)。
 - Blender 4.4.3/4.5.15/5.2.1： [run 42210546751](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546751)。合成GLBから候補を出し合成プロパティの同クラスself参照の集計と`binding_verified=false`等をチェック。
 - Windows kit： [run 42210546861](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546861)。
@@ -1075,3 +1075,13 @@ GitHub実測記録`c7306ce`を正本として、既存CBDKプロジェクトとG
 ### 第6段階のNotion同期完了
 
 GitHub正本の実測記録`c575834`を既存CBDKプロジェクト/GLB-022タスクへ反映。現在要約・全体partial/作業中・NEXT-022完了・6CIリンク・LIM-014・次のNEXT-023を更新し、全応答警告なし成功。新規ページ・私有ソース/GLB/個別レポート・個人情報の同期なし。コード検証SHAは5dc799aで固定し、受領記録は文書のみ。
+
+## 2026-11-07 現行ロードマップ継続：NEXT-023 同条件複数実験比較
+
+- 開始HEAD87ceb5d、前段階コード5dc799aの全6CI成功を再確認。既存NEXT-023/NEXT-020を対象とし、新しいNEXT番号や無関係な構想は追加しない。
+- 新規`glb_synthetic_conditions.py`で固定プロトコル・ソース集約SHA・Blender版・基準/初期GLB SHA・初期観測を記録。`glb_synthetic_run_review.py`は旧schema1を維持し、新しい条件付き記録をschema2とする。ランナーは比較/検証ソース変更と候補測定版の不一致も拒否。
+- `glb_synthetic_run_compare.py`の読取専用CLIと日本語レビューを追加。失敗/未完了/入力改変/旧条件なし/条件・予算不一致を成功比較から除外し、距離と面数の反対変化を混在扱い。任意ラベル/パス/不正本文を出力しない。自動採用・実行・再開なし。
+- 新規15回帰テストを含む関連71件成功。ローカルBlender4.3.2で独立した予算1の2実験を実生成・比較し、条件一致/観測差なし、模擬タイムアウト実行除外を確認。開発途中の古いローカルJSON（未コミット形式）は厳格読取で拒否し、現行形式で再生成した。
+- 比較のみのウォームアップ後3回の中央値：2件2.416704ms/割当ピーク20,225bytes、16件17.300782ms/145,632bytes。16件は証拠を複製した負荷試験で16独立実験ではない。ディスク/Blenderは計測外。速度保証/最適化採用はしない。
+- CIへ独立4試行の再実行を1回追加し、通常実行と条件比較・失敗除外・時間/割当ピークを実測予定。対象CI未実施。GLB-020/021/022はpartial、NEXT-023 in_progress、正式v0.17.0/PRドラフトを維持。詳細`GLB023_RUN_COMPARISON.md`。
+- 節目の最終ローカル検証：Python3.12.14で**742件成功**。関連71件、新規15回帰を含む。STATE validate / handoff write・check / diff checkも成功。このまとまりの対象GitHub CIを1回実行する。

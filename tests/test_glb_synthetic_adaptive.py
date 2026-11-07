@@ -32,6 +32,7 @@ def review(*, distance, socket_faces, ball_faces=0, scale=6.0):
 
     return {
         "kind": "cbdk_glb_diff_visualization", "schema_version": 1,
+        "blender_version": "4.5.15",
         "status": "review_only", "auto_apply": False, "sampled_only": True,
         "complete_surface_equivalence_proven": False,
         "cross_file_part_identity_proven": False,

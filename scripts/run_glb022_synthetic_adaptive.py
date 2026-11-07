@@ -23,6 +23,7 @@ from cbdk.glb_synthetic_adaptive import (
 )
 from cbdk.glb_synthetic_progress import _metric
 from cbdk.glb_synthetic_run_review import build_run_review, write_run_review
+from cbdk.glb_synthetic_conditions import build_conditions, condition_source_digest
 
 
 class SyntheticAdaptiveRunError(RuntimeError):
@@ -58,17 +59,20 @@ def run(blender, output, *, budget=MAX_TRIALS):
         raise ValueError("Only new repo-local reports/ci output folder allowed")
     root.mkdir(parents=True, exist_ok=False)
     initial_sha = sha(generator)
+    initial_sources = condition_source_digest(REPO)
     glb_shas = {}
     checkpoint = None
     sequence = 0
     stage, active_trial = "reference_generation", None
     integrity = "not_checked"
+    conditions = None
 
     def record(*, status="incomplete", failure_code=None):
         nonlocal sequence
         report = build_run_review(
             checkpoint, budget=budget, stage=stage, status=status,
             active_trial=active_trial, failure_code=failure_code, integrity=integrity,
+            conditions=conditions,
         )
         if status == "incomplete":
             write_run_review(report, root, sequence=sequence)
@@ -81,10 +85,11 @@ def run(blender, output, *, budget=MAX_TRIALS):
     def check_integrity():
         nonlocal integrity
         try:
-            unchanged = not generator.is_symlink() and sha(generator) == initial_sha and all(
+            unchanged = (condition_source_digest(REPO) == initial_sources
+                and not generator.is_symlink() and sha(generator) == initial_sha and all(
                 not path.is_symlink() and sha(path) == digest
-                for path, digest in glb_shas.items())
-        except OSError:
+                for path, digest in glb_shas.items()))
+        except (OSError, ValueError):
             unchanged = False
         integrity = "verified" if unchanged else "failed"
         if not unchanged:
@@ -147,7 +152,15 @@ def run(blender, output, *, budget=MAX_TRIALS):
         baseline, baseline_metric = compare(reference, narrow, "review_narrow")
         try:
             checkpoint = build_adaptive_checkpoint(baseline, {}, budget=budget)
+            conditions = build_conditions(
+                source_sha256=initial_sources, reference_sha256=glb_shas[reference],
+                baseline_sha256=glb_shas[narrow], blender_version=baseline.get("blender_version"),
+                scale=baseline_metric["combined_aabb_diagonal"],
+                initial_max=baseline_metric["sampled_max_distance"],
+                initial_faces=baseline_metric["socket_sampled_affected_faces"],
+            )
         except ValueError:
+            checkpoint = None
             raise SyntheticAdaptiveRunError("invalid_measurement") from None
         stage = "measurement_validated"
         record()
@@ -164,6 +177,8 @@ def run(blender, output, *, budget=MAX_TRIALS):
             stage = "candidate_comparison"
             record()
             report, metric = compare(reference, glb, "review_" + active_trial)
+            if report.get("blender_version") != conditions["blender_version"]:
+                raise SyntheticAdaptiveRunError("invalid_measurement")
             if metric["combined_aabb_diagonal"] != baseline_metric["combined_aabb_diagonal"]:
                 raise SyntheticAdaptiveRunError("coordinate_scale_changed")
             if metric["other_parts_sampled_affected_faces"] != 0:

@@ -62,6 +62,7 @@ class RunReviewTests(unittest.TestCase):
     @contextlib.contextmanager
     def mocked(self, *, compare=None, generate=None):
         with patch.object(runner, "REPO", self.root), \
+             patch.object(runner, "condition_source_digest", return_value="a" * 64), \
              patch.object(runner.subprocess, "run", side_effect=generate or self.generate), \
              patch.object(runner, "run_glb_diff_visualize", side_effect=compare or
                           [self.baseline, *self.trials.values()]), \
@@ -212,6 +213,9 @@ class RunReviewTests(unittest.TestCase):
         unsafe = review(distance=.2, socket_faces=20)
         unsafe["safety"]["executes_addon_code"] = True
         cases.append((unsafe, "invalid_measurement"))
+        wrong_version = review(distance=.2, socket_faces=20)
+        wrong_version["blender_version"] = "5.2.1"
+        cases.append((wrong_version, "invalid_measurement"))
         for candidate, code in cases:
             output = self.output()
             with self.mocked(compare=[self.baseline, candidate]), self.assertRaisesRegex(runner.SyntheticAdaptiveRunError, code):
@@ -230,6 +234,17 @@ class RunReviewTests(unittest.TestCase):
             runner.run(self.exe, output)
         terminal = read_run_review(output / "synthetic_run_review.json")
         self.assertEqual(terminal["input_integrity"], "failed")
+        self.assertIsNone(terminal["checkpoint"])
+
+    def test_runner_rejects_comparison_source_change_before_generation(self):
+        output = self.output()
+        with self.mocked(), patch.object(runner, "condition_source_digest",
+                side_effect=["a" * 64, "b" * 64, "b" * 64]):
+            with self.assertRaisesRegex(runner.SyntheticAdaptiveRunError, "input_integrity_changed"):
+                runner.run(self.exe, output)
+        terminal = read_run_review(output / "synthetic_run_review.json")
+        self.assertEqual(terminal["input_integrity"], "failed")
+        self.assertEqual(terminal["stage"], "reference_generation")
         self.assertIsNone(terminal["checkpoint"])
 
     def test_runner_history_write_failure_preserves_full_trace_but_not_success(self):
