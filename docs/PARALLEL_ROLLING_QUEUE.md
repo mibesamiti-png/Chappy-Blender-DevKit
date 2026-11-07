@@ -220,3 +220,33 @@ CBDK自作fixtureのみを使い、**ビルド形式の妥当性、公式validat
 2. 着手の瞬間に最新 `feature/v0.18-shape-diagnostics` HEADを読み、**R8統合SHAを祖先に持つこと**を確認。B `work/v018-glb-analysis-r9`、C `work/v018-ui-builder-r9`、D `work/v018-extension-quality-r9`。各自の未統合追加ドラフトPRは最大1件。旧B #66/C #70/D #67をstack/再マージしない。
 3. 担当専用ファイルのみ変更。共有 `STATE.json`・Handoff・PROGRESS・Notion・共通CI・mainはA管理。新負例が実際のCIで実行されたか検証し、未実行をgreenと扱わない。Codex不在でも継続。
 4. 実ユーザーGLB、実Windows GUI/Undo、第三者Addonとの実共存、作者/ライセンス、公式Extensions公開、main、正式v0.17.0はすべて別承認。上記の正式統合前はR9実装禁止。
+
+
+## 2026-11-08 JST — R10 プレ設計 — R9統合ゲート未達なら**設計のみ・実装禁止**
+
+**Aの先読み案であって正式割当ではない。** R9個別 B [#78](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/78) / C [#77](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/77) / D [#76](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/76) は、各正確なHEADでPython / Windows / Blender3版 / Chromium / Handoffの5系統CIがsuccess。AのR9統合候補 [#81](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/81) はB3/C4/D3の10ファイルを担当重複0で最新devから独立結合。**以下の条件をすべてAが実測してから**R10の編集許可・ブランチ基点を正式発効すること。途中でCIがred / canceled / pendingなら設計・レビューのみ、PR追加なし。
+
+1. R9統合PR #81の**最終厳密HEAD**に対し、Python 3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1（実際の `native_r9_*` ログ）、Chromium、Handoffの**5つの独立workflow系統がすべてsuccess**。R9個別CIは統合CIの代用にしない。
+2. #81を`feature/v0.18-shape-diagnostics`に**一度だけsquash統合**、開発統合コミットSHAを記録する。過去R1〜R9個別PRや古い統合PRを二重mergeしない。
+3. 上記**統合後SHAそのもの**に対して別のpush CI **7系統**（Python、Windows、Blender3版、Chromium、Handoff、Kit、Skill）がすべてsuccessし、Aがジョブと対象SHAを確認する。
+4. Aが最新の`docs/project/STATE.json`、生成`docs/PROJECT_HANDOFF.md`、`docs/PROGRESS.md`を節目同期し、R10正式割当文書を承認・統合した後のみ、各チームは**その時点の最新dev HEAD**を基点に新担当専用ブランチを作る。R9専門ブランチからstackしない。未統合追加PRは担当1件まで。
+
+### R10 B候補 / NEXT-008：低選別率R2-AABBの適応判定を安全側で調査
+
+- **出発点:** R8のpadded 2×t AABBは疎な合成輪郭で速度向上。R9密集128辺のmatcher局所では、AABB判定がほぼ全部通過し、3つのPython版で強制unprunedより遅い場合を観測。これは一般GLB全体の速度断定ではない。
+- **設計:** 疎/密/境界許容値付近の対照を同一Python版で反復計測し、全結果辞書・R2距離述語・独立R3連結ガード・R6 exact署名・R7ゼロ長guard・256辺/64部品/512面・review_onlyを保持できる「適応的に不要なAABB処理を迂回」する安全な条件があるか検証。単なる速度推測で製品本体を変更しない。数学的保証と3版の独立測定が無ければtest/docsのみ。
+- **許可候補:** `cbdk/glb_*`、GLB専用tests/docs。共通CI/スクリプト/STATEはA。ユーザーGLB、物理穴、部品同一性、auto applyは未証明。
+
+### R10 C候補 / UI-001・BUILD-001：二重失敗の所有権ledger回復
+
+- **設計:** CBDK自作生成previewで、同じ`unregister()`中にoperatorクラス解除とScene RNA削除が共に失敗する合成負例、失敗間にforeign Scene宣言が差替られる負例を実Blender 3版で試す。成功した除去だけledgerから消し、残りの正確なtokenと名前を保全、reload/再登録を安全に拒否、次の明示retryで完全回復して初めて成功とする。
+- **検証:** R5〜R9既存nativeマーカー・5機能6レシピを保持し、R10専用nativeマーカーをBlender 4.4.3/4.5.15/5.2.1の実ジョブログで確認。合成foreign物のみ、実第三者アドオンやGUI Ctrl+Zは未検証。
+- **許可候補:** `templates/modular_preview/`、C専用tests/docs。`scripts/`、CI、STATEはA。
+
+### R10 D候補 / EXT-001：自己hashと別管理の既知ソース照合
+
+- **設計:** R9はZIP自身が改変後のhash一覧を書き直しても「自己整合」は証明できる一方、作者真正性・同意・ライセンス・正式公開権限は証明しないと確認。R10は**リポジトリ内の明示された既知CBDK自作source**と生成ZIPのhelper bytesを、allowlistとサイズ・件数制限を設けて**読み取り専用で比較する候補**を検証。元を更新した場合の正例、再hash改変の負例、未知root・path逸脱・値/パス漏洩の負例を含む。
+- **安全:** 比較一致ですら作者同意/SPDX/著作権/署名/公式validator/公開承認にはならない。未知Pythonはimport/exec/installせず、私有ソースを公開しない。問題が再現しなければtests/docsのみ、`blocked_for_extension_release`維持。既知7 ZIP正例も保持。
+- **許可候補:** `cbdk/extension_*`、D専用tests/docs。公式validator共通script・CI・STATEはA。
+
+**R10はまだNOT ACTIVE。** Aが上記ゲート後に正式基点・ブランチ名・受入基準を再公布するまで、B/C/Dは現在のR9 PR以外に新たな実装PRを作らない。Codex不在でも設計/負例候補調査は可能。main、正式v0.17.0、GitHub Pages、実ユーザー資産、Windows GUI、権利決定は変更しない。
