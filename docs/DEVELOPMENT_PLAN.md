@@ -43,3 +43,7 @@
 ## 今回の到達点
 
 NEXT-021の実装・検証は完了。コード`31bf3de18c357d796194dcac369c66e55b3973bf`の全6CI成功、Python707件×3版/Windows2版/Blender3版合成4ケースを確認（[Blender実測](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722777)）。GLB-019はimplemented/blender_ci。次の実装は上記2のNEXT-019/020を優先。GLB-020/021/022はpartialを維持し、Notionへの実際の同期結果は`NOTION_SYNC.md`に記録する。
+
+## 今回の継続単位：NEXT-022
+
+上記優先2から「合成適応探索の失敗・打切り・人手レビュー」を選択。途中失敗で正常履歴が保存されない問題を、工程前チェックポイント、検証済みprefix保存、固定診断、日本語レビューと読取CLIで解消する。旧探索条件や任意ユーザーコード実行は広げない。関連テスト・ローカル合成試験後に一度の対象CIでまとめて確認する。[仕様](GLB022_RUN_REVIEW.md)。実測結果と次の段階はSTATE/HANDOFFを参照。

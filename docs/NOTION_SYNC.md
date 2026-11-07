@@ -181,3 +181,7 @@ Continue from PR #25 and its `docs/project/STATE.json` / generated handoff; pref
 - [GLB-022](https://app.notion.com/p/410948b74937811ea006d4d6bd55b1dc): partial/in progress, synthetic adaptive search, failure/stop diagnostics and human review next.
 
 The sync receipt changes documentation only; verified code SHA remains `31bf3de`. This receipt is not a release or approval.
+
+## Pending milestone: GLB-022 phase 6 / NEXT-022
+
+The new durable-checkpoint/failure-review implementation is locally tested; target CI has not run yet. After the single milestone CI, update the existing project and GLB-022 task with actual code SHA/results. Preserve partial overall status and previous histories. No derived checkpoints, private geometry/source or personal data are synchronized.

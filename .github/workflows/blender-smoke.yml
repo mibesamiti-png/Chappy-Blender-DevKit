@@ -32,6 +32,12 @@ on:
       - 'scripts/blender_glb_surface_review.py'
       - 'scripts/blender_surface_inventory_smoke.py'
       - 'cbdk/glb_part_hints.py'
+      - 'cbdk/glb_synthetic_adaptive.py'
+      - 'cbdk/glb_synthetic_run_review.py'
+      - 'scripts/run_glb022_synthetic_adaptive.py'
+      - 'scripts/verify_glb022_failure_review.py'
+      - 'tests/test_glb_synthetic_adaptive.py'
+      - 'tests/test_glb_synthetic_run_review.py'
       - 'tests/test_glb_part_hints.py'
       - 'tests/test_glb_surface_pipeline.py'
       - 'cbdk/glb_compare.py'
@@ -754,6 +760,17 @@ jobs:
           assert adaptive["final_bracket"] == [1.41, 1.47]
           assert adaptive["measured_feasible_trial_id"] == "adaptive_147"
           assert adaptive["stop_reason"] == "attempt_budget_exhausted"
+          from cbdk.glb_synthetic_run_review import read_run_review, render_run_review
+          run_review = read_run_review(adaptive_root / "synthetic_run_review.json")
+          assert run_review["status"] == "completed"
+          assert run_review["run_completed"] is True
+          assert run_review["validated_attempts"] == 4
+          assert run_review["input_integrity"] == "verified"
+          assert run_review["checkpoint"] == adaptive
+          assert "最適性は未証明" in render_run_review(run_review)
+          checkpoints = sorted(adaptive_root.glob("checkpoint_*.json"))
+          assert len(checkpoints) == 14
+          assert all(read_run_review(p)["run_completed"] is False for p in checkpoints)
           assert adaptive["safety"]["only_cbdk_owned_synthetic_generator"] is True
           assert not any(v for k, v in adaptive["safety"].items()
                          if k != "only_cbdk_owned_synthetic_generator")
@@ -767,6 +784,12 @@ jobs:
           PY
           sha256sum --check "$root/source_sha256.txt"
           echo "GLB-020 joint-like MVP: exact negative control, narrow socket, moved ball, uncapped lip, privacy check all passed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve synthetic adaptive review after controlled comparison timeout
+        shell: bash
+        run: |
+          python scripts/verify_glb022_failure_review.py \
+            --blender "$BLENDER_PATH" --output reports/ci/glb022_controlled_failure
 
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash

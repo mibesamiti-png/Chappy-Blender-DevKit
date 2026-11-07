@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18 PR #25ドラフト: GLB診断・ASTレビュー・合成適応探索と匿名部品台帳。31bf3deで証拠型/総面数/skip整合性を補強し、Python707件×3版/Windows2版/Blender3版の合成4ケースを含む6系統CI全成功。正式版v0.17.0維持"
+    "milestone": "v0.18 PR #25: GLB-022第6段階の工程チェックポイント・失敗/打切り診断・日本語実行レビューを実装。関連Python56件とローカルBlender4.3.2合成試験成功、対象CIはこれから実行。正式v0.17.0維持"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -361,9 +361,9 @@
       "id": "GLB-022",
       "title": "生成→比較→改善の反復実験",
       "status": "partial",
-      "verification": "blender_ci",
+      "verification": "python",
       "source": "cbdk/glb_synthetic_adaptive.py",
-      "note": "GLB-022第5段階：CBDK自作合成ソケット専用の0.78〜1.70・0.01刻み・最大4試行の適応型探索を追加。実際のGLB-020双方向サンプル最大距離がテスト目標0.12以下なら区間上側を縮め、未達なら区間下側を上げる二分探索。実Blenderで1.24→1.47→1.35→1.41と次候補が測定結果で変わり、1.47が合成目標内と観測、1.41〜1.47に絞り最大4回で停止。目標内の測定候補と最適値確定を区別し、他部品悪化は失敗、ローカル匿名JSON/MD・SHA256不変。コードSHA 37ee124aabb44df5ad9cb246342712bd9e0eb2ef：Python 42311608904、Windows 42311608916、Blender3版 42311608910、Kit 42311609353、Handoff 42311609070、Chromium 42311609211の6系統全success。実アドオン原因・製造公差・全形状一致は未検証、GLB-022 partial"
+      "note": "第5段階の最大4試行・合成適応二分探索は37ee124aの6CI成功。第6段階で上書きしない工程チェックポイント、失敗/中断時の検証済み履歴、日本語の失敗分類/確認手順と読取専用CLIを追加。予算処理完了と合成目標内観測を分離し、失敗候補を採用しない。関連Python56件成功、ローカルBlender4.3.2で予算1の実生成/比較成功と、実基準比較後の模擬タイムアウト保存成功。対象3版/Windows新CI未実施。GLB-022全体partial、実アドオン因果・任意最適化・完全幾何一致・自動再開は未対応。"
     }
   ],
   "known_issues": [
@@ -610,8 +610,8 @@
       "id": "NEXT-020",
       "priority": 20,
       "status": "in_progress",
-      "title": "GLB-022: 固定合成モデルで実測に応じた二分探索の次候補変更と4試行上限を6CI成功。次は許可済み範囲の汎用化と人間レビュー",
-      "acceptance": "CBDK合成ソケットの安全範囲0.78〜1.70（0.01刻み）で、GLBを再生成しGLB-020測定で次の候補値を左右に切替。Blender3版では1.24→1.47→1.35→1.41、目標のサンプル最大距離0.12以下を満たす候補1.47を観測し、4試行上限で未確定の最適性を断定しない。Pythonの反対分岐1.24→1.01など、偽履歴・未知数値・元GLB不変/他部品悪化ガードも検証。コードSHA 37ee124aの6系統CI success。実アドオンやユーザー実データの因果・推奨設定値・厳密な表面距離は未検証"
+      "title": "GLB-022: 合成適応探索の失敗・打切り・人手レビューを実装し対象CIを確認",
+      "acceptance": "NEXT-022で工程チェックポイントと失敗レビューを追加。生成/比較タイムアウト、他部品悪化、座標系/入力改変、中断、出力失敗で未検証候補を採用せず、完了と目標内観測を区別。合成3版CIとWindows/Pythonの実測後に進捗を更新。任意ユーザーアドオンへの拡張は別判断。"
     },
     {
       "id": "NEXT-021",
@@ -619,6 +619,13 @@
       "status": "done",
       "title": "GLB-019: 匿名部品一覧・弱い候補の証拠整合性補強と引き継ぎ同期",
       "acceptance": "コード31bf3deのPython707件×3版、Windows2版、Blender3版合成4ケース、Kit/Handoff/Chromiumの全6系統CI成功を実ジョブとログで確認。安全フラグ型偽装・一覧/面数/skip矛盾を拒否し入力SHA256不変を確認。既存Notionへの最終CI結果の同期はmaintenance_policy参照。次はNEXT-019/020の失敗/打切り/レビュー。"
+    },
+    {
+      "id": "NEXT-022",
+      "priority": 22,
+      "status": "in_progress",
+      "title": "GLB-022第6段階: 途中失敗でも合成反復の検証済み経過と日本語レビューを保存",
+      "acceptance": "関連Python回帰、対象Blender3版の既存4試行成功経路・全チェックポイント検証と、実GLB基準比較後の明示的模擬タイムアウト保存、Windows回帰を確認。仕様/STATE/HANDOFF/進捗と既存Notionへ実測結果・残課題を記録する。"
     }
   ],
   "decisions": [
@@ -871,6 +878,11 @@
       "id": "DEC-050",
       "decision": "反復機能を広げる前にGLB-019の既存匿名部品証拠を型と面数境界で検証し、Notionの現在要約をGitHub台帳へ同期する",
       "note": "数値/真偽値のPython等価性では安全フラグを検証しない。省略一覧の未列挙部品も順位から総面数範囲を制約。合成4ケースを既存3版CIへ追加し、私有ソース/GLBは使わない。GLB-020追加機能凍結、GLB-021/022 partial、正式v0.17.0とlast_verified維持。現状と優先順はdocs/DEVELOPMENT_PLAN.md。"
+    },
+    {
+      "id": "DEC-051",
+      "decision": "合成適応探索の範囲を広げる前に、工程開始前の新規チェックポイントと失敗/打切りレビューを残す",
+      "note": "検証済みprefixだけを再生し、失敗候補は除外。目標内観測と実行完了は別。固定診断コードで私有パス/例外自由文を保存せず、自動再試行/再開なし。読取CLIは非実行。従来成功履歴と最大4試行を維持。合成CIの候補比較タイムアウトは明示的な模擬注入で、自然ハング再現ではない。強制終了/書込障害の完全保存は保証しない。"
     }
   ],
   "last_verified": {
@@ -950,7 +962,7 @@
     "feature_priority": "2026-11-07 GLB-018 code/docs SHA 676e92f8cc4ad48774ea6e0702710576fe97a286 all five GitHub CI SUCCESS: Python3 42246918798, Windows PowerShell 2 42246918818, Blender4.4.3/4.5.15/5.2.1 42246918883, Windows kit 42246918868, durable handoff 42246918953. Real synthetic 9-GLB: large panels with narrow small-part opening area-only max 0.0 vs feature-aware max 0.0657466 all Blender versions; review-only false defect-equivalence/auto-apply flags. GLB-018 implemented/blender_ci, NEXT-016 done. PR draft; formal v0.17.0 preserved.",
     "real_glb_surface_bridge": "2026-11-07 GLB-019 docs/implementation HEAD 5b6196a59f86318128c768507fea53237e3a6e11 ALL FIVE CI SUCCESS: Python3 42258076642, Windows PowerShell3.11/3.13 42258076781, Blender4.4.3/4.5.15/5.2.1 42258076658, Windows kit 42258076681, durable handoff 42258076822. Local opt-in GLB pair compares fixed BVH and adaptive feature-aware sampling; 512 triangle strict cap; external URI reject; no private model uploads or auto edits. GLB-019 implemented/blender_ci, NEXT-017 done. PR draft, official last_verified v0.17.0.",
     "milestone_notion_sync": "GitHub STATE更新→push/PRと実測検証→既存Notionプロジェクト/タスクへ状態と証拠を同期。失敗時はGitHubへpending記録。常駐同期なし、私有ソース/GLB/個人情報は対象外。",
-    "notion_sync_status": "success 2026-11-07 JST: GitHub実測記録c7306ceを基に既存CBDKプロジェクト410948b7493781449462ca76e9567e75と既存GLB-019/020/021/022の4タスクの現在要約・状態・検証・予定を更新。全更新応答成功。GLB-019完了、020/021/022作業中。履歴保持、新規ページなし、私有ソース/GLB/個人情報なし。常駐同期なし。次の節目もdocs/NOTION_SYNC.mdに従う。",
+    "notion_sync_status": "pending: GLB-022第6段階の実装/対象CI確認後、既存プロジェクト/GLB-022タスクへ同期予定。前回31bf3deの同期は成功済み。",
     "surface_inventory_integrity": "2026-11-07: code SHA 31bf3de18c357d796194dcac369c66e55b3973bf ALL SUCCESS: Python https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722780 (707 tests x 3), Windows 42359722774, Blender 42359722777 (4.4.3/4.5.15/5.2.1, 4 new synthetic cases), Kit 42359722842, Handoff 42359722778, Chromium 42359722853. Local Python3.12.14 707/707 and Blender4.3.2 synthetic4 passed separately. Release last_verified 0.17.0 unchanged."
   }
 }

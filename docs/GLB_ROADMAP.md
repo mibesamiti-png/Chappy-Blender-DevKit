@@ -9,7 +9,7 @@
 | GLB-019 | 実際の参照GLBと生成GLBを読み込み、表面距離・開口差・特徴優先解析を既存比較へ統合 | **implemented / blender_ci** | 合成モデルでCI成功。実ユーザーGLB・512三角形超・個別部品対応は追加検証 | [タスク](https://app.notion.com/p/410948b7493781e888acd4392249365d) |
 | GLB-020 | **形状差分の3D可視化**。差の位置、部品、規模を赤/黄などの色と凡例で確認 | **partial / blender_ci** | 匿名部品別の色付きGLBと集計JSONに加え、オフラインHTMLで左右連動3Dビューを追加（Blender3版/JS構文CI成功）。実Chromium操作CI・空間的な部品候補表示に加え、追加24点で誤差増大を観測した面の紫枠表示も成功。未測定領域の完全把握、部品同一性の証明、実ユーザーGLBは残る。詳細 [仕様](GLB_DIFF_VISUALIZATION.md) | [タスク](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25) |
 | GLB-021 | **アドオン設定の改善候補と連携**。例: ソケットの開口差→該当しそうな設定候補を人がレビュー | **partial / blender_ci** | GLB-020集計差分と既存ASTプロパティ照合をレビュー専用で接続済み。原因・数値は未確定、実ユーザーソース未検証 | [タスク](https://app.notion.com/p/410948b7493781efb123c459b521312e) |
-| GLB-022 | **生成→比較→改善の反復実験**。許可済み合成条件でGLB再生成と改善測定 | **partial / blender_ci** | CBDK自作モデルだけで基本2試行・部品間退行・中間改善・算術格子・実測適応型二分探索までCI成功。最大4試行の合成探索に限定し、任意アドオン実行/自由最適化は未実装 | [タスク](https://app.notion.com/p/410948b74937811ea006d4d6bd55b1dc) |
+| GLB-022 | **生成→比較→改善の反復実験**。許可済み合成条件でGLB再生成と改善測定 | **partial / blender_ci** | CBDK自作モデルの適応探索までCI成功。第6段階の途中経過保存・失敗/打切りレビューを実装し、新しい対象CIを確認中。最大4試行、任意アドオン実行/自由最適化は未実装 | [タスク](https://app.notion.com/p/410948b74937811ea006d4d6bd55b1dc) |
 
 ## 今回の優先順
 
@@ -164,3 +164,7 @@
 - CBDK合成ソケット開口の0.78〜1.70を0.01刻みで二分。試験専用の全体双方向サンプル最大距離0.12以内かどうかで次候補が変わり、Blender3版の実生成・比較は1.24→1.47→1.35→1.41。1.47を測定上の目標内候補と記録し、最大4回で停止・最適値未確定と明記。
 - テスト対象コードSHA `37ee124aabb44df5ad9cb246342712bd9e0eb2ef`：[Python 42311608904](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608904)、[Windows 42311608916](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608916)、[Blender4.4.3/4.5.15/5.2.1 42311608910](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608910)、[Windows Kit 42311609353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609353)、[引き継ぎ 42311609070](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609070)、[Chromium 42311609211](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609211) **全6系統success**。
 - **GLB-022 partial / blender_ci**。実アドオンの設定を変更して因果や最適値を見つけるものではなく、単調性の仮定を他形状へ一般化しない。古い4プロトコルの回帰維持。[仕様と制限](GLB022_ADAPTIVE_SYNTHETIC.md)。
+
+## 今回の開発単位: NEXT-022 / GLB-022第6段階
+
+工程チェックポイント、検証済みprefixの保存、固定失敗分類、日本語確認事項、非実行の読取CLIを一括実装。[仕様](GLB022_RUN_REVIEW.md)。対象CIと同期状態はSTATE/HANDOFFへ記録する。新しい探索条件やユーザーコード実行へは拡張しない。

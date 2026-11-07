@@ -141,7 +141,21 @@ def build_adaptive_history(baseline: dict, trials: dict, *, budget=MAX_TRIALS) -
     return output
 
 
+def build_adaptive_checkpoint(baseline: dict, trials: dict, *, budget=MAX_TRIALS) -> dict:
+    """Replay only validated measurements; an unfinished trace stays incomplete."""
+    return _replay(baseline, trials, budget=budget)
+
+
+def render_adaptive_checkpoint(history: dict) -> str:
+    """Render a validated prefix without implying that the run finished."""
+    return _render_adaptive_history(history, allow_incomplete=True)
+
+
 def render_adaptive_history(history: dict) -> str:
+    return _render_adaptive_history(history, allow_incomplete=False)
+
+
+def _render_adaptive_history(history: dict, *, allow_incomplete: bool) -> str:
     """Validate the generated trace strictly; no arbitrary labels in Markdown."""
     if (not isinstance(history, dict)
             or set(history) != {
@@ -153,21 +167,24 @@ def render_adaptive_history(history: dict) -> str:
                 "sampled_target_status", "stop_reason", "metric", "safety",
             }
             or history["kind"] != KIND
+            or type(history["schema_version"]) is not int
             or history["schema_version"] != 1
             or history["status"] != "synthetic_test_only"
             or history["target_sampled_max"] != TARGET_SAMPLED_MAX
             or history["target_is_real_tolerance"] is not False
+            or type(history["max_trials"]) is not int
             or history["max_trials"] != MAX_TRIALS
             or history["metric"] !=
             "global_bidirectional_sampled_max_not_exact_hausdorff"
-            or history["safety"] != SAFETY):
+            or json.dumps(history["safety"], sort_keys=True) != json.dumps(SAFETY, sort_keys=True)):
         raise ValueError("Unsafe adaptive history")
     budget = history["attempt_budget"]
     if (type(budget) is not int or not 1 <= budget <= MAX_TRIALS
             or type(history["attempts_executed"]) is not int
-            or history["attempts_executed"] != budget
+            or not 0 <= history["attempts_executed"] <= budget
+            or (not allow_incomplete and history["attempts_executed"] != budget)
             or not isinstance(history["steps"], list)
-            or len(history["steps"]) != budget):
+            or len(history["steps"]) != history["attempts_executed"]):
         raise ValueError("Invalid adaptive history budget")
     initial_max = history["initial_sampled_max"]
     initial_faces = history["initial_socket_affected_faces"]
@@ -248,8 +265,10 @@ def render_adaptive_history(history: dict) -> str:
         )
     expected_status = ("target_feasible_in_sampled_test"
                        if feasible else "no_measured_feasible_candidate")
-    expected_stop = ("attempt_budget_exhausted" if next_candidate(lo, hi) is not None
-                     else "centi_unit_bracket_converged")
+    expected_stop = ("attempt_budget_exhausted" if len(history["steps"]) == budget
+                     else "incomplete_trace")
+    if next_candidate(lo, hi) is None:
+        expected_stop = "centi_unit_bracket_converged"
     if (history["initial_bracket"] != [LOW_CENTI / 100, HIGH_CENTI / 100]
             or history["final_bracket"] != [lo / 100, hi / 100]
             or history["best_observed_trial_id"] != best_id

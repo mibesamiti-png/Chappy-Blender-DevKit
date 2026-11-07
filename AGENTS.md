@@ -375,3 +375,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - Measured scenes require 1..512 triangles each. A triangle_limit skip needs an actually over-limit scene. Preserve ambiguous and insufficient-inventory states and all review-only flags.
 - Run `scripts/blender_surface_inventory_smoke.py` only on CBDK-authored synthetic fixtures under fresh reports/ci output directories. Four cases cover unique counts, duplicate ambiguity, 33-object truncation and 561-face skipped truncation. Never substitute local Blender 4.3.2 for the CI target matrix.
 - At development milestones, mirror the canonical GitHub STATE into the existing Notion project/tasks per docs/NOTION_SYNC.md. No duplicate pages, private reports, source/geometry or personal data. Record connector failures and pending sync in GitHub; no always-on sync is installed.
+
+## GLB-022 phase 6 — durable failed/interrupted synthetic run review
+
+- Keep immutable numbered checkpoint pairs and a terminal review under the fresh local reports/ci run directory. Validate partial traces independently; never pass them to the legacy completed-history API as finished runs.
+- Failed generation/comparison, invalid measurement, cross-part regression, changed scale/input, interruption and I/O failures must preserve only the previously validated measurement prefix. An observed feasible candidate is not successful run completion. Unvalidated slots include failed/in-flight candidates and are not automatic retry allowance.
+- Never save exception text/commands/private paths/geometry in the run review. Use fixed diagnostic codes and a nonzero CLI exit; no automatic retry/resume or user addon execution. Missing final evidence means incomplete, not completed or a live process.
+- The extra Blender CI failure probe uses real CBDK-generated GLBs and baseline comparison, with an explicitly simulated candidate-comparison timeout. Do not claim a naturally occurring hang was reproduced. Local4.3.2 evidence is separate from target4.4.3/4.5.15/5.2.1 CI. See docs/GLB022_RUN_REVIEW.md.
