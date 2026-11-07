@@ -262,3 +262,34 @@ CBDK自作fixtureのみを使い、**ビルド形式の妥当性、公式validat
 - **D / EXT-001:** 新ブランチ `work/v018-extension-quality-r10`。CBDK自作のrepo管理helperソースと、生成プレビューZIPのhash自己申告を、読み取り専用・上限付き・trusted-root固定で照合する負例/正例を検討。一致も真正性/作者同意/公開権限にならず、`blocked_for_extension_release`維持。実行/インストール・私有ソース公開禁止。 `cbdk/extension_*`、D専用tests/docsだけ。
 
 各チームは着手時の最新dev SHAと作業対象ファイルをPR本文へ明記。正確なHEADでPython3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1、Chromium、Handoffの発火5系統CIを実測し、追加負例が本当に実行されたか区別する。Aが統合ブランチで再度5CIを確認し、開発squash後7CIで次ラウンドを許可。共通STATE/HANDOFF/PROGRESS/CI/Notionと`main`、正式リリースはA所有。Codex不在でも専門チームを止めない。Windows GUI/Undo、実ユーザーGLB、真の第三者Addon、ライセンス、正式Extensions、Pagesは引き続き別承認。
+
+## 2026-11-08 JST — R11 プレ設計 — R10統合が成立するまで設計のみ
+
+**これはAによる先読み案であり、実装開始許可ではない。** R10個別B [#85](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/85) / C [#83](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/83) / D [#84](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/84) は各厳密HEADで5発火workflow系統すべてsuccess、変更は計12パス・担当重複0。A結合 [#86](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/86) は別SHAの独立CI検証が必要。R11の専門新ブランチや第2の未統合PRは禁止し、以下の負例と適用範囲を検討するだけなら可。
+
+### R11 B候補 / GLB NEXT-008：冒頭64サンプルへの偏りを負例で検証
+
+- R10適応AABBでは**最初の最大64回のbbox判定**だけを見て、除外8回以上ならフィルタを保持、未満なら途中から停止する。この選別は速さのみを変え、R2の元の最近接距離述語とR3独立連結判定は変えてはならない。
+- 先頭64回が非代表的な「密集→疎」「疎→密集」、同じ線分群の候補順入替、float32で近接した細帯、ゼロ長、255/256/257辺、64部品/512面などCBDK自作合成ケースを用意。固定R8と完全unpruned R2との**全結果辞書一致**、計算回数、Python3版の中央値、peak traced heap上限、順序依存の速度変動を観測。意味的に異なる出力なら即修正。性能利得や安全性の証拠が乏しければ本体の変更はしない。
+- 担当候補：`cbdk/glb_*`、GLB専用tests/docs。共通スクリプト・CI/STATEはA。実GLB同一性、穴証明、自動適用は禁止。
+
+### R11 C候補 / UI-001・BUILD-001：pending ledger中の所有者交代と安全なdisable失敗
+
+- R10で同じunregister呼び出し中のclassとSceneの同時失敗を観測。R11は別クラスledgerがpendingの最中、Scene RNAが「失われる・第三者の同名宣言に差し替わる・見かけがCBDK ownedに似る」負例を、CBDK自作の合成スタブのみで追加。名前だけでforeignを削除せず**原tokenの同一性**を比較し、未解放のclass/Sceneの台帳を保持。reload・duplicate registerの拒否とexplicit retryに偽の成功がないことを確認。
+- `addon_utils.disable`途中に1回だけ人工的解除失敗を発生させ、次の明示的な回復で漏れ0、5機能/6レシピ、既存R5〜R10のnativeマーカー保持をBlender 4.4.3/4.5.15/5.2.1実ジョブで検証。Windows GUI Ctrl+Zや外部アドオン実共存は証明しない。
+- 担当候補：`templates/modular_preview/`、C専用tests/docs。Aの共通`scripts/`・CI/STATEは編集しない。
+
+### R11 D候補 / EXT-001：参照スナップショット鮮度・パス整合・改行揺れ
+
+- R10のrepo source比較は**テスト専用**で、外部から来たコードの真正性や公開権限を認定しない。R11は合成一時checkoutで、ZIP作成後に元sourceが合法的に更新された時の差分と、自己rehashed ZIPによる差分が、単なるbyte比較だけでは識別不能なことを明示的に試験。スナップショット/コミット基準を明示し、CRLF/LFによる差・大文字小文字パスエイリアス・symlink親抜け・未知root/allowlistを保守的に拒否。ファイル名・パス・payload・PII等をログに出さない。
+- 最大16MiB ZIP/2MiB member/64 member・既存7合法プレビューと既知公式Blender synthetic validator正例を維持。真正性・作者同意・再配布・ライセンス・公開・署名・インストールを承認しない。実装問題が再現するまではtests/docsのみ。
+- 担当候補：`cbdk/extension_*`、D専用tests/docs。共通validatorスクリプト/CI/STATEはA。
+
+### R11を開始できる厳格なゲート
+
+1. A統合 [#86](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/86) の**最終HEAD**でPython 3版、Windows 2版、Blender3版（`native_r10_*`実ジョブログ）、Chromium、Handoffの5発火系統すべてsuccess。個別R10 CIを代替として使わない。
+2. Aが上記を確認して**v0.18開発ブランチだけ**にR10結合コードをsquash mergeし、そのSHAを新たに記録。旧R9/R10個別PRは履歴であり二重mergeしない。
+3. 開発ブランチのR10統合SHAで**独立した7系統CI**（Python、Windows、Blender3版、Chromium、Handoff、Kit、Skill）が全success。PRの5系統成功や前のR9 push/PR結果で代用しない。
+4. AがSTATE.json・生成Handoff・PROGRESSと本キューにR10の証拠を同期し、**R11正式割当PRを開発ブランチに統合した後**にだけR11新ブランチを作成可能。着手直前の最新dev SHAを基点にする。B/C/Dは各担当1未統合追加ドラフトPRまで、旧PR stack禁止、Codex不在でも安全な作業のみ継続。
+
+main、正式v0.17.0、実ユーザー私有GLB、GUI/Ctrl+Z、第三者Addon実行、著作権/SPDX/再配布承認、Blender Extensions公開、GitHub Pagesのゲートは従来どおり。
