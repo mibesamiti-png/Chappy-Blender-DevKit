@@ -200,7 +200,7 @@
 - `DEC-067` R7でGLB厳密境界fastpathのゼロ長線分誤通過を再現して保守的ガードを統合し、Blender登録失敗回復とExtension TOML上限を確認後R8を正式割当。B #61 SHA182ae87、C #62 eef6bce、D #60 040036c 各5系統CI成功。B初期テストHEAD fff82a6は意図通りREDとなりゼロ長R2不一致を発見、正長ガードを修正。A統合#63 HEAD 52dea171で5系統all green、dev統合687b2acdで独立7系統success後R8 #64を統合。実GLB/GUI/権利/配布/mainと正式リリースは別ゲート。
 - `DEC-068` A所有のGitHub読み取り専用HTMLライブボードをv0.18開発ブランチに統合し、ブラウザ実機確認とPages公開は別ゲートにする。PR #68統合コードd656f62d2b70301ec34c667f89743d17e7168a1b。Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995が各success。NodeテストでチームCI・音通知dedupeを検証。公開API3回/5分+raw1回、認証情報を保存せず、5分更新・手動更新。Pages設定/main/正式v0.17.0は変更しない。
 
-- `DEC-069` Dashboard v2でBCD完了件数と通知音試聴、作業キュー代替取得を追加し、ブラウザの実ユーザー端末検証は引き続き別ゲートとする。A PR #71 combined SHA98ec697252f04fa58bdfcc1614ea5587c5446d7a: Python42417792237/Windows42417792437/Chromium42417792272/Handoff42417792410各success。dev squash SHA dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a、post-merge 7CI確認中。Node版のロジックと独立したChromiumネットワークモックでBCD 2/3→3/3、完了音1回、再更新で重複なし、Raw→Contents fallbackを確認。実GitHub APIへのローカルfile://からのアクセス、実Windows Edge通知音、Pages設定はユーザー実機で未検証。
+- `DEC-069` Dashboard v2でBCD完了件数と通知音試聴、作業キュー代替取得を追加し、ブラウザの実ユーザー端末検証は引き続き別ゲートとする。A PR #71 combined SHA98ec697252f04fa58bdfcc1614ea5587c5446d7a: Python42417792237/Windows42417792437/Chromium42417792272/Handoff42417792410各success。dev squash SHA dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a、post-merge Python42418153530/Windows42418153594/Blender42418153563(4.4.3/4.5.15/5.2.1)/Chromium42418153533/Handoff42418153613/Kit42418153551/Skill42418153532の7系統success確認。Node版のロジックと独立したChromiumネットワークモックでBCD 2/3→3/3、完了音1回、再更新で重複なし、Raw→Contents fallbackを確認。実GitHub APIへのローカルfile://からのアクセス、実Windows Edge通知音、Pages設定はユーザー実機で未検証。
 
 ## 更新・プライバシールール
 
