@@ -482,3 +482,8 @@ NEXT-003完了。NEXT-002は制御履歴2ケースの成功を確認したが通
 ## v0.18 UI-001 一部実装 — 自作5機能の宣言的パネル
 
 `catalog/ui_layouts.json` から見出し・ボタン名・順序を指定し、`cbdk/ui_layout.py` が未知/重複/欠落feature、JSON重複、余計なキー、不可視文字を拒否する。許可済み5機能・既存レシピの選択範囲からだけBlenderパネルを組み立て、オペレーターを任意指定できない。`ea0a4bf`のPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功、headless `Panel.draw`で表示順検査。実GUI/任意のUI作成/正式配布/ライセンスは未検証のまま。UI-001をpartial/blender_ciとする。詳細：[UI_DECLARATIVE_PREVIEW](UI_DECLARATIVE_PREVIEW.md)。
+
+
+## EXT-001 一部実装 — Blender Extensions形式の移行前チェック
+
+`cbdk/extension_preflight.py` と `python -m cbdk extension-preflight` は、CBDKが自作して許可したlegacy/modular preview ZIPだけを対象にした安全な静的検査。既知のZIPメンバー/パス/サイズ/ZIP symlink/重複と、全構成ファイルのSHA-256出自を照合する。未認可・ライセンス未選択・正式なmanifest/Extensions ZIP未生成/公式Blender extension validate未実施を必ず公開ブロッカーとしてJSON出力する。元Pythonコードを実行・採用・配布しない。公式Blender Extensions形式の最終パッケージではなく、`EXT-001`はpartial/blender_ci（1f31506の全6系統CI、Blender3版成功）。実装詳細は[EXTENSION_PREFLIGHT.md](EXTENSION_PREFLIGHT.md)。

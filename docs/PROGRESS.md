@@ -1163,3 +1163,8 @@ Notion節目同期も成功。正本73b5635を既存CBDKプロジェクトとPR/
 ## 2026-11-07 — UI-001 context guards and bounded nudge input
 
 固定自作5機能のBlenderパネルで、active meshとOBJECT/EDIT_MESHによる操作可能状態を表示し、既存の頂点移動operatorのXYZ引数をBlender RNA FloatVectorPropertyで編集可能にした。関連headless Panel.drawとパラメータ渡し・登録解除を検証。コード`597ed5c`に対するPython/Windows/Blender3版/Kit/Handoff/Chromium全6CI成功。Windowsの実GUI操作、任意UI構築、正式配布は未検証。UI-001 partial、v0.17.0正式版とPR #25ドラフト維持。
+
+
+## 2026-11-07 — EXT-001 extension-readiness preflight
+
+CBDK自作のlegacy/modular preview ZIPの整合性・内容のSHA256/パストラバーサル/重複/出自未承認を検査し、Extensions正式公開の未解決事項をJSONで表示する`extension-preflight`を追加。コード`1f31506`のPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功。実Extensions ZIP・Blenderの公式検証・ライセンス選択・再配布権限は未完了。EXT-001 partial、v0.18ドラフト/正式v0.17.0維持。

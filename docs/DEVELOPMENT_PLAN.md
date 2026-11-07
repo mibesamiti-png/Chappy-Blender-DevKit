@@ -17,6 +17,12 @@
 ## UI-001 操作性改善（2026-11-07 JST）
 固定5自作機能のプレビューに、Blenderのモード・active meshを使ったボタン有効/無効と、`vertex_nudge`用の範囲付きXYZ入力を追加。未知operator・入力コードの実行は引き続き禁止。生成パネルの`Panel.draw`、operator引数引継ぎ、Scene登録/解除をheadlessで確認した。コード[597ed5c](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/597ed5c9d40e750025e7d86ca9ccd525a4ca7786)の[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508527)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508424)・[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508575)・[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508465)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508411)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508412)は6系統成功。UI-001はpartial、Windows GUI Ctrl+Z/操作感・汎用UI・再配布権利は未確認。詳細 [UI_DECLARATIVE_PREVIEW.md](UI_DECLARATIVE_PREVIEW.md)。
 
+## EXT-001 構造と公開ブロッカーのプレフライト（2026-11-07 JST）
+
+コード [1f31506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/1f3150611dc9da5a4ff1c7f4d4f89042f399911c) で、既存自作legacy/modular ZIPをコード実行なしで検査し、ZIPの出自/重複/危険パス/ハッシュ不一致と、Blender Extensionsへの移行に必要なライセンス/承認/maintainer/version等の未解決条件をJSONに記録。manifest TOML/Extensions ZIPを生成しない。手元のpreview build時点のSHAは公式Blender Extension形式認証でも権利許諾でもない。
+
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42383597364)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42383597323)、[Blender4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42383597324)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42383597344)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42383597328)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42383597372)全6系統成功。Blender CIでは両形式のZIPを実際にビルドしてpreflightがrelease-blockedと返すことを検証。EXT-001はpartial / blender_ci。正式Extensions生成・公式validate・ライセンス判断・公開承認は未完了。次世代ロードマップは未有効でv0.18を継続。[詳細](EXTENSION_PREFLIGHT.md)。
+
 ## 初回引き継ぎ基準（履歴）
 
 - 開始ブランチ `feature/v0.18-shape-diagnostics`、開始HEAD `7a021f5978302d21d02d51bbb4b4fc263284fa1e`。

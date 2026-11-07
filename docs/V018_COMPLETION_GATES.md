@@ -11,7 +11,7 @@
 | NEXT-007 | 自作GLBの3版プレビュー/画像/metadata | 許可された実ユーザーGLBとの照合が残る。現時点で実データ利用許可はない |
 | NEXT-008 | 合成生成/比較/診断/反復に、両方向focus・分類面割合・実験triageを追加。b17fa4d/Blender3版成功 | 実ユーザーの生成元との全工程・真の部品対応や細穴/内部形状は未保証。私有コードを無断実行しない |
 | UI-001 / BUILD-001 | 固定5機能の宣言的見出し/順序のほか、OBJECT/EDIT_MESH mode・active meshのボタンガードと安全な頂点移動XYZ入力を追加。597ed5cのBlender3版/全6CI成功 | UI-001はpartial。汎用UI・任意operator・実Windows GUI操作/Undo・Extensions形式・権利・正式公開は未検証。次世代へ形式的に完了扱いして移行しない |
-| EXT-001 / LIM-004 | 既存legacy ZIPの出自/メンバー/ハッシュ/承認フラグを検査する安全なExtensions適合性プレフライトを追加（検証は新規CIで確認）。JSONに必須メタデータ不足/ライセンス/公開ブロッカーを表示、Extension ZIPとmanifest TOMLは生成しない | 公式Blender Extension validate・実際のExtensions ZIP・権利/ライセンス判断・正式配布は未完了。コード検証前に成功扱いしない |
+| EXT-001 / LIM-004 | 自作legacy/modular ZIPの出自・SHA/パス・承認フラグ検査とExtensions移行ブロッカーJSONを実装。1f31506のPython/Windows/Blender3版/Kit/Handoff/Chromium全6CI成功 | EXT-001はpartial。正式blender_manifest.toml/Extensions ZIPの生成、公式Blender extension validate、権利/ライセンス選択・配布/公開の個別承認は未完了。未承認内容の自動公開禁止 |
 | EDIT-002 / PERF-001 | 監査/ベストエフォート復元/上限拒否/70×70実測 | クラッシュ耐性・全トポロジー復元・巨大/実メッシュ保証は未完了。未検証上限を緩和しない |
 | NEXT-004 / INST-001 | 保留 | 直接インストール/更新は別の明示指示まで保留を維持 |
 
