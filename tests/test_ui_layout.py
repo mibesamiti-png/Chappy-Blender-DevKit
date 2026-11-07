@@ -9,10 +9,52 @@ import unittest
 from pathlib import Path
 
 from cbdk.addon_builder import ROOT
-from cbdk.ui_layout import plan_ui_layout, validate_ui_layout
+from cbdk.ui_layout import plan_ui_layout, validate_ui_layout, validate_nudge_settings
 
 
 class AuthoredUILayoutTests(unittest.TestCase):
+    def test_section_modes_are_fixed_literals_and_preserve_legacy_plan(self):
+        original = validate_ui_layout(self.data)
+        self.data["sections"][0]["visible_in"] = "object"
+        self.data["sections"][1]["visible_in"] = "edit_mesh"
+        self.assertEqual(validate_ui_layout(self.data), original)
+        self.write()
+        _, options = plan_ui_layout(["vertex_nudge"], root=self.root, include_options=True)
+        self.assertEqual([s["visible_in"] for s in options["section_styles"]], ["edit_mesh"])
+        for mode in ("context.mode == 'OBJECT'", "exec(code)", True, None, []):
+            with self.subTest(mode=mode):
+                self.data["sections"][0]["visible_in"] = mode
+                with self.assertRaises(ValueError):
+                    validate_ui_layout(self.data)
+
+    def test_typed_bounds_can_only_narrow_and_contain_default(self):
+        spec = validate_nudge_settings({"default": [0, 0, .125], "min": -1, "max": 1})
+        self.assertEqual(spec["type"], "float_vector")
+        self.assertEqual(spec["size"], 3)
+        self.assertEqual(spec["max"], 1.0)
+        for override in (
+            {"min": -11}, {"max": 11}, {"min": True}, {"max": float("inf")},
+            {"min": 1}, {"min": 0, "max": 0}, {"default": [2, 0, 0]},
+            {"type": "python_expression"},
+        ):
+            with self.subTest(override=override), self.assertRaises(ValueError):
+                validate_nudge_settings({"default": [0, 0, .125], "min": -1, "max": 1, **override})
+
+    def test_visibility_cannot_make_controls_unreachable(self):
+        self.data["sections"][1]["visible_in"] = "object"
+        with self.assertRaisesRegex(ValueError, "unreachable"):
+            validate_ui_layout(self.data)
+
+    def test_legacy_and_structured_defaults_share_one_contract(self):
+        old = validate_nudge_settings([0, 0, .1])
+        new = validate_nudge_settings({"default": [0, 0, .1], "min": -10, "max": 10})
+        self.assertEqual(old, new)
+        self.data["sections"][1]["controls"][1]["parameters"] = {"offset": {"default": [0, 0, .25], "min": -1, "max": 1}}
+        self.write()
+        _, options = plan_ui_layout(["vertex_nudge"], root=self.root, include_options=True)
+        self.assertEqual(options["nudge_offset"]["default"], (0.0, 0.0, .25))
+        self.assertEqual(options["nudge_offset"]["min"], -1)
+
     def test_optional_layout_and_typed_offset_preserve_legacy_plan(self):
         original = validate_ui_layout(self.data)
         self.data["sections"][0].update(layout="row", boxed=False)
@@ -20,7 +62,7 @@ class AuthoredUILayoutTests(unittest.TestCase):
         self.assertEqual(validate_ui_layout(self.data), original)
         self.write()
         plan, options = plan_ui_layout(["vertex_nudge", "mesh_bounds"], root=self.root, include_options=True)
-        self.assertEqual(options["section_styles"][0], {"layout": "row", "boxed": False})
+        self.assertEqual(options["section_styles"][0], {"layout": "row", "boxed": False, "visible_in": "always"})
         self.assertEqual(options["nudge_offset"]["default"], (0.125, -0.25, 0.5))
         self.assertEqual(options["nudge_offset"]["min"], -10)
 

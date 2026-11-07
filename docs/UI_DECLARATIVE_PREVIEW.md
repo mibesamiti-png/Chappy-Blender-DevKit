@@ -106,3 +106,12 @@ Panel.draw and Blender data evidence, not real Windows GUI/hotkey verification.
 コードeac7453b3e052267c45a83fa7c47180882d02419でPython823件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411841)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411842)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411863)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412044)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412165)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411889)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412036)。
 
 [検証範囲・負荷観測・未確認・再開点](UI_GUARD_VALIDATION.md)。全3版で理由表示と両property factory失敗からの復旧を確認。UIのcached選択数は助言、実行時監査を維持。全体partial、実GUI/権利/汎用UIは未確認のまま。
+
+## 2026-11-08 JST: conditional sections and narrowed parameter ranges
+
+[Mode/settings contract](UI_MODE_SETTINGS.md) adds fixed `visible_in` values,
+context-compatible placement checks, narrowed float-vector ranges and an
+opt-in static `addon-plan --with-ui` review. Existing defaults and vector-only
+settings remain compatible. The generated archive records UI options and native
+smoke compares them with the loaded module. Template substitutions now run in
+one pass so sentinel-like labels remain inert strings.

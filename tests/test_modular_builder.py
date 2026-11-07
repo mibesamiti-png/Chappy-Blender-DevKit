@@ -132,6 +132,33 @@ class ModularBuilderTests(unittest.TestCase):
         ))
         self.assertEqual(manifest['ui_section_titles'], ['Inspection', 'Edit Mode'])
         self.assertNotIn('__CBDK_UI_SECTIONS__', source)
+        self.assertEqual(manifest['ui_options']['section_styles'][0]['visible_in'], 'always')
+
+    def test_invalid_declared_bounds_stop_before_zip_creation(self):
+        path = self.root / 'catalog/ui_layouts.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        data['sections'][1]['controls'][1]['parameters'] = {
+            'offset': {'default': [0, 0, 2], 'min': -1, 'max': 1}}
+        path.write_text(json.dumps(data), encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'outside declared'):
+            self.build()
+        self.assertFalse(self.output.exists())
+
+    def test_template_marker_text_in_labels_is_an_inert_literal(self):
+        import ast
+        self.data['display_name'] = 'CBDK __CBDK_FEATURE_IDS__'
+        self.save_recipe()
+        path = self.root / 'catalog/ui_layouts.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        data['sections'][0]['controls'][0]['label'] = '__CBDK_UI_OPTIONS__'
+        path.write_text(json.dumps(data), encoding='utf-8')
+        self.build()
+        with ZipFile(self.output) as archive:
+            tree = ast.parse(archive.read(f'{PACKAGE_ID}/__init__.py'))
+        literals = {node.targets[0].id: node.value for node in tree.body
+                    if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)}
+        self.assertEqual(ast.literal_eval(literals['bl_info'])['name'], self.data['display_name'])
+        self.assertEqual(ast.literal_eval(literals['_UI_SECTIONS'])[0][1][0][1], '__CBDK_UI_OPTIONS__')
 
     def test_generated_panel_has_guarded_operator_arguments(self):
         self.data['features'] = ['vertex_nudge']

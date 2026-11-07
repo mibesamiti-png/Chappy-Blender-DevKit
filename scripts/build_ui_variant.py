@@ -17,11 +17,13 @@ def build(output):
             shutil.copytree(ROOT / folder, root / folder)
         path = root / "catalog/ui_layouts.json"
         data = json.loads(path.read_text(encoding="utf-8"))
-        data["sections"][0].update(layout="row", boxed=False)
+        data["sections"][0].update(layout="row", boxed=False, visible_in="object")
+        data["sections"][1]["visible_in"] = "edit_mesh"
         for section in data["sections"]:
             for control in section["controls"]:
                 if control["feature_id"] == "vertex_nudge":
-                    control["parameters"] = {"offset": [0.125, -0.25, 0.5]}
+                    control["parameters"] = {"offset": {"default": [0.125, -0.25, 0.5],
+                                                         "min": -1, "max": 1}}
         path.write_text(json.dumps(data), encoding="utf-8")
         recipe = json.loads((ROOT / "recipes/modular_all.json").read_text(encoding="utf-8"))
         build_modular(recipe, output, root=root, preview_unapproved=True)

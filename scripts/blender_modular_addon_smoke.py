@@ -6,6 +6,7 @@ build, never scanned/private third-party scripts. Factory startup is required.
 import json
 import sys
 import tempfile
+from types import SimpleNamespace
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -67,6 +68,9 @@ def run(path):
             assert hasattr(bpy.types, "VIEW3D_PT_cbdk_modular_preview")
             assert hasattr(bpy.types.Scene, "cbdk_modular_result")
             assert hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
+            with ZipFile(path) as archive:
+                metadata = json.loads(archive.read(f"{PACKAGE}/CBDK_BUILD_INFO.json"))
+            assert json.loads(json.dumps(module._UI_OPTIONS)) == metadata["ui_options"]
             parameter = module._UI_OPTIONS["nudge_offset"]
             actual_default = bpy.context.scene.cbdk_modular_nudge_offset
             assert all(abs(a - b) < 1e-6 for a, b in zip(actual_default, parameter["default"]))
@@ -135,22 +139,29 @@ def run(path):
                 preview = type("CBDK_Synthetic_Panel", (), {"layout": layout})()
                 module.VIEW3D_PT_cbdk_modular_preview.draw(preview, bpy.context)
                 result = layout.events
-                styles = module._UI_OPTIONS["section_styles"]
+                visible = [(title, controls, style) for (title, controls), style in
+                           zip(module._UI_SECTIONS, module._UI_OPTIONS["section_styles"])
+                           if style["visible_in"] == "always"
+                           or (style["visible_in"] == "object" and expected_mode == "OBJECT")
+                           or (style["visible_in"] == "edit_mesh" and expected_mode == "EDIT_MESH")]
+                styles = [style for _, _, style in visible]
+                visible_features = {feature for _, controls, _ in visible for feature, _ in controls}
                 assert sum(e[0] == "box" for e in result) == sum(s["boxed"] for s in styles)
-                assert sum(e[0] == "row" for e in result) == len(features) + sum(s["layout"] == "row" for s in styles) + ("vertex_nudge" in features)
+                assert sum(e[0] == "row" for e in result) == len(visible_features) + sum(s["layout"] == "row" for s in styles) + ("vertex_nudge" in visible_features)
                 observed_ops = [entry for entry in result if entry[0] == "operator"]
-                assert {entry[1] for entry in observed_ops} == expected_ops, result
+                assert {entry[1] for entry in observed_ops} == {
+                    module._OPERATORS_BY_FEATURE[feature].bl_idname for feature in visible_features}, result
                 enabled = [entry[1] for entry in result if entry[0] == "enabled"]
-                assert len(enabled) == len(module._FEATURE_IDS) + ("vertex_nudge" in features), result
+                assert len(enabled) == len(visible_features) + ("vertex_nudge" in visible_features), result
                 expected = []
-                for _, controls in module._UI_SECTIONS:
+                for _, controls, _ in visible:
                     for feature, _ in controls:
                         expected.append(feature in expected_enabled)
                         if feature == "vertex_nudge":
                             expected.append(feature in expected_enabled if nudge_ready is None else nudge_ready)
                 assert enabled == expected, (enabled, expected, expected_mode)
                 assert bpy.context.mode == expected_mode
-                if "vertex_nudge" in features:
+                if "vertex_nudge" in visible_features:
                     props = [entry for entry in result if entry[0] == "prop"]
                     offsets = [entry for entry in result if entry[0] == "operator_property"]
                     assert len(props) == len(offsets) == 1, result
@@ -159,6 +170,15 @@ def run(path):
                 else:
                     assert not any(event[0] in {"prop", "operator_property"} for event in result)
                 return result
+
+            if all(style["visible_in"] != "always" for style in module._UI_OPTIONS["section_styles"]):
+                layout = RecordingLayout()
+                preview = type("CBDK_Synthetic_Hidden_Panel", (), {"layout": layout})()
+                simulated = SimpleNamespace(mode="SCULPT", active_object=None, scene=bpy.context.scene)
+                module.VIEW3D_PT_cbdk_modular_preview.draw(preview, simulated)
+                assert not any(e[0] == "operator" for e in layout.events)
+                assert ("label", "No preview controls for this mode") in layout.events
+                checks.append("simulated_unsupported_mode_empty_panel_explanation")
 
             assert all(not enabled for enabled in
                        [item[1] for item in verify_panel("OBJECT", set())
@@ -249,6 +269,10 @@ def run(path):
                 bpy.ops.object.mode_set(mode="EDIT")
                 bpy.ops.mesh.select_all(action="SELECT")
                 checks.append("panel_selection_zero_shared_and_shape_key_reasons")
+                if parameter["max"] < 10:
+                    scene.cbdk_modular_nudge_offset = (10.0, -10.0, 0.5)
+                    assert tuple(scene.cbdk_modular_nudge_offset) == (parameter["max"], parameter["min"], 0.5)
+                    checks.append("declared_narrow_bounds_clamp_rna_input")
                 bpy.context.scene.cbdk_modular_nudge_offset = (0.125, 0.0, 0.0)
                 actual_layout = verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"})
                 assert ("operator_property", "offset", (0.125, 0.0, 0.0)) in actual_layout
@@ -307,6 +331,8 @@ def run(path):
             assert not hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
             assert not module._REGISTERED
             checks.append("disable_unregistered_all")
+            if any(s["visible_in"] != "always" for s in module._UI_OPTIONS["section_styles"]):
+                checks.append("declarative_section_modes_switch_visible_controls")
             # Fail each property factory, including the second allocation after
             # one real Scene property was created. Recover before class tests.
             for factory_name in ("StringProperty", "FloatVectorProperty"):

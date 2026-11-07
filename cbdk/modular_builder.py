@@ -8,6 +8,7 @@ release, not a license grant, and not an endorsement of third-party code.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
@@ -81,11 +82,14 @@ def build_modular(
     for marker in ("__CBDK_DISPLAY_NAME__", "__CBDK_FEATURE_IDS__", "__CBDK_UI_SECTIONS__", "__CBDK_UI_OPTIONS__"):
         if init_template.count(marker) != 1:
             raise ValueError("Modular template placeholder must occur exactly once: " + marker)
-    init_code = (init_template
-                 .replace("__CBDK_DISPLAY_NAME__", repr(name))
-                 .replace("__CBDK_FEATURE_IDS__", repr(resolved_features))
-                 .replace("__CBDK_UI_SECTIONS__", repr(ui_sections))
-                 .replace("__CBDK_UI_OPTIONS__", repr(ui_options)))
+    replacements = {"__CBDK_DISPLAY_NAME__": repr(name),
+                    "__CBDK_FEATURE_IDS__": repr(resolved_features),
+                    "__CBDK_UI_SECTIONS__": repr(ui_sections),
+                    "__CBDK_UI_OPTIONS__": repr(ui_options)}
+    # Match the original template only. Never reinterpret sentinel-like text
+    # introduced by a label/default in a previous substitution.
+    init_code = re.sub("|".join(map(re.escape, replacements)),
+                       lambda match: replacements[match.group()], init_template)
     # Python repr is an escaped Python *literal*, not code supplied by recipes.
     sources = sorted({PART_SOURCES[part_id] for part_id in part_ids})
     assets: dict[str, bytes] = {
@@ -118,6 +122,7 @@ def build_modular(
         "requested_features": list(feature_ids), "part_ids": part_ids,
         "ui_layout": "catalog/ui_layouts.json",
         "ui_section_titles": [section[0] for section in ui_sections],
+        "ui_options": ui_options,
         "minimum_blender": plan["minimum_blender"], "maximum_blender": plan["maximum_blender"],
         "target_blender": target_blender,
         "preview_only": True, "redistribution_cleared": False, "approved": False,

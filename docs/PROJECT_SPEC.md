@@ -523,3 +523,7 @@ this milestone's target CI has not run yet. No GUI or user-project guarantee.
 コードeac7453b3e052267c45a83fa7c47180882d02419でPython823件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411841)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411842)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411863)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412044)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412165)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411889)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412036)。
 
 [検証範囲・負荷観測・未確認・再開点](UI_GUARD_VALIDATION.md)。全3版で理由表示と両property factory失敗からの復旧を確認。UIのcached選択数は助言、実行時監査を維持。全体partial、実GUI/権利/汎用UIは未確認のまま。
+
+## 2026-11-08 JST UI表示条件/設定計画
+
+[仕様と検証](UI_MODE_SETTINGS.md)。固定modeによる表示、型付き範囲縮小、配置矛盾/不正初期値拒否、addon-plan --with-uiによる非実行レビュー、生成ZIPの計画記録を追加。置換語入り表示名/ラベルの生成失敗を再現して単一置換へ修正。ローカル830件とBlender4.3.2追加例が成功、対象CIは今回未実行。全体partial、実GUI/権利/汎用UI/実Extensionは未確認。

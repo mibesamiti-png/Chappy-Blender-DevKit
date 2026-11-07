@@ -41,8 +41,12 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
 
     def draw(self, context):
         col = self.layout.column(align=True)
+        visible_sections = 0
         for index, (title, buttons) in enumerate(_UI_SECTIONS):
             style = _UI_OPTIONS["section_styles"][index]
+            if style["visible_in"] not in ("always", context.mode.lower()):
+                continue
+            visible_sections += 1
             group = col.box() if style["boxed"] else col.column(align=True)
             group.label(text=title)
             body = group.row(align=True) if style["layout"] == "row" else group
@@ -73,6 +77,8 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
                     button_row.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
                 if reason is not None:
                     body.label(text=label + ": " + reason)
+        if not visible_sections:
+            col.label(text="No preview controls for this mode")
         col.label(text=context.scene.cbdk_modular_result)
 
 

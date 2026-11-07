@@ -166,7 +166,9 @@ jobs:
           python -m cbdk.registration_audit \
             2>&1 | tee reports/ci/registration_audit.log
           python -m cbdk feature-list --output reports/ci/feature_catalog.json             2>&1 | tee reports/ci/feature_catalog.log
-          python -m cbdk addon-plan --recipe recipes/modular_all.json             --target-blender "$BLENDER_VERSION" --output reports/ci/addon_plan.json             2>&1 | tee reports/ci/addon_plan.log
+          python -m cbdk addon-plan --recipe recipes/modular_all.json --with-ui \
+            --target-blender "$BLENDER_VERSION" --output reports/ci/addon_plan.json \
+            2>&1 | tee reports/ci/addon_plan.log
       - name: Build private development-preview addon ZIP
         shell: bash
         run: |

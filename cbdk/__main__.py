@@ -136,6 +136,8 @@ def main(argv=None) -> int:
     plan_cmd.add_argument('--recipe', default='recipes/modular_combined.json')
     plan_cmd.add_argument('--target-blender', default=None)
     plan_cmd.add_argument('--output', default=None)
+    plan_cmd.add_argument('--with-ui', action='store_true',
+                          help='Include static authored UI visibility and bounded settings, without building or running')
 
     draft_cmd = sub.add_parser('registration-draft',
                                help='Propose manual registration steps without approving or executing code')
@@ -533,6 +535,12 @@ def main(argv=None) -> int:
             _name, selected = validate_modular_recipe(recipe)
             report = plan_features(selected, root=Path(__file__).resolve().parent.parent,
                                    target_blender=args.target_blender)
+            if args.with_ui:
+                from .ui_layout import plan_ui_layout
+                sections, options = plan_ui_layout(report['ordered_features'],
+                    root=Path(__file__).resolve().parent.parent, include_options=True)
+                report['ui_layout'] = {'sections': sections, 'options': options,
+                                       'runtime_verified': False}
             print(json.dumps(report, ensure_ascii=False, indent=2))
             if args.output:
                 write_json(Path(args.output), report)

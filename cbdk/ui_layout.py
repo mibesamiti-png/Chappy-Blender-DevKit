@@ -1,6 +1,7 @@
 """Safe declarative panel layout for the five CBDK-authored preview features.
 
-UI JSON only controls labels and grouping; it NEVER selects Python modules,
+UI JSON controls labels, grouping, fixed visibility and bounded defaults.
+It NEVER selects Python modules,
 operator class names, source paths, or executes user-supplied expressions.
 """
 from __future__ import annotations
@@ -26,6 +27,31 @@ def validate_nudge_default(value):
             or all(v == 0 for v in value)):
         raise ValueError("Nudge default must be three finite nonzero-vector components within +/-10")
     return tuple(float(v) for v in value)
+
+
+def validate_nudge_settings(value):
+    """Code-owned type/size; declarative bounds may only narrow safe limits.
+
+    Legacy vector-only defaults remain valid. No arbitrary RNA names, types,
+    expressions or expanded operator limits can enter the generated package.
+    """
+    settings = dict(NUDGE_PARAMETER)
+    if type(value) is dict:
+        if set(value) != {"default", "min", "max"}:
+            raise ValueError("Expected default/min/max for authored nudge settings")
+        for bound in (value["min"], value["max"]):
+            if (type(bound) not in (int, float)
+                    or not NUDGE_PARAMETER["min"] <= bound <= NUDGE_PARAMETER["max"]
+                    or not math.isfinite(bound)):
+                raise ValueError("Nudge bounds may only narrow the finite +/-10 range")
+        if not value["min"] <= 0 <= value["max"] or value["min"] >= value["max"]:
+            raise ValueError("Nudge bounds must be ordered and include zero")
+        settings.update(min=float(value["min"]), max=float(value["max"]))
+        value = value["default"]
+    settings["default"] = validate_nudge_default(value)
+    if any(not settings["min"] <= component <= settings["max"] for component in settings["default"]):
+        raise ValueError("Nudge default lies outside declared bounds")
+    return settings
 
 
 def _strict_object(pairs):
@@ -62,10 +88,12 @@ def validate_ui_layout(data: object) -> tuple:
     output = []
     for section in sections:
         if (type(section) is not dict or not {"id", "title", "controls"} <= set(section)
-                or set(section) - {"id", "title", "controls", "layout", "boxed"}):
+                or set(section) - {"id", "title", "controls", "layout", "boxed", "visible_in"}):
             raise ValueError("Invalid authored UI section")
         if section.get("layout", "column") not in ("column", "row") or type(section.get("boxed", True)) is not bool:
             raise ValueError("Unsupported authored section presentation")
+        if section.get("visible_in", "always") not in ("always", "object", "edit_mesh"):
+            raise ValueError("Section visibility must be always/object/edit_mesh")
         section_id = section["id"]
         title = section["title"]
         if (not isinstance(section_id, str)
@@ -89,11 +117,14 @@ def validate_ui_layout(data: object) -> tuple:
                     or not _label(control["label"])):
                 raise ValueError("Unknown, repeated or invalid authored UI control")
             seen_features.add(feature_id)
+            required_mode = "edit_mesh" if feature_id in {"edit_selection", "vertex_nudge"} else "object"
+            if section.get("visible_in", "always") not in ("always", required_mode):
+                raise ValueError("Section visibility would make an authored control unreachable")
             if "parameters" in control:
                 parameters = control["parameters"]
                 if feature_id != "vertex_nudge" or type(parameters) is not dict or set(parameters) != {"offset"}:
                     raise ValueError("Only the authored nudge offset parameter is configurable")
-                validate_nudge_default(parameters["offset"])
+                validate_nudge_settings(parameters["offset"])
             entries.append((feature_id, control["label"]))
         output.append((title, tuple(entries)))
     if seen_features != set(TRUSTED_FEATURES):
@@ -123,7 +154,8 @@ def plan_ui_layout(requested_features: object, *, root: Path, include_options=Fa
     result = tuple((title, controls) for title, controls in visible if controls)
     if not include_options:
         return result
-    styles = tuple({"layout": s.get("layout", "column"), "boxed": s.get("boxed", True)}
+    styles = tuple({"layout": s.get("layout", "column"), "boxed": s.get("boxed", True),
+                    "visible_in": s.get("visible_in", "always")}
                    for s in data["sections"] if any(c["feature_id"] in chosen for c in s["controls"]))
     offset = NUDGE_PARAMETER["default"]
     for section in data["sections"]:
@@ -131,4 +163,4 @@ def plan_ui_layout(requested_features: object, *, root: Path, include_options=Fa
             if control["feature_id"] == "vertex_nudge" and "vertex_nudge" in chosen:
                 offset = control.get("parameters", {}).get("offset", offset)
     return result, {"section_styles": styles,
-                    "nudge_offset": {**NUDGE_PARAMETER, "default": validate_nudge_default(offset)}}
+                    "nudge_offset": validate_nudge_settings(offset)}
