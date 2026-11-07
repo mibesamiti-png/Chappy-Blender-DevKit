@@ -506,3 +506,14 @@ remain intact. No user geometry is uploaded. Target CI is pending for this chang
 機能実装8d28b69を含む統合HEAD 63bddb9dcd47ca985995f000efb06b14f056a2cfでPython820件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761850)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761797)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761748)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761811)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761787)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761776)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761778)。
 
 [検証範囲・同時更新/失敗履歴・未確認・再開点](EXT_UI_VALIDATION.md)。合成fixtureの公式検証は実部品の権利/ライセンス/公開承認や正式Extension検証ではない。EXT-001/UI-001/BUILD-001は全体partialを維持。
+
+## 2026-11-08 JST: shared edit readiness and property-allocation recovery
+
+UI-001/BUILD-001 add advisory operation-unavailable reasons and independent
+XYZ input/action enablement. The authored edit helper shares structural/offset
+checks with the panel, reads cached selected-count metadata without a mesh
+scan, and retains full execute-time audits. Stale readiness cannot bypass
+actual selection validation. Both property-allocation failure paths are
+injected in native Blender tests and followed by cleanup/re-registration.
+[Contract](UI_DECLARATIVE_PREVIEW.md). Local823 tests/Blender4.3.2 pass;
+this milestone's target CI has not run yet. No GUI or user-project guarantee.

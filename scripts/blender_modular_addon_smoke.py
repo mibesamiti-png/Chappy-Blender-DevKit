@@ -130,22 +130,24 @@ def run(path):
                     self.events.append(("operator", identifier, text))
                     return RecordingOperator(self.events)
 
-            def verify_panel(expected_mode, expected_enabled):
+            def verify_panel(expected_mode, expected_enabled, *, nudge_ready=None):
                 layout = RecordingLayout()
                 preview = type("CBDK_Synthetic_Panel", (), {"layout": layout})()
                 module.VIEW3D_PT_cbdk_modular_preview.draw(preview, bpy.context)
                 result = layout.events
                 styles = module._UI_OPTIONS["section_styles"]
                 assert sum(e[0] == "box" for e in result) == sum(s["boxed"] for s in styles)
-                assert sum(e[0] == "row" for e in result) == len(features) + sum(s["layout"] == "row" for s in styles)
+                assert sum(e[0] == "row" for e in result) == len(features) + sum(s["layout"] == "row" for s in styles) + ("vertex_nudge" in features)
                 observed_ops = [entry for entry in result if entry[0] == "operator"]
                 assert {entry[1] for entry in observed_ops} == expected_ops, result
                 enabled = [entry[1] for entry in result if entry[0] == "enabled"]
-                assert len(enabled) == len(module._FEATURE_IDS), result
+                assert len(enabled) == len(module._FEATURE_IDS) + ("vertex_nudge" in features), result
                 expected = []
                 for _, controls in module._UI_SECTIONS:
                     for feature, _ in controls:
                         expected.append(feature in expected_enabled)
+                        if feature == "vertex_nudge":
+                            expected.append(feature in expected_enabled if nudge_ready is None else nudge_ready)
                 assert enabled == expected, (enabled, expected, expected_mode)
                 assert bpy.context.mode == expected_mode
                 if "vertex_nudge" in features:
@@ -222,6 +224,31 @@ def run(path):
             verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"})
             checks.append("panel_edit_mode_guards")
             if "vertex_nudge" in features:
+                scene = bpy.context.scene
+                original_offset = tuple(scene.cbdk_modular_nudge_offset)
+                scene.cbdk_modular_nudge_offset = (0.0, 0.0, 0.0)
+                events = verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"}, nudge_ready=False)
+                assert any(e[0] == "label" and "nonzero" in e[1] for e in events)
+                scene.cbdk_modular_nudge_offset = original_offset
+                bpy.ops.mesh.select_all(action="DESELECT")
+                events = verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"}, nudge_ready=False)
+                assert any(e[0] == "label" and "Select at least one vertex" in e[1] for e in events)
+                bpy.ops.mesh.select_all(action="SELECT")
+                shared = bpy.data.objects.new("CBDK_Shared_Guard_Fixture", mesh)
+                bpy.context.scene.collection.objects.link(shared)
+                events = verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"}, nudge_ready=False)
+                assert any(e[0] == "label" and "Shared mesh" in e[1] for e in events)
+                bpy.data.objects.remove(shared, do_unlink=True)
+                bpy.ops.object.mode_set(mode="OBJECT")
+                obj.shape_key_add(name="CBDK_Basis_Fixture")
+                bpy.ops.object.mode_set(mode="EDIT")
+                events = verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"}, nudge_ready=False)
+                assert any(e[0] == "label" and "shape keys" in e[1] for e in events)
+                bpy.ops.object.mode_set(mode="OBJECT")
+                obj.shape_key_clear()
+                bpy.ops.object.mode_set(mode="EDIT")
+                bpy.ops.mesh.select_all(action="SELECT")
+                checks.append("panel_selection_zero_shared_and_shape_key_reasons")
                 bpy.context.scene.cbdk_modular_nudge_offset = (0.125, 0.0, 0.0)
                 actual_layout = verify_panel("EDIT_MESH", {"edit_selection", "vertex_nudge"})
                 assert ("operator_property", "offset", (0.125, 0.0, 0.0)) in actual_layout
@@ -280,6 +307,27 @@ def run(path):
             assert not hasattr(bpy.types.Scene, "cbdk_modular_nudge_offset")
             assert not module._REGISTERED
             checks.append("disable_unregistered_all")
+            # Fail each property factory, including the second allocation after
+            # one real Scene property was created. Recover before class tests.
+            for factory_name in ("StringProperty", "FloatVectorProperty"):
+                native_factory = getattr(bpy.props, factory_name)
+                def failed_property(**kwargs):
+                    raise RuntimeError("CBDK controlled property failure")
+                setattr(bpy.props, factory_name, failed_property)
+                try:
+                    try:
+                        module.register()
+                    except RuntimeError as exc:
+                        assert "controlled property failure" in str(exc)
+                    else:
+                        raise AssertionError("Injected property failure was ignored")
+                finally:
+                    setattr(bpy.props, factory_name, native_factory)
+                assert not module._REGISTERED and not module._OWNED_PROPERTIES
+                assert not any(hasattr(bpy.types.Scene, name) for name in module._PROPERTY_NAMES)
+                module.register()
+                module.unregister()
+            checks.append("property_allocation_failure_cleanup_and_recovery")
             # Inject a controlled registration failure after one real class.
             native_register = bpy.utils.register_class
             calls = []

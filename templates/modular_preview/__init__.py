@@ -20,10 +20,9 @@ import bpy
 _FEATURE_IDS = __CBDK_FEATURE_IDS__
 _UI_SECTIONS = __CBDK_UI_SECTIONS__
 _UI_OPTIONS = __CBDK_UI_OPTIONS__
-_OPERATORS = [
-    importlib.import_module("." + feature, __name__ + ".features").OPERATOR_CLASS
-    for feature in _FEATURE_IDS
-]
+_FEATURE_MODULES = {feature: importlib.import_module("." + feature, __name__ + ".features")
+                    for feature in _FEATURE_IDS}
+_OPERATORS = [_FEATURE_MODULES[feature].OPERATOR_CLASS for feature in _FEATURE_IDS]
 _OPERATORS_BY_FEATURE = dict(zip(_FEATURE_IDS, _OPERATORS))
 # Fixed context map for the five reviewed CBDK-authored operators.
 # Recipes/JSON cannot inject a new context or an arbitrary operator.
@@ -53,17 +52,27 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
                 has_mesh = active is not None and active.type == "MESH"
                 mode = "EDIT_MESH" if feature_id in _EDIT_MODE_FEATURES else "OBJECT"
                 button_row.enabled = has_mesh and context.mode == mode
+                reason = ("An active mesh object is required" if not has_mesh else
+                          "Switch to " + mode + " mode" if context.mode != mode else None)
                 if feature_id == "vertex_nudge":
                     # The built-in RNA property limits local offsets to +/-10.
                     # This edits only the chosen operator arguments, never
                     # executes user-supplied Python or alters the source mesh.
                     button_row.prop(context.scene, "cbdk_modular_nudge_offset", text="XYZ")
-                    button = button_row.operator(
+                    if reason is None:
+                        reason = _FEATURE_MODULES[feature_id].ui_unavailable_reason(context)
+                    # Keep XYZ editable when the vector is zero or nothing is
+                    # selected, so a disabled action cannot trap its input.
+                    action = button_row.row(align=True)
+                    action.enabled = reason is None
+                    button = action.operator(
                         _OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label
                     )
                     button.offset = context.scene.cbdk_modular_nudge_offset
                 else:
                     button_row.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
+                if reason is not None:
+                    body.label(text=label + ": " + reason)
         col.label(text=context.scene.cbdk_modular_result)
 
 

@@ -81,3 +81,22 @@ failure atomicity or Windows GUI/Undo certification.
 機能実装8d28b69を含む統合HEAD 63bddb9dcd47ca985995f000efb06b14f056a2cfでPython820件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761850)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761797)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761748)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761811)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761787)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761776)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761778)。
 
 [検証範囲・同時更新/失敗履歴・未確認・再開点](EXT_UI_VALIDATION.md)。合成fixtureの公式検証は実部品の権利/ライセンス/公開承認や正式Extension検証ではない。EXT-001/UI-001/BUILD-001は全体partialを維持。
+
+## 2026-11-08 JST: advisory reasons and shared edit guards
+
+The fixed preview panel now explains missing active mesh/wrong mode and, for
+vertex nudge, invalid offsets, no selected vertices, linked/shared data,
+shape keys and unsupported multi-object edit context. Structural checks and
+offset validation are shared with the existing edit helper; execute still
+rechecks actual BMesh selection, numeric changes, topology and resource limits.
+
+The panel uses cached Mesh.total_vert_sel and never imports/scans BMesh or
+copies vertex coordinates for readiness. Cached RNA can be stale: an enabled
+button is advisory, not edit authorization. The execute-time guard remains
+mandatory. A zero vector/no selection disables only the action, keeping XYZ
+editable in the appropriate mode so the input can be corrected.
+
+Synthetic Blender tests exercise selection/zero/shared/shape-key reasons,
+both Scene-property factory failures, cleanup and subsequent registration.
+Existing class-registration/foreign-property tests remain. This is headless
+Panel.draw and Blender data evidence, not real Windows GUI/hotkey verification.

@@ -1185,3 +1185,11 @@ CBDK自作のlegacy/modular preview ZIPの整合性・内容のSHA256/パスト�
 [検証範囲・同時更新/失敗履歴・未確認・再開点](EXT_UI_VALIDATION.md)。合成fixtureの公式検証は実部品の権利/ライセンス/公開承認や正式Extension検証ではない。EXT-001/UI-001/BUILD-001は全体partialを維持。
 
 2026-11-08 JST: c89a10f正本を既存Notion CBDKプロジェクトへ同期成功。内容更新1応答が警告なし成功、部分実装/未確認/次回と全7CIを反映。旧履歴保持・新規ページ/私有データなし。
+
+## 2026-11-08 JST — UI-001 / BUILD-001 判定理由と復旧の集中改善
+
+UIに操作不可理由を表示し、ゼロ値でもXYZを修正できるよう入力と実行の有効状態を分離。
+構造/offsetの判定を既存edit helperへ共通化し、UIはcached選択数のみ、executeのBMesh監査は維持。
+RNAが古いときの実選択再検査をPythonで確認。ローカル823テスト成功、Blender4.3.2で
+選択なし/ゼロ値/共有/shape key表示とStringProperty/FloatVectorProperty割当失敗の復旧に成功。
+対象3版/Windowsの今回CIは未実行。全体partialと実GUI/私有データ/権利/正式公開の未完了を維持。
