@@ -20,6 +20,24 @@ class ManifestFileReviewTests(unittest.TestCase):
         self.source.write_text('schema_version="1.0.0"\nmaintainer="Private Person email@example.invalid"\n'
                                '"PRIVATE_KEY_IDENTIFIER"="private value"\n', encoding='utf-8')
 
+    def test_r7_limit_controls_do_not_claim_release_approval(self):
+        """R7: exactly-on-budget TOML is review-only; oversized stays blocked."""
+        from cbdk.extension_manifest_review import MAX_BYTES
+        prefix = 'schema_version="1.0.0"\n# private-review-r7 '
+        for size in (MAX_BYTES - 1, MAX_BYTES):
+            with self.subTest(bytes=size):
+                text = prefix + ("x" * (size - len(prefix)))
+                self.source.write_bytes(text.encode("ascii"))
+                self.assertEqual(self.source.stat().st_size, size)
+                result = review_manifest_file(self.source)
+                self.assertEqual(result["status"], "review_only")
+                self.assertFalse(result["release_authorized"])
+                self.assertFalse(result["official_validation_ran"])
+                self.assertNotIn("private-review-r7", json.dumps(result))
+        self.source.write_bytes((prefix + "x" * (MAX_BYTES + 1 - len(prefix))).encode("ascii"))
+        with self.assertRaises(ValueError):
+            review_manifest_file(self.source)
+
     def test_file_values_unknown_keys_and_paths_are_not_exposed(self):
         before = self.source.read_bytes()
         report = review_manifest_file(self.source)
