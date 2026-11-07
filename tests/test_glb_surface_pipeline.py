@@ -215,6 +215,47 @@ class GLBSurfacePipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
             self.run_fake(report_override=invalid)
 
+    def test_rejects_duplicate_keys_and_nonfinite_json_in_report(self):
+        def fake_bad_report(raw):
+            def run(cmd, **kwargs):
+                Path(cmd[-1]).write_text(raw, encoding="utf-8")
+                acknowledgment = json.dumps({
+                    "kind": "cbdk_glb_surface_review",
+                    "status": "review_only",
+                })
+                return subprocess.CompletedProcess(
+                    cmd, 0, stdout="CBDK_GLB_SURFACE_REVIEW_PASS " + acknowledgment,
+                    stderr="",
+                )
+            with patch("cbdk.glb_surface_pipeline.inspect_glb",
+                       return_value=inspection()), \\
+                 patch("cbdk.glb_surface_pipeline.subprocess.run",
+                       side_effect=run):
+                with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+                    run_glb_surface_review(self.blender, self.ref, self.cand, self.out)
+
+        valid = json.dumps(report())
+        fake_bad_report(valid.replace('"schema_version": 1,',
+                                      '"schema_version": 1, "schema_version": 1,', 1))
+        fake_bad_report(valid.replace('"symmetric_sampled_max": 0.2',
+                                      '"symmetric_sampled_max": NaN', 1))
+
+    def test_rejects_duplicate_acknowledgment_keys(self):
+        def run(cmd, **kwargs):
+            Path(cmd[-1]).write_text(json.dumps(report()), encoding="utf-8")
+            raw = ('{"kind":"cbdk_glb_surface_review",'
+                   '"status":"review_only","status":"review_only"}')
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout="CBDK_GLB_SURFACE_REVIEW_PASS " + raw,
+                stderr="",
+            )
+        with patch("cbdk.glb_surface_pipeline.inspect_glb",
+                   return_value=inspection()), \\
+             patch("cbdk.glb_surface_pipeline.subprocess.run",
+                   side_effect=run):
+            with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+                run_glb_surface_review(self.blender, self.ref, self.cand, self.out)
+
     def test_output_report_is_bounded(self):
         with patch("cbdk.glb_surface_pipeline.inspect_glb",
                    return_value=inspection()), \
