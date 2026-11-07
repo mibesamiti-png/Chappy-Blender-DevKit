@@ -99,7 +99,14 @@ def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
     # difference falls through to the original bidirectional distance scan.
     # The R3 boundary-graph connectivity guard is evaluated by the caller
     # independently and MUST NOT be bypassed by this optimization.
-    if (_exact_undirected_contour_signature(left)
+    # The original R2 distance scanner ignores zero-squared-length
+    # opposite segments. Exact equality of such degenerate inputs would
+    # otherwise bypass that fail-closed scanner and incorrectly return None.
+    # Keep the fast path only when *every* segment is usable by the scanner.
+    # The 256-edge budget still runs above, so this linear guard is bounded.
+    if (all(sum((end[k] - start[k]) ** 2 for k in range(3)) > 0
+            for start, end in left + right)
+            and _exact_undirected_contour_signature(left)
             == _exact_undirected_contour_signature(right)):
         return None
 
