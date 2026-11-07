@@ -8,11 +8,10 @@
   "transition_authorized": true,
   "repeat_transition_approval_required": false,
   "canonical_current_state": "docs/project/STATE.json",
-  "current_requirements_or_priorities_modified": false,
   "activation_gates": {
     "v018_automatable_work_completed": false,
     "human_blockers_documented": true,
-    "latest_pr25_code_checks_reviewed": false,
+    "latest_pr25_code_checks_reviewed": true,
     "integration_policy_recorded": true
   },
   "integration_policy": "Continue development on feature branches; keep PR #25 draft until appropriate review. Main merge and formal release require separate explicit approval and are not implicitly authorized by transition approval.",
@@ -88,5 +87,12 @@
     "Use relevant tests during work and necessary milestone CI",
     "Keep GitHub canonical and Notion as an actual-status mirror",
     "Do not claim fully autonomous creation or repair of arbitrary addons"
-  ]
+  ],
+  "current_requirements_or_priorities_modified_by_future_plan": false,
+  "last_current_code_evidence": {
+    "code_sha": "79fea17e70665392731780ed5a518982530b7323",
+    "blender_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055131",
+    "result": "success",
+    "activation_decision": "Remain inactive; current automatable registry/UI work is not complete."
+  }
 }

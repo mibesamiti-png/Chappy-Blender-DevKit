@@ -201,3 +201,7 @@ Receipt: existing [project](https://app.notion.com/p/410948b7493781449462ca76e95
 ## Pending milestone — existing NEXT-019 / NEXT-009
 
 Bound-baseline AST/synthetic experiment review is implemented; Python752 and local4.3.2 completed/incomplete/controlled-failure checks passed. Target CI is pending. At completion, mirror canonical results to the existing project/GLB-021/NEXT-009 pages. Future transition approval is recorded separately in docs/future, approved but not active; do not create current future-phase tasks or copy private linked review sheets into Notion.
+
+## Current verified milestone — bound AST/experiment review
+
+Code79fea17e70665392731780ed5a518982530b7323 all6 success: Python752x3 42366055143, Windows42366055138, Blender42366055131, Kit42366055135, Handoff42366055133, Chromium42366055162. NEXT-019 done; NEXT-009 and GLB-021 overall remain in progress/partial with real-data identity/effect unverified. Task counts17 done/5 in progress/1 deferred, total23. Next existing NEXT-003. Future transition approval lives independently under docs/future and remains inactive because current automatable work is open. Final Notion mirror pending after this GitHub evidence is saved; never upload private linked sheets.

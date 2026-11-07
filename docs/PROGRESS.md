@@ -1116,3 +1116,10 @@ GitHub正本の実測記録`c575834`を既存CBDKプロジェクト/GLB-022タ�
 - `verify_glb021_experiment_link.py`を既存3版CIへ追加。自作ソースはASTのみ、私有シートはartifact対象外reports/latest。新対象CIは未実施、NEXT-019/009はまだ継続、GLB-021 partial。
 - 次期承認はdocs/futureの独立JSON/MDにAPPROVED_WAITING_FOR_V018_GATESとして保存。現行STATEの要件/NEXT/優先順位へ未来の項目は追加しない。自動化残作業と人間ブロッカーはV018_COMPLETION_GATES.md。移行開始の承認は取得済みだが、現行自動化未完了のため未有効。main/公開/未承認採用/私有データは別承認。
 - 節目のローカル全体テスト：Python3.12.14で752件成功。STATE validate / handoff write・check / diff check、独立した未来計画JSONの承認済み・未有効/版順も確認した。次にこの実装の対象GitHub CIを実行する。
+
+### 測定元一致の候補・実験連携：実測CI成功
+
+- コード`79fea17e70665392731780ed5a518982530b7323`：[Python752件×3版42366055143](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055143)、[Windows2版42366055138](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055138)、[Blender3版42366055131](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055131)、[Kit42366055135](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055135)、[Handoff42366055133](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055133)、[Chromium42366055162](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055162)全6系統success。実装push1回で完了、CI再実行なし。
+- 全Blender版の新しい連携工程が成功。初期集計SHA一致、完了/未完了/制御された模擬失敗の表示、別集計拒否、元ソース/JSON不変、私有候補のstdout非表示を検証。AST fixtureは未実行、実プロパティの因果は未証明。
+- NEXT-019完了。NEXT-009は自動化部分を拡充したが実データ実体/登録/効果未確認のため継続。GLB-021/022全体partial、正式v0.17.0・PRドラフト/未マージを維持。作業23件＝完了17/継続5/保留1、要件43件の状態区分は不変。
+- 次は既存NEXT-003の登録/依存/レシピ検査の残りを優先。人間ブロッカーはV018_COMPLETION_GATES.md。次期は承認済み・未有効、開始の承認を取り直さず条件達成後に進むが、現行自動化未完了のため有効化しない。未来の要件/NEXTを現行STATEへ追加していない。

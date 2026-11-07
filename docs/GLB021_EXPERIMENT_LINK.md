@@ -36,3 +36,7 @@ Pythonでは元ソース非実行/非改変、異なる測定元の事前拒否�
 Blender3版CIは既存の自作合成実験を再利用し、`scripts/verify_glb021_experiment_link.py`で完了・未完了・制御された模擬タイムアウトのレビューを生成する。別候補の集計を初期測定元として使うと拒否することと、元ソース/測定JSONのSHA不変を確認。私有シートはreports/latestに置き、アップロード対象reports/ciへ入れない。新しい任意アドオン実行や追加GLB実験は不要。
 
 NEXT-019はこの接続の受け入れ条件を対象CIで確認後に完了判定する。NEXT-009の自動化部分は拡充するが、実ユーザーの設定実体・登録・因果の確認を完了とはしない。GLB-021全体partialを維持する。実測SHA/CIは成功確認後にSTATE/HANDOFF・PROGRESSへ記録。
+
+## 対象CIの実測（2026-11-07 JST）
+
+コード79fea17e70665392731780ed5a518982530b7323の[Python752件×3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055143)、[Windows2版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055138)、[Blender4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055131)、Kit42366055135/Handoff42366055133/Chromium42366055162が全成功。全版で測定元結び付け・完了/未完了/模擬失敗・不一致拒否・ソース/JSON不変を実検査。NEXT-019の接続は完了。NEXT-009とGLB-021全体の実ユーザー検証は未完了で、合成の操作候補を実プロパティの因果へ昇格しない。
