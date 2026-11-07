@@ -213,6 +213,16 @@ jobs:
             --python scripts/blender_modular_addon_smoke.py -- reports/ci/CBDK_UI_Variant.zip \
             2>&1 | tee reports/ci/ui_variant_smoke.log
           grep -F 'CBDK_MODULAR_ADDON_PASS ' reports/ci/ui_variant_smoke.log
+      - name: R5 native authored UI lifecycle and foreign Scene property safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python tests/blender_ui_lifecycle_r5.py \
+            -- reports/ci/CBDK_modular_all_Preview.zip \
+            2>&1 | tee reports/ci/r5_ui_lifecycle.log
+          grep -F 'CBDK_R5_UI_LIFECYCLE_PASS ' reports/ci/r5_ui_lifecycle.log
+          echo 'R5 authored UI lifecycle/Scene property guard native Blender probe PASSED.' >> "$GITHUB_STEP_SUMMARY"
       - name: Audit extension compatibility blockers on authored CI previews
         shell: bash
         run: |
