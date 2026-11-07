@@ -15,6 +15,7 @@ from .contracts import make_blender_contracts, write_contracts
 from .evidence import verify_authored_parts, save_evidence, check_evidence_freshness
 from .part_matrix import evidence_paths, summarize_parts, write_matrix, render_matrix_markdown
 from .addon_builder import build_addon
+from .extension_preflight import write_preflight_report
 from .feature_catalog import load_feature_catalog, plan_features
 from .modular_builder import validate_modular_recipe
 from .registration_draft import propose_registration, write_draft
@@ -121,6 +122,12 @@ def main(argv=None) -> int:
     addon_cmd.add_argument('--output', default='dist/CBDK_Mesh_Inspector_Preview.zip')
     addon_cmd.add_argument('--preview-unapproved', action='store_true',
                            help='Required explicit opt-in; output is NOT a release or approved component')
+
+    ext_cmd = sub.add_parser('extension-preflight',
+                             help='Static, blocked-for-release compatibility audit of a CBDK preview ZIP')
+    ext_cmd.add_argument('preview_zip', help='Local CBDK-authored legacy preview ZIP')
+    ext_cmd.add_argument('--output', default='reports/latest/extension_readiness.json',
+                         help='New private review report, never an extension package')
 
     feature_cmd = sub.add_parser('feature-list', help='List trusted authored preview features; no approval implied')
     feature_cmd.add_argument('--output', default=None)
@@ -500,6 +507,17 @@ def main(argv=None) -> int:
         if args.command == 'glb-repair-plan':
             report = plan_from_comparison(args.comparison, args.output)
             print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'extension-preflight':
+            report = write_preflight_report(args.preview_zip, args.output)
+            print(json.dumps({
+                'kind': report['kind'], 'status': report['status'],
+                'package_id': report['package_id'],
+                'provenance_hashes_verified': report['provenance_hashes_verified'],
+                'blockers': report['blockers'],
+                'output': args.output,
+                'extension_zip_created': False,
+            }, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'feature-list':
             catalog = load_feature_catalog(root=Path(__file__).resolve().parent.parent)

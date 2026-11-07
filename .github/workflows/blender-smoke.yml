@@ -13,6 +13,8 @@ on:
       - 'scripts/blender_parts_smoke.py'
       - 'cbdk/addon_builder.py'
       - 'cbdk/modular_builder.py'
+      - 'cbdk/extension_preflight.py'
+      - 'tests/test_extension_preflight.py'
       - 'cbdk/ui_layout.py'
       - 'catalog/ui_layouts.json'
       - 'tests/test_ui_layout.py'
@@ -198,6 +200,31 @@ jobs:
             grep -F 'CBDK_MODULAR_ADDON_PASS ' "reports/ci/${recipe}_smoke.log"
           done
           echo 'Modular preview variants: objects, edit, combined, geometry, nudge and all PASSED.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Audit extension compatibility blockers on authored CI previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cbdk extension-preflight reports/ci/CBDK_modular_all_Preview.zip \
+            --output reports/ci/extension_readiness_modular.json
+          python -m cbdk extension-preflight reports/ci/CBDK_Mesh_Inspector_Preview.zip \
+            --output reports/ci/extension_readiness_legacy.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for kind in ('modular', 'legacy'):
+              report = json.loads(Path(
+                  f'reports/ci/extension_readiness_{kind}.json').read_text())
+              assert report['status'] == 'blocked_for_extension_release'
+              assert report['provenance_hashes_verified'] is True
+              assert report['python_code_executed'] is False
+              assert report['extension_zip_created'] is False
+              assert report['manifest_toml_emitted'] is False
+              assert report['official_blender_extension_validate_ran'] is False
+              assert report['manifest_fields_review_only']['license'] is None
+              assert 'owner_release_and_redistribution_authorization_required' in report['blockers']
+          PY
+          echo 'Both preview ZIPs passed safe extension readiness inspection; formal release remains BLOCKED.' >> "$GITHUB_STEP_SUMMARY"
+
       - name: Probe native Undo and Redo (background only, not GUI hotkeys)
         shell: bash
         run: |
