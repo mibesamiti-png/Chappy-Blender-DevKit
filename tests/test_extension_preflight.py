@@ -202,6 +202,40 @@ class ExtensionPreflightTests(unittest.TestCase):
                 self.assertEqual(result["failure_code"], "unsafe_member")
                 self.assertFalse(result["python_code_executed"])
 
+    def test_corrupt_member_crc_is_integrity_failure(self):
+        from zipfile import ZIP_STORED
+        self.build()
+        target = self.root / "corrupted.zip"
+        member = "cbdk_modular_preview/README.txt"
+        with ZipFile(self.zip) as original, ZipFile(target, "x") as output:
+            for old in original.infolist():
+                info = ZipInfo(old.filename)
+                info.compress_type = ZIP_STORED
+                info.external_attr = old.external_attr
+                output.writestr(info, original.read(old.filename))
+        with ZipFile(target) as archive:
+            info = archive.getinfo(member)
+            position = info.header_offset + 30 + len(info.filename.encode("utf-8")) + len(info.extra)
+        with target.open("r+b") as stream:
+            stream.seek(position)
+            first = stream.read(1)
+            stream.seek(position)
+            stream.write(bytes([first[0] ^ 1]))
+        report = diagnose_preview_archive(target)
+        self.assertEqual(report["status"], "invalid_preview_archive")
+        self.assertEqual(report["failure_category"], "archive_integrity")
+        self.assertEqual(report["failure_code"], "corrupt_or_unreadable")
+
+    def test_duplicate_metadata_key_has_specific_provenance_code(self):
+        self.build()
+        name = "cbdk_modular_preview/CBDK_BUILD_INFO.json"
+        with ZipFile(self.zip) as archive:
+            raw = archive.read(name).decode("utf-8")
+        changed = self.replace_zip_member(name, (raw[:-2] + ', "approved": true}').encode("utf-8"))
+        result = diagnose_preview_archive(changed)
+        self.assertEqual(result["failure_category"], "provenance")
+        self.assertEqual(result["failure_code"], "duplicate_metadata_key")
+
     def test_tampered_manifest_name_not_reflected_in_report(self):
         self.build()
         name = "cbdk_modular_preview/CBDK_BUILD_INFO.json"
