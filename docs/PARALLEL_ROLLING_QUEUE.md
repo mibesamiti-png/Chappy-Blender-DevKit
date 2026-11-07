@@ -190,9 +190,9 @@ CBDK自作fixtureのみを使い、**ビルド形式の妥当性、公式validat
 4. 実ユーザーGLB、Windows GUI/Undoホットキー、第三者アドオン実併用、正式Extensionsの所有権・権利・ライセンス・公開許可、`main`と正式v0.17.0は引き続き承認待ち。R8はv0.18開発ブランチの範囲に限定。
 
 
-## 2026-11-08 JST — R8統合候補提出済み・R9事前割当案（**未発効**）
+## 2026-11-08 JST — R8統合完了・R9ローリング正式割当（post-merge 7CI成功）
 
-**停止ゲート:** AのR8統合候補 [PR #73](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/73) はB/C/Dの変更を計13ファイル・重複0で結合した段階。**正確な結合HEAD `f5fd6585488e7d69501caf2ed48c54ec81e0cc2a` の5系統CI、devへのsquash merge、その統合後**7系統CI（Python/Windows/Blender3版/Chromium/Handoff/Kit/Skill）**全成功、さらにAがこのキューのR9正式発効PRを開発ブランチへ統合するまでは**R9担当の実装・専用PR作成を禁止**。旧R8個別PRを再マージしない。
+**正式許可ゲート検証済み:** A R8結合 [PR #73](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/73) はB/C/Dの13ファイル（担当重複0）を候補HEAD `f5fd6585488e7d69501caf2ed48c54ec81e0cc2a` に集約し、Python/Windows/Blender3版/Chromium/Handoffの5系統success（新規 `native_r8_*` 5項目を各Blender実機ジョブログで確認）。v0.18開発ブランチへsquash SHA **`ded947f85f46fb8cce0943314d6e1a9fb41717ef`** として統合後、**独立した7系統CIもすべてsuccess**：[Python #42419734167](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734167)、[Windows #42419734210](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734210)、[Blender3版 #42419734261](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734261)、[Chromium #42419734226](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734226)、[Handoff #42419734193](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734193)、[Kit #42419734233](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734233)、[Skill #42419734172](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734172)。**本PR #74を開発ブランチにマージした時点でR9が正式に有効**。着手時点の最新版dev HEADを利用し、旧R8個別PRを再マージしない。
 
 - B [#66](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/66) 正確なソースSHA `0c81b10cf1010b967b3a9b8dd8fd572dbf2b010c`、4パス、個別5系統CI success。R8のR2 AABB事前棄却はpadded 2tで非厳密R2の安全な最適化、同じ数学的R2結果を元のunpruned scannerと合成テストで比較。少数のmatcher局所性能測定を実GLB全体性能に拡大解釈しない。
 - C [#70](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/70) 正確なソースSHA `07a742f124bda35d3474be45a461eef48df64d64`、6パス、個別5系統CI success。native headless Blender3版で5つの `native_r8_*` の実行確認が必要。
@@ -214,9 +214,9 @@ CBDK自作fixtureのみを使い、**ビルド形式の妥当性、公式validat
 - **目標:** CBDK自作の既知ZIPを使用し、(a) 1部だけ変更してSHAを更新しない不整合、(b) 変更後にアーカイブ `files_sha256` と対応するsource SHAを**両方更新して自己整合にしたZIP**を合成。前者は静的構造/ハッシュ不整合としてfail-closed、後者は自己整合を認めても**真正性・作者同意・再配布/公開承認を絶対に昇格しない**ことを証明。
 - ZIPの構造安全性、固定7件positive、実Blenderの合成official validator正例、未知/矛盾ログの保守的処理を保持。新しい未知コード実行や実Addonインストール、私有ソース・個人path使用は禁止。観測した不具合のみD所有 `cbdk/extension_*` で最小修正。その他D専用test/docs。
 
-### ローリングR9の安全規則（発効前は参照専用）
+### ローリングR9の安全規則（本PR #74統合後に正式発効）
 
-1. R8の結合PR #73で**正確なHEAD**のPython3/Windows2/Blender3/Chromium/Handoffの5系統CI成功後にのみdev統合。dev squash SHAで**別に7系統全success**を確認してからAがキューを正式発効させる。
+1. R8結合#73の正確なHEAD 5系統とdev squash SHA `ded947f85f46fb8cce0943314d6e1a9fb41717ef` の独立7系統は**既に全success確認済み**。本PR #74を正式統合した後のみ、R9担当専用ブランチを作成可能。
 2. 着手の瞬間に最新 `feature/v0.18-shape-diagnostics` HEADを読み、**R8統合SHAを祖先に持つこと**を確認。B `work/v018-glb-analysis-r9`、C `work/v018-ui-builder-r9`、D `work/v018-extension-quality-r9`。各自の未統合追加ドラフトPRは最大1件。旧B #66/C #70/D #67をstack/再マージしない。
 3. 担当専用ファイルのみ変更。共有 `STATE.json`・Handoff・PROGRESS・Notion・共通CI・mainはA管理。新負例が実際のCIで実行されたか検証し、未実行をgreenと扱わない。Codex不在でも継続。
-4. 実ユーザーGLB、実Windows GUI/Undo、第三者Addonとの実共存、作者/ライセンス、公式Extensions公開、main、正式v0.17.0はすべて別承認。まだR9の実装は開始しない。
+4. 実ユーザーGLB、実Windows GUI/Undo、第三者Addonとの実共存、作者/ライセンス、公式Extensions公開、main、正式v0.17.0はすべて別承認。上記の正式統合前はR9実装禁止。
