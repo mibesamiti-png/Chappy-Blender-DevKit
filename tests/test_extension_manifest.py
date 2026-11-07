@@ -187,6 +187,30 @@ class ManifestReviewTests(unittest.TestCase):
         self.assertFalse(rejected["official_observation"]["authenticates_log"])
         self.assertFalse(rejected["license_compatibility_verified"])
 
+    def test_r6_bounded_official_log_stays_sanitized(self):
+        """Bounded synthetic text must not override the known official verdict."""
+        from cbdk.extension_manifest import observe_official_validation
+        success = 'Success parsing TOML in "/private/synthetic-r6-fixture"'
+        for length in (199_999, 200_000):
+            with self.subTest(length=length):
+                clean = success + "\n" + " " * (length - len(success) - 1)
+                self.assertEqual(len(clean), length)
+                matched = compare_official_validation(fields(), 0, clean)
+                self.assertTrue(matched["complete_diagnostic_agreement"])
+                self.assertNotIn("/private/", str(matched))
+                self.assertFalse(matched["official_observation"]["authenticates_log"])
+        warning = "WARNING: synthetic-r6-secret"
+        unknown = (success + "\n" +
+                   " " * (200_000 - len(success) - len(warning) - 2) +
+                   "\n" + warning)
+        self.assertEqual(len(unknown), 200_000)
+        result = compare_official_validation(fields(), 0, unknown)
+        self.assertEqual(result["status"], "unclassified")
+        self.assertFalse(result["complete_diagnostic_agreement"])
+        self.assertNotIn("synthetic-r6-secret", str(result))
+        with self.assertRaises(ValueError):
+            observe_official_validation(0, clean + "X" * 3)
+
     def test_official_fields_must_match_not_just_nonzero_exit(self):
         data = {**fields(), "license": None}
         matched = compare_official_validation(data, 1, 'Error parsing TOML "/private/source"\nmissing "license"')
