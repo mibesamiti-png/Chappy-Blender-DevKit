@@ -4,12 +4,48 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cbdk.undo_probe_report import PREFIX, build_report, parse_log, validate_report, main
+from cbdk.undo_probe_report import PREFIX, PREPARED_CASES, build_report, parse_log, validate_report, main
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class UndoProbeReportTests(unittest.TestCase):
+    def extended(self):
+        cases = {name: {"undo_status": "passed", "redo_status": "passed", "edit_steps": steps}
+                 for name, steps in PREPARED_CASES.items()}
+        return build_report("4.5.15 LTS", "unavailable", "not_attempted", prepared_cases=cases)
+
+    def test_prepared_success_never_promotes_normal_or_gui_probe(self):
+        record = self.extended()
+        self.assertEqual(validate_report(record), record)
+        self.assertEqual(record["schema_version"], 2)
+        self.assertEqual(record["status"], "unavailable_in_background")
+        self.assertFalse(record["gui_hotkey_verified"])
+        self.assertEqual(parse_log(PREFIX + json.dumps(record)), record)
+
+    def test_prepared_missing_cases_and_false_state_claims_rejected(self):
+        for field, value in (("exact_topology_verified", 1),
+                             ("cancelled_edit_unchanged", False),
+                             ("prepared_stack_method", "automatic_operator_history"),
+                             ("prepared_stack_cases", {})):
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                validate_report(dict(self.extended(), **{field: value}))
+
+    def test_prepared_round_count_and_status_consistency(self):
+        for field, value in (("edit_steps", True), ("edit_steps", 1),
+                             ("redo_status", "not_attempted")):
+            record = self.extended()
+            record["prepared_stack_cases"]["multi_vertex_repeated"][field] = value
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                validate_report(record)
+
+    def test_duplicate_observation_fields_rejected(self):
+        text = json.dumps(self.extended())
+        text = text.replace('"undo_status": "unavailable"',
+                            '"undo_status": "passed", "undo_status": "unavailable"')
+        with self.assertRaisesRegex(ValueError, "Duplicate"):
+            parse_log(PREFIX + text)
+
     def test_passed_background_is_not_gui(self):
         report = build_report("4.5.15", "passed", "passed")
         self.assertEqual(report["status"], "verified_background")

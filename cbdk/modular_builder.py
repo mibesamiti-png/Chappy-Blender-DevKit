@@ -13,6 +13,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 from .addon_builder import _sha, _trusted_read
 from .feature_catalog import TRUSTED_FEATURES, TRUSTED_PART_SOURCES, plan_features
+from .registration_audit import validate_registration_assets
 
 PACKAGE_ID = "cbdk_modular_preview"
 TEMPLATE = "modular_preview"
@@ -101,6 +102,10 @@ def build_modular(
         assets["features/" + feature_id + ".py"] = _trusted_read(
             FEATURES[feature_id]["source"], root=root
         )
+
+    # Reject broken authored imports and colliding registrations before any ZIP
+    # is created. Metadata planning alone cannot see these source-level drifts.
+    validate_registration_assets(assets, resolved_features)
 
     provenance = {
         "schema_version": 2, "template": TEMPLATE, "package_id": PACKAGE_ID,

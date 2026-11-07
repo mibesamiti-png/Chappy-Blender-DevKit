@@ -12,9 +12,10 @@ from pathlib import Path
 PREFIX = "CBDK_UNDO_PROBE "
 _UNDO = {"passed", "unavailable"}
 _REDO = {"passed", "unavailable", "not_attempted"}
+PREPARED_CASES = {"single_vertex": 1, "multi_vertex_repeated": 2}
 
 
-def build_report(blender_version: str, undo: str, redo: str) -> dict:
+def build_report(blender_version: str, undo: str, redo: str, *, prepared_cases=None) -> dict:
     """Describe what was *observed*, with GUI hotkeys explicitly excluded."""
     if (not isinstance(blender_version, str) or not blender_version.strip()
             or len(blender_version) > 100
@@ -31,7 +32,7 @@ def build_report(blender_version: str, undo: str, redo: str) -> dict:
         status = "partial_background"
     else:
         status = "unavailable_in_background"
-    return {
+    report = {
         "schema_version": 1,
         "suite": "native_undo_redo_probe",
         "blender": blender_version,
@@ -43,6 +44,20 @@ def build_report(blender_version: str, undo: str, redo: str) -> dict:
         "gui_hotkey_verified": False,
         "user_project_tested": False,
     }
+    if prepared_cases is not None:
+        if not isinstance(prepared_cases, dict) or set(prepared_cases) != set(PREPARED_CASES):
+            raise ValueError("Missing prepared-stack cases")
+        for name, steps in PREPARED_CASES.items():
+            case = prepared_cases[name]
+            if not isinstance(case, dict) or set(case) != {"undo_status", "redo_status", "edit_steps"}:
+                raise ValueError("Invalid prepared-stack case")
+            if type(case["edit_steps"]) is not int or case["edit_steps"] != steps:
+                raise ValueError("Invalid prepared-stack step count")
+            build_report(blender_version, case["undo_status"], case["redo_status"])
+        report.update(schema_version=2, prepared_stack_cases=prepared_cases,
+                      prepared_stack_method="explicit_ed_undo_push",
+                      exact_topology_verified=True, cancelled_edit_unchanged=True)
+    return report
 
 
 def validate_report(data: object) -> dict:
@@ -53,16 +68,23 @@ def validate_report(data: object) -> dict:
         "nudge_delta_verified", "undo_status", "redo_status",
         "status", "gui_hotkey_verified", "user_project_tested",
     }
+    if type(data.get("schema_version")) is int and data["schema_version"] == 2:
+        required |= {"prepared_stack_cases", "prepared_stack_method",
+                     "exact_topology_verified", "cancelled_edit_unchanged"}
     if set(data) != required:
         raise ValueError("Undo probe report fields missing or unexpected")
-    if (type(data["schema_version"]) is not int or data["schema_version"] != 1
+    if (type(data["schema_version"]) is not int or data["schema_version"] not in (1, 2)
             or data["suite"] != "native_undo_redo_probe"):
         raise ValueError("Unknown Undo probe report schema")
     if data["operator_completed"] is not True or data["nudge_delta_verified"] is not True:
         raise ValueError("Nudge was not verified")
     if data["gui_hotkey_verified"] is not False or data["user_project_tested"] is not False:
         raise ValueError("Background suite cannot certify GUI or user scenes")
-    expected = build_report(data["blender"], data["undo_status"], data["redo_status"])
+    if data["schema_version"] == 2 and (data["exact_topology_verified"] is not True
+                                        or data["cancelled_edit_unchanged"] is not True):
+        raise ValueError("Extended state checks were not verified")
+    expected = build_report(data["blender"], data["undo_status"], data["redo_status"],
+                            prepared_cases=data.get("prepared_stack_cases"))
     if data != expected:
         raise ValueError("Undo/Redo verification claim does not match observation")
     return data
@@ -76,7 +98,14 @@ def parse_log(log: str) -> dict:
     if len(found) != 1:
         raise ValueError("Exactly one Undo probe record is required")
     try:
-        return validate_report(json.loads(found[0]))
+        def unique_pairs(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError("Duplicate Undo probe field")
+                result[key] = value
+            return result
+        return validate_report(json.loads(found[0], object_pairs_hook=unique_pairs))
     except (json.JSONDecodeError, TypeError) as exc:
         raise ValueError("Malformed Undo probe record") from exc
 
@@ -92,6 +121,9 @@ def main(argv=None) -> int:
                            encoding="utf-8")
     print("Undo/Redo background probe: " + report["status"] +
           " (GUI Ctrl+Z / Ctrl+Shift+Z not tested)")
+    for name, case in report.get("prepared_stack_cases", {}).items():
+        print("Explicit undo_push case " + name + ": Undo=" + case["undo_status"] +
+              ", Redo=" + case["redo_status"])
     return 0
 
 
