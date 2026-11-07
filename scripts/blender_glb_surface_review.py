@@ -44,8 +44,8 @@ def _read_world_triangles(source: Path):
         count = len(mesh.loop_triangles)
         part_counts.append(count)
         face_total += count
-        if face_total > MAX_TRIANGLES:
-            return None, face_total, part_counts
+    if face_total > MAX_TRIANGLES:
+        return None, face_total, part_counts
 
     triangles = []
     for obj in mesh_objects:
