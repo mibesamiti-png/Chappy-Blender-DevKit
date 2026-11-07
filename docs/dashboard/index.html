@@ -125,11 +125,12 @@
     }finally{clearTimeout(timer)}
   }
   async function github(path){return request(API+path,true)}
-  function decodeContent(o){
-    if(!o||!o.content||o.encoding!=="base64")throw Error("GitHub状態台帳の形式が不正");
+  function decodeUtf8(o){
+    if(!o||!o.content||o.encoding!=="base64")throw Error("GitHubファイルの形式が不正");
     const raw=atob(o.content.replace(/\s/g,"")),buf=Uint8Array.from(raw,c=>c.charCodeAt(0));
-    return JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(buf))
+    return new TextDecoder("utf-8",{fatal:true}).decode(buf)
   }
+  function decodeContent(o){return JSON.parse(decodeUtf8(o))}
   function roundFromQueue(md){
     const hs=[...md.matchAll(/^## .+$/gm)].filter(m=>/R\d+/.test(m[0])&&/割当|ローリング/.test(m[0]));
     if(!hs.length)return {round:0,section:""};
@@ -268,7 +269,7 @@
         github("/contents/docs/project/STATE.json"+qs),
         github("/pulls?state=all&sort=updated&direction=desc&per_page=100"),
         github("/actions/runs?per_page=100"),
-        request("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/docs/PARALLEL_ROLLING_QUEUE.md?_="+Math.floor(Date.now()/60000),false)
+        request("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/docs/PARALLEL_ROLLING_QUEUE.md?_="+Math.floor(Date.now()/60000),false).catch(async()=>decodeUtf8(await github("/contents/docs/PARALLEL_ROLLING_QUEUE.md"+qs)))
       ]);
       const state=decodeContent(fetched[0]),prs=fetched[1],runs=(fetched[2]||{}).workflow_runs||[],q=roundFromQueue(fetched[3]);
       if(!Array.isArray(prs)||!Array.isArray(runs)||!q.round)throw Error("GitHub応答・作業キューを解析できません");
