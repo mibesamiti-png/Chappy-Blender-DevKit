@@ -35,6 +35,66 @@ class ExtensionPreflightTests(unittest.TestCase):
                              source.read(entry.filename))
         return target
 
+    def test_r4_all_authored_recipes_remain_safe_and_release_blocked(self):
+        """R2 strict ZIP layout must preserve all seven authentic preview recipes.
+
+        Two independently generated archives per recipe also catch accidental
+        metadata/timestamp drift. No addon import or execution occurs here.
+        """
+        recipes = (
+            "mesh_inspector",
+            "modular_all", "modular_combined", "modular_edit",
+            "modular_geometry", "modular_nudge", "modular_objects",
+        )
+        for recipe in recipes:
+            with self.subTest(recipe=recipe):
+                first = self.root / (recipe + "-one.zip")
+                second = self.root / (recipe + "-two.zip")
+                source = ROOT / "recipes" / (recipe + ".json")
+                built = build_addon(source, first, preview_unapproved=True)
+                rebuilt = build_addon(source, second, preview_unapproved=True)
+                self.assertTrue(built["preview_only"])
+                self.assertFalse(built["approved"])
+                self.assertEqual(built["files"], rebuilt["files"])
+                self.assertEqual(first.read_bytes(), second.read_bytes())
+
+                for archive in (first, second):
+                    report = inspect_preview_archive(archive)
+                    self.assertEqual(report, diagnose_preview_archive(archive))
+                    self.assertEqual(report["status"], "blocked_for_extension_release")
+                    self.assertEqual(report["package_id"], built["package_id"])
+                    self.assertEqual(report["verified_source_file_count"], built["files"] - 1)
+                    self.assertTrue(report["archive_structure_checked"])
+                    self.assertTrue(report["provenance_hashes_verified"])
+                    self.assertTrue(report["preview_only"])
+                    self.assertFalse(report["source_authenticity_verified"])
+                    self.assertFalse(report["python_code_executed"])
+                    self.assertFalse(report["extension_zip_created"])
+                    self.assertFalse(report["manifest_toml_emitted"])
+                    self.assertFalse(report["official_blender_extension_validate_ran"])
+                    self.assertFalse(report.get("release_authorized", False))
+                    self.assertEqual(report["manifest_structure_review"]["status"], "incomplete")
+                    self.assertEqual(
+                        report["manifest_structure_review"]["missing_required_fields"],
+                        ["version", "maintainer", "license"])
+                    self.assertFalse(report["manifest_structure_review"]["owner_approval_verified"])
+                    self.assertFalse(report["manifest_structure_review"]["license_registry_or_compatibility_verified"])
+                    self.assertIn("license", report["blocker_categories"]["owner_metadata"])
+                    self.assertNotIn(str(self.root), json.dumps(report))
+                    self.assertNotIn(str(archive), json.dumps(report))
+
+                # One negative control per recipe: a trailer must never
+                # downgrade a malformed ZIP to merely "release blocked".
+                corrupt = self.root / (recipe + "-trailer.zip")
+                corrupt.write_bytes(first.read_bytes() + b"synthetic-hidden-tail")
+                result = diagnose_preview_archive(corrupt)
+                self.assertEqual(result["status"], "invalid_preview_archive")
+                self.assertEqual(result["failure_category"], "archive_structure")
+                self.assertEqual(result["failure_code"], "zip_envelope")
+                self.assertFalse(result["provenance_hashes_verified"])
+                self.assertNotIn("synthetic-hidden-tail", json.dumps(result))
+                self.assertNotIn(str(corrupt), json.dumps(result))
+
     def test_all_feature_preview_is_verified_but_not_extension_approved(self):
         self.build()
         result = inspect_preview_archive(self.zip)

@@ -15,6 +15,7 @@ bl_info = {
 }
 
 import importlib
+from math import isfinite
 import bpy
 
 _FEATURE_IDS = __CBDK_FEATURE_IDS__
@@ -43,13 +44,28 @@ def _preview_unavailable_reason(feature_id, context):
     if getattr(context, "mode", None) != required_mode:
         return "Switch to " + required_mode + " mode"
 
-    if feature_id == "mesh_bounds":
+    if feature_id == "object_selection":
+        # The matching read-only helper refuses a context with no selection
+        # collection. This is a context hint, not a scan of selected objects.
+        if getattr(context, "selected_objects", None) is None:
+            return "Context does not expose selected_objects"
+    elif feature_id == "mesh_bounds":
         vertices = getattr(mesh, "vertices", None)
         if vertices is None or len(vertices) == 0:
             return "Active mesh must contain vertices"
         corners = getattr(active, "bound_box", None)
         if corners is None or len(corners) != 8:
             return "Active mesh has no valid bounding box"
+        # At most 24 scalar checks, independent of mesh size. A non-finite
+        # corner is known to make the bounds helper refuse execution; a
+        # finite preview still is NOT a guarantee that its world transform
+        # or any subsequent operator calculation will succeed.
+        try:
+            if any(len(corner) != 3 or any(not isfinite(float(v)) for v in corner)
+                   for corner in corners):
+                return "Mesh bounding box contains non-finite coordinates"
+        except (TypeError, ValueError, OverflowError):
+            return "Mesh bounding box contains non-finite coordinates"
     elif feature_id == "edit_selection":
         objects = getattr(context, "objects_in_mode_unique_data", None)
         if objects is None:
