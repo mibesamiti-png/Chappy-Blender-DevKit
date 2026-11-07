@@ -1050,3 +1050,7 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - コードSHA `31bf3de18c357d796194dcac369c66e55b3973bf`： [Python 42359722780](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722780)（707件×3.11/3.12/3.13）、[Windows 42359722774](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722774)（3.11/3.13）、[Blender 42359722777](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722777)（4.4.3/4.5.15/5.2.1）、[Kit 42359722842](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722842)、[Handoff 42359722778](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722778)、[Chromium 42359722853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722853)の**全6系統success**。
 - 全Blender版の追加`Verify anonymous inventory and weak hints through real GLB imports`工程成功。ユニーク/曖昧/33部品/561面skip、元GLB SHA256不変を実際に検証。GLB-019をimplemented/blender_ciへ戻し、NEXT-021をdoneへ。一般の部品同一性や完全形状保証は追加しない。
 - Notionの既存プロジェクト/4タスクは中間状態を同期済み。このGitHub記録後に最終CI成功を反映する。正式v0.17.0、PR #25ドラフト、未マージ・未公開を維持。
+
+### Notion最終同期完了
+
+GitHub実測記録`c7306ce`を正本として、既存CBDKプロジェクトとGLB-019/020/021/022の4タスクへ現在の要約・ステータス・CI・今後の予定を反映。最終更新はすべて警告なし成功。GLB-019完了、020/021/022作業中。ページ新規作成なし、私有コード/GLB/個人情報なし。同期先リンクと結果は`docs/NOTION_SYNC.md`、正本STATEのmaintenance_policyへ保存。常駐ジョブは設置していない。次はNEXT-019/020の合成反復の失敗/打切り診断と人手レビュー。コード検証SHAは31bf3deで固定し、この同期受領は文書のみ。

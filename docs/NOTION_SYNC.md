@@ -13,7 +13,7 @@ Last handoff: 2026-11-07 JST.
 - Current canonical state: [development branch STATE](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/blob/feature/v0.18-shape-diagnostics/docs/project/STATE.json). Earlier snapshots below are history.
 - Existing project and GLB-019/020/021/022 task pages are accessible through the Notion connector; no connection setup is required for this session.
 - GitHub source inventory/count hints at code `e254aa7` have all six workflows successful. Report-integrity code `31bf3de18c357d796194dcac369c66e55b3973bf` passed all six workflows: Python707 tests x3 (`42359722780`), Windows2 (`42359722774`), Blender3 (`42359722777`, all four new inventory cases), Kit (`42359722842`), Handoff (`42359722778`), Chromium (`42359722853`). GLB-019 implemented/blender_ci; GLB-020/021/022 remain partial.
-- Sync status: **pending final CI reflection**. Existing project and all four GLB tasks were updated successfully with interim status; now reflect the successful code CI after saving this GitHub evidence. No new pages, private sources/models/reports, or personal data are included.
+- Sync status: **success**. Mirrored canonical evidence commit `c7306ced51f99c8e5765d46ef3d32ac5a5c841b1` into the existing project and all four GLB tasks. Every final update returned success without warnings. GLB-019 is complete/implemented/blender_ci, GLB-020/021/022 remain in progress/partial. Current summaries, CI links, remaining work and next plans were updated; older history was preserved. No new pages or private/personal data. No always-on sync job was installed. No new pages, private sources/models/reports, or personal data are included.
 - At every milestone: save canonical state and observed evidence on GitHub, update existing Notion records, then record the actual outcome here and in STATE. On connector failure leave pending with a reason and retry target; never mark unsaved changes synchronized.
 - If a future session has no Notion connection, connect Notion in the client Apps settings using the intended workspace and grant access to these existing pages; retry fetch before writing. Never request credentials in chat.
 
@@ -171,3 +171,13 @@ GitHub is the technical source of truth; the Notion GLB-020 task remains 'in pro
 ## Next work
 
 Continue from PR #25 and its `docs/project/STATE.json` / generated handoff; prefer the next validated synthetic GLB geometry-diagnostics step before claiming arbitrary addon auto-repair. Confirm CI at the most recent commit prior to any release decision.
+
+## Final synchronized records for this milestone
+
+- [Project](https://app.notion.com/p/410948b7493781449462ca76e9567e75): current roadmap/implementation/verification/remaining work and all six CI links.
+- [GLB-019](https://app.notion.com/p/410948b7493781e888acd4392249365d): done after 31bf3de CI; original user-model limitations remain.
+- [GLB-020](https://app.notion.com/p/410948b7493781f7a88cf4781588ee25): partial/in progress, accepted synthetic MVP, optional expansion frozen.
+- [GLB-021](https://app.notion.com/p/410948b7493781efb123c459b521312e): partial/in progress, AST reviews and synthetic history, no real addon causality claim.
+- [GLB-022](https://app.notion.com/p/410948b74937811ea006d4d6bd55b1dc): partial/in progress, synthetic adaptive search, failure/stop diagnostics and human review next.
+
+The sync receipt changes documentation only; verified code SHA remains `31bf3de`. This receipt is not a release or approval.
