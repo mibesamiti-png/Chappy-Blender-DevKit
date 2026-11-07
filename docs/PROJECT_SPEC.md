@@ -537,3 +537,9 @@ this milestone's target CI has not run yet. No GUI or user-project guarantee.
 ## 2026-11-08 JST EXT-001診断の集中改善
 
 [仕様/検証](EXTENSION_DIAGNOSTICS.md)。データ専用extension-manifest-reviewと項目別固定案内を追加。入力値/個人情報/元パス/未知キー名を出力せず、既存preview事前検査にも案内を共有。公式CLI検証を6合成例へ拡充し、終了値だけでなく拒否項目を照合。unknown/partial/mismatchは完全一致と区別する。ローカル839件/Blender4.3.2成功、今回対象CIは未実行。実Extension/権利/実GUI/ユーザーデータは未確認、全体partial維持。
+
+## 2026-11-08 JST EXT診断照合の実測
+
+実装ede29deb459232b3de4a64d32a8f73ec53103cb4でBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium/Skill成功。データ専用パーサーと回帰入力だけの修正1e18232379924939dd7529ad09c967b65018838aでPython839件×3.11/3.12/3.13・Windows3.11/3.13成功。影響のないBlenderを再実行せず、異なる検証SHAを区別する。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391763231)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391766410)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587199)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587164)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587159)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587181)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587167)。
+
+[範囲・パーサー修正・未確認・再開点](EXTENSION_DIAGNOSTICS.md)。6合成例の項目一致と値を出さない非実行レビューを確認。実部品ライセンス/正式Extension/実GUI/実ユーザー因果は未確認で全体partial。

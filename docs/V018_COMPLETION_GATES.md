@@ -52,3 +52,9 @@ UI-001/BUILD-001の今回拡充はeac7453の全7CI成功。助言UI/実行監査
 今回拡充は4b99068の全7CI成功。固定visible_in・範囲縮小・非実行UIレビューと生成物の計画を確認。旧仕様/レシピを維持し、実GUI/任意UI/実Extension/権利/実データを完了扱いしない。[証拠](UI_MODE_SETTINGS.md)。
 
 現行自動化完了=false（汎用UI/設定/実Extension経路の残り）、人間ブロッカー整理=true、最新PR #25実測確認=true、ドラフト継続/別承認方針=true。次期計画active=false、既存の開始承認は保持。次の自動化はEXT-001診断と公式validatorの合成結果照合。
+
+## 2026-11-08 JST EXT診断照合節目
+
+EXT-001に値なしTOMLレビュー/共有案内/公式6例の項目照合を追加。Blender等はede29de、データパーサー修正後Python839件/Windowsは1e18232で成功。[証拠](EXTENSION_DIAGNOSTICS.md)。実部品の権利/ライセンス・正式Extension・GUIは未確認、全体partialを維持。
+
+現行自動化完了=false（optional構造レビュー/汎用UI/実Extension経路等に残り）、人間ブロッカー整理=true、最新PRの影響範囲別実測確認=true、別承認/ドラフト統合方針=true。将来計画active=false、開始承認は保持する。
