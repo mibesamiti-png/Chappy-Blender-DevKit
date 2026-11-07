@@ -57,3 +57,7 @@ python -m cbdk.glb_synthetic_run_review reports/ci/my_synthetic_run/synthetic_ru
 - 合成目標0.12、全体サンプリング距離、部品候補の従来の限界を維持する。実ユーザーの因果・最適値・GUI操作・全形状一致は未検証。
 
 CI結果・対象コードSHAは実測を確認してSTATE/HANDOFFとPROGRESSへ記録する。Notionはそれらの公開可能な状態のみを同期し、生成チェックポイントそのものはアップロードしない。
+
+## 実測結果（2026-11-07 JST）
+
+コード`5dc799ac6dd46ed27f249dfea694c67644d4ab22`で[Python727件×3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082109)、[Windows2版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361081999)、[Blender4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082117)、Kit42361082094/Handoff42361082165/Chromium42361082252の6系統CI成功。追加20回帰テストを含む。全Blender版で通常4試行/14チェックポイント/最終レビューと、実基準GLB比較後の**模擬**タイムアウト保存を確認。ローカル4.3.2の予算1/模擬失敗試験とは別証拠。強制終了・電源断・書込障害の完全保存、実ユーザーアドオン、最適値/完全形状は未保証。NEXT-022完了、GLB-022全体partial。

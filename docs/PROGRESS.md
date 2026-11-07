@@ -1064,3 +1064,10 @@ GitHub実測記録`c7306ce`を正本として、既存CBDKプロジェクトとG
 - 対象3版CIへ通常4試行/14チェックポイント検査と明示的な模擬タイムアウト工程を追加。新CI未実施のため現時点で合格とは記録しない。詳細`GLB022_RUN_REVIEW.md`。
 - GLB-022全体partial、NEXT-022 in_progress。正式v0.17.0/PRドラフト/GLB-020凍結を維持。GitHubへ保存し実測後に既存Notionへ同期する。
 - 節目のローカル全体検証：Python3.12.14で**727件成功**。STATE validate / handoff write・check / diff checkも成功。次にこのコードの対象GitHub CIを1回実行して実測を確認する。
+
+### GLB-022第6段階のCI実測成功
+
+- コードSHA `5dc799ac6dd46ed27f249dfea694c67644d4ab22`： [Python 42361082109](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082109)（727件×3.11/3.12/3.13）、[Windows 42361081999](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361081999)（3.11/3.13）、[Blender 42361082117](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082117)（4.4.3/4.5.15/5.2.1）、[Kit 42361082094](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082094)、[Handoff 42361082165](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082165)、[Chromium 42361082252](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082252)の**全6系統success**。実装pushに対する全体CIは1回で完了し、再実行なし。
+- 全Blender版で従来の4試行/採否/停止履歴に加え、14チェックポイントと最終レビューを実検査。基準GLB生成・比較と候補生成を実Blenderで行い、候補比較のタイムアウトのみを明示的に模擬注入した工程も全版成功。自然ハング再現や実ユーザー検証ではない。
+- NEXT-022をdoneへ、GLB-022はpartial/blender_ci。新しいLIM-014に強制終了・書込み障害時の最終保存限界と手動確認を記録。次はNEXT-023の同条件複数合成実行の比較レビュー。任意コード実行・自動採用/再開・正式公開/マージなし。
+- この実測をGitHubへ保存後、既存NotionプロジェクトとGLB-022タスクへ同期する。後続文書コミットはコードCI対象SHAと区別。

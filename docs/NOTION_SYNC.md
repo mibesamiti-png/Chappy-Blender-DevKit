@@ -182,6 +182,6 @@ Continue from PR #25 and its `docs/project/STATE.json` / generated handoff; pref
 
 The sync receipt changes documentation only; verified code SHA remains `31bf3de`. This receipt is not a release or approval.
 
-## Pending milestone: GLB-022 phase 6 / NEXT-022
+## Current milestone: GLB-022 phase 6 / NEXT-022
 
-The new durable-checkpoint/failure-review implementation is locally tested; target CI has not run yet. After the single milestone CI, update the existing project and GLB-022 task with actual code SHA/results. Preserve partial overall status and previous histories. No derived checkpoints, private geometry/source or personal data are synchronized.
+Code 5dc799ac6dd46ed27f249dfea694c67644d4ab22 passed all six workflows once: Python42361082109 (727 x3), Windows42361081999, Blender42361082117 (three versions: normal4/14 checkpoints and explicitly simulated candidate timeout after real baseline), Kit42361082094, Handoff42361082165, Chromium42361082252. NEXT-022 done; GLB-022 overall partial/blender_ci; next NEXT-023 read-only same-condition run comparison. Sync pending final update to the existing project and GLB-022 task after saving this GitHub evidence. No derived checkpoints, private geometry/source or personal data are synchronized.
