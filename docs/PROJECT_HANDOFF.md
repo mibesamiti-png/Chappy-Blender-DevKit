@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R1〜R6に続きR7のB/C/D 11ファイルをPR #63で開発統合（687b2acd）。GLBゼロ長境界がR6高速経路を誤通過する負例を再現・正長ガードで修正、Blender3版実機でScene登録失敗回復・所有権保護、Extensionsの32KiB/64フィールドTOML境界を検証。R7結合5CI、統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skill 7CI全成功。R8はPR #64で割当済み。実ユーザーGLB、Windows GUI、権利、正式Extensions/公開は未検証。正式v0.17.0維持。 Aが開発状況ライブボードMVP（PR #68、d656f62d）を追加し7系統CI成功、ブラウザ実機/Pages公開は別ゲート。 Dashboard v2（PR #71）としてBCD完了件数・音試聴・Raw取得fallbackを統合、実ブラウザ受入は引き続き未完了。
+- 最新の節目: v0.18: R1〜R7に続きR8 B/C/Dの13ファイルをPR #73で開発統合（ded947f8）。非厳密R2 GLBのAABB padded 2×tol候補除外を安全回帰付きで追加、Blender3版の登録解除障害・Edit Mesh cancel無変更、Extensions静的正当性と公開権限の証拠分離を検証。結合PR #73の5系統CI全成功。統合後7系統CIも全成功。R9はPR #74で正式割当済み。実ユーザーGLB、Windows GUI、ライセンス/公式Extensions公開は未検証、正式v0.17.0・main維持。Dashboard v2のNEXT-024実Windowsブラウザ/音声確認も未完了。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -201,6 +201,8 @@
 - `DEC-068` A所有のGitHub読み取り専用HTMLライブボードをv0.18開発ブランチに統合し、ブラウザ実機確認とPages公開は別ゲートにする。PR #68統合コードd656f62d2b70301ec34c667f89743d17e7168a1b。Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995が各success。NodeテストでチームCI・音通知dedupeを検証。公開API3回/5分+raw1回、認証情報を保存せず、5分更新・手動更新。Pages設定/main/正式v0.17.0は変更しない。
 
 - `DEC-069` Dashboard v2でBCD完了件数と通知音試聴、作業キュー代替取得を追加し、ブラウザの実ユーザー端末検証は引き続き別ゲートとする。A PR #71 combined SHA98ec697252f04fa58bdfcc1614ea5587c5446d7a: Python42417792237/Windows42417792437/Chromium42417792272/Handoff42417792410各success。dev squash SHA dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a、post-merge Python42418153530/Windows42418153594/Blender42418153563(4.4.3/4.5.15/5.2.1)/Chromium42418153533/Handoff42418153613/Kit42418153551/Skill42418153532の7系統success確認。Node版のロジックと独立したChromiumネットワークモックでBCD 2/3→3/3、完了音1回、再更新で重複なし、Raw→Contents fallbackを確認。実GitHub APIへのローカルfile://からのアクセス、実Windows Edge通知音、Pages設定はユーザー実機で未検証。
+
+- `DEC-070` R8でGLB非厳密R2の保守的AABBフィルタとBlender実機登録解除回帰、Extensions静的provenance拒否を結合し、R9を統合後CI成功まで停止。B #66 HEAD0c81b10c、C #70 HEAD07a742f1、D #67 HEADa8f1b282 各5系統CI success。A #73 結合HEADf5fd6585488e7d69501caf2ed48c54ec81e0cc2aでPython42419473291/Windows42419473354/Blender42419473288(4.4.3/4.5.15/5.2.1, native_r8 5項目実測)/Chromium42419473271/Handoff42419473294の5系統全success。開発ブランチsquash SHA ded947f85f46fb8cce0943314d6e1a9fb41717ef、post-merge7系統CIも全success（Python42419734167、Windows42419734210、Blender42419734261（4.4.3/4.5.15/5.2.1）、Chromium42419734226、Handoff42419734193、Kit42419734233、Skill42419734172）。R9正式キューPR #74 merged SHA 4e40a16e71f0036c442e604c667036045172149a。実GLB、GUI、権利、正式v0.18公開は承認していない。
 
 ## 更新・プライバシールール
 
