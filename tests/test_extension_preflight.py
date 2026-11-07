@@ -164,7 +164,7 @@ class ExtensionPreflightTests(unittest.TestCase):
     def test_clean_zip_envelope_rejects_prefix_trailer_and_comment(self):
         self.build()
         original = self.zip.read_bytes()
-        for label, payload in (("prefix", b"#!/bin/sh\\n" + original),
+        for label, payload in (("prefix", b"#!/bin/sh\n" + original),
                                ("trailer", original + b"hidden payload")):
             with self.subTest(label=label):
                 path = self.root / (label + ".zip")
