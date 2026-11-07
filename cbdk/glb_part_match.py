@@ -62,6 +62,22 @@ def _exact_undirected_contour_signature(segments):
     ))
 
 
+def _outside_expanded_boundary_segment_box(point, start, end, margin):
+    """Conservatively reject points too far from a segment on any axis.
+
+    If a point is within Euclidean radius tol of any point on a
+    segment, each axis lies within the segment's [min,max] +/- tol.
+    We deliberately use a 2x tol envelope to avoid borderline floating
+    rounding false exclusions. Returning False always remains safe: the
+    unmodified R2 point-to-segment predicate decides the actual match.
+    """
+    return any(
+        point[axis] < min(start[axis], end[axis]) - margin
+        or point[axis] > max(start[axis], end[axis]) + margin
+        for axis in range(3)
+    )
+
+
 def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
     """Compare corresponding open-contour segments in part-local coordinates.
 
@@ -114,6 +130,12 @@ def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
 
     def within_any(point, segments):
         for start, end in segments:
+            # R8: reject only a definitely-outside AABB (two tolerance
+            # radii of padding). No potentially in-range segment is dropped:
+            # the original R2 closest-distance calculation still decides.
+            if _outside_expanded_boundary_segment_box(
+                    point, start, end, 2 * BOUNDARY_LAYOUT_RELATIVE_TOLERANCE):
+                continue
             direction = tuple(end[k] - start[k] for k in range(3))
             norm2 = sum(v * v for v in direction)
             if norm2 <= 0:
