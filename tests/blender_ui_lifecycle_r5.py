@@ -333,6 +333,112 @@ def run(path):
             module.unregister()
             assert_detached(module)
             checks.append("native_r6_partial_registration_retry")
+
+            # R7: fail partway through registering operator classes, after
+            # one real class is attached. During the error, one CBDK Scene
+            # property disappears and the other is replaced with a controlled
+            # *foreign stand-in*. Rollback must clean only what CBDK still owns.
+            for missing, replaced in (
+                    (PROPERTIES[0], PROPERTIES[1]),
+                    (PROPERTIES[1], PROPERTIES[0])):
+                native_register = bpy.utils.register_class
+                calls = [0]
+                foreign_descriptor = [None]
+
+                def fail_after_foreign_mutation(cls):
+                    calls[0] += 1
+                    if calls[0] == 2:
+                        assert len(module._REGISTERED) == 1
+                        assert all(name in bpy.types.Scene.__dict__
+                                   for name in PROPERTIES)
+                        # Re-entering importlib.reload during partial
+                        # registration must not erase the live ownership ledger.
+                        try:
+                            importlib.reload(module)
+                        except RuntimeError as exc:
+                            assert "unregistered before module reload" in str(exc)
+                        else:
+                            raise AssertionError("Partial registration reload accepted")
+                        assert len(module._REGISTERED) == 1
+                        delattr(bpy.types.Scene, missing)
+                        if replaced == PROPERTIES[0]:
+                            bpy.types.Scene.cbdk_modular_result = (
+                                bpy.props.StringProperty(
+                                    default="CBDK R7 foreign result"))
+                        else:
+                            bpy.types.Scene.cbdk_modular_nudge_offset = (
+                                bpy.props.FloatVectorProperty(
+                                    size=3, default=(0.0, 0.0, 0.35)))
+                        foreign_descriptor[0] = (
+                            bpy.types.Scene.__dict__.get(replaced))
+                        assert foreign_descriptor[0] is not None
+                        raise RuntimeError("CBDK R7 injected mid-register failure")
+                    return native_register(cls)
+
+                bpy.utils.register_class = fail_after_foreign_mutation
+                try:
+                    try:
+                        module.register()
+                    except RuntimeError as exc:
+                        assert "R7 injected mid-register failure" in str(exc)
+                    else:
+                        raise AssertionError("R7 controlled failure was ignored")
+                finally:
+                    bpy.utils.register_class = native_register
+
+                try:
+                    assert calls[0] == 2
+                    assert not module._REGISTERED
+                    assert not module._OWNED_PROPERTIES
+                    assert not module._OWNED_PROPERTY_TOKENS
+                    assert missing not in bpy.types.Scene.__dict__
+                    assert bpy.types.Scene.__dict__.get(replaced) is (
+                        foreign_descriptor[0])
+                    assert not hasattr(
+                        bpy.types, "VIEW3D_PT_cbdk_modular_preview")
+                    # Reload after *successful rollback* is allowed even if
+                    # the foreign RNA declaration still occupies one name.
+                    assert importlib.reload(module) is module
+                    assert bpy.types.Scene.__dict__.get(replaced) is (
+                        foreign_descriptor[0])
+                    try:
+                        module.register()
+                    except RuntimeError as exc:
+                        assert "Scene properties conflict" in str(exc)
+                    else:
+                        raise AssertionError("Foreign Scene name not protected")
+                    assert not module._REGISTERED
+                    assert not module._OWNED_PROPERTIES
+                    assert not module._OWNED_PROPERTY_TOKENS
+                    assert bpy.types.Scene.__dict__.get(replaced) is (
+                        foreign_descriptor[0])
+                finally:
+                    # Remove only our controlled synthetic foreign stand-in.
+                    if (bpy.types.Scene.__dict__.get(replaced)
+                            is foreign_descriptor[0]):
+                        delattr(bpy.types.Scene, replaced)
+                assert_detached(module)
+                module.register()
+                module.unregister()
+                assert_detached(module)
+            checks.append("native_r7_mid_register_missing_foreign_rollback")
+            checks.append("native_r7_partial_live_reload_rejected")
+            checks.append("native_r7_foreign_reload_collision_preserved")
+
+            # R7: after both interrupted registrations are recovered, use
+            # Blender's actual addon enable/disable API repeatedly. This is
+            # independent of merely invoking module.register() by hand.
+            for _ in range(2):
+                module = addon_utils.enable(
+                    PACKAGE, default_set=False, persistent=False)
+                assert module is not None
+                enabled = True
+                assert all(hasattr(bpy.types.Scene, name) for name in PROPERTIES)
+                assert len(module._REGISTERED) == len(module._CLASSES)
+                addon_utils.disable(PACKAGE, default_set=False)
+                enabled = False
+                assert_detached(module)
+            checks.append("native_r7_enable_disable_after_recovery_2")
         finally:
             if enabled:
                 try:
