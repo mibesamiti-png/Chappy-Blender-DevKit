@@ -52,3 +52,16 @@
 ## 各担当の最終報告形式
 
 `基点SHA / ブランチ / 担当機能ID / PR URL / 変更ファイル / 実装の意義 / 自作fixtureでのテストと版・run URL / 残課題 / Aが更新すべき共通資料 / 次の小さな候補` を簡潔にまとめる。個別CIが緑でもAの統合CI待ちを区別する。
+
+## Team A追加判断：第2ラウンド暫定共通基点（R2開始許可）
+
+2026-11-08 JST。第2ラウンドの事前設計が完了し、初回B/C/DのPR #26〜28と統合候補PR #29はドラフト・未マージであるため、本流へ自動統合せず開発を継続する方法を明示する。
+
+- **限定的な実装開始許可**: 検証済み初回統合コミット `e445b12c9a66541ba13bfb10ee6bc0007078c24b` を**暫定基点**とする。ブランチ `work/v018-integration-bcd` のHEADが同一SHAであることを作業直前に確認する。異なる場合はAが再確認するまで開始しない。
+- この暫定基点には初回B/C/Dの変更17ファイルがすでに含まれ、[Python 859件×3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028094)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028160)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028123)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028146)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028095)の5系統が実測成功。Skill/Kitは該当コミットで未実行。
+- Bは `work/v018-glb-analysis-r2`、Cは `work/v018-ui-builder-r2`、Dは `work/v018-extension-quality-r2` を、それぞれ**この暫定基点から新規作成**。同名ブランチが存在するなら所有者/差分を確認して上書きしない。
+- **R2ドラフトPRの暫定base branchは `work/v018-integration-bcd`**。未統合の `feature/v0.18-shape-diagnostics` をR2 PRの直接baseにすると初回分のコードが混入して差分が誤解されるので避ける。初回統合が実際に本流に入った後、Aが必要に応じR2 PRのbaseを変更する。
+- 共通 `scripts/blender_modular_addon_smoke.py`, `scripts/verify_extension_manifest.py`, `cbdk/__main__.py`、共通CI、STATE/HANDOFF、Notionは**Aの所有**。各チームは専有ファイル内の負例テストを先行し、共通scriptの修正が必要な場合はPRに変更要求だけを書く。
+- Bの最初の実装単位: 境界数が等しい場合の穴位置/形状を見逃さない保守的な特徴比較の負例。C: 誤有効UI（空mesh、multi-data Edit、missing data）と登録解除失敗の復旧。D: ZIPローカルヘッダー/central directory、extra/comment、provenanceの偽合格を防ぐ負例。
+- **Codex必須ではない**。B/C/Dは自作合成fixtureとPython/Blender CIを使って進め、重い未解決項目だけタスク票で後回しにする。独立R2 PRの成功は、PR #29と組み合わせた全体のCI成功と同義ではない。
+- Aの[PR #29調整コメント](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/29#issuecomment-6710783861)を暫定判断の根拠とし、**この記述を本流マージ・正式公開・個別PR統合の許可と取り違えない**。
