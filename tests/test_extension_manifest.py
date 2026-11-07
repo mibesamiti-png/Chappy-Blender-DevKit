@@ -98,10 +98,15 @@ class ManifestReviewTests(unittest.TestCase):
 
         # Harmless known Blender startup and shutdown lines may accompany
         # real official-validator results. Synthetic test, no Blender executed.
-        for version in ("4.4.3", "4.5.15", "5.2.1"):
+        for version, suffix in (
+            ("4.4.3", ""),
+            ("4.5.15", " LTS"),
+            ("5.2.1", " LTS"),
+        ):
             with self.subTest(version=version):
-                output = ('Blender ' + version + ' (synthetic build)\n'
-                          'Success parsing TOML in "synthetic"\nBlender quit')
+                output = ('Blender ' + version + suffix
+                          + ' (hash deadbeef1234 built 2026-01-01 00:00:00)\n'
+                          + 'Success parsing TOML in "synthetic"\nBlender quit')
                 report = compare_official_validation(fields(), 0, output)
                 self.assertEqual(report["status"], "agreement")
                 self.assertTrue(report["complete_diagnostic_agreement"])
