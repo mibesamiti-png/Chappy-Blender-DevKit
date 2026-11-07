@@ -80,6 +80,11 @@ Codexが必要な条件 / Codexなしの代替:
 - 統合候補の[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028094) は859件×Python3版、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028160)、[Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028123)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028146)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42395028095)の5系統を全て成功確認。Skill/Kitはこの統合候補に対する実行証拠がないため5系統に算入しない。
 - この時点で**個別/統合PRはドラフト・未マージ**。検証済みでも、統合許可やmainマージではない。進捗/次期移行の判定は最新`STATE.json`を再読して確定する。
 
+## Notionの閲覧用マニュアル
+
+- [CBDK — AI並行開発チーム運用マニュアル](https://app.notion.com/p/411948b7493781c49de4f175ac0b9ee6)（GitHub正本の人間向けミラー。コード/CIはGitHubを優先）
+- 次ラウンドの作業票は [PARALLEL_ROUND_002.md](PARALLEL_ROUND_002.md) を参照。
+
 ## 7. 継続観測と改善
 
 1サイクルごとに、独立PR数、統合時に実際に衝突したファイル数、CI再試行数、実装・レビューに費やした所要時間（分かる場合）、人間確認待ち件数を残す。**単純なコミット/テスト数はスピードの代理指標にしない。**初回の「編集ファイル重複0」は成功だが、今後の運用でも同じと仮定しない。
