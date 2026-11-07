@@ -239,6 +239,139 @@ def _boundary_component_roundtrip(output):
     print("CBDK_GLB_BOUNDARY_COMPONENT_ROUNDTRIP_PASS")
 
 
+def _boundary_budget_roundtrip(output):
+    """R4 self-authored GLB: exact 255/256/257 open-edge budget boundaries."""
+    from time import perf_counter
+
+    for target_edges in (255, 256, 257):
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        vertices, polygons = [], []
+
+        def add_tri(a, b, c):
+            first = len(vertices)
+            vertices.extend((a, b, c))
+            polygons.append((first, first + 1, first + 2))
+
+        for i in range(85 if target_edges == 255 else 84):
+            x = 3. * i
+            add_tri((x, 0., 0.), (x + 1., 0., 0.), (x, 1., 0.))
+        if target_edges == 256:
+            a, b, c, d = ((300., 0., 0.), (301., 0., 0.),
+                          (300., 1., 0.), (301., 1., 0.))
+            add_tri(a, b, c)
+            add_tri(b, d, c)
+        if target_edges == 257:
+            a, b, c, d, e = ((300., 0., 0.), (301., 0., 0.),
+                             (302., 1., 0.), (301., 2., 0.),
+                             (300., 2., 0.))
+            for face in ((a, b, c), (a, c, d), (a, d, e)):
+                add_tri(*face)
+        mesh = bpy.data.meshes.new("CBDK_R4_Edge_Budget")
+        mesh.from_pydata(vertices, [], polygons)
+        mesh.update()
+        obj = bpy.data.objects.new("CBDK_R4_Edge_Budget", mesh)
+        bpy.context.collection.objects.link(obj)
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        source = output / ("r4_boundary_" + str(target_edges) + ".glb")
+        bpy.ops.export_scene.gltf(
+            filepath=str(source), export_format="GLB", use_selection=True,
+        )
+        before = hashlib.sha256(source.read_bytes()).digest()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        bpy.ops.import_scene.gltf(filepath=str(source))
+        assert hashlib.sha256(source.read_bytes()).digest() == before
+        meshes = [item for item in bpy.context.scene.objects if item.type == "MESH"]
+        assert len(meshes) == 1, "R4 boundary fixture import split object"
+        item = meshes[0]
+        item.data.calc_loop_triangles()
+        faces = [[tuple(float(x) for x in
+                  (item.matrix_world @ item.data.vertices[i].co))
+                  for i in tri.vertices]
+                 for tri in item.data.loop_triangles]
+        assert len(faces) == len(polygons), "R4 fixture count changed"
+        audit = boundary_audit(faces, [len(faces)])
+        assert audit["parts"][0]["boundary_edges"] == target_edges
+        start = perf_counter()
+        result = suggest_spatial_part_matches(
+            faces, faces, [len(faces)], [len(faces)],
+        )
+        elapsed_ms = (perf_counter() - start) * 1000
+        row = result["reference_parts"][0]
+        expected = "ambiguous" if target_edges == 257 else "suggested"
+        reason = ["boundary_layout_budget_exceeded"] if target_edges == 257 else []
+        assert (row["status"], row["topology_review_reasons"]) == (expected, reason), row
+        assert result["auto_apply"] is False
+        assert result["cross_file_part_identity_proven"] is False
+        print(f"CBDK R4 budget {target_edges}: {expected} ({elapsed_ms:.3f} ms)")
+
+    print("CBDK_GLB_BOUNDARY_BUDGET_ROUNDTRIP_PASS")
+
+
+def _boundary_many_parts_roundtrip(output):
+    """64 actual GLB objects / 512 triangles, reversible anonymous inventory."""
+    from time import perf_counter
+
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    outer = [(-1., -1., 0.), (1., -1., 0.),
+             (1., 1., 0.), (-1., 1., 0.)]
+    inner = [(-.3, -.3, 0.), (.3, -.3, 0.),
+             (.3, .3, 0.), (-.3, .3, 0.)]
+    for index in range(64):
+        grid_x = (index % 4) * 12.
+        grid_y = ((index // 4) % 4) * 12.
+        grid_z = (index // 16) * 12.
+        points = [
+            (x + grid_x, y + grid_y, z + grid_z)
+            for x, y, z in outer + inner
+        ]
+        triangles = []
+        for i in range(4):
+            j = (i + 1) % 4
+            triangles.extend(((i, j, j + 4), (i, j + 4, i + 4)))
+        mesh = bpy.data.meshes.new("CBDK_R4_Frame")
+        mesh.from_pydata(points, [], triangles)
+        mesh.update()
+        obj = bpy.data.objects.new(f"CBDK_R4_{index:03d}", mesh)
+        bpy.context.collection.objects.link(obj)
+
+    source = output / "r4_parts_64_faces_512.glb"
+    bpy.ops.export_scene.gltf(filepath=str(source), export_format="GLB")
+    before = hashlib.sha256(source.read_bytes()).digest()
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.import_scene.gltf(filepath=str(source))
+    assert hashlib.sha256(source.read_bytes()).digest() == before
+    meshes = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
+    assert len(meshes) == 64, "R4 multipart GLB failed to preserve object count"
+    groups = []
+    for obj in meshes:
+        obj.data.calc_loop_triangles()
+        faces = [
+            [tuple(float(x) for x in
+             (obj.matrix_world @ obj.data.vertices[i].co))
+             for i in tri.vertices]
+            for tri in obj.data.loop_triangles
+        ]
+        assert len(faces) == 8, "R4 multipart GLB triangulation changed"
+        groups.append(faces)
+    assert sum(len(group) for group in groups) == 512
+    reference = [face for group in groups for face in group]
+    candidate = [face for group in reversed(groups) for face in group]
+    start = perf_counter()
+    result = suggest_spatial_part_matches(reference, candidate, [8] * 64, [8] * 64)
+    elapsed_ms = (perf_counter() - start) * 1000
+    assert [row["candidate_part_ids"] for row in result["reference_parts"]] == [
+        [f"part_{64 - i:03d}"] for i in range(64)
+    ], "R4 multipart reversed-order pairing changed"
+    assert all(row["status"] == "suggested"
+               and not row["topology_review_reasons"]
+               for row in result["reference_parts"])
+    assert result["auto_apply"] is False
+    assert result["cross_file_part_identity_proven"] is False
+    print(f"CBDK R4 multipart 64 parts / 512 faces: suggested ({elapsed_ms:.3f} ms)")
+    print("CBDK_GLB_BOUNDARY_MULTIPART_ROUNDTRIP_PASS")
+
+
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if len(args) != 1:
@@ -293,6 +426,8 @@ def main():
     _topology_count_roundtrip(output)
     _boundary_layout_roundtrip(output)
     _boundary_component_roundtrip(output)
+    _boundary_budget_roundtrip(output)
+    _boundary_many_parts_roundtrip(output)
     print("CBDK_SURFACE_INVENTORY_PASS")
 
 
