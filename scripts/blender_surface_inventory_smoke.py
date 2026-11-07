@@ -16,6 +16,154 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from cbdk.glb_surface_pipeline import run_glb_surface_review  # noqa: E402
+from cbdk.glb_part_match import suggest_spatial_part_matches  # noqa: E402
+from cbdk.glb_boundary_audit import boundary_audit  # noqa: E402
+
+
+def _topology_count_roundtrip(output):
+    """Verify numeric boundary guard after genuine Blender GLB export/import."""
+    vertices = [
+        (0., 0., 0.), (1., 0., 0.), (0., 1., 0.),
+        (1., 1., 0.), (.4, .7, 0.),
+    ]
+    variants = (
+        ("connected", [(0, 1, 2), (1, 3, 2)]),
+        ("disconnected", [(0, 1, 2), (0, 3, 4)]),
+    )
+    imported = []
+    for label, polygons in variants:
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        mesh = bpy.data.meshes.new("CBDK_Synthetic_Topology")
+        mesh.from_pydata(vertices, [], polygons)
+        mesh.update()
+        obj = bpy.data.objects.new("CBDK_Synthetic_Topology", mesh)
+        bpy.context.collection.objects.link(obj)
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        source = output / ("topology_" + label + ".glb")
+        bpy.ops.export_scene.gltf(
+            filepath=str(source), export_format="GLB", use_selection=True,
+        )
+        digest = hashlib.sha256(source.read_bytes()).digest()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        bpy.ops.import_scene.gltf(filepath=str(source))
+        assert hashlib.sha256(source.read_bytes()).digest() == digest
+        meshes = [item for item in bpy.context.scene.objects
+                  if item.type == "MESH"]
+        assert len(meshes) == 1, "Unexpected synthetic import mesh count"
+        item = meshes[0]
+        item.data.calc_loop_triangles()
+        faces = [[tuple(float(x) for x in
+                 (item.matrix_world @ item.data.vertices[index].co))
+                  for index in face.vertices]
+                 for face in item.data.loop_triangles]
+        assert len(faces) == 2, "Synthetic triangles did not survive GLB"
+        imported.append(faces)
+
+    reference, candidate = imported
+    ref_edges = boundary_audit(reference, [2])["parts"][0]
+    cand_edges = boundary_audit(candidate, [2])["parts"][0]
+    assert (ref_edges["boundary_edges"], cand_edges["boundary_edges"]) == (4, 6)
+    assert ref_edges["observed_boundary"] and cand_edges["observed_boundary"]
+    match = suggest_spatial_part_matches(reference, candidate, [2], [2])
+    row = match["reference_parts"][0]
+    assert row["status"] == "ambiguous", row
+    assert row["topology_review_reasons"] == ["boundary_edge_count_mismatch"], row
+    assert match["unpaired_candidate_part_ids"] == ["part_001"], match
+    assert match["cross_file_part_identity_proven"] is False
+    print("CBDK synthetic GLB topology-count roundtrip passed")
+
+
+def _boundary_layout_roundtrip(output):
+    """End-to-end equal-count moved-hole and retessellation negative controls."""
+    from time import perf_counter
+
+    outer = [(-1., -1., 0.), (1., -1., 0.),
+             (1., 1., 0.), (-1., 1., 0.)]
+
+    def make_faces(*, opening_shift=0., opening_half_width=.3,
+                   alternate=False, mirrored=False):
+        inner = [
+            (opening_shift - opening_half_width, -.3, 0.),
+            (opening_shift + opening_half_width, -.3, 0.),
+            (opening_shift + opening_half_width, .3, 0.),
+            (opening_shift - opening_half_width, .3, 0.),
+        ]
+        vertices = outer + inner
+        if mirrored:
+            vertices = [(-x, y, z) for x, y, z in vertices]
+        polygons = []
+        for index in range(4):
+            nxt = (index + 1) % 4
+            if alternate:
+                polygons.extend(((index, nxt, index + 4),
+                                 (nxt, nxt + 4, index + 4)))
+            else:
+                polygons.extend(((index, nxt, nxt + 4),
+                                 (index, nxt + 4, index + 4)))
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        mesh = bpy.data.meshes.new("CBDK_Synthetic_Hole_Layout")
+        mesh.from_pydata(vertices, [], polygons)
+        mesh.update()
+        obj = bpy.data.objects.new("CBDK_Synthetic_Hole_Layout", mesh)
+        bpy.context.collection.objects.link(obj)
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        return obj
+
+    variants = (
+        ("reference", {}),
+        ("moved", {"opening_shift": .24}),
+        ("wider", {"opening_half_width": .5}),
+        ("retessellated", {"alternate": True}),
+        ("symmetric", {"alternate": True, "mirrored": True}),
+    )
+    loaded = {}
+    for label, kwargs in variants:
+        make_faces(**kwargs)
+        source = output / ("layout_" + label + ".glb")
+        bpy.ops.export_scene.gltf(
+            filepath=str(source), export_format="GLB", use_selection=True,
+        )
+        before = hashlib.sha256(source.read_bytes()).digest()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        bpy.ops.import_scene.gltf(filepath=str(source))
+        assert hashlib.sha256(source.read_bytes()).digest() == before
+        meshes = [obj for obj in bpy.context.scene.objects
+                  if obj.type == "MESH"]
+        assert len(meshes) == 1
+        mesh = meshes[0]
+        mesh.data.calc_loop_triangles()
+        faces = [[tuple(float(x) for x in
+                  (mesh.matrix_world @ mesh.data.vertices[idx].co))
+                  for idx in tri.vertices]
+                 for tri in mesh.data.loop_triangles]
+        assert len(faces) == 8
+        assert boundary_audit(faces, [8])["parts"][0]["boundary_edges"] == 8
+        loaded[label] = faces
+
+    reference = loaded["reference"]
+    for label, expected, reasons in (
+        ("reference", "suggested", []),
+        ("moved", "ambiguous", ["boundary_spatial_layout_mismatch"]),
+        ("wider", "ambiguous", ["boundary_spatial_layout_mismatch"]),
+        ("retessellated", "suggested", []),
+        ("symmetric", "suggested", []),
+    ):
+        start = perf_counter()
+        report = suggest_spatial_part_matches(
+            reference, loaded[label], [8], [8],
+        )
+        elapsed_ms = (perf_counter() - start) * 1000
+        row = report["reference_parts"][0]
+        assert row["status"] == expected, (label, row)
+        assert row["topology_review_reasons"] == reasons, (label, row)
+        assert row["normalized_score"] == 0., (label, row)
+        assert report["cross_file_part_identity_proven"] is False
+        assert report["auto_apply"] is False
+        print(f"CBDK boundary-layout synthetic {label}: {expected} "
+              f"({elapsed_ms:.3f} ms)")
+    print("CBDK_GLB_BOUNDARY_LAYOUT_ROUNDTRIP_PASS")
 
 
 def main():
@@ -69,6 +217,8 @@ def main():
             assert result["surface_observation"] == "not_measured"
             assert "fixed_surface" not in result
         print("CBDK inventory synthetic case passed: " + label)
+    _topology_count_roundtrip(output)
+    _boundary_layout_roundtrip(output)
     print("CBDK_SURFACE_INVENTORY_PASS")
 
 

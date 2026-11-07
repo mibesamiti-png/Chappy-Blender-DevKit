@@ -304,6 +304,42 @@ class ColoredGLBLauncherTests(unittest.TestCase):
         self.assertNotIn("private_ref", html)
         self.assertNotIn("__CBDK_VIEWER_DATA__", html)
 
+    def test_boundary_layout_diagnostic_codes_are_bounded_and_consistent(self):
+        cases = (
+            ("moved", ["boundary_spatial_layout_mismatch"], True, True),
+            ("budget", ["boundary_layout_budget_exceeded"], True, True),
+            ("reversed", ["boundary_layout_budget_exceeded",
+                          "boundary_spatial_layout_mismatch"], True, False),
+            ("missing_flag", ["boundary_spatial_layout_mismatch"], False, False),
+            ("duplicate", ["boundary_spatial_layout_mismatch",
+                           "boundary_spatial_layout_mismatch"], True, False),
+        )
+        for label, reasons, flag, accepted in cases:
+            with self.subTest(label=label):
+                self.dest = self.root / ("layout_" + label)
+
+                def synthetic_runner(cmd, **kwargs):
+                    result = self.fake_runner(cmd, **kwargs)
+                    output = Path(cmd[-1]) / "review.json"
+                    data = json.loads(output.read_text(encoding="utf-8"))
+                    row = data["part_match_candidates"]["reference_parts"][0]
+                    row["status"] = "ambiguous" if flag else "suggested"
+                    row["topology_review_required"] = flag
+                    row["topology_review_reasons"] = reasons
+                    if flag:
+                        data["part_match_candidates"]["unpaired_candidate_part_ids"] = ["part_001"]
+                    output.write_text(json.dumps(data), encoding="utf-8")
+                    return result
+
+                if accepted:
+                    result, _ = self.run_ok(synthetic_runner)
+                    self.assertEqual(
+                        result["part_match_candidates"]["reference_parts"][0]
+                        ["topology_review_reasons"], reasons)
+                else:
+                    with self.assertRaises(GLBSurfacePipelineError):
+                        self.run_ok(synthetic_runner)
+
     def test_refuses_existing_folder_instead_of_overwriting(self):
         self.dest.mkdir()
         (self.dest / "user.txt").write_text("keep")
@@ -321,6 +357,40 @@ class ColoredGLBLauncherTests(unittest.TestCase):
             return subprocess.CompletedProcess(cmd, 7, stdout="", stderr="failed")
         with self.assertRaisesRegex(GLBSurfacePipelineError, "failed"):
             self.run_ok(failure)
+
+    def test_optional_topology_reason_codes_reject_tampering(self):
+        # Old v1 aggregate reports may omit the new explanatory list.
+        # A present list must be a canonical subset consistent with the
+        # existing conservative review flag.
+        cases = (
+            ("legacy", None, True),
+            ("unknown", ["not_a_measured_reason"], False),
+            ("contradictory", ["boundary_edge_count_mismatch"], False),
+            ("bool", True, False),
+            ("duplicate", ["boundary_edge_count_mismatch",
+                           "boundary_edge_count_mismatch"], False),
+        )
+        for label, reasons, accepted in cases:
+            with self.subTest(case=label):
+                self.dest = self.root / ("colors_" + label)
+
+                def forged(cmd, **kwargs):
+                    result = self.fake_runner(cmd, **kwargs)
+                    output = Path(cmd[-1]) / "review.json"
+                    data = json.loads(output.read_text(encoding="utf-8"))
+                    row = data["part_match_candidates"]["reference_parts"][0]
+                    if reasons is None:
+                        row.pop("topology_review_reasons", None)
+                    else:
+                        row["topology_review_reasons"] = reasons
+                    output.write_text(json.dumps(data), encoding="utf-8")
+                    return result
+
+                if accepted:
+                    self.run_ok(forged)
+                else:
+                    with self.assertRaises(GLBSurfacePipelineError):
+                        self.run_ok(forged)
 
     def test_rejects_fake_files_or_unsafe_reports(self):
         def no_files(cmd, **kwargs):
