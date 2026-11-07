@@ -46,11 +46,17 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
             style = _UI_OPTIONS["section_styles"][index]
             if style["visible_in"] not in ("always", context.mode.lower()):
                 continue
+            control_modes = _UI_OPTIONS["control_visibility"][index]
+            visible_buttons = [(feature_id, label) for (feature_id, label), mode in
+                               zip(buttons, control_modes)
+                               if mode in ("always", context.mode.lower())]
+            if not visible_buttons:
+                continue
             visible_sections += 1
             group = col.box() if style["boxed"] else col.column(align=True)
             group.label(text=title)
             body = group.row(align=True) if style["layout"] == "row" else group
-            for feature_id, label in buttons:
+            for feature_id, label in visible_buttons:
                 button_row = body.row(align=True)
                 active = context.active_object
                 has_mesh = active is not None and active.type == "MESH"
@@ -109,16 +115,36 @@ def register():
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
             _REGISTERED.append(cls)
-    except Exception:
-        unregister()
+    except Exception as error:
+        try:
+            unregister()
+        except Exception as cleanup_error:
+            # Keep the original registration error and retain failed entries
+            # in the ownership lists so a later cleanup can be retried.
+            error.add_note("CBDK preview rollback was incomplete; retry unregister()")
+            raise error from cleanup_error
         raise
 
 
 def unregister():
-    for cls in reversed(_REGISTERED):
-        bpy.utils.unregister_class(cls)
-    _REGISTERED.clear()
-    for name in reversed(_OWNED_PROPERTIES):
-        if hasattr(bpy.types.Scene, name):
-            delattr(bpy.types.Scene, name)
-    _OWNED_PROPERTIES.clear()
+    # A failing operator unregister must not prevent owned Scene property
+    # cleanup. Entries are removed only after a successful detach so a caller
+    # can retry without touching foreign add-on registrations.
+    failures = []
+    for cls in reversed(tuple(_REGISTERED)):
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception as error:
+            failures.append(error)
+        else:
+            _REGISTERED.remove(cls)
+    for name in reversed(tuple(_OWNED_PROPERTIES)):
+        try:
+            if hasattr(bpy.types.Scene, name):
+                delattr(bpy.types.Scene, name)
+        except Exception as error:
+            failures.append(error)
+        else:
+            _OWNED_PROPERTIES.remove(name)
+    if failures:
+        raise RuntimeError("CBDK preview cleanup incomplete; retry unregister()") from failures[0]
