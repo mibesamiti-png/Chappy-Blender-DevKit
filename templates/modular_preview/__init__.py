@@ -70,15 +70,19 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
 
     def draw(self, context):
         col = self.layout.column(align=True)
+        # Snapshot the UI mode once for consistent composition during a mode
+        # switch. A missing/non-string mode is unsupported, never ready.
+        raw_mode = getattr(context, "mode", None)
+        visible_mode = raw_mode.lower() if type(raw_mode) is str else None
         visible_sections = 0
         for index, (title, buttons) in enumerate(_UI_SECTIONS):
             style = _UI_OPTIONS["section_styles"][index]
-            if style["visible_in"] not in ("always", context.mode.lower()):
+            if style["visible_in"] not in ("always", visible_mode):
                 continue
             control_modes = _UI_OPTIONS["control_visibility"][index]
             visible_buttons = [(feature_id, label) for (feature_id, label), mode in
                                zip(buttons, control_modes)
-                               if mode in ("always", context.mode.lower())]
+                               if mode in ("always", visible_mode)]
             if not visible_buttons:
                 continue
             visible_sections += 1
@@ -120,17 +124,23 @@ _REGISTERED = []
 
 _PROPERTY_NAMES = ("cbdk_modular_result", "cbdk_modular_nudge_offset")
 _OWNED_PROPERTIES = []
+# Blender's registered bpy.props declarations also remain in Scene.__dict__.
+# Keep the exact descriptor to avoid deleting a foreign replacement by name.
+_OWNED_PROPERTY_TOKENS = {}
 
 
 def register():
     # Refuse collisions before touching another add-on's Scene data.
-    if _REGISTERED or _OWNED_PROPERTIES or any(hasattr(bpy.types.Scene, name) for name in _PROPERTY_NAMES):
+    if (_REGISTERED or _OWNED_PROPERTIES or _OWNED_PROPERTY_TOKENS
+            or any(hasattr(bpy.types.Scene, name) for name in _PROPERTY_NAMES)):
         raise RuntimeError("CBDK preview is already registered or Scene properties conflict")
     try:
         bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
             name="Last CBDK preview result", default="No inspection yet"
         )
         _OWNED_PROPERTIES.append("cbdk_modular_result")
+        _OWNED_PROPERTY_TOKENS["cbdk_modular_result"] = (
+            bpy.types.Scene.__dict__.get("cbdk_modular_result"))
         parameter = _UI_OPTIONS["nudge_offset"]
         bpy.types.Scene.cbdk_modular_nudge_offset = bpy.props.FloatVectorProperty(
             name="Local Nudge XYZ", description="Local-space offset for selected vertices",
@@ -138,6 +148,8 @@ def register():
             min=parameter["min"], max=parameter["max"], subtype="TRANSLATION",
         )
         _OWNED_PROPERTIES.append("cbdk_modular_nudge_offset")
+        _OWNED_PROPERTY_TOKENS["cbdk_modular_nudge_offset"] = (
+            bpy.types.Scene.__dict__.get("cbdk_modular_nudge_offset"))
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
             _REGISTERED.append(cls)
@@ -166,11 +178,18 @@ def unregister():
             _REGISTERED.remove(cls)
     for name in reversed(tuple(_OWNED_PROPERTIES)):
         try:
-            if hasattr(bpy.types.Scene, name):
-                delattr(bpy.types.Scene, name)
+            # A different addon may have removed/replaced our declaration.
+            # Blender retains assigned bpy.props on the type __dict__; a
+            # replacement has a different descriptor even with the same name.
+            # Releasing a lost ownership claim must NOT delete the new value.
+            current = bpy.types.Scene.__dict__.get(name)
+            if current is _OWNED_PROPERTY_TOKENS.get(name):
+                if hasattr(bpy.types.Scene, name):
+                    delattr(bpy.types.Scene, name)
         except Exception as error:
             failures.append(error)
         else:
             _OWNED_PROPERTIES.remove(name)
+            _OWNED_PROPERTY_TOKENS.pop(name, None)
     if failures:
         raise RuntimeError("CBDK preview cleanup incomplete; retry unregister()") from failures[0]

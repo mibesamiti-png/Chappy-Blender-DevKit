@@ -167,7 +167,7 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(len(functions), 2)
         self.namespace = {
             "bpy": bpy, "_CLASSES": (self.first, self.second),
-            "_REGISTERED": [], "_OWNED_PROPERTIES": [],
+            "_REGISTERED": [], "_OWNED_PROPERTIES": [], "_OWNED_PROPERTY_TOKENS": {},
             "_PROPERTY_NAMES": ("cbdk_modular_result", "cbdk_modular_nudge_offset"),
             "_UI_OPTIONS": {"nudge_offset": {
                 "size": 3, "default": (0., 0., .1), "min": -10., "max": 10.}},
