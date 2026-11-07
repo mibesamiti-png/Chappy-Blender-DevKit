@@ -64,12 +64,12 @@ class GLBSurfacePipelineTests(unittest.TestCase):
         for file in (self.ref, self.cand, self.blender):
             file.write_bytes(b"dummy")
 
-    def run_fake(self, *, status="review_only", unsafe=False):
+    def run_fake(self, *, status="review_only", unsafe=False, report_override=None):
         commands = []
 
         def fake_run(cmd, **kwargs):
             commands.append(cmd)
-            Path(cmd[-1]).write_text(json.dumps(report(status=status, unsafe=unsafe)))
+            Path(cmd[-1]).write_text(json.dumps(report_override if report_override is not None else report(status=status, unsafe=unsafe)))
             line = "CBDK_GLB_SURFACE_REVIEW_PASS " + json.dumps({
                 "kind": "cbdk_glb_surface_review", "status": status,
             }) + "\n"
@@ -174,6 +174,27 @@ class GLBSurfacePipelineTests(unittest.TestCase):
                    side_effect=subprocess.TimeoutExpired(cmd="blender", timeout=30)):
             with self.assertRaisesRegex(GLBSurfacePipelineError, "timed out"):
                 run_glb_surface_review(self.blender, self.ref, self.cand, self.out)
+
+
+    def test_rejects_nonfinite_negative_or_boolean_surface_metric(self):
+        for bad in (float("nan"), float("inf"), -0.01, True, "0.2"):
+            with self.subTest(value=repr(bad)):
+                invalid = report()
+                invalid["fixed_surface"]["symmetric_sampled_max"] = bad
+                with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+                    self.run_fake(report_override=invalid)
+
+    def test_rejects_invalid_triangle_counts_and_skip_measurements(self):
+        for invalid_count in (-1, 1.5, True, "8"):
+            with self.subTest(count=repr(invalid_count)):
+                invalid = report()
+                invalid["reference_triangles"] = invalid_count
+                with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+                    self.run_fake(report_override=invalid)
+        invalid = report(status="skipped")
+        invalid["fixed_surface"] = {"symmetric_sampled_max": 0.0}
+        with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
+            self.run_fake(status="skipped", report_override=invalid)
 
     def test_output_report_is_bounded(self):
         with patch("cbdk.glb_surface_pipeline.inspect_glb",
