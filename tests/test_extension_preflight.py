@@ -1,4 +1,5 @@
 """CBDK extension readiness preflight, no executable source or release build."""
+# Round-two adversarial ZIP regressions: test_extension_archive_round2.py.
 from __future__ import annotations
 
 import json
