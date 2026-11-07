@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18 EXT-001: 値なしTOMLレビュー/項目別案内/公式診断照合6例を実装。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2が成功。深い入れ子も制御拒否。正式Extension/権利/実GUI未完了、v0.17.0維持
+- 最新の節目: v0.18: A/B/C/DのR1〜R3実装をPR #38で開発ブランチに統合（12ddcfe）。GLB境界数/配置/連結成分の保守的レビュー、宣言UIの誤有効とforeign Scene保護、EXT ZIP構造/来歴と公式ログ異常のfail-closedを強化。合体SHAのPython897件×3版・Windows・Blender3版・Kit・Chromium・Skill・Handoffの7系統成功。任意GLB/実Windows GUI/正式Extension/権利/公開は未確認。正式v0.17.0を維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -187,6 +187,7 @@
 - `DEC-060` パネルの助言判定と実編集の安全検査を区別し、構造/入力ガードだけを共通化する。UIはcached total_vert_selを読みBMesh走査/座標コピーなし。RNAが古い場合もexecuteが実選択/数値/トポロジー/上限を再検査。ゼロ値で入力を無効にして修正不能にしない。両property factory失敗の回復も検証する。
 - `DEC-061` 表示条件は固定literal、設定範囲はコード契約の内側のみ、生成時に挿入文字列を再置換しない。省略時の6レシピ/旧計画出力を維持。visible_inはalways/object/edit_meshだけで矛盾を拒否。型/サイズ/最大範囲をJSONへ委ねない。静的UIレビューとメタデータは実行/承認/真正性の証明ではない。
 - `DEC-062` manifest構造診断を値なしで共有し、公式検証は終了コードだけでなく項目の一致を要求する。生ログ/個人情報/私有パスを保存せず既知項目だけ正規化。unknown/partial/mismatchを完全一致へ昇格しない。fixtureのSPDXや公式パス成功を部品の承認/ライセンスへ適用しない。
+- `DEC-063` 並行A/B/C/DのR1〜R3を合体コードSHAで検証してv0.18開発ブランチへ統合し、Codex不在でもローリング方式を維持する。PR #38のCIはコードと合成Blenderでの検証。ソースPR #26〜37を二重マージせず履歴を保持。AがSTATE/Handoff/共通CI/Notionを管理し、B/C/Dは最新版dev HEADの担当ファイルにR4を作る。公開・ライセンス・実ユーザーデータ・Windows GUI・mainは別承認。
 
 ## 更新・プライバシールール
 

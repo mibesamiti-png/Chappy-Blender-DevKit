@@ -91,3 +91,12 @@
 3. その後、スタックされたR3の統合方式を確定し、R4を編集可能にする新基点SHAを通知。**上記R4はAの通知までは設計のみ**。
 4. v0.18の未検証GUI/実ユーザーGLB/ライセンス/正式Extensions、v0.19以降の未有効条件を維持。Codexが上限でもこの運用は止めない。
 
+
+## 2026-11-08 JST — A統合完了・R4実装への切替指示（旧ゲートより本節優先）
+
+- AがR1〜R3の開発コードを統合：**[PR #38](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/38) merged**、開発コードSHA `12ddcfeef935a805f7316ffb3698c141328aac88`。このコミットの7CI系統（Python897件×3版、Windows、Blender3版、Kit、Chromium、Skill、Handoff）は全成功。正式`main`やv0.17.0リリースは変えていない。
+- **R4新基点**: `feature/v0.18-shape-diagnostics` の**着手時点の最新HEAD**を確認し、`12ddcfeef935a805f7316ffb3698c141328aac88` が祖先であることを確認する。正本更新のため、後続のdocs-onlyコミットが増えてもその最新HEADから分岐する。古い統合実験 `work/v018-integration-bcd` やR2/R3専用ブランチからR4を始めない。
+- R4ブランチ: B `work/v018-glb-analysis-r4`、C `work/v018-ui-builder-r4`、D `work/v018-extension-quality-r4`。それぞれ **base `feature/v0.18-shape-diagnostics` のドラフトPR**。追加R4 PRは1担当につき1件、担当外ファイルを編集しない。
+- **旧PR #26〜37はPR #38によってコード内容が統合済みの履歴資料**。勝手に二重merge/force-push/closeしない。旧スタックを新規R4作業の基点にはしない。Aの明示的な新基点割り当てにより、旧R3の「追加1件」は新サイクルへ持ち越さない。
+- R4の具体的なB/C/Dタスクと負例・受け入れ条件は直前の「先読み済み：R4候補（設計のみ）」節を使用。本節により**設計のみの制限を解除**する。ただし実装時は最新`STATE.json`/担当パス/PR依存を読み直し、未検証の実データ・GUI・ライセンスを自動で完了扱いしない。
+- Codexが利用不可でも専門チームの小実装とPython/Blender/Windows CIを続ける。共通STATE/HANDOFF/Notion/共通CI、`main`、正式公開はA/所有者の別ゲート。

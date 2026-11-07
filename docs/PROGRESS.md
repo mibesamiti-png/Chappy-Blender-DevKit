@@ -1225,3 +1225,18 @@ RNAが古いときの実選択再検査をPythonで確認。ローカル823テ�
 [範囲・パーサー修正・未確認・再開点](EXTENSION_DIAGNOSTICS.md)。6合成例の項目一致と値を出さない非実行レビューを確認。実部品ライセンス/正式Extension/実GUI/実ユーザー因果は未確認で全体partial。
 
 2026-11-08 JST: 正本02702b8を既存Notion CBDKプロジェクトへ同期成功。内容更新1応答警告なし、旧節目保持・新規ページ/私有データなし。受領記録だけの後続コミットを新しいコードCIとは扱わない。
+
+## 2026-11-08 JST — B/C/DローリングR1〜R3の統合実績
+
+**開発統合のみ・正式v0.17.0維持。** Aが合体コード検証ドラフト[PR #38](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/38)（`e7c2f97ac7965faf1fe096f7a9d3eb811bceec46`）の5系統CI成功を確認し、R1(#26-28)・R2(#30-32)・R3(#34-36)の合成変更24ファイルを `feature/v0.18-shape-diagnostics` へsquash統合。統合済み開発コミット `12ddcfeef935a805f7316ffb3698c141328aac88`。旧ソースPR/統合実験PRはコードが重複するため**再マージ禁止**、履歴・会話記録は保持。
+
+変更点：
+- GLB: 境界辺数・境界レイアウト・局所的境界グラフ連結成分の保守的判定。自動部品ID決定や実GLBの完全形状一致は未保証。
+- UI-001/BUILD-001: 固定5機能/6レシピのモード別UI合成、空mesh/多重dataの助言readiness、登録解除再試行/foreign Scene property保持。実Windows GUI/ユーザーアドオンは未検証。
+- EXT-001: ZIPローカル/中央構造とprovenanceの整合、manifest/公式validatorログの未知/矛盾/重複をfail-closed。正式Extension ZIPや権利承認には進めていない。
+
+**統合後の開発HEAD `12ddcfeef935a805f7316ffb3698c141328aac88` の7CI実測**：Python 3.11/3.12/3.13 各897件 [run 42400673260](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673260)、Windows 3.11/3.13 [run 42400673258](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673258)、Blender 4.4.3/4.5.15/5.2.1 [run 42400673250](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673250)、Kit [run 42400673299](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673299)、Chromium [run 42400673262](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673262)、Skill [run 42400673266](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673266)、Handoff [run 42400673257](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673257)。**7系統すべて成功**。この記録は後続ドキュメント更新の新SHAを自動的に検証済みとするものではない。
+
+`STATE.json` の `last_verified` は正式v0.17.0リリース時の証拠を指すため、開発PR #38に自動で付け替えない。現行の実装到達点は依然 `UI-001` / `BUILD-001` / `EXT-001` 等 partial、NEXT-002の人間GUI、NEXT-007/008/009実GLB/因果、権利/正式Extensionsが未完了。v0.19以降はactive=falseのまま。
+
+次は[ローリングキュー](PARALLEL_ROLLING_QUEUE.md)のR4を、Aが整理済みの最新開発ブランチを基点にチーム別小PRで実装する。Codexの利用上限時にもB/C/Dは停止せず、重い実装だけ候補として残す。
