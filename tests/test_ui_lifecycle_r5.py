@@ -96,7 +96,7 @@ class R5NativeProbePackagingTests(unittest.TestCase):
             for alias in node.names
         }
         self.assertTrue(imports <= {
-            "importlib", "json", "sys", "tempfile", "addon_utils", "bpy"})
+            "importlib", "json", "sys", "tempfile", "addon_utils", "bmesh", "bpy"})
         assert "input_sources_private" not in source
         self.assertNotIn("eval(", source)
         self.assertNotIn("exec(", source)
