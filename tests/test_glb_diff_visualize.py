@@ -326,6 +326,8 @@ class ColoredGLBLauncherTests(unittest.TestCase):
                     row["status"] = "ambiguous" if flag else "suggested"
                     row["topology_review_required"] = flag
                     row["topology_review_reasons"] = reasons
+                    if flag:
+                        data["part_match_candidates"]["unpaired_candidate_part_ids"] = ["part_001"]
                     output.write_text(json.dumps(data), encoding="utf-8")
                     return result
 
