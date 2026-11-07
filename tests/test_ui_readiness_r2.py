@@ -6,6 +6,7 @@ The actual built-in operators remain the authority for execute-time safety.
 from __future__ import annotations
 
 import ast
+from math import isfinite
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -86,7 +87,7 @@ def mesh_context(*, mode="OBJECT", vertices=3, data=True, mesh=True,
     scene = SimpleNamespace(cbdk_modular_nudge_offset=(0.0, 0.0, 0.1),
                             cbdk_modular_result="No inspection yet")
     return SimpleNamespace(
-        mode=mode, active_object=obj, scene=scene,
+        mode=mode, active_object=obj, scene=scene, selected_objects=(obj,),
         objects_in_mode_unique_data=tuple(
             SimpleNamespace(type="MESH") for _ in range(unique)
         ),
@@ -96,6 +97,7 @@ def mesh_context(*, mode="OBJECT", vertices=3, data=True, mesh=True,
 class PreviewReadinessTests(unittest.TestCase):
     def setUp(self):
         self.namespace = {
+            "isfinite": isfinite,
             "_EDIT_MODE_FEATURES": EDIT_FEATURES,
             "_FEATURE_MODULES": {"vertex_nudge": SimpleNamespace(
                 ui_unavailable_reason=lambda ctx:
