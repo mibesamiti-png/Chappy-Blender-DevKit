@@ -173,7 +173,8 @@ def run_glb_surface_review(
                         or total < 1 or not isinstance(counts, list)
                         or len(counts) != min(total, 32)
                         or any(isinstance(v, bool) or not isinstance(v, int)
-                               or v < 0 or v > 512 for v in counts)
+                               or v < 0 or (payload["status"] == "review_only" and v > 512)
+                               for v in counts)
                         or counts != sorted(counts, reverse=True)):
                     raise ValueError("invalid anonymous part counts")
                 if payload["status"] == "review_only" and total <= 32 and (
