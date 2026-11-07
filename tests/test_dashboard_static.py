@@ -19,7 +19,8 @@ class DashboardStaticTests(unittest.TestCase):
         self.assertEqual(len(re.findall(r"<script(?:\s[^>]*)?>", page)), 1)
         self.assertNotRegex(page, r"<script[^>]*\bsrc\s*=")
         for identity in ("refresh", "automatic", "sound", "teamA", "teamB",
-                         "teamC", "teamD", "progress", "cadence", "tasks"):
+                         "teamC", "teamD", "progress", "cadence", "tasks",
+                         "previewSound", "teamSummary"):
             self.assertIn('id="' + identity + '"', page)
         self.assertIn("api.github.com/repos/", page)
         self.assertIn("raw.githubusercontent.com/", page)
@@ -28,6 +29,8 @@ class DashboardStaticTests(unittest.TestCase):
         self.assertNotIn("Authorization", page)
         self.assertNotIn("localStorage.setItem('token'", page)
         self.assertIn("5*60*1000", page)
+        self.assertIn('github("/contents/docs/PARALLEL_ROLLING_QUEUE.md"+qs)', page)
+        self.assertIn('previewSound', page)
         self.assertIn('seen:"cbdk-live-v1-seen"', page)
         self.assertIn("if(!firstLoad)newly.push", page)
 
@@ -41,7 +44,7 @@ class DashboardStaticTests(unittest.TestCase):
         self.assertEqual(script.count(needle), 1)
         script = script.replace(
             needle,
-            "  return {roundFromQueue,taskText,ci,teamStatus,announce};",
+            "  return {roundFromQueue,taskText,ci,teamStatus,announce,renderSummary};",
             1,
         )
         js = """
@@ -79,6 +82,10 @@ const a = {number:72,title:'[Team A][R8 integration] Combine',
 assert.equal(dashboard.teamStatus('A',8,[a],runsFor(seven,'merge-a','push')).state,'done');
 assert.equal(dashboard.teamStatus('A',8,[a],runsFor(seven,'merge-a','push')).completedId,'8:A');
 assert.equal(dashboard.teamStatus('A',8,[a],runsFor(five,'merge-a','push')).state,'running');
+dashboard.renderSummary([{team:'A',item:{state:'waiting'}},
+  {team:'B',item:{state:'done'}},{team:'C',item:{state:'running'}},
+  {team:'D',item:{state:'done'}}],8);
+assert.match(elements.teamSummary.textContent,/BCD完了 2\/3/);
 dashboard.announce([{team:'B',item:{completedId:'8:B'}}]);
 assert.equal(elements.flash.textContent,''); // existing completion on initial page load
 dashboard.announce([{team:'B',item:{completedId:'8:B'}},
