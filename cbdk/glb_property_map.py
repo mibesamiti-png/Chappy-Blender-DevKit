@@ -76,6 +76,39 @@ def _constructor(expr: ast.AST, imports: tuple[dict[str, str], set[str], set[str
     return None
 
 
+def _scope_bindings(nodes):
+    """Conservative syntactic bindings, without descending into nested scopes."""
+    from collections import Counter
+    counts = Counter()
+
+    class Bindings(ast.NodeVisitor):
+        def visit_Name(self, node):
+            if isinstance(node.ctx, (ast.Store, ast.Del)):
+                counts[node.id] += 1
+
+        def visit_FunctionDef(self, node):
+            counts[node.name] += 1
+
+        visit_AsyncFunctionDef = visit_FunctionDef
+        visit_ClassDef = visit_FunctionDef
+
+        def visit_Lambda(self, node):
+            pass
+
+        def visit_Import(self, node):
+            for alias in node.names:
+                counts[alias.asname or alias.name.split(".")[0]] += 1
+
+        def visit_ImportFrom(self, node):
+            for alias in node.names:
+                counts[alias.asname or alias.name] += 1
+
+    visitor = Bindings()
+    for node in nodes:
+        visitor.visit(node)
+    return counts
+
+
 def _inventory(source: str | Path, *, file_index: int) -> list[dict]:
     path = Path(source)
     if path.suffix.lower() != ".py" or path.is_symlink() or not path.is_file():
@@ -94,12 +127,22 @@ def _inventory(source: str | Path, *, file_index: int) -> list[dict]:
         raise PropertyMappingError("Python source could not be parsed safely") from exc
 
     imports = _imported_constructors(tree)
+    bindings = _scope_bindings(tree.body)
+    # A recognized import plus another binding is ambiguous. Do not silently
+    # classify a shadowed constructor as a bpy property. This is deliberately
+    # conservative even when a later assignment might not execute.
+    imports = ({k: v for k, v in imports[0].items() if bindings[k] == 1},
+               {k for k in imports[1] if bindings[k] == 1},
+               {k for k in imports[2] if bindings[k] == 1})
     result = []
     # Only class-level direct definitions; never a local variable or guessed
     # instance attribute, and never a constructor inside an uncalled function.
     for cls in tree.body:
         if not isinstance(cls, ast.ClassDef):
             continue
+        local_bindings = _scope_bindings(cls.body)
+        scoped_imports = ({k: v for k, v in imports[0].items() if not local_bindings[k]},
+                          imports[1] - local_bindings.keys(), imports[2] - local_bindings.keys())
         for node in cls.body:
             entries = []
             if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
@@ -108,7 +151,7 @@ def _inventory(source: str | Path, *, file_index: int) -> list[dict]:
             elif isinstance(node, ast.Assign):
                 entries = [(t.id, node.value) for t in node.targets if isinstance(t, ast.Name)]
             for prop_name, expression in entries:
-                kind = _constructor(expression, imports)
+                kind = _constructor(expression, scoped_imports)
                 if kind is None or not IDENTIFIER.fullmatch(prop_name):
                     continue
                 result.append({

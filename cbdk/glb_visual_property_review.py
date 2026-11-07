@@ -96,6 +96,7 @@ def _check_rows(report, side):
 def _read_observations(report: dict):
     if (not isinstance(report, dict)
             or report.get("kind") != "cbdk_glb_diff_visualization"
+            or type(report.get("schema_version")) is not int
             or report.get("schema_version") != 1
             or report.get("status") != "review_only"
             or report.get("auto_apply") is not False
@@ -251,6 +252,10 @@ def build_visual_property_review(
         "role_labels_human_declared_only": True,
         "next_action": "human_review_candidate_properties_and_validate_on_synthetic_fixture",
     })
+    # Keep reference-only observations visible even when candidate-side AST
+    # recommendations are empty. Existing recommendation order is unchanged.
+    from .glb_debug_focus import build_debug_focus
+    mapped["debug_focus"] = build_debug_focus(review)
     return mapped
 
 

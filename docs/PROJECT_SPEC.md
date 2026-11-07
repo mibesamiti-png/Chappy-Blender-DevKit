@@ -467,3 +467,7 @@ Undo schema2は旧schema1読取互換を維持し、通常背景プローブと`
 実装コードc80f2a0a174a37074c283641ce288a378261e92dのBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium成功。テストだけUTF-8指定を修正したb5d32734d4a74e6acd7ff896baeb3aa3088e661aのPython767件×3版・Windows2版成功。両SHA間の変更はtests/test_registration_audit.pyだけで実装は同一。対象6系統の結果は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368307965)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368305584)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190461)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190510)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190490)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190614)。
 
 NEXT-003完了。NEXT-002は制御履歴2ケースの成功を確認したが通常背景Undo不能・GUI未検証で継続。初回Windowsのパス/文字コード失敗を修正し、テストだけの再実行はPython/Windowsへ限定。6レシピの生成ZIPは新AST検査の有無で同じSHA。負荷・既知制限・再開点は[検証記録](REGISTRATION_UNDO_VALIDATION.md)を参照。
+
+## NEXT-008/009 双方向focus・宣言曖昧さ・実験triage（2026-11-07）
+
+[仕様と使い方](GLB_DEBUG_TRIAGE.md)。生成側設定候補が空でも参照側観測を保持し、三角面数で正規化した調査順を表示。既存測定元一致の合成実験を再利用して候補の複数宣言・直前試行との差分を表示する。constructor別名の再代入/クラス内shadowingを安全側に除外。自作GLBの完了/未完了/模擬失敗でローカル接続成功。対象CIは今回未実行、全体NEXT-008/009は継続。GLB-020測定上限は維持し、実ユーザー因果・GUI・権利・現行UI等を未完了で残す。

@@ -406,3 +406,8 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 
 - Run `python -m cbdk.registration_audit` after authored feature/part/recipe changes. It builds disposable previews and checks static relative-import/export closure, registration collisions, runtime KNOWN IDs and the explicit Blender CI recipe loop. Keep these independent inventories synchronized; do not weaken the audit to admit unknown/private code. Static export support is deliberately limited; dynamic exports require separate reviewed design.
 - Undo schema2 retains schema1 reader compatibility. `prepared_stack_cases` uses explicit `ed.undo_push`, never snapshot-based restoration. Keep ordinary background availability separate from controlled-stack passes. Verify each single/multi-step native Undo/Redo state and cancellation invariance; no GUI hotkey/user-project certification. Record actual target-version CI before promoting completion.
+
+## NEXT-008/009 focus and ambiguity boundaries
+
+- Existing GLB aggregate observations may drive review priority only. Preserve both sides and side-qualified anonymous IDs, unverified associations, 512-triangle caps and no raw geometry. Triangle fractions are not area/confidence; equal boundary counts alone are not differences or watertightness proof.
+- glb_experiment_triage reads validated bound reviews, never executes source/next trials. Preserve multiple declarations, family-aggregate syntax counts and false cause/selection flags. Constructor alias rebinding is conservatively excluded, not runtime-resolved. New JSON/Markdown stays private under reports/latest; never upload private candidate sheets to artifacts/Notion.

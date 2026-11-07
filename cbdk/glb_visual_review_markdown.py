@@ -73,10 +73,21 @@ def render_review_markdown(report: dict) -> str:
     ]
     if not rows:
         lines.extend([
-            "制限された測定ではレビュー対象の差分が観測されませんでした。",
+            "生成側の設定候補へ結び付ける差分は観測されませんでした。",
             "小穴や内部形状など未測定の問題が存在しないという意味ではありません。",
             "",
         ])
+    if "debug_focus" in report:
+        from .glb_debug_focus import validate_debug_focus
+        focus = validate_debug_focus(report["debug_focus"])
+        lines += ["## 双方向の調査優先部品", "",
+                  "分類された三角面の割合による調査順です。面積・原因・穴の位置を証明しません。",
+                  "生成側の設定候補が空でも、参照側だけの差分が残る場合があります。", ""]
+        for item in focus["focus"]:
+            lines.append(f"- {item['side']} / {item['part_id']}: 黄{item['medium']}・赤{item['high']}面、"
+                         f"観測割合{item['observed_affected_fraction']:.4f}、"
+                         f"根拠 {', '.join(item['reasons'])}。")
+        lines.append("")
     seen = set()
     for row in rows:
         if not isinstance(row, dict):

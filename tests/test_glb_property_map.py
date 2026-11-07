@@ -37,6 +37,23 @@ def review_plan(candidates=("ball_diameter", "socket_opening_diameter", "shaft_d
 
 
 class GLBPropertyMapTests(unittest.TestCase):
+    def test_shadowed_constructor_aliases_are_not_property_evidence(self):
+        for source in (
+            'from bpy.props import FloatProperty\nFloatProperty = fake\nclass P:\n x: FloatProperty()\n',
+            'import bpy as b\nif condition:\n b = fake\nclass P:\n x: b.props.FloatProperty()\n',
+            'from bpy import props as p\nclass P:\n p = fake\n x: p.FloatProperty()\n',
+            'from bpy.props import FloatProperty as F\ndef F(): pass\nclass P:\n x: F()\n',
+        ):
+            with self.subTest(source=source):
+                path = self.make_source(source)
+                self.assertEqual(_inventory(path, file_index=1), [])
+
+    def test_unrelated_nested_binding_does_not_hide_module_constructor(self):
+        path = self.make_source('from bpy.props import FloatProperty as F\n'
+                                'def helper():\n F = fake\n'
+                                'class P:\n x: F()\n')
+        self.assertEqual(len(_inventory(path, file_index=1)), 1)
+
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
