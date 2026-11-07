@@ -52,7 +52,7 @@ def _json_unique(pairs):
     result = {}
     for key, value in pairs:
         if key in result:
-            raise ValueError("Duplicate metadata JSON key")
+            raise PreviewArchiveError("provenance", "duplicate_metadata_key", "Duplicate metadata JSON key")
         result[key] = value
     return result
 
@@ -105,10 +105,13 @@ def inspect_preview_archive(source: str | Path) -> dict:
             meta_path = prefix + "CBDK_BUILD_INFO.json"
             if meta_path not in names:
                 raise PreviewArchiveError("provenance", "missing_metadata", "Missing CBDK build provenance")
-            metadata = json.loads(
-                archive.read(meta_path).decode("utf-8"),
-                object_pairs_hook=_json_unique,
-            )
+            try:
+                metadata = json.loads(
+                    archive.read(meta_path).decode("utf-8"),
+                    object_pairs_hook=_json_unique,
+                )
+            except (json.JSONDecodeError, RecursionError) as exc:
+                raise PreviewArchiveError("provenance", "invalid_json", "Invalid CBDK provenance JSON") from exc
             if not isinstance(metadata, dict):
                 raise PreviewArchiveError("provenance", "invalid_metadata", "Invalid CBDK provenance")
             schema, expected_template = KNOWN[package]
