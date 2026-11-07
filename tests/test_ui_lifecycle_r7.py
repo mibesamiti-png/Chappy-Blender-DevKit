@@ -127,7 +127,7 @@ class R7NativeRegressionContractTests(unittest.TestCase):
             for alias in node.names
         }
         self.assertTrue(imported <= {
-            "addon_utils", "bpy", "importlib", "json", "sys", "tempfile"
+            "addon_utils", "bmesh", "bpy", "importlib", "json", "sys", "tempfile"
         })
         self.assertTrue(all(
             not isinstance(node, ast.ImportFrom)

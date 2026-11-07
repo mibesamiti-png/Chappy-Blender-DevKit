@@ -15,6 +15,7 @@ from types import SimpleNamespace
 from zipfile import ZipFile
 
 import addon_utils
+import bmesh
 import bpy
 
 
@@ -439,6 +440,164 @@ def run(path):
                 enabled = False
                 assert_detached(module)
             checks.append("native_r7_enable_disable_after_recovery_2")
+
+            # R8: class *unregistration* fails, not registration. It leaves
+            # exactly one actual Blender class live while a CBDK-owned Scene
+            # descriptor is replaced with a synthetic foreign declaration.
+            # The first unregister must preserve it despite the partial
+            # failure; the retry must release the remaining class only.
+            for replaced in PROPERTIES:
+                module.register()
+                fail_class = module._REGISTERED[-1]
+                previous = bpy.types.Scene.__dict__.get(replaced)
+                assert previous is not None
+                native_unregister = bpy.utils.unregister_class
+                injection = [False]
+                foreign_descriptor = [None]
+
+                def fail_once_during_unregister(cls):
+                    if cls is fail_class and not injection[0]:
+                        injection[0] = True
+                        if replaced == PROPERTIES[0]:
+                            bpy.types.Scene.cbdk_modular_result = (
+                                bpy.props.StringProperty(
+                                    default="CBDK R8 synthetic foreign"))
+                        else:
+                            bpy.types.Scene.cbdk_modular_nudge_offset = (
+                                bpy.props.FloatVectorProperty(
+                                    size=3, default=(0.0, 0.0, 0.75)))
+                        foreign_descriptor[0] = (
+                            bpy.types.Scene.__dict__.get(replaced))
+                        assert (foreign_descriptor[0] is not None
+                                and foreign_descriptor[0] is not previous)
+                        raise RuntimeError(
+                            "CBDK R8 injected unregister_class failure")
+                    return native_unregister(cls)
+
+                bpy.utils.unregister_class = fail_once_during_unregister
+                try:
+                    try:
+                        module.unregister()
+                    except RuntimeError as exc:
+                        assert "cleanup incomplete" in str(exc), str(exc)
+                    else:
+                        raise AssertionError("R8 class detach failure swallowed")
+                finally:
+                    bpy.utils.unregister_class = native_unregister
+
+                try:
+                    assert injection[0]
+                    assert module._REGISTERED == [fail_class]
+                    assert not module._OWNED_PROPERTIES
+                    assert not module._OWNED_PROPERTY_TOKENS
+                    assert bpy.types.Scene.__dict__.get(replaced) is (
+                        foreign_descriptor[0])
+                    # A partial detach is still live; R6's guard must not
+                    # silently reinitialize ownership on importlib.reload.
+                    try:
+                        importlib.reload(module)
+                    except RuntimeError as exc:
+                        assert "unregistered before module reload" in str(exc)
+                    else:
+                        raise AssertionError("R8 partial detach reload accepted")
+                    assert module._REGISTERED == [fail_class]
+                    assert bpy.types.Scene.__dict__.get(replaced) is (
+                        foreign_descriptor[0])
+                    module.unregister()
+                    assert not module._REGISTERED
+                    assert not module._OWNED_PROPERTIES
+                    assert not module._OWNED_PROPERTY_TOKENS
+                    assert not hasattr(
+                        bpy.types, "VIEW3D_PT_cbdk_modular_preview")
+                    assert bpy.types.Scene.__dict__.get(replaced) is (
+                        foreign_descriptor[0])
+                    try:
+                        module.register()
+                    except RuntimeError as exc:
+                        assert "Scene properties conflict" in str(exc), str(exc)
+                    else:
+                        raise AssertionError("R8 foreign descriptor overwritten")
+                finally:
+                    # Remove only the CBDK-authored foreign stand-in, never
+                    # arbitrary third-party or input Scene properties.
+                    if (bpy.types.Scene.__dict__.get(replaced)
+                            is foreign_descriptor[0]):
+                        delattr(bpy.types.Scene, replaced)
+                assert_detached(module)
+                assert importlib.reload(module) is module
+                module.register()
+                module.unregister()
+                assert_detached(module)
+            checks.append("native_r8_partial_unregister_foreign_retry")
+            checks.append("native_r8_partial_unregister_reload_fail_closed")
+
+            # R8: canceled edit operators must not alter the input mesh,
+            # vertex/edge/face selection, active object or current mode.
+            # Read Blender's *live Edit BMesh* instead of stale Mesh.vertices
+            # flags while an object is in Edit Mode.
+            module.register()
+            bpy.context.view_layer.objects.active = obj
+            obj.select_set(True)
+            bpy.ops.object.mode_set(mode="EDIT")
+            assert bpy.context.mode == "EDIT_MESH"
+
+            def edit_input_snapshot():
+                bm = bmesh.from_edit_mesh(mesh)
+                return (
+                    tuple((tuple(float(v.co[i]) for i in range(3)),
+                           bool(v.select), bool(v.hide)) for v in bm.verts),
+                    tuple((bool(e.select), bool(e.hide)) for e in bm.edges),
+                    tuple((bool(f.select), bool(f.hide)) for f in bm.faces),
+                    bpy.context.mode,
+                    bpy.context.view_layer.objects.active,
+                )
+
+            try:
+                bpy.ops.mesh.select_all(action="DESELECT")
+                snapshot = edit_input_snapshot()
+                last_result = bpy.context.scene.cbdk_modular_result
+                assert bpy.ops.cbdk.modular_vertex_nudge() == {"CANCELLED"}
+                assert edit_input_snapshot() == snapshot
+                assert bpy.context.scene.cbdk_modular_result == last_result
+                checks.append("native_r8_validation_cancel_input_unchanged")
+
+                bpy.ops.mesh.select_all(action="SELECT")
+                assert any(v.select for v in bmesh.from_edit_mesh(mesh).verts)
+                snapshot = edit_input_snapshot()
+                last_result = bpy.context.scene.cbdk_modular_result
+                nudge = module._FEATURE_MODULES["vertex_nudge"]
+                counter = module._FEATURE_MODULES["edit_selection"]
+                original_translate = nudge.translate_selected_vertices
+                original_count = counter.count_edit_selection
+
+                def raise_nudge_validation(context, offset):
+                    raise nudge.BlenderContextError(
+                        "CBDK R8 controlled nudge validation")
+
+                def raise_count_validation(context):
+                    raise counter.BlenderContextError(
+                        "CBDK R8 controlled selection read failure")
+
+                try:
+                    nudge.translate_selected_vertices = raise_nudge_validation
+                    counter.count_edit_selection = raise_count_validation
+                    assert bpy.ops.cbdk.modular_vertex_nudge() == {"CANCELLED"}
+                    assert edit_input_snapshot() == snapshot
+                    assert bpy.context.scene.cbdk_modular_result == last_result
+                    assert bpy.ops.cbdk.modular_edit_selection() == {"CANCELLED"}
+                    assert edit_input_snapshot() == snapshot
+                    assert bpy.context.scene.cbdk_modular_result == last_result
+                finally:
+                    nudge.translate_selected_vertices = original_translate
+                    counter.count_edit_selection = original_count
+                checks.append("native_r8_guarded_exception_cancel_input_unchanged")
+            finally:
+                if bpy.context.mode != "OBJECT":
+                    bpy.ops.object.mode_set(mode="OBJECT")
+                module.unregister()
+                assert_detached(module)
+            assert tuple(tuple(v.co) for v in mesh.vertices) == before
+            checks.append("native_r8_edit_mode_cleanup_after_cancellation")
         finally:
             if enabled:
                 try:
