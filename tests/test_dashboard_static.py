@@ -20,7 +20,8 @@ class DashboardStaticTests(unittest.TestCase):
         self.assertNotRegex(page, r"<script[^>]*\bsrc\s*=")
         for identity in ("refresh", "automatic", "sound", "teamA", "teamB",
                          "teamC", "teamD", "progress", "cadence", "tasks",
-                         "previewSound", "teamSummary"):
+                         "previewSound", "teamSummary", "teamLead",
+                         "waitAfterBCD", "aLead"):
             self.assertIn('id="' + identity + '"', page)
         self.assertIn("api.github.com/repos/", page)
         self.assertIn("raw.githubusercontent.com/", page)
@@ -44,7 +45,7 @@ class DashboardStaticTests(unittest.TestCase):
         self.assertEqual(script.count(needle), 1)
         script = script.replace(
             needle,
-            "  return {roundFromQueue,taskText,ci,teamStatus,announce,renderSummary};",
+            "  return {roundFromQueue,taskText,ci,teamStatus,announce,renderSummary,speedMetrics};",
             1,
         )
         js = """
@@ -64,10 +65,11 @@ const five = ['CBDK Python tests','CBDK Windows PowerShell launcher regression',
 const seven = five.concat(['CBDK Windows kit package','CBDK Agent Skill package']);
 const runsFor = (names,sha,event) => names.map((name,i) => ({
   name,head_sha:sha,event,status:'completed',conclusion:'success',
-  created_at:new Date(Date.UTC(2026,10,8,0,i)).toISOString(),pull_requests:[]
+  created_at:new Date(Date.UTC(2026,10,8,0,i)).toISOString(),
+  updated_at:new Date(Date.UTC(2026,10,8,1,0)).toISOString(),pull_requests:[]
 }));
 const b = { number:71,title:'[Team B R8] Safety test',
-  head:{sha:'source-b'},updated_at:'2026-11-08T04:00:00Z' };
+  head:{sha:'source-b'},created_at:'2026-11-08T00:00:00Z',updated_at:'2026-11-08T04:00:00Z' };
 const runs = runsFor(five,'source-b','pull_request');
 assert.equal(dashboard.teamStatus('B',8,[b],runs).state,'done');
 assert.equal(dashboard.teamStatus('B',8,[b],runs).completedId,'8:B');
@@ -77,11 +79,32 @@ const failed = runs.map(x=>({...x}));
 failed[0].conclusion='failure';
 assert.equal(dashboard.teamStatus('B',8,[b],failed).state,'error');
 const a = {number:72,title:'[Team A][R8 integration] Combine',
-  updated_at:'2026-11-08T05:00:00Z',merged_at:'2026-11-08T05:00:00Z',
-  merge_commit_sha:'merge-a'};
+  created_at:'2026-11-08T02:00:00Z',updated_at:'2026-11-08T05:00:00Z',
+  merged_at:'2026-11-08T05:00:00Z',merge_commit_sha:'merge-a'};
 assert.equal(dashboard.teamStatus('A',8,[a],runsFor(seven,'merge-a','push')).state,'done');
 assert.equal(dashboard.teamStatus('A',8,[a],runsFor(seven,'merge-a','push')).completedId,'8:A');
 assert.equal(dashboard.teamStatus('A',8,[a],runsFor(five,'merge-a','push')).state,'running');
+// R8 example: CI all green at 01:00, A merged at 05:00.
+const c = {...b,number:73,title:'[Team C R8] tests',head:{sha:'source-c'}};
+const d = {...b,number:74,title:'[Team D R8] tests',head:{sha:'source-d'}};
+const tpr = [b,c,d,a];
+const truns = runsFor(five,'source-b','pull_request').concat(
+  runsFor(five,'source-c','pull_request'),runsFor(five,'source-d','pull_request'));
+const speed = dashboard.speedMetrics(8,tpr,truns,Date.parse('2026-11-08T06:00:00Z'));
+assert.equal(speed.teamLeadMinutes,60);
+assert.equal(speed.waitMinutes,240);
+assert.equal(speed.aLeadMinutes,180);
+assert.equal(speed.waitingLive,false);
+assert.equal(speed.complete,3);
+// Before A merges, show live wait only after all three CI complete.
+const live = dashboard.speedMetrics(8,[b,c,d],truns,Date.parse('2026-11-08T02:15:00Z'));
+assert.equal(live.waitMinutes,75);
+assert.equal(live.waitingLive,true);
+const missing = dashboard.speedMetrics(8,[b,c,d],truns.slice(1),Date.parse('2026-11-08T06:00:00Z'));
+assert.equal(missing.teamLeadMinutes,null);
+assert.equal(missing.waitMinutes,null);
+const wrongSHA = dashboard.speedMetrics(8,[{...b,head:{sha:'different'}},c,d],truns,Date.parse('2026-11-08T06:00:00Z'));
+assert.equal(wrongSHA.teamLeadMinutes,null);
 dashboard.renderSummary([{team:'A',item:{state:'waiting'}},
   {team:'B',item:{state:'done'}},{team:'C',item:{state:'running'}},
   {team:'D',item:{state:'done'}}],8);
