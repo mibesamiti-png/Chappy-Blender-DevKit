@@ -163,12 +163,12 @@ R6 B [#54](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/54) `0c2
 4. Codexは任意。privateソース/GLB、main、正式v0.17.0、将来v0.19有効化、Windows GUI、ライセンス/正式Extensions配布は触らない。AはR6節目STATE/生成Handoff/PROGRESS/既存Notionを追って同期し、R7開発中R8を先読みする。
 
 
-## 2026-11-08 JST — R7統合済み、R8正式割当案（R7 post-merge 7系統成功の確認後に発効）
+## 2026-11-08 JST — R7統合完了・R8ローリング正式割当（post-merge 7CI成功確認済み）
 
 - **R7入力:** B [PR #61](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/61) 最終 `182ae87a47ddd127c3ef1a2afc3c1ce502880722`、C [PR #62](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/62) 最終 `eef6bcea675f3198a19d9aea973c7dbeecf4e814`、D [PR #60](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/60) 最終 `040036c785d47229f735342352a2881157bd36ed`。各担当の5系統CI全成功、11ファイル重複0。
 - **重要な失敗と修正:** Bの初期テスト専用SHA `fff82a6d67e6b531d5f9da6244a3e91bc1f5522d` でゼロ長境界線分がR6 exact fastpathに誤って流れるケースを再現（Python負例失敗）。Bが生産matcherに厳密な正長ガードを追加し、ゼロ長時はR2保守的fallbackを使用、R3独立連結ガードは維持。実ユーザーGLBの穴位置/部品IDを証明しない。
 - **A結合:** [PR #63](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/63) 候補HEAD `52dea171587888be2c26045808bbaf24a76bee7c` にB4/C4/D3件を正確に取り込み、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415247)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415263)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415266)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415159)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415103) の5系統全成功を確認。R7開発統合コミット `687b2acdc920253d69eda8c5e9c1c102d02aaef3`。
-- **R8実装許可の停止ゲート:** 上記R7開発統合コミット `687b2acd...` の独立したpush CIが、Python3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・Chromium・Handoff・Kit・Skill、**合計7系統すべて完成success**になるまで、以下は計画だけでBCDの実装着手禁止。Aが実行URLを証明し、このキューの割当PRを確定してから初めて実装可。結合PR #63の5系統を開発統合後7系統と混同しない。
+- **R8実装許可ゲートは確認済み:** R7開発統合コミット `687b2acdc920253d69eda8c5e9c1c102d02aaef3` に対する**別系統のpush CI全7系統success**：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646111) 3.11/3.12/3.13、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646149) 3.11/3.13、[Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646135) 4.4.3/4.5.15/5.2.1、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646129)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646222)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646126)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646165)。統合候補#63の5系統とは厳密に別に確認した。**本PR #64がv0.18開発ブランチにマージされ次第、R8正式実装可。**
 
 ### R8候補 — B / GLB NEXT-008
 
