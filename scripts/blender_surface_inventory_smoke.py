@@ -166,6 +166,79 @@ def _boundary_layout_roundtrip(output):
     print("CBDK_GLB_BOUNDARY_LAYOUT_ROUNDTRIP_PASS")
 
 
+def _boundary_component_roundtrip(output):
+    """CBDK-only near-contact graph negative after real GLB reimport."""
+    from time import perf_counter
+
+    variants = (
+        ("apart", False, False),
+        ("touch", True, False),
+        ("apart_reversed", False, True),
+        ("touch_reversed", True, True),
+    )
+    loaded = {}
+    for label, touch, reverse in variants:
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        vertices = [
+            (0., 0., 0.), (1., 0., 0.), (0., 1., 0.),
+            (0., 0., 0.) if touch else (.0002, -.0002, 0.),
+            (-1., 0., 0.), (0., -1., 0.),
+        ]
+        polygons = [(0, 1, 2), (3, 4, 5)]
+        if reverse:
+            polygons = [tuple(reversed(p)) for p in reversed(polygons)]
+        mesh = bpy.data.meshes.new("CBDK_Synthetic_Graph")
+        mesh.from_pydata(vertices, [], polygons)
+        mesh.update()
+        obj = bpy.data.objects.new("CBDK_Synthetic_Graph", mesh)
+        bpy.context.collection.objects.link(obj)
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        source = output / ("component_" + label + ".glb")
+        bpy.ops.export_scene.gltf(
+            filepath=str(source), export_format="GLB", use_selection=True,
+        )
+        before = hashlib.sha256(source.read_bytes()).digest()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        bpy.ops.import_scene.gltf(filepath=str(source))
+        assert hashlib.sha256(source.read_bytes()).digest() == before
+        imported = [item for item in bpy.context.scene.objects
+                    if item.type == "MESH"]
+        assert len(imported) == 1, "Synthetic component mesh regrouped"
+        item = imported[0]
+        item.data.calc_loop_triangles()
+        faces = [[tuple(float(x) for x in
+                  (item.matrix_world @ item.data.vertices[index].co))
+                  for index in face.vertices]
+                 for face in item.data.loop_triangles]
+        assert len(faces) == 2, "Synthetic graph GLB lost triangles"
+        assert boundary_audit(faces, [2])["parts"][0]["boundary_edges"] == 6
+        loaded[label] = faces
+
+    for left, right, expected, reasons in (
+        ("apart", "touch", "ambiguous",
+         ["boundary_component_count_mismatch"]),
+        ("touch", "apart", "ambiguous",
+         ["boundary_component_count_mismatch"]),
+        ("apart", "apart_reversed", "suggested", []),
+        ("touch", "touch_reversed", "suggested", []),
+    ):
+        start = perf_counter()
+        report = suggest_spatial_part_matches(
+            loaded[left], loaded[right], [2], [2],
+        )
+        elapsed_ms = (perf_counter() - start) * 1000
+        row = report["reference_parts"][0]
+        assert row["status"] == expected, (left, right, row)
+        assert row["topology_review_reasons"] == reasons, (left, right, row)
+        assert row["normalized_score"] == 0., (left, right, row)
+        assert report["cross_file_part_identity_proven"] is False
+        assert report["auto_apply"] is False
+        print(f"CBDK graph synthetic {left}/{right}: {expected} "
+              f"({elapsed_ms:.3f} ms)")
+    print("CBDK_GLB_BOUNDARY_COMPONENT_ROUNDTRIP_PASS")
+
+
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if len(args) != 1:
@@ -219,6 +292,7 @@ def main():
         print("CBDK inventory synthetic case passed: " + label)
     _topology_count_roundtrip(output)
     _boundary_layout_roundtrip(output)
+    _boundary_component_roundtrip(output)
     print("CBDK_SURFACE_INVENTORY_PASS")
 
 

@@ -105,6 +105,32 @@ def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
     return None
 
 
+def _observed_boundary_component_count(lines):
+    """Count components of a bounded coordinate-welded *boundary graph*.
+
+    Vertices are the anonymous, quantized endpoints already emitted by
+    local_boundary_segments. Point-contact and near-contact are different in
+    this observation, even if the R2 distance probe sees the same contour.
+    This is NOT a watertightness, true hole, or object-identity certificate.
+    """
+    adjacency = {}
+    for segment in lines:
+        start, end = tuple(segment[1:4]), tuple(segment[4:7])
+        adjacency.setdefault(start, set()).add(end)
+        adjacency.setdefault(end, set()).add(start)
+    unseen = set(adjacency)
+    components = 0
+    while unseen:
+        components += 1
+        stack = [unseen.pop()]
+        while stack:
+            for neighbour in adjacency[stack.pop()]:
+                if neighbour in unseen:
+                    unseen.remove(neighbour)
+                    stack.append(neighbour)
+    return components
+
+
 def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
     """Suggest spatially plausible pairings; ties and weak matches are not bound.
 
@@ -180,6 +206,12 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
             )
             if layout_issue is not None:
                 topology_reasons.append(layout_issue)
+            elif (_observed_boundary_component_count(ref_lines[i])
+                    != _observed_boundary_component_count(cand_lines[best_j])):
+                # This catches sub-layout-tolerance disconnections/point
+                # contacts that a geometric nearest-segment probe can miss.
+                # Do not imply an actual physical opening was identified.
+                topology_reasons.append("boundary_component_count_mismatch")
         topo_review = bool(topology_reasons)
         if strong and not topo_review:
             used.add(best_j)
