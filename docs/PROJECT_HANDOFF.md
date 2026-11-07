@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R1〜R3をPR #38、R4のB/C/D 11ファイルをPR #43で開発統合（a9a0a76）。R4統合後SHAのPython/Windows/Blender3版/Chromium/Handoff/Kit/Skillの全7系統CI成功。BのGLB限界値、CのUI宣言/実operator拒否、DのZIP/validator正例を検証。R5はPR #44で割当済み。実ユーザーGLB、Windows GUI、正式Extension、ライセンス・公開は未確認。v0.17.0維持。
+- 最新の節目: v0.18: R1〜R4開発統合後、R5のB/C/DをPR #49で統合（a1c2f847）。GLB判定の並べ替え/微小摂動、UI所有権修正とBlender3版での実機反復、Extensionsログ分類を検証。初回R5 native UIテスト失敗はテスト期待値を修正し再実測成功。統合後Python/Windows/Blender3版/Chromium/Handoff/Kit/Skillの7CI全成功。R6はPR #51で割当済み。実ユーザーGLB、Windows GUI、権利、正式Extensions/公開は未確認。v0.17.0維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -190,6 +190,8 @@
 - `DEC-063` 並行A/B/C/DのR1〜R3を合体コードSHAで検証してv0.18開発ブランチへ統合し、Codex不在でもローリング方式を維持する。PR #38のCIはコードと合成Blenderでの検証。ソースPR #26〜37を二重マージせず履歴を保持。AがSTATE/Handoff/共通CI/Notionを管理し、B/C/Dは最新版dev HEADの担当ファイルにR4を作る。公開・ライセンス・実ユーザーデータ・Windows GUI・mainは別承認。
 
 - `DEC-064` R4をPR #43で統合し、統合後7CIの実測を経てR5をPR #44のローリングキューで正式割当する。B/C/DのR4専用SHAの5系統CI成功と11ファイル非重複を確認。R4 dev SHA a9a0a76のPython/Windows/Blender3版/Chromium/Handoff/Kit/Skill全7系統成功。旧PR再統合なし、R5は最新dev基点。実GUI、実ユーザーGLB、権利、正式公開とmainは別ゲート。
+
+- `DEC-065` R5統合候補で新設Blender実機検証を実行し失敗修正後の成功を確認して統合、7CI後にR6を割り当てる。B #47/C #48/D #46の各個別5CI成功。A統合#49初回b300e743は3版Blenderでテスト誤期待により失敗、修正106bf250の5系統全成功（Blender3版のnative UI反復含む）。dev SHA a1c2f847の7系統全成功後、R6キュー#51を正式統合。GUI/私有GLB/権利/公開は未検証。
 
 ## 更新・プライバシールール
 
