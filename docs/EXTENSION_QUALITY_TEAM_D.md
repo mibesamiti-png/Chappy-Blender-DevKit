@@ -103,3 +103,56 @@ existing A-owned smoke workflow; neither the workflow nor the fixture script
 is modified by Team D. Changes are limited to Extensions-owned code, tests
 and this document.
 
+
+
+## R4 — positive compatibility and fail-closed regression matrix
+
+Base: current v0.18 development line after A's combined R1–R3 integration,
+not the obsolete stacked R2/R3 preview branches. This round prioritizes
+**not rejecting authentic CBDK development previews**, without weakening
+previous structural security checks or granting release authority.
+
+### Authored ZIP matrix (offline, no addon execution)
+
+The Extensions preflight tests build **two independently generated**
+archives for each of seven allowlisted authored recipes:
+
+- Legacy: mesh_inspector
+- Modular: modular_all, modular_combined, modular_edit,
+  modular_geometry, modular_nudge, modular_objects
+
+For every recipe the bytes must be deterministic; both
+inspect_preview_archive() and diagnose_preview_archive() must agree and
+return blocked_for_extension_release. The audit must confirm canonical ZIP
+layout, hash inventory and source file count **without** setting
+source_authenticity_verified, executing bundled Python, issuing a formal
+Extension ZIP, or claiming owner/licensing/redistribution clearance. Each
+recipe also has a negative control with appended bytes that must return
+invalid_preview_archive with a sanitized error code. Input paths and
+synthetic marker bytes must not appear in any report.
+
+### Official validator observation matrix
+
+The Extensions manifest tests use three observed version-banner formats:
+4.4.3, 4.5.15 LTS and 5.2.1 LTS, with the same **six purely synthetic TOML**
+cases as the A-owned real official validator fixture script. For each case:
+
+- Expected clean accepted / known-field rejected observation must remain
+  agreement for the local bounded subset, with
+  complete_diagnostic_agreement=true **only for these synthetic inputs**.
+- The same output with one unknown note must instead be unclassified,
+  with complete_diagnostic_agreement=false.
+- Free-form log text and fixture paths must not propagate to normalized JSON.
+
+The repository's existing Blender CI runs the **actual official**
+--command extension validate against six data-only fixtures in each
+supported Blender version. This test suite contains no official program
+invocation of its own and does not edit the A-owned verifier or CI YAML.
+R4 should modify only tests if these positive and negative cases pass;
+actual previously missed false rejections require a small, evidence-backed
+change before adding any parser allowance.
+
+**Always excluded:** real user addons, source execution, trademark/owner
+identity authentication, SPDX license selection, redistribution approval,
+formal Extension build/install/uninstall, Windows GUI confirmation and
+publication. EXT-001 stays partial until the owner and A resolve those gates.
