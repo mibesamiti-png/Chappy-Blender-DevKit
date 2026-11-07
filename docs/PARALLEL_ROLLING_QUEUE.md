@@ -100,3 +100,24 @@
 - **旧PR #26〜37はPR #38によってコード内容が統合済みの履歴資料**。勝手に二重merge/force-push/closeしない。旧スタックを新規R4作業の基点にはしない。Aの明示的な新基点割り当てにより、旧R3の「追加1件」は新サイクルへ持ち越さない。
 - R4の具体的なB/C/Dタスクと負例・受け入れ条件は直前の「先読み済み：R4候補（設計のみ）」節を使用。本節により**設計のみの制限を解除**する。ただし実装時は最新`STATE.json`/担当パス/PR依存を読み直し、未検証の実データ・GUI・ライセンスを自動で完了扱いしない。
 - Codexが利用不可でも専門チームの小実装とPython/Blender/Windows CIを続ける。共通STATE/HANDOFF/Notion/共通CI、`main`、正式公開はA/所有者の別ゲート。
+
+
+## 2026-11-08 JST — A R4統合結果・R5割当（post-merge CIゲート付き）
+
+**R4統合記録:** AがB [#41](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/41) HEAD `e94febeb557be52474d5c17a08271d164cbef2d6`、C [#42](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/42) HEAD `ae6ad0b77feafc5db052eb658538adf5ec50691d`、D [#39](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/39) HEAD `f0fa73531ad3892040f5f01a64cb110fdb80e6b8` の各5系統CI成功を確認。11ファイルはチーム間で重複0。A統合候補 [#43](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/43) HEAD `667f2e4c9e4ad4b4e2b026c7fe1fd2464d2ca957` のPython3版、Windows2版、Blender3版、Chromium、Handoffの**5系統すべて成功**を確認した上で、v0.18開発ブランチにsquash merge済み。**統合コミットSHA: `a9a0a76a963ab4ae41b68126f419546b80871e2b`。** `main`、公開版v0.17.0、旧PR #26〜42は変更しない。
+
+**重要な追加ゲート:** 上記CIはPR #43の結合HEADでの実測。squash統合後SHA `a9a0a76...` に対する7系統（Python、Windows、Blender3版、Chromium、Handoff、Kit、Skill）の**別のpush CIが成功したことをAが確認した時だけ**、下記R5着手許可を有効化する。これが未確認・赤の場合、B/C/DはR5設計/fixture調査のみ。Aは不足ジョブを確認し失敗を修正する。
+
+### R5担当と受け入れ条件（#40の設計を正式キュー化する候補）
+
+- **B / NEXT-008:** 既存の256境界・512面上限前後、面/部品順序入替と微小座標摂動で、判定の決定性・予算超過時の安全な`ambiguous`を検証。まず合成負例を再現し、再現した場合だけ最小修正。許可: `cbdk/glb_*`、GLB専用テスト/fixture/文書。共通スクリプト・STATE・CIはA所有。実GLB同一性・物理穴の証明は禁止。
+- **C / UI-001・BUILD-001:** 生成previewの登録→mode変更→operator拒否→解除→再登録の反復と、foreign Scene property維持をBlender実機で追加観測。Python mockと実Blender/GUIを区別し、既存5機能/6レシピを維持。許可: `cbdk/ui_layout.py`、`cbdk/modular_builder.py`、`templates/modular_preview/`、UI専用テスト/文書。共通 `scripts/blender_modular_addon_smoke.py` の更新はAへの変更要求（直接編集しない）。
+- **D / EXT-001:** R4の正常ZIP正例を保持しつつ、公式Blender 3版の既知validator出力と未知/矛盾ログの安定した区別・サニタイズの回帰を拡充。観測された誤分類がなければ製品コードに変更を加えない。許可: `cbdk/extension_*`、Extensions専用テスト/文書。共有validator/CIはA所有。正式Extensionの配布/権利承認なし。
+
+### R5作業ゲート・ブランチ指示
+
+1. Aが最新GitHubの `feature/v0.18-shape-diagnostics` HEADと、`a9a0a76a963ab4ae41b68126f419546b80871e2b` が祖先であることを確認。Aのdocs-only更新が後続にある場合は**新しい最新HEAD**を起点にする。旧R2/R3/R4のHEADから分岐しない。
+2. post-mergeの実行済み7系統CIが成功し、各担当のR4 PRがgreenであることを確認後に着手。R5案は各担当1タスクだけ、追加未統合PR上限1件、Codex不要。
+3. B: `work/v018-glb-analysis-r5`、C: `work/v018-ui-builder-r5`、D: `work/v018-extension-quality-r5`。いずれも新しい開発HEADから作成、ドラフトPRのbaseは `feature/v0.18-shape-diagnostics`。依存を跨ぐファイル変更/共有スモークはAに報告。
+4. Python3版/Windows2版/Blender3版・Chromium・Handoff、および変更内容に必要なKit/Skillを**各R5厳密HEADで**実測し、失敗/中止/未実行を明確に分ける。合成fixture、実GUI、私有GLB、権利、公開に関する未検証を保持。
+5. AはB/C/D稼働中にR6負例/受け入れ条件を先読みで設計し、R5 PRの差分・CIを先行レビュー。R5はv0.18開発ブランチ内のみであり、mainマージやv0.19有効化を意味しない。
