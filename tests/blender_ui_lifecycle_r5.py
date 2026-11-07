@@ -1,11 +1,12 @@
-"""Team C R5 real-Blender lifecycle probe for a trusted CBDK-authored preview.
+"""Team C R5/R6 Blender lifecycle probe for a CBDK-authored preview.
 
-Explicit opt-in, standalone. This file is NOT invoked by the current shared
-Blender workflow; Team A owns connecting it. Use only factory-startup and a
+Explicit opt-in, standalone. Team A's Blender workflow already invokes
+this script on three official versions. Use only factory-startup and a
 locally generated `modular_all` preview ZIP. No private addon/user .blend.
 """
 from __future__ import annotations
 
+import importlib
 import json
 import sys
 import tempfile
@@ -149,6 +150,37 @@ def run(path):
             checks.append("native_object_edit_cancel_mode_cycles_3")
             checks.append("native_zero_selection_xyz_editable_and_non_mutating")
 
+            # R6: two objects may share a single mesh datablock.  Selection
+            # is deliberately nonempty, so the nudge must be refused by the
+            # shared-data preflight rather than the zero-selection guard.
+            other = bpy.data.objects.new("CBDK_R6_shared", mesh)
+            bpy.context.scene.collection.objects.link(other)
+            other.select_set(False)
+            assert mesh.users == 2, mesh.users
+            try:
+                bpy.context.view_layer.objects.active = obj
+                obj.select_set(True)
+                bpy.ops.object.mode_set(mode="EDIT")
+                bpy.ops.mesh.select_all(action="SELECT")
+                assert bpy.context.mode == "EDIT_MESH"
+                assert len([item for item in bpy.context.objects_in_mode_unique_data
+                            if item.type == "MESH"]) == 1
+                shared_ui, _ = panel_events(module)
+                assert not shared_ui[IDS["vertex_nudge"]], shared_ui
+                assert "Shared mesh datablocks" in module._preview_unavailable_reason(
+                    "vertex_nudge", bpy.context)
+                before_result = bpy.context.scene.cbdk_modular_result
+                assert bpy.ops.cbdk.modular_vertex_nudge() == {"CANCELLED"}
+                assert bpy.context.scene.cbdk_modular_result == before_result
+                bpy.ops.object.mode_set(mode="OBJECT")
+                assert tuple(tuple(v.co) for v in mesh.vertices) == before
+            finally:
+                if bpy.context.mode != "OBJECT":
+                    bpy.ops.object.mode_set(mode="OBJECT")
+                bpy.data.objects.remove(other, do_unlink=True)
+            assert mesh.users == 1
+            checks.append("native_r6_shared_mesh_nudge_refused_no_mutation")
+
             addon_utils.disable(PACKAGE, default_set=False)
             enabled = False
             assert_detached(module)
@@ -216,6 +248,91 @@ def run(path):
             module.unregister()
             assert_detached(module)
             checks.append("native_cleanup_and_reregister_after_collision")
+
+            # R6: importlib.reload must refuse to discard an active module's
+            # ledgers. An explicit unregister followed by reload is allowed.
+            module.register()
+            old_classes = tuple(module._REGISTERED)
+            old_tokens = dict(module._OWNED_PROPERTY_TOKENS)
+            assert old_classes and all(old_tokens.values())
+            try:
+                importlib.reload(module)
+            except RuntimeError as exc:
+                assert "unregistered before module reload" in str(exc), str(exc)
+            else:
+                raise AssertionError("Live reload silently lost Scene ownership")
+            assert tuple(module._REGISTERED) == old_classes
+            assert all(module._OWNED_PROPERTY_TOKENS.get(key) is value
+                       for key, value in old_tokens.items())
+            assert all(hasattr(bpy.types.Scene, name) for name in PROPERTIES)
+            module.unregister()
+            assert_detached(module)
+            checks.append("native_r6_live_reload_rejected_without_leaks")
+
+            assert importlib.reload(module) is module
+            module.register()
+            module.unregister()
+            assert_detached(module)
+            checks.append("native_r6_detached_reload_reregistered")
+
+            # R6: do not remove *either* foreign declaration after replacing
+            # both CBDK-owned RNA descriptors while the addon is loaded.
+            module.register()
+            original_result = bpy.types.Scene.__dict__.get(PROPERTIES[0])
+            original_offset = bpy.types.Scene.__dict__.get(PROPERTIES[1])
+            assert original_result is not None and original_offset is not None
+            bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
+                default="CBDK R6 external replacement")
+            bpy.types.Scene.cbdk_modular_nudge_offset = bpy.props.FloatVectorProperty(
+                size=3, default=(0.0, 0.0, 0.25))
+            new_result = bpy.types.Scene.__dict__.get(PROPERTIES[0])
+            new_offset = bpy.types.Scene.__dict__.get(PROPERTIES[1])
+            assert new_result is not None and new_result is not original_result
+            assert new_offset is not None and new_offset is not original_offset
+            try:
+                module.unregister()
+                assert not module._REGISTERED
+                assert not module._OWNED_PROPERTIES
+                assert not module._OWNED_PROPERTY_TOKENS
+                assert bpy.types.Scene.__dict__.get(PROPERTIES[0]) is new_result
+                assert bpy.types.Scene.__dict__.get(PROPERTIES[1]) is new_offset
+                try:
+                    module.register()
+                except RuntimeError as exc:
+                    assert "Scene properties conflict" in str(exc)
+                else:
+                    raise AssertionError("Foreign RNA replacement accepted")
+            finally:
+                for name in reversed(PROPERTIES):
+                    if name in bpy.types.Scene.__dict__:
+                        delattr(bpy.types.Scene, name)
+            assert_detached(module)
+            checks.append("native_r6_dual_foreign_descriptors_preserved")
+
+            # R6: controlled failure on the second class registration keeps
+            # the original exception visible and can be retried cleanly.
+            native_register = bpy.utils.register_class
+            call_count = [0]
+            def fail_second_registration(cls):
+                call_count[0] += 1
+                if call_count[0] == 2:
+                    raise RuntimeError("CBDK R6 injected registration failure")
+                return native_register(cls)
+            bpy.utils.register_class = fail_second_registration
+            try:
+                try:
+                    module.register()
+                except RuntimeError as exc:
+                    assert "R6 injected registration failure" in str(exc)
+                else:
+                    raise AssertionError("Injected registration failure ignored")
+            finally:
+                bpy.utils.register_class = native_register
+            assert_detached(module)
+            module.register()
+            module.unregister()
+            assert_detached(module)
+            checks.append("native_r6_partial_registration_retry")
         finally:
             if enabled:
                 try:
