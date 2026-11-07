@@ -14,6 +14,9 @@
 
 [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102139)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102083)・[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102168)・[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102045)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102092)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42379102137)の全6CI成功。headless `Panel.draw`監査は実Windows GUIや任意UIの完成を意味しない。UI-001は`partial / blender_ci`。次世代は未有効、PR #25ドラフト、正式版v0.17.0を維持。
 
+## UI-001 操作性改善（2026-11-07 JST）
+固定5自作機能のプレビューに、Blenderのモード・active meshを使ったボタン有効/無効と、`vertex_nudge`用の範囲付きXYZ入力を追加。未知operator・入力コードの実行は引き続き禁止。生成パネルの`Panel.draw`、operator引数引継ぎ、Scene登録/解除をheadlessで確認した。コード[597ed5c](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/597ed5c9d40e750025e7d86ca9ccd525a4ca7786)の[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508527)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508424)・[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508575)・[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508465)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508411)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42380508412)は6系統成功。UI-001はpartial、Windows GUI Ctrl+Z/操作感・汎用UI・再配布権利は未確認。詳細 [UI_DECLARATIVE_PREVIEW.md](UI_DECLARATIVE_PREVIEW.md)。
+
 ## 初回引き継ぎ基準（履歴）
 
 - 開始ブランチ `feature/v0.18-shape-diagnostics`、開始HEAD `7a021f5978302d21d02d51bbb4b4fc263284fa1e`。
