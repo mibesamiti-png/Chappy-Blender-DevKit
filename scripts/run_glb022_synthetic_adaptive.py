@@ -23,7 +23,9 @@ from cbdk.glb_synthetic_adaptive import (
 )
 from cbdk.glb_synthetic_progress import _metric
 from cbdk.glb_synthetic_run_review import build_run_review, write_run_review
-from cbdk.glb_synthetic_conditions import build_conditions, condition_source_digest
+from cbdk.glb_synthetic_conditions import (
+    aggregate_review_digest, build_conditions, condition_source_digest,
+)
 
 
 class SyntheticAdaptiveRunError(RuntimeError):
@@ -158,6 +160,7 @@ def run(blender, output, *, budget=MAX_TRIALS):
                 scale=baseline_metric["combined_aabb_diagonal"],
                 initial_max=baseline_metric["sampled_max_distance"],
                 initial_faces=baseline_metric["socket_sampled_affected_faces"],
+                baseline_review_sha256=aggregate_review_digest(baseline),
             )
         except ValueError:
             checkpoint = None

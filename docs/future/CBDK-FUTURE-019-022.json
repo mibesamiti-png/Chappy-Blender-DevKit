@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "plan_id": "CBDK-FUTURE-019-022",
+  "status": "APPROVED_WAITING_FOR_V018_GATES",
+  "active": false,
+  "approved_on": "2026-11-07",
+  "approval_basis": "User explicitly approved the future plan and transition policy; finish automatable v0.18 work and record remaining human blockers first.",
+  "transition_authorized": true,
+  "repeat_transition_approval_required": false,
+  "canonical_current_state": "docs/project/STATE.json",
+  "current_requirements_or_priorities_modified": false,
+  "activation_gates": {
+    "v018_automatable_work_completed": false,
+    "human_blockers_documented": true,
+    "latest_pr25_code_checks_reviewed": false,
+    "integration_policy_recorded": true
+  },
+  "integration_policy": "Continue development on feature branches; keep PR #25 draft until appropriate review. Main merge and formal release require separate explicit approval and are not implicitly authorized by transition approval.",
+  "blocker_inventory": "docs/V018_COMPLETION_GATES.md",
+  "separate_approval_required": [
+    "merge_to_main",
+    "formal_release_or_public_distribution",
+    "adoption_of_unapproved_code_or_parts",
+    "use_or_execution_of_private_user_data_or_addons",
+    "material_scope_or_safety_changes"
+  ],
+  "phases": [
+    {
+      "version": "0.19",
+      "status": "not_started",
+      "goal": "Practical GLB analysis and conservative part correspondence",
+      "candidates": [
+        "Expand the 512-triangle research limit gradually with explicit computational budgets",
+        "Partition large meshes, reuse BVHs and cache bounded calculations",
+        "Suggest matches using dimensions, position, centroid and surface features",
+        "Represent competing or ambiguous part candidates explicitly",
+        "Measure detection limits for holes, thin walls, joints and internal cavities",
+        "Prioritize regions with large observed differences"
+      ],
+      "acceptance": "Evaluate accuracy and resources on authored synthetic models and explicitly permitted real models; test reordered parts and different triangulations without unnecessary false positives. Sample agreement is not exact geometry."
+    },
+    {
+      "version": "0.20",
+      "status": "not_started",
+      "goal": "Blender addon generation engine",
+      "candidates": [
+        "Declarative panels, buttons, properties and operators",
+        "Compose only permitted parts and validate dependency/API compatibility",
+        "Verify operator mode, selection and Undo requirements",
+        "Automatically register, enable and function-test generated previews",
+        "Support multiple recipes and prepare Blender Extensions formatting"
+      ],
+      "acceptance": "Generate multi-feature addons and verify registration, operation and disabling on supported Blender versions. Do not adopt unapproved parts or redistribute license-unreviewed code."
+    },
+    {
+      "version": "0.21",
+      "status": "not_started",
+      "goal": "Safe repair and improvement candidate experiments",
+      "candidates": [
+        "Strengthen diagnostic-to-setting/code hypotheses",
+        "Generate narrowly scoped change candidates with diffs and restoration",
+        "Regenerate and compare only in permitted validation environments",
+        "Classify improvement, regression and uncertainty across candidates",
+        "Protect previously good parts and record reasons, metrics and decisions"
+      ],
+      "acceptance": "Validate detection, proposed changes, regeneration and comparison on CBDK-managed safe sample addons. Applying changes to real user addons requires separate explicit permission/review; no arbitrary code execution, automatic adoption or merge."
+    },
+    {
+      "version": "0.22",
+      "status": "not_started",
+      "goal": "Integrated Blender UI and practical delivery",
+      "candidates": [
+        "Blender development panel and part/recipe/test visualization",
+        "Side-by-side GLB review and navigation to observed differences",
+        "Candidate confirmation and approval interface",
+        "Interrupt, failure display and explicit rerun assistance",
+        "Real Windows GUI and Undo/Redo verification",
+        "Packaging, usage documentation and compatibility checks"
+      ],
+      "acceptance": "Operate feature selection, addon generation, testing, shape comparison and candidate review consistently from Blender. Formal distribution requires license, safety and user approvals."
+    }
+  ],
+  "shared_principles": [
+    "Preserve compatibility and measure quality, safety and performance",
+    "Never change original sources or private projects without permission",
+    "Keep private GLBs, source and personal data out of public GitHub/Notion",
+    "Separate synthetic success, sampled similarity, causal hypotheses and verified effects",
+    "Use relevant tests during work and necessary milestone CI",
+    "Keep GitHub canonical and Notion as an actual-status mirror",
+    "Do not claim fully autonomous creation or repair of arbitrary addons"
+  ]
+}

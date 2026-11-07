@@ -50,7 +50,8 @@ def condition_source_digest(root):
 
 
 def build_conditions(*, source_sha256, reference_sha256, baseline_sha256,
-                     blender_version, scale, initial_max, initial_faces):
+                     blender_version, scale, initial_max, initial_faces,
+                     baseline_review_sha256=None):
     for digest in (source_sha256, reference_sha256, baseline_sha256):
         if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
             raise ValueError("Invalid synthetic condition digest")
@@ -62,13 +63,31 @@ def build_conditions(*, source_sha256, reference_sha256, baseline_sha256,
             raise ValueError("Invalid synthetic baseline observation")
     if type(initial_faces) is not int or not 1 <= initial_faces <= 96:
         raise ValueError("Invalid baseline face count")
-    return {
+    output = {
         **FIXED, "range_centi": list(FIXED["range_centi"]),
         "source_sha256": source_sha256, "reference_sha256": reference_sha256,
         "baseline_sha256": baseline_sha256, "blender_version": blender_version,
         "combined_aabb_diagonal": scale, "initial_sampled_max": initial_max,
         "initial_socket_affected_faces": initial_faces,
     }
+    if baseline_review_sha256 is not None:
+        if (not isinstance(baseline_review_sha256, str)
+                or re.fullmatch(r"[0-9a-f]{64}", baseline_review_sha256) is None):
+            raise ValueError("Invalid aggregate review binding")
+        output["baseline_review_sha256"] = baseline_review_sha256
+    return output
+
+
+def aggregate_review_digest(report):
+    """Bind an already validated aggregate, independently of file formatting."""
+    try:
+        body = json.dumps(report, sort_keys=True, separators=(",", ":"),
+                          ensure_ascii=True, allow_nan=False).encode("utf-8")
+        if not isinstance(report, dict) or len(body) > 128 * 1024:
+            raise ValueError("Invalid or oversized aggregate review")
+    except (TypeError, RecursionError, OverflowError) as exc:
+        raise ValueError("Invalid aggregate review") from exc
+    return hashlib.sha256(body).hexdigest()
 
 
 def validate_conditions(value):
@@ -80,6 +99,7 @@ def validate_conditions(value):
             baseline_sha256=value["baseline_sha256"], blender_version=value["blender_version"],
             scale=value["combined_aabb_diagonal"], initial_max=value["initial_sampled_max"],
             initial_faces=value["initial_socket_affected_faces"],
+            baseline_review_sha256=value.get("baseline_review_sha256"),
         )
         if json.dumps(value, sort_keys=True, allow_nan=False) != json.dumps(
             expected, sort_keys=True, allow_nan=False

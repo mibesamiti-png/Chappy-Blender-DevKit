@@ -389,3 +389,15 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - Compare only completed, integrity-verified runs with equal conditions and budgets. Failed/incomplete/changed/invalid/legacy evidence is excluded from success comparisons. Opposing distance/count changes remain mixed observations; do not select a winner or claim causality/exact geometry.
 - Keep comparison inputs 2..16, outputs fresh under ignored local reports/latest or reports/ci, and omit raw paths/unknown labels/invalid content. No source/Blender execution in the comparison CLI, auto-adoption or retry.
 - Verify two independent real synthetic four-trial runs in the existing Blender matrix and exclude the controlled-failure run. Record median time/peak Python allocation for in-memory 2-input comparison and replicated 16-input load, without speed thresholds or claims of 16 independent experiments. Do not add unrelated roadmap tasks. See docs/GLB023_RUN_COMPARISON.md.
+
+## Current v0.18 work and approved future transition
+
+- Prioritize existing NEXT-019/NEXT-009 and remaining automatable v0.18 requirements. The future CBDK-FUTURE-019-022 plan is approved but NOT ACTIVE; keep it independently in docs/future/CBDK-FUTURE-019-022.json, not current requirements/NEXT/priorities.
+- The user has already authorized transition after automatable current work is complete, human blockers are documented and PR #25 evidence/integration policy is recorded. Do not request the same transition approval again. Current registry/UI work and human/data/GUI/license boundaries are listed in docs/V018_COMPLETION_GATES.md; do not falsely close or drop them.
+- Main merge, formal release/distribution, unapproved adoption and private-data use/execution still require separate explicit approval. Future approval does not activate direct installation or remove review gates.
+
+## GLB-021 bound AST / synthetic experiment review
+
+- Bind the visual baseline using its canonical aggregate SHA stored by the trusted adaptive runner. Old condition/run reviews remain readable, but a missing baseline binding cannot authorize a linked review.
+- Parse only explicit source via AST. A manually asserted socket role plus exact socket_opening_diameter name is a review link to the synthetic socket_diameter control, never proof that the actual property drove the generator. Preserve false causality/approval flags and no recommended property values.
+- Successful, incomplete and failed verified prefixes may be displayed with their actual status. Reject changed inputs and a different baseline before reading private Python. Write fresh private JSON/Markdown under reports/latest only; do not upload these candidate sheets to public CI artifacts/Notion. Verify with repository-owned fixture and existing real Blender runs only.

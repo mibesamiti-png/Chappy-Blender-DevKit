@@ -35,6 +35,9 @@ on:
       - 'cbdk/glb_synthetic_adaptive.py'
       - 'cbdk/glb_synthetic_run_review.py'
       - 'cbdk/glb_synthetic_conditions.py'
+      - 'cbdk/glb_visual_experiment_review.py'
+      - 'scripts/verify_glb021_experiment_link.py'
+      - 'tests/test_glb_visual_experiment_review.py'
       - 'cbdk/glb_synthetic_run_compare.py'
       - 'scripts/verify_glb023_run_comparison.py'
       - 'tests/test_glb_synthetic_run_compare.py'
@@ -805,6 +808,12 @@ jobs:
             --second reports/ci/glb022_adaptive_repeat/synthetic_run_review.json \
             --failed reports/ci/glb022_controlled_failure/synthetic_run_review.json \
             --output reports/ci/glb023_comparison
+
+      - name: Link private AST review to its measured synthetic experiment baseline
+        shell: bash
+        run: |
+          python scripts/verify_glb021_experiment_link.py \
+            --run reports/ci/glb022_adaptive --failed-run reports/ci/glb022_controlled_failure
 
       - name: Create and render deterministic GLB visual-inspection fixture
         shell: bash
