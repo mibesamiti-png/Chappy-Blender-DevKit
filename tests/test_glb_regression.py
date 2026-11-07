@@ -281,6 +281,58 @@ class GLBRegressionTests(unittest.TestCase):
                 self.assertEqual(output["surface_status"], "review_only")
 
 
+    def test_r9_dense_fallback_review_is_never_file_approval(self):
+        """R9 near-notch candidates stay reviewer hints through the facade.
+
+        This GLB-owned mocked-IO test triggers existing Blender workflow.
+        R9 dense-AABB stress inputs themselves are Python-only fixtures.
+        """
+        from cbdk.glb_part_match import suggest_spatial_part_matches
+        from test_glb_match_pruning_r8 import original_unpruned
+        from test_glb_match_adversarial_r7 import split_edge_fan
+
+        reference = split_edge_fan(.30)
+        for label, candidate, expected in (
+            ("same_contour_resplit", split_edge_fan(.70), "suggested"),
+            ("near_notch", split_edge_fan(.70, indentation=.0001), "suggested"),
+            ("real_notch", split_edge_fan(.70, indentation=.03), "ambiguous"),
+        ):
+            with self.subTest(case=label), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                pairing = suggest_spatial_part_matches(
+                    reference, candidate, [5], [5])
+                self.assertEqual(pairing, original_unpruned(
+                    reference, candidate, [5], [5]))
+                self.assertEqual(pairing["reference_parts"][0]["status"], expected)
+                self.assertFalse(pairing["cross_file_part_identity_proven"])
+                self.assertFalse(pairing["auto_apply"])
+
+                surface = {
+                    "kind": "cbdk_glb_surface_review",
+                    "status": "review_only",
+                    "surface_observation": "no_difference_observed_at_samples",
+                    "part_match_candidates": pairing,
+                }
+                comparison = {
+                    "kind": "cbdk_glb_scene_comparison",
+                    "passed": True,
+                    "summary": {"errors": 0},
+                    "differences": [],
+                }
+                with patch("cbdk.glb_regression.write_glb_inspection"), \
+                     patch("cbdk.glb_regression.render_glb_preview"), \
+                     patch("cbdk.glb_regression.write_scene_comparison",
+                           return_value=comparison), \
+                     patch("cbdk.glb_regression.run_glb_surface_review",
+                           return_value=surface):
+                    result = run_glb_regression(
+                        root / "blender", root / "a.glb", root / "b.glb",
+                        root / "out", surface_review=True)
+                self.assertIs(result["surface_does_not_auto_approve"], True)
+                self.assertIs(result["passed_is_metadata_only"], True)
+                self.assertEqual(result["surface_status"], "review_only")
+
+
     def test_optional_surface_stage_can_report_skipped_without_false_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

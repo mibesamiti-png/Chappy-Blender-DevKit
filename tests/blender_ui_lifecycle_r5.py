@@ -598,6 +598,132 @@ def run(path):
                 assert_detached(module)
             assert tuple(tuple(v.co) for v in mesh.vertices) == before
             checks.append("native_r8_edit_mode_cleanup_after_cancellation")
+
+            # R9: Blender RNA Scene attribute deletion fails only after all
+            # classes have *successfully* detached.  Shadow the builtin
+            # delattr in the trusted preview module for this controlled test;
+            # do not alter Blender's native metaclass or foreign add-ons.
+            for failing_name in PROPERTIES:
+                module.register()
+                assert "delattr" not in module.__dict__
+                owned_token = module._OWNED_PROPERTY_TOKENS[failing_name]
+                other_name = next(n for n in PROPERTIES if n != failing_name)
+                attempts = [0]
+
+                def fail_one_scene_delete(owner, name):
+                    if (owner is bpy.types.Scene and name == failing_name
+                            and attempts[0] == 0):
+                        attempts[0] += 1
+                        raise RuntimeError("CBDK R9 injected Scene deletion failure")
+                    return delattr(owner, name)
+
+                module.__dict__["delattr"] = fail_one_scene_delete
+                try:
+                    try:
+                        module.unregister()
+                    except RuntimeError as exc:
+                        assert "cleanup incomplete" in str(exc), str(exc)
+                    else:
+                        raise AssertionError("R9 Scene deletion failure swallowed")
+                finally:
+                    # A module-level shadow is test-only and must never
+                    # persist into a future register/unregister operation.
+                    module.__dict__.pop("delattr", None)
+
+                assert attempts == [1]
+                assert not module._REGISTERED
+                assert module._OWNED_PROPERTIES == [failing_name]
+                assert set(module._OWNED_PROPERTY_TOKENS) == {failing_name}
+                assert module._OWNED_PROPERTY_TOKENS[failing_name] is owned_token
+                assert bpy.types.Scene.__dict__.get(failing_name) is owned_token
+                assert other_name not in bpy.types.Scene.__dict__
+                assert not hasattr(bpy.types, "VIEW3D_PT_cbdk_modular_preview")
+                try:
+                    importlib.reload(module)
+                except RuntimeError as exc:
+                    assert "unregistered before module reload" in str(exc)
+                else:
+                    raise AssertionError("R9 pending Scene cleanup reload accepted")
+                assert module._OWNED_PROPERTY_TOKENS[failing_name] is owned_token
+                try:
+                    module.register()
+                except RuntimeError as exc:
+                    assert "already registered" in str(exc)
+                else:
+                    raise AssertionError("R9 pending Scene cleanup was overwritten")
+
+                # A foreign stand-in takes the same name while the original
+                # CBDK ownership ledger is still pending cleanup.  Retry
+                # must release CBDK's ledger but *not* delete this descriptor.
+                if failing_name == PROPERTIES[0]:
+                    bpy.types.Scene.cbdk_modular_result = (
+                        bpy.props.StringProperty(
+                            default="CBDK R9 synthetic foreign result"))
+                else:
+                    bpy.types.Scene.cbdk_modular_nudge_offset = (
+                        bpy.props.FloatVectorProperty(
+                            size=3, default=(0.0, 0.0, 0.6)))
+                foreign = bpy.types.Scene.__dict__.get(failing_name)
+                assert foreign is not None and foreign is not owned_token
+                try:
+                    module.unregister()
+                    assert not module._REGISTERED
+                    assert not module._OWNED_PROPERTIES
+                    assert not module._OWNED_PROPERTY_TOKENS
+                    assert bpy.types.Scene.__dict__.get(failing_name) is foreign
+                    try:
+                        module.register()
+                    except RuntimeError as exc:
+                        assert "Scene properties conflict" in str(exc)
+                    else:
+                        raise AssertionError("R9 foreign Scene property accepted")
+                    assert bpy.types.Scene.__dict__.get(failing_name) is foreign
+                finally:
+                    if bpy.types.Scene.__dict__.get(failing_name) is foreign:
+                        delattr(bpy.types.Scene, failing_name)
+                assert_detached(module)
+                assert importlib.reload(module) is module
+                module.register()
+                module.unregister()
+                assert_detached(module)
+            checks.append("native_r9_scene_delete_failure_retains_ledger")
+            checks.append("native_r9_pending_cleanup_reload_rejected")
+            checks.append("native_r9_foreign_replace_retry_preserved")
+
+            # The same injected Scene deletion failure without a replacement
+            # must allow a later attempt to remove the original CBDK token.
+            module.register()
+            retry_name = PROPERTIES[1]
+            owned_retry_token = module._OWNED_PROPERTY_TOKENS[retry_name]
+            attempts = [0]
+
+            def reject_first_owned_delete(owner, name):
+                if (owner is bpy.types.Scene and name == retry_name
+                        and attempts[0] == 0):
+                    attempts[0] += 1
+                    raise RuntimeError("CBDK R9 retry-only deletion failure")
+                return delattr(owner, name)
+
+            assert "delattr" not in module.__dict__
+            module.__dict__["delattr"] = reject_first_owned_delete
+            try:
+                try:
+                    module.unregister()
+                except RuntimeError as exc:
+                    assert "cleanup incomplete" in str(exc)
+                else:
+                    raise AssertionError("R9 owned deletion failure swallowed")
+            finally:
+                module.__dict__.pop("delattr", None)
+            assert attempts == [1]
+            assert module._OWNED_PROPERTIES == [retry_name]
+            assert module._OWNED_PROPERTY_TOKENS[retry_name] is owned_retry_token
+            module.unregister()
+            assert_detached(module)
+            module.register()
+            module.unregister()
+            assert_detached(module)
+            checks.append("native_r9_owned_delete_retry_recovered")
         finally:
             if enabled:
                 try:
