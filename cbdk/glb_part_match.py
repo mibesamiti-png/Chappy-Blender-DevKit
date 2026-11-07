@@ -78,6 +78,15 @@ def _outside_expanded_boundary_segment_box(point, start, end, margin):
     )
 
 
+def _keep_r2_bbox_after_probe(rejected):
+    """Keep the safe R8 filter when >=8 of the first 64 boxes were rejected.
+
+    This is only a CPU-work choice, never a geometry-match decision. Bounded
+    geometry and the original R2 predicate still govern every candidate.
+    """
+    return rejected >= 8
+
+
 def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
     """Compare corresponding open-contour segments in part-local coordinates.
 
@@ -150,8 +159,8 @@ def _boundary_layout_issue(ref_lines, cand_lines, ref_part, cand_part):
                 if sampled_boxes < 64:
                     sampled_boxes += 1
                     rejected_boxes += int(outside)
-                    if sampled_boxes == 64 and rejected_boxes < 8:
-                        use_bbox = False
+                    if sampled_boxes == 64:
+                        use_bbox = _keep_r2_bbox_after_probe(rejected_boxes)
                 if outside:
                     continue
             direction = tuple(end[k] - start[k] for k in range(3))
