@@ -1,5 +1,9 @@
 # Chappy Blender DevKit — Agent Rules
 
+## AI並行開発（複数チャット・Codex利用不可時を含む）
+
+並行開発時は [docs/PARALLEL_DEVELOPMENT.md](docs/PARALLEL_DEVELOPMENT.md) を先に読む。AだけがSTATE/引き継ぎ/共通CI/Notionを更新し、B（GLB）、C（UI生成）、D（Extensions品質）は各専用ブランチ・ドラフトPRで作業する。Codexは任意の追加戦力で、上限・利用不能でも開発はB/C/Dと既存GitHub Actionsで継続する。個別CI成功は統合CI成功ではない。mainマージ・正式リリース・未承認採用・私有データ実行は別承認。
+
 ## 最優先: 開発引き継ぎと状態管理
 
 **チャット履歴を前提にしないこと。** 最初に `docs/PROJECT_HANDOFF.md`（未生成なら `docs/project/STATE.json`）、`docs/PROJECT_SPEC.md`、`pyproject.toml`、このファイル、対象コードとテストを読む。最新のGitHub `main` とCIの実測を優先し、古い文章の将来予定を現在の未実装と誤認しない。

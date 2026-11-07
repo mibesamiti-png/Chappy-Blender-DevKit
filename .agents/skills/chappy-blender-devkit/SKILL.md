@@ -10,6 +10,15 @@ source, merge, release, approve licensing, or assume CI passed. `AGENTS.md` and
 the live repository state remain authoritative; this file deliberately does not
 freeze a task count, a release, or test metrics.
 
+## Parallel development and optional Codex
+
+When A/B/C/D chats or concurrent PRs are in scope, read repository
+`docs/PARALLEL_DEVELOPMENT.md` first for task ownership, isolated branches,
+integration gates, and the **no-Codex / usage-limit fallback**. Codex is an
+optional specialist, not a required critical path. Team A owns shared status,
+generated handoff, common CI and Notion; specialists submit separate draft PRs.
+Do not merge independently verified PRs without combined-sha regression checks.
+
 ## 1. Resume from the repository, not the chat
 
 1. Identify the repository `mibesamiti-png/Chappy-Blender-DevKit`. Read

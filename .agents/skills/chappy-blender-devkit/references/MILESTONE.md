@@ -1,5 +1,10 @@
 # CBDK milestone delivery — safe batched Codex workflow
 
+For multi-chat B/C/D plus coordinator A, follow repository
+`docs/PARALLEL_DEVELOPMENT.md`, including Codex-usage-limit fallback and
+isolated integration PRs. A owns shared state and Notion synchronization;
+Codex is optional and must never be a blocker for unrelated safe work.
+
 Follow this procedure when the user says "continue", "develop more",
 "resume from GitHub", or requests a v0.18 development milestone.
 This reference describes the **process**, not a fixed set of tasks.
