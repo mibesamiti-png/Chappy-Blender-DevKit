@@ -64,6 +64,17 @@ permitted.
    257-edge budget still fails closed. Test aggregate numbers are
    synthetic and reveal no private geometry.
 
+A targeted GLB-owned regression facade test in
+`tests/test_glb_regression.py` further checks that both an equivalent
+reordered 8-face opening and a physically moved opening remain
+non-authoritative when the review is reported through
+`run_glb_regression`: `surface_does_not_auto_approve=true` and
+`passed_is_metadata_only=true`. This owned, workflow-listed test
+also enables the existing real Blender version-matrix CI without any
+modification to A-owned workflows or shared smoke scripts. The test
+itself mocks IO; Blender runtime is separately verified via actual
+workflow jobs.
+
 Existing R4 tests still check 513-triangle and 65-part rejection,
 R2 aperture/retessellation, and uniform-scale R3 near-contact.
 Tests use CBDK-owned coordinates *only inside synthetic code*; no
