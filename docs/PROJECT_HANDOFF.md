@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R9 B #78/C #77/D #76の10ファイルをA結合PR #81で検証（HEAD b5978eac、5系統CI成功）、開発統合914f1c8aの独立7系統CIも全成功。密集GLB AABB非利得の検証、Scene RNA削除失敗時の所有台帳保全、ZIP自己再hashと作者真正性の分離をレビュー専用で確認。R10はA正式割当PR #82の統合後のみ新ブランチ着手可。main/正式v0.17.0維持、実ユーザーGLB・Windows GUI・権利/公式Extensions公開は未承認。DASH-001の実Windows通信/音声・Pagesも未検証。
+- 最新の節目: v0.18: R10 B #85/C #83/D #84の12ファイルをA PR #86で結合（HEAD 6a12b7fa、5系統CI成功）、開発統合a3ae6da1の独立7系統CIも全成功。GLB R2-AABBの適応バイパス、Scene/class同時解除失敗時の所有台帳安全性、ZIPと別管理checkoutソースのテスト専用照合を確認。R11はA正式割当PR #87統合後のみ着手可。実GLB/Windows GUI/第三者Addon/権利・公式Extensions・GitHub Pagesは未承認、main/正式v0.17.0維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -206,6 +206,7 @@
 
 - `DEC-071` Aの開発ライブボードv3にPR/CI時刻由来の3種類の観測速度指標を追加し、実機ネットワーク/音声とPages公開を別ゲートとして維持。A PR #79 exact HEAD c52cc14fd74ab2a53245b6744b406960a7a8225a のPython42422092224、Windows42422092201、Chromium42422092185、Handoff42422092289の4発火CI success。Nodeテストが実走。dev squash e60d48f1461d3c57edaa7916731d19c5ede6b75b の独立post-merge7系統CIも全success（Python42422198759、Windows42422198754、Blender42422198841（4.4.3/4.5.15/5.2.1）、Chromium42422198751、Handoff42422198765、Kit42422198764、Skill42422198785）。Portable版21,353 bytesのHTML + ZIP(9,863 bytes)のファイル/JavaScript/ZIPを検査し、ChromiumモックでR9 B/D→C完了、A統合、チーム毎一回通知、390px表示を確認。実Windows音声とlive GitHub API/Pagesは未確認。
 - `DEC-072` R9統合で密集AABB非利得・Scene RNA削除失敗回復・ZIP自己hashの真正性非証明を確認し、R10を安全ゲート付きで割り当てる。B #78 HEAD60fcda39、C #77 HEADa525fa8e、D #76 HEADb29de167各5系統CI成功。A #81 HEADb5978eacもPython/Windows/Blender3版(native_r9四項目)/Chromium/Handoffの5系統成功。開発squash 914f1c8aの別7系統成功（Python42423898180、Windows42423898189、Blender42423898177、Chromium42423898202、Handoff42423898215、Kit42423898188、Skill42423898183）。実行イベントはpull_request。実GLB/GUI/ライセンス/正式公開未検証。R10は#82正式割当の統合後のみ着手可。
+- `DEC-073` R10で安全な適応GLB AABB、Blender二重解除失敗の台帳回復、ZIPと既知ソース比較の権限非昇格を検証してR11を安全ゲート付きで割り当てる。B #85 a3c57d9、C #83 9f3df76、D #84 262d646各5CI成功。A #86 HEAD6a12b7faもPython42425995892/Windows42425995843/Blender42425995934（4.4.3/4.5.15/5.2.1 native_r10五項目）/Chromium42425995902/Handoff42425995915成功。dev統合a3ae6da1の別7CI成功（Python42426258493、Windows42426258509、Blender42426258621、Chromium42426258600、Handoff42426258438、Kit42426258568、Skill42426258440）。イベントpull_request。実GLB/GUI/ライセンス/公開未検証。R11は#87統合後のみ開始可。
 
 ## 更新・プライバシールール
 
