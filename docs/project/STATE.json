@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18でworld bounds比較＋32x32シルエットIoU比較まで実装。PR #24でPython 347件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功。同bounds異輪郭の実機検出も成功"
+    "milestone": "v0.18 PR #25ドラフト: GLB診断・ASTレビュー・合成適応探索に加え匿名部品台帳/弱い面数候補を実装。開始コードe254aa7の6系統CI実測成功。引き継ぎ後はGLB-019証拠整合性を補強中、正式版v0.17.0を維持"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -16,7 +16,9 @@
     "docs/PROJECT_SPEC.md",
     "docs/PROGRESS.md",
     "AGENTS.md",
-    "docs/GLB_ROADMAP.md"
+    "docs/GLB_ROADMAP.md",
+    "docs/DEVELOPMENT_PLAN.md",
+    "docs/NOTION_SYNC.md"
   ],
   "requirements": [
     {
@@ -334,10 +336,10 @@
     {
       "id": "GLB-019",
       "title": "ローカル2GLBを安全に読み込みBVH表面距離と特徴優先多解像度の比較を既存パイプラインに統合",
-      "status": "implemented",
-      "verification": "blender_ci",
+      "status": "partial",
+      "verification": "python",
       "source": "cbdk/glb_surface_pipeline.py",
-      "note": "ローカル2GLBを静的preflight後、factory-startup/disable-autoexecのBlender固定スクリプトでworld-space三角面を抽出し、固定BVH距離+特徴優先多解像度の集計を出すglb-surface-review CLIを実装。glb-regression --surface-review opt-inにも統合。512面超はskippedで合格扱いしない。合成GLBの開口検出/別三角分割をBlender4.4.3/4.5.15/5.2.1で実輸入して確認（実装SHA ec13972f, Blender run 42257317535成功）。Python3版 42257317519, kit 42257317475, handoff 42257317601成功。記録更新commit 5b6196a5のPython3版/Windows2版/Blender3版/kit/handoffの全5 CI成功（Windows run 42258076781）。実ユーザーGLB大規模/個別オブジェクト対応は未検証"
+      "note": "ローカル2GLBを静的検査後にfactory-startup/disable-autoexecのBlenderで読み込み、固定BVH/特徴優先距離と匿名上位32部品一覧・弱い面数候補を集計。512面超はskip。開始コードe254aa7の6系統CI成功: Python42357800567/Windows42357800581/Blender3版42357800595/Kit42357800603/Handoff42357800626/Chromium42357800564。今回の型付き候補再計算・完全/途中省略/skip総面数整合性はPython回帰とBlender4.3.2合成4例成功。対象3版/Windows新CI未確認につきpartial/python。実ユーザー・部品同一性・完全幾何一致は未保証。"
     },
     {
       "id": "GLB-020",
@@ -353,7 +355,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/glb_synthetic_trial_history.py",
-      "note": "GLB-020匿名集計→AST静的レビューと日本語シートに加え、CBDK合成3部品で固定3試験（開口0.78の欠陥／開口0.78のまま無関係なボール移動／開口1.70の既知正常状態）を部品別の黄赤面数とともにローカルJSON＋日本語Markdown履歴に保存。異常が復元時に0、無関係な変更では残留、初期GLB SHA256不変を確認。試験名・安全フラグ・件数不整合を拒否。テスト対象コードSHA ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f：Python 42299997255・Windows 42299997246・Blender3版 42299997251・Kit 42299997311・Handoff 42299997254・Chromium 42299997355全6系統成功。これは合成設定だけの因果実験、実ユーザーのアドオン/最適値/全形状一致は未証明。GLB-021 partial、GLB-022未実装"
+      "note": "GLB-020匿名集計→AST静的レビューと日本語シートに加え、CBDK合成3部品で固定3試験（開口0.78の欠陥／開口0.78のまま無関係なボール移動／開口1.70の既知正常状態）を部品別の黄赤面数とともにローカルJSON＋日本語Markdown履歴に保存。異常が復元時に0、無関係な変更では残留、初期GLB SHA256不変を確認。試験名・安全フラグ・件数不整合を拒否。テスト対象コードSHA ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f：Python 42299997255・Windows 42299997246・Blender3版 42299997251・Kit 42299997311・Handoff 42299997254・Chromium 42299997355全6系統成功。これは合成設定だけの因果実験、実ユーザーのアドオン/最適値/全形状一致は未証明。GLB-021 partial、GLB-022は合成適応探索までpartial（下記GLB-022参照）"
     },
     {
       "id": "GLB-022",
@@ -610,6 +612,13 @@
       "status": "in_progress",
       "title": "GLB-022: 固定合成モデルで実測に応じた二分探索の次候補変更と4試行上限を6CI成功。次は許可済み範囲の汎用化と人間レビュー",
       "acceptance": "CBDK合成ソケットの安全範囲0.78〜1.70（0.01刻み）で、GLBを再生成しGLB-020測定で次の候補値を左右に切替。Blender3版では1.24→1.47→1.35→1.41、目標のサンプル最大距離0.12以下を満たす候補1.47を観測し、4試行上限で未確定の最適性を断定しない。Pythonの反対分岐1.24→1.01など、偽履歴・未知数値・元GLB不変/他部品悪化ガードも検証。コードSHA 37ee124aの6系統CI success。実アドオンやユーザー実データの因果・推奨設定値・厳密な表面距離は未検証"
+    },
+    {
+      "id": "NEXT-021",
+      "priority": 21,
+      "status": "in_progress",
+      "title": "GLB-019: 匿名部品一覧・弱い候補の証拠整合性補強と引き継ぎ同期",
+      "acceptance": "安全フラグの整数偽装・完全/途中省略一覧と総面数矛盾・空の測定・上限超過のないskipを拒否。Python回帰と自作GLB4ケースのBlender4.4.3/4.5.15/5.2.1、Windows CIの実測後に要件を更新。GitHub STATEと既存Notionへ検証結果/残課題を同期する"
     }
   ],
   "decisions": [
@@ -857,6 +866,11 @@
       "id": "DEC-049",
       "decision": "GLB-022の適応探索は実測された全体双方向サンプル最大距離に基づく安全な0.01刻みの二分区間更新を、CBDK合成モデルの最大4試行に限定して許可する",
       "note": "固定目標0.12は合成テスト用の入力座標単位で、実物公差ではない。Blender4.4.3/4.5.15/5.2.1で1.24→1.47→1.35→1.41を実生成・測定し、1.47が目標内、停止時は区間1.41〜1.47で最小値未確定。分岐はPython回帰で測定を変えると1.24→1.01となることも検証。実行はCBDK自作の合成生成器のみ、入力SHA256不変、匿名ローカル履歴、未知数値・嘘の保証を拒否。コードSHA 37ee124aのPython/Windows/Blender3版/Kit/Handoff/Chromium全6系統成功。実ユーザーアドオン修正や適切な公差・最適値は未検証、GLB-022 partialのまま"
+    },
+    {
+      "id": "DEC-050",
+      "decision": "反復機能を広げる前にGLB-019の既存匿名部品証拠を型と面数境界で検証し、Notionの現在要約をGitHub台帳へ同期する",
+      "note": "数値/真偽値のPython等価性では安全フラグを検証しない。省略一覧の未列挙部品も順位から総面数範囲を制約。合成4ケースを既存3版CIへ追加し、私有ソース/GLBは使わない。GLB-020追加機能凍結、GLB-021/022 partial、正式v0.17.0とlast_verified維持。現状と優先順はdocs/DEVELOPMENT_PLAN.md。"
     }
   ],
   "last_verified": {
@@ -934,6 +948,8 @@
     "surface_benchmark": "2026-11-07: GLB-016 implementation+docs SHA ca9ad5076fb911bc8337bc525c163b1b069c6bcb all 5 workflows SUCCESS: Python 42241396452, Windows PowerShell 42241396094, Blender 3-version 42241395979, Windows kit 42241396296, durable handoff 42241396289. Synthetic 64-face BVH/brute median ms by Blender version: 4.4.3 35.510505/161.156313, 4.5.15 19.356758/86.027068, 5.2.1 32.467850/149.716417; synthetic 512-face BVH-only median ms 352.050953/192.798623/321.247609. No portable speedup promise; GLB-016 implemented/blender_ci, NEXT-014 done; v0.17.0 formal release remains.",
     "multires_surface": "2026-11-07: GLB-017 SHA 4c7248c853047b1f21088e01441a6c5fed9ca4b2 all CI SUCCESS: Blender 4.4.3/4.5.15/5.2.1 42244257499 (narrow hole legacy24=0, coarse8=0, selected48=0.0657466), Python3-version 42244257474 (13 new tests), Windows PowerShell 42244257438, Windows kit 42244257461, durable handoff 42244257445. GLB-017 implemented/blender_ci, NEXT-015 done. General coverage and enclosed cavities not proven. PR draft, release last_verified 0.17.0 preserved.",
     "feature_priority": "2026-11-07 GLB-018 code/docs SHA 676e92f8cc4ad48774ea6e0702710576fe97a286 all five GitHub CI SUCCESS: Python3 42246918798, Windows PowerShell 2 42246918818, Blender4.4.3/4.5.15/5.2.1 42246918883, Windows kit 42246918868, durable handoff 42246918953. Real synthetic 9-GLB: large panels with narrow small-part opening area-only max 0.0 vs feature-aware max 0.0657466 all Blender versions; review-only false defect-equivalence/auto-apply flags. GLB-018 implemented/blender_ci, NEXT-016 done. PR draft; formal v0.17.0 preserved.",
-    "real_glb_surface_bridge": "2026-11-07 GLB-019 docs/implementation HEAD 5b6196a59f86318128c768507fea53237e3a6e11 ALL FIVE CI SUCCESS: Python3 42258076642, Windows PowerShell3.11/3.13 42258076781, Blender4.4.3/4.5.15/5.2.1 42258076658, Windows kit 42258076681, durable handoff 42258076822. Local opt-in GLB pair compares fixed BVH and adaptive feature-aware sampling; 512 triangle strict cap; external URI reject; no private model uploads or auto edits. GLB-019 implemented/blender_ci, NEXT-017 done. PR draft, official last_verified v0.17.0."
+    "real_glb_surface_bridge": "2026-11-07 GLB-019 docs/implementation HEAD 5b6196a59f86318128c768507fea53237e3a6e11 ALL FIVE CI SUCCESS: Python3 42258076642, Windows PowerShell3.11/3.13 42258076781, Blender4.4.3/4.5.15/5.2.1 42258076658, Windows kit 42258076681, durable handoff 42258076822. Local opt-in GLB pair compares fixed BVH and adaptive feature-aware sampling; 512 triangle strict cap; external URI reject; no private model uploads or auto edits. GLB-019 implemented/blender_ci, NEXT-017 done. PR draft, official last_verified v0.17.0.",
+    "milestone_notion_sync": "GitHub STATE更新→push/PRと実測検証→既存Notionプロジェクト/タスクへ状態と証拠を同期。失敗時はGitHubへpending記録。常駐同期なし、私有ソース/GLB/個人情報は対象外。",
+    "notion_sync_status": "pending: 今回のコード/台帳をGitHubへ保存後、既存Notionページへ反映する。接続と既存5ページの読取は成功。"
   }
 }

@@ -124,7 +124,9 @@ def run_glb_surface_review(
         report = _strict_json(target.read_text(encoding="utf-8"))
         if not isinstance(report, dict) or report.get("kind") != payload["kind"]:
             raise ValueError("invalid report kind")
-        if report.get("status") != payload["status"] or report.get("schema_version") != 1:
+        if (report.get("status") != payload["status"]
+                or type(report.get("schema_version")) is not int
+                or report["schema_version"] != 1):
             raise ValueError("invalid report status or version")
         if report.get("source") != "local_blender_import_aggregate_only":
             raise ValueError("unexpected report source")
@@ -161,7 +163,8 @@ def run_glb_surface_review(
                 "identifies_changed_part", "notes",
             }:
                 raise ValueError("invalid part inventory schema")
-            if (inventory["max_listed_per_side"] != 32
+            if (type(inventory["max_listed_per_side"]) is not int
+                    or inventory["max_listed_per_side"] != 32
                     or inventory["correspondence_verified"] is not False
                     or inventory["identifies_changed_part"] is not False
                     or inventory["notes"] !=
@@ -178,9 +181,12 @@ def run_glb_surface_review(
                                for v in counts)
                         or counts != sorted(counts, reverse=True)):
                     raise ValueError("invalid anonymous part counts")
-                if payload["status"] == "review_only" and total <= 32 and (
-                    sum(counts) != report[side + "_triangles"]
-                ):
+                # A truncated, size-ranked inventory still bounds the total:
+                # each unlisted object has at most the last listed face count.
+                # Apply these constraints to skipped reports as well.
+                listed = sum(counts)
+                maximum = listed + (total - len(counts)) * counts[-1]
+                if not listed <= report[side + "_triangles"] <= maximum:
                     raise ValueError("part inventory contradicts total triangles")
         hints = report.get("part_count_hints")
         if hints is not None:
@@ -192,7 +198,11 @@ def run_glb_surface_review(
                 reference_total=inventory["reference_object_count"],
                 candidate_total=inventory["candidate_object_count"],
             )
-            if hints != expected_hints:
+            # Python equality aliases False/0 and True/1 (including in lists).
+            # Canonical JSON preserves these scalar types while ignoring key order.
+            if json.dumps(hints, sort_keys=True, allow_nan=False) != json.dumps(
+                expected_hints, sort_keys=True, allow_nan=False
+            ):
                 raise ValueError("part hints contradict anonymous inventory")
         observation = report.get("surface_observation")
         if payload["status"] == "review_only":
@@ -214,14 +224,17 @@ def run_glb_surface_review(
             ) > 1e-6
             if measured_difference != (observation == "sampled_difference_detected"):
                 raise ValueError("surface observation contradicts metrics")
-            if any(report[name] > 512 for name in (
+            if any(not 1 <= report[name] <= 512 for name in (
                 "reference_triangles", "candidate_triangles"
             )):
-                raise ValueError("measured triangle count exceeds safety cap")
-        elif observation != "not_measured" or (
-            "fixed_surface" in report or "adaptive_surface" in report
-        ):
-            raise ValueError("skipped evidence must not contain measurements")
+                raise ValueError("measured triangle count is outside the safe range")
+        else:
+            if observation != "not_measured" or (
+                "fixed_surface" in report or "adaptive_surface" in report
+            ):
+                raise ValueError("skipped evidence must not contain measurements")
+            if max(report["reference_triangles"], report["candidate_triangles"]) <= 512:
+                raise ValueError("triangle-limit skip requires an over-limit scene")
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         raise GLBSurfacePipelineError("Untrusted or corrupt Blender surface report") from exc
     return report

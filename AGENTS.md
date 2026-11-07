@@ -368,3 +368,10 @@ Blender CI uses only repo-authored small synthetic GLBs to show actual new comma
 - `cbdk/glb_synthetic_adaptive.py` replays and validates the feedback-driven candidate order and anonymous, local-only history. `scripts/run_glb022_synthetic_adaptive.py` runs only the trusted CBDK fixture generator with factory startup/no autoexec, recomputes GLB-020 aggregate review every candidate, and checks all generated GLB/source SHA-256 integrity.
 - A measured target-feasible candidate is **not a proven optimum**, nor evidence of actual addon causality, true part identity or exact surface equivalence. Unknown values, boundary violations, false safety flags and forged score/decision histories must fail closed. Never access or publish user private geometry or code.
 - All previous `basic`, `cross_part`, `progressive`, `generated_grid` paths must remain tested across Blender 4.4.3/4.5.15/5.2.1. Keep GLB-022 partial, v0.17.0 current release and draft v0.18 PR #25.
+
+## GLB-019 inventory evidence integrity and milestone sync
+
+- Validate the exact JSON scalar types in recomputed count-only hypotheses; Python's False==0 / True==1 equality is insufficient. A truncated size-ranked inventory constrains the scene total to listed_sum..listed_sum+unlisted_count*smallest_listed_count; apply total checks to skipped reports too.
+- Measured scenes require 1..512 triangles each. A triangle_limit skip needs an actually over-limit scene. Preserve ambiguous and insufficient-inventory states and all review-only flags.
+- Run `scripts/blender_surface_inventory_smoke.py` only on CBDK-authored synthetic fixtures under fresh reports/ci output directories. Four cases cover unique counts, duplicate ambiguity, 33-object truncation and 561-face skipped truncation. Never substitute local Blender 4.3.2 for the CI target matrix.
+- At development milestones, mirror the canonical GitHub STATE into the existing Notion project/tasks per docs/NOTION_SYNC.md. No duplicate pages, private reports, source/geometry or personal data. Record connector failures and pending sync in GitHub; no always-on sync is installed.

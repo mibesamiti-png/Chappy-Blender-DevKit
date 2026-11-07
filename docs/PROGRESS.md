@@ -1035,3 +1035,12 @@ closed/open 四面体のBlender3版での差分と、元ソースを公開しな
 - 他部品悪化の拒否、未知値・不正入力・偽の改善履歴の拒否、入力ジェネレーター/GLB SHA-256不変、新規ローカルJSON/日本語MDのみ保存。既存のbasic/cross_part/progressive/generated_gridもCIで維持。
 - テスト対象コードSHA `37ee124aabb44df5ad9cb246342712bd9e0eb2ef`：[Python 42311608904](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608904)、[Windows 42311608916](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608916)、[Blender4.4.3/4.5.15/5.2.1 42311608910](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608910)、[Windows Kit 42311609353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609353)、[引き継ぎ 42311609070](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609070)、[Chromium 42311609211](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609211) **全6系統success**。
 - GLB-022はpartial。距離は全体のサンプリング最大で厳密Hausdorffや部品別誤差ではなく、0.12も実物の製造公差ではない。[詳細](GLB022_ADAPTIVE_SYNTHETIC.md)。
+
+## 2026-11-07 開発引き継ぎ：証拠整合性と現在のロードマップ
+
+- 指定ブランチHEAD `7a021f5`から継続。正式v0.17.0、ドラフトPR #25、未マージ。最新コード/テスト`e254aa7`の6系統CI成功をAPIと実ジョブで確認（Python 42357800567、Windows 42357800581、Blender3版 42357800595、Kit 42357800603、Handoff 42357800626、Chromium 42357800564）。docs-only後続SHAの成功とは混同しない。
+- 開始時Python 3.12.14で701件成功。GLB-019の匿名部品一覧/弱い候補がSTATEに未反映だったため現状と全体計画を`DEVELOPMENT_PLAN.md`へ記録。
+- **実装:** 候補再計算時のJSON型一致、途中省略した一覧からの総面数範囲、skip時の完全一覧合計、上限超過がないskipと空シーン測定の拒否。新規6回帰テスト（関連27件成功）。既存の合成探索/GLB-020凍結を維持。
+- **実機:** ローカルBlender4.3.2で自作GLB4ケース（ユニーク、曖昧、33部品、33部品561面）を生成→実ランナーで再読込→台帳/候補/skip/入力SHA256不変を確認。対象3版の成功に代用しない。同じスクリプトを既存3版CIへ追加。
+- **状態:** GLB-019の今回の補強は対象CI完了までpartial/python。GLB-021/022は引き続きpartial、正式last_verified維持。人間の判断が必要なGUI操作/権利/正式公開の境界も計画書へ記録。
+- **Notion:** 既存プロジェクトと4タスクの読取成功。新規ページは作らない。GitHub保存後に既存要約/状態/検証/予定を同期するまでpending。私有ソース、GLB、ローカルレポート、個人情報は同期しない。

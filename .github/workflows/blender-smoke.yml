@@ -30,6 +30,9 @@ on:
       - 'cbdk/glb_regression.py'
       - 'cbdk/glb_surface_pipeline.py'
       - 'scripts/blender_glb_surface_review.py'
+      - 'scripts/blender_surface_inventory_smoke.py'
+      - 'cbdk/glb_part_hints.py'
+      - 'tests/test_glb_part_hints.py'
       - 'tests/test_glb_surface_pipeline.py'
       - 'cbdk/glb_compare.py'
       - 'tests/test_glb_diagnose.py'
@@ -410,6 +413,13 @@ jobs:
           assert same['adaptive_surface']['refined_symmetric_sampled_max'] < 1e-6
           PY
           echo "GLB-019 imported local pair pipeline, exact source privacy and review-only caps passed." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify anonymous inventory and weak hints through real GLB imports
+        shell: bash
+        run: |
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec \
+            --python-exit-code 7 --python scripts/blender_surface_inventory_smoke.py \
+            -- reports/ci/surface_inventory
 
       - name: GLB-020 review-only colored 3D difference exports and reimport
         shell: bash

@@ -48,7 +48,8 @@ def report(*, status="review_only", unsafe=False):
         })
     else:
         result.update({"reason": "triangle_limit",
-                       "surface_observation": "not_measured"})
+                       "surface_observation": "not_measured",
+                       "candidate_triangles": 513})
     return result
 
 
@@ -291,6 +292,7 @@ class GLBSurfacePipelineTests(unittest.TestCase):
             lambda p: p.update(candidate_object_count=3),
             lambda p: p.update(reference_triangle_counts=[True, 1]),
             lambda p: p.update(private_object_name="secret"),
+            lambda p: p.update(max_listed_per_side=32.0),
         ):
             bad = json.loads(json.dumps(valid))
             mutation(bad["part_inventory"])
@@ -325,6 +327,86 @@ class GLBSurfacePipelineTests(unittest.TestCase):
         invalid["part_count_hints"]["weak_candidate_triangle_counts"] = [1]
         with self.assertRaisesRegex(GLBSurfacePipelineError, "report"):
             self.run_fake(report_override=invalid)
+
+    def inventory_report(self, *, status="review_only", total=2, counts=None):
+        result = report(status=status)
+        counts = [6, 2] if counts is None else counts
+        result["candidate_triangles"] = sum(counts)
+        result["part_inventory"] = {
+            "reference_object_count": 1, "candidate_object_count": total,
+            "reference_triangle_counts": [2],
+            "candidate_triangle_counts": counts,
+            "max_listed_per_side": 32,
+            "correspondence_verified": False, "identifies_changed_part": False,
+            "notes": "Anonymous size-ranked inventory, not matched objects",
+        }
+        return result
+
+    def test_rejects_boolean_or_float_schema_version(self):
+        for value in (True, 1.0):
+            invalid = report()
+            invalid["schema_version"] = value
+            with self.subTest(value=value), self.assertRaises(GLBSurfacePipelineError):
+                self.run_fake(report_override=invalid)
+
+    def test_rejects_empty_measured_scenes(self):
+        for side in ("reference", "candidate"):
+            invalid = report()
+            invalid[side + "_triangles"] = 0
+            with self.subTest(side=side), self.assertRaises(GLBSurfacePipelineError):
+                self.run_fake(report_override=invalid)
+
+    def test_triangle_limit_skip_requires_actual_over_limit_count(self):
+        for count in (0, 512):
+            invalid = report(status="skipped")
+            invalid["candidate_triangles"] = count
+            with self.subTest(count=count), self.assertRaises(GLBSurfacePipelineError):
+                self.run_fake(status="skipped", report_override=invalid)
+
+    def test_complete_skipped_inventory_must_agree_with_scene_total(self):
+        valid = self.inventory_report(status="skipped", counts=[600, 2])
+        result, _ = self.run_fake(status="skipped", report_override=valid)
+        self.assertEqual(result["candidate_triangles"], 602)
+        for count in (601, 603):
+            invalid = json.loads(json.dumps(valid))
+            invalid["candidate_triangles"] = count
+            with self.subTest(count=count), self.assertRaises(GLBSurfacePipelineError):
+                self.run_fake(status="skipped", report_override=invalid)
+
+    def test_truncated_inventory_bounds_include_unlisted_empty_objects(self):
+        # There are two hidden objects; each can contain 0..2 triangles.
+        for status, largest in (("review_only", 10), ("skipped", 600)):
+            counts = [largest] + [2] * 31
+            valid = self.inventory_report(status=status, total=34, counts=counts)
+            listed = sum(counts)
+            for total_faces in (listed, listed + 2, listed + 4):
+                valid["candidate_triangles"] = total_faces
+                with self.subTest(status=status, faces=total_faces):
+                    self.run_fake(status=status, report_override=valid)
+            for total_faces in (listed - 1, listed + 5):
+                valid["candidate_triangles"] = total_faces
+                with self.subTest(status=status, faces=total_faces), self.assertRaises(GLBSurfacePipelineError):
+                    self.run_fake(status=status, report_override=valid)
+
+    def test_recomputed_hints_reject_numeric_boolean_aliases(self):
+        from cbdk.glb_part_hints import count_based_part_hints
+        valid = self.inventory_report(counts=[2])
+        valid["part_inventory"]["candidate_object_count"] = 1
+        valid["part_count_hints"] = count_based_part_hints(
+            [2], [2], reference_total=1, candidate_total=1)
+        # Dictionary key order is not semantically significant.
+        valid["part_count_hints"] = dict(reversed(list(valid["part_count_hints"].items())))
+        self.run_fake(report_override=valid)
+        for key, value in (
+            ("auto_apply", 0), ("correspondence_verified", 0),
+            ("shape_equivalence_verified", 0), ("identifies_changed_part", 0),
+            ("complete_inventories", 1), ("candidate_count", True),
+            ("candidate_count", 1.0), ("weak_candidate_triangle_counts", [2.0]),
+        ):
+            invalid = json.loads(json.dumps(valid))
+            invalid["part_count_hints"][key] = value
+            with self.subTest(key=key, value=value), self.assertRaises(GLBSurfacePipelineError):
+                self.run_fake(report_override=invalid)
 
     def test_output_report_is_bounded(self):
         with patch("cbdk.glb_surface_pipeline.inspect_glb",
