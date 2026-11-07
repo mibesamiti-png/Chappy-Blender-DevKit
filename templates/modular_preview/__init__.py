@@ -2,7 +2,9 @@
 
 Only trusted authored feature modules are loaded, selected at build time.
 Do not install two modular-preview variants simultaneously: they share class
-and operator identifiers and are intended to replace one another.
+and operator identifiers and are intended to replace one another. A partially
+failed unregister keeps its class ownership ledger until an explicit retry;
+a Scene declaration replaced by a foreign owner is never deleted by CBDK.
 """
 bl_info = {
     "name": __CBDK_DISPLAY_NAME__,
