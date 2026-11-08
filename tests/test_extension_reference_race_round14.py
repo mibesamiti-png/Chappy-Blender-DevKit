@@ -81,13 +81,10 @@ def _anchored_reference_probe(
     """
     if not isinstance(source_rel, str) or source_rel not in r10.ALLOWLISTED_REPO_SOURCES:
         return _review_only("inconclusive_reference_path"), None
-    if (
-        os.name != "posix" or not hasattr(os, "O_NOFOLLOW") or
-        not hasattr(os, "O_DIRECTORY") or
-        os.open not in os.supports_dir_fd or
-        os.stat not in os.supports_dir_fd
-    ):
+    if os.name != "posix":
         return _review_only("inconclusive_platform_handle_guarantee"), None
+    # A forged or stale pinned root must be refused before any content-open
+    # capability probe, including under a spy on os.open in negative tests.
     if (
         not isinstance(root_fd, int) or isinstance(root_fd, bool) or root_fd < 0 or
         not isinstance(expected_root, tuple) or len(expected_root) != 2 or
@@ -103,6 +100,14 @@ def _anchored_reference_probe(
             return _review_only("inconclusive_reference_basis"), None
     except (OSError, ValueError):
         return _review_only("inconclusive_reference_basis"), None
+
+    if (
+        not hasattr(os, "O_NOFOLLOW") or
+        not hasattr(os, "O_DIRECTORY") or
+        os.open not in os.supports_dir_fd or
+        os.stat not in os.supports_dir_fd
+    ):
+        return _review_only("inconclusive_platform_handle_guarantee"), None
 
     current = None
     opened = 0
