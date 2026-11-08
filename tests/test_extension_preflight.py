@@ -190,6 +190,30 @@ class ExtensionPreflightTests(unittest.TestCase):
         )
         self.assertNotIn(str(ROOT), json.dumps(result))
 
+    def test_r13_commit_inventory_binding_is_independent_of_zip(self):
+        """R13 watched smoke: same commit, changed source inventory is unknown."""
+        import test_extension_source_reference_round10 as r10
+        import test_extension_source_reference_round12 as r12
+        import test_extension_source_reference_round13 as r13
+        self.build("mesh_inspector")
+        result = inspect_preview_archive(self.zip)
+        self.assertEqual(result["status"], "blocked_for_extension_release")
+        package = result["package_id"]
+        with ZipFile(self.zip) as z:
+            included = {name.removeprefix(package + "/") for name in z.namelist()}
+        reference = r10._current_reference_snapshot(package, included)
+        pinned = r12.snapshot_basis(reference, r13.COMMIT)
+        first = next(iter(reference))
+        different = dict(reference, **{first: reference[first] + b"synthetic-r13"})
+        unknown = r13._compare_frozen_basis(self.zip, different, pinned, pinned)
+        self.assertEqual(unknown["status"], "inconclusive_reference_basis")
+        self.assertFalse(unknown["source_authenticity_verified"])
+        self.assertFalse(unknown["release_authorized"])
+        known = r13._compare_frozen_basis(self.zip, reference, pinned, pinned)
+        self.assertEqual(known["status"], "same_known_repo_bytes")
+        self.assertFalse(known["source_authenticity_verified"])
+        self.assertFalse(known["release_authorized"])
+
     def test_all_feature_preview_is_verified_but_not_extension_approved(self):
         self.build()
         result = inspect_preview_archive(self.zip)
