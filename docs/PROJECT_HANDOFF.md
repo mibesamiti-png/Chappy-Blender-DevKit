@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。
+- 最新の節目: v0.18: R13 B#100/C#102/D#103の9ファイルをA統合PR #104で一度だけdevへ統合（0a306a85d6f84ef434eb6b54f12cb4ce93251a6c）。結合候補7d7933dの5CIと統合SHAの独立7CI成功、Python1101件・Blender3版のnative_r13各5件確認。R14はAの正式割当文書統合後に着手。実GUI/私有GLB/第三者addon/権利は未確認、v0.19未有効。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
