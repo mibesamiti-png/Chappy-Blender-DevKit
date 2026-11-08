@@ -86,7 +86,7 @@ class R14GLBEvidenceTriageTests(unittest.TestCase):
                                  comparison["summary"]["errors"])
                 self.assertEqual(channels["silhouette_iou"]["view_count"], 1)
                 self.assertEqual(channels["silhouette_iou"]["worst_observed_iou"],
-                                 min(comparison["summary"]["scene_silhouette_iou"].values()))
+                                 round(min(comparison["summary"]["scene_silhouette_iou"].values()), 7))
                 self.assertEqual(channels["boundary_counts"]["reference_boundary_edges"],
                                  ref["summary"]["boundary_edges"])
                 self.assertEqual(channels["boundary_counts"]["candidate_boundary_edges"],
