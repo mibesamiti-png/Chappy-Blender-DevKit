@@ -1136,6 +1136,169 @@ def run(path):
             checks.append("native_r12_second_disable_keeps_pending_ledgers")
             checks.append("native_r12_reenable_eviction_original_reference_cleanup")
             checks.append("native_r12_explicit_recovery_no_owned_leaks")
+
+            # R13: a FAILED addon_utils.enable() can evict its package from
+            # sys.modules while the original module still OWNS a registered
+            # Blender operator class (and optionally an RNA descriptor).
+            # Reimporting the same package creates fresh, empty ledgers: only
+            # our saved original module reference may release old resources.
+            for scene_cleanup_pending in (False, True):
+                original_module = module
+                assert_detached(original_module)
+                assert sys.modules.get(PACKAGE) is original_module
+                assert "delattr" not in original_module.__dict__
+                original_register_class = bpy.utils.register_class
+                original_unregister_class = bpy.utils.unregister_class
+                registration_calls = [0]
+                rollback_calls = [0]
+                scene_delete_calls = [0]
+                observed_errors = []
+
+                def fail_second_during_enable(cls):
+                    registration_calls[0] += 1
+                    if registration_calls[0] == 2:
+                        raise RuntimeError(
+                            "CBDK R13 injected enable register_class failure")
+                    return original_register_class(cls)
+
+                def fail_first_class_rollback(cls):
+                    if (original_module._REGISTERED
+                            and cls is original_module._REGISTERED[0]
+                            and rollback_calls[0] == 0):
+                        rollback_calls[0] += 1
+                        raise RuntimeError(
+                            "CBDK R13 injected rollback unregister failure")
+                    return original_unregister_class(cls)
+
+                def fail_owned_scene_rollback(owner, name):
+                    if (scene_cleanup_pending and owner is bpy.types.Scene
+                            and name == PROPERTIES[0]
+                            and scene_delete_calls[0] == 0):
+                        scene_delete_calls[0] += 1
+                        raise RuntimeError(
+                            "CBDK R13 injected rollback Scene deletion failure")
+                    return delattr(owner, name)
+
+                bpy.utils.register_class = fail_second_during_enable
+                bpy.utils.unregister_class = fail_first_class_rollback
+                if scene_cleanup_pending:
+                    original_module.__dict__["delattr"] = (
+                        fail_owned_scene_rollback)
+                try:
+                    result = addon_utils.enable(
+                        PACKAGE, default_set=False, persistent=False,
+                        handle_error=lambda exc: observed_errors.append(
+                            type(exc).__name__))
+                    assert result is None, "R13 failed enable returned a module"
+                finally:
+                    bpy.utils.register_class = original_register_class
+                    bpy.utils.unregister_class = original_unregister_class
+                    original_module.__dict__.pop("delattr", None)
+
+                assert registration_calls == [2]
+                assert rollback_calls == [1]
+                assert scene_delete_calls == [int(scene_cleanup_pending)]
+                assert observed_errors == ["RuntimeError"], observed_errors
+                assert PACKAGE not in sys.modules, (
+                    "Failed addon_utils.enable did not evict its module")
+                assert original_module.__addon_enabled__ is False
+                assert len(original_module._REGISTERED) == 1
+                leaked_class = original_module._REGISTERED[0]
+                assert getattr(bpy.types, leaked_class.__name__, None) is (
+                    leaked_class), "Native Blender class must remain registered"
+                assert original_module._OWNED_PROPERTIES == (
+                    [PROPERTIES[0]] if scene_cleanup_pending else [])
+                assert set(original_module._OWNED_PROPERTY_TOKENS) == (
+                    {PROPERTIES[0]} if scene_cleanup_pending else set())
+                pending_token = (
+                    original_module._OWNED_PROPERTY_TOKENS.get(PROPERTIES[0]))
+                if scene_cleanup_pending:
+                    assert pending_token is not None
+                    assert (bpy.types.Scene.__dict__.get(PROPERTIES[0])
+                            is pending_token)
+                else:
+                    assert all(name not in bpy.types.Scene.__dict__
+                               for name in PROPERTIES)
+
+                # This fresh import is deliberately BEFORE original cleanup.
+                # It cannot recover the old object: its ownership lists are
+                # empty despite real Blender resources remaining registered.
+                fresh_module = importlib.import_module(PACKAGE)
+                assert fresh_module is not original_module
+                assert sys.modules.get(PACKAGE) is fresh_module
+                assert not fresh_module._REGISTERED
+                assert not fresh_module._OWNED_PROPERTIES
+                assert not fresh_module._OWNED_PROPERTY_TOKENS
+                assert (fresh_module._REGISTERED
+                        is not original_module._REGISTERED)
+                assert getattr(bpy.types, leaked_class.__name__, None) is (
+                    leaked_class)
+                assert original_module._REGISTERED == [leaked_class]
+                assert fresh_module.__name__ == original_module.__name__
+                # Place one CBDK-created foreign stand-in in the Scene.
+                # For the Scene-pending case, replace the old descriptor;
+                # for the class-only case, ensure collision remains guarded.
+                if scene_cleanup_pending:
+                    assert bpy.types.Scene.__dict__.get(PROPERTIES[0]) is (
+                        pending_token)
+                bpy.types.Scene.cbdk_modular_result = (
+                    bpy.props.StringProperty(
+                        name="CBDK R13 synthetic foreign",
+                        default="R13 stand-in: do not delete"))
+                foreign = bpy.types.Scene.__dict__.get(PROPERTIES[0])
+                assert foreign is not None and foreign is not pending_token
+                try:
+                    try:
+                        fresh_module.register()
+                    except RuntimeError as exc:
+                        assert "Scene properties conflict" in str(exc), str(exc)
+                    else:
+                        raise AssertionError(
+                            "R13 fresh import claimed foreign Scene property")
+                    fresh_module.unregister()
+                    assert not fresh_module._REGISTERED
+                    assert not fresh_module._OWNED_PROPERTIES
+                    assert not fresh_module._OWNED_PROPERTY_TOKENS
+                    assert original_module._REGISTERED == [leaked_class]
+                    assert getattr(bpy.types, leaked_class.__name__, None) is (
+                        leaked_class)
+                    assert bpy.types.Scene.__dict__.get(PROPERTIES[0]) is (
+                        foreign)
+
+                    # Explicitly address the OLD object. An empty newly
+                    # imported module is not an ownership recovery tool.
+                    original_module.unregister()
+                    assert not original_module._REGISTERED
+                    assert not original_module._OWNED_PROPERTIES
+                    assert not original_module._OWNED_PROPERTY_TOKENS
+                    assert not hasattr(
+                        bpy.types, leaked_class.__name__)
+                    assert bpy.types.Scene.__dict__.get(PROPERTIES[0]) is (
+                        foreign)
+                finally:
+                    # Never delete a descriptor other than this fixture's
+                    # exact synthetic foreign token.
+                    if bpy.types.Scene.__dict__.get(PROPERTIES[0]) is foreign:
+                        delattr(bpy.types.Scene, PROPERTIES[0])
+
+                assert_detached(original_module)
+                assert_detached(fresh_module)
+                assert sys.modules.get(PACKAGE) is fresh_module
+                module = addon_utils.enable(
+                    PACKAGE, default_set=False, persistent=False)
+                assert module is not None
+                enabled = True
+                assert set(module._FEATURE_IDS) == set(IDS)
+                assert len(module._REGISTERED) == len(module._CLASSES)
+                addon_utils.disable(PACKAGE, default_set=False)
+                enabled = False
+                assert_detached(module)
+
+            checks.append("native_r13_failed_enable_evicts_live_module")
+            checks.append("native_r13_fresh_import_hides_original_pending_ledger")
+            checks.append("native_r13_old_reference_recovers_live_classes")
+            checks.append("native_r13_foreign_scene_survives_recovery")
+            checks.append("native_r13_reenable_after_eviction_2")
         finally:
             if enabled:
                 try:
