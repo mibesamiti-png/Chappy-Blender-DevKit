@@ -117,7 +117,8 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libegl1 libgl1
-      - name: Download official Blender Linux binary and verify checksum
+      - name: Fetch current official Blender checksum for the cache key
+        id: official-sha
         shell: bash
         run: |
           set -euo pipefail
@@ -125,8 +126,28 @@ jobs:
           archive="blender-${BLENDER_VERSION}-linux-x64.tar.xz"
           curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30 \
             "${base}/blender-${BLENDER_VERSION}.sha256" -o blender.sha256
-          curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30 \
-            "${base}/${archive}" -o "${archive}"
+          matches="$(grep -F "${archive}" blender.sha256 | wc -l)"
+          test "$matches" -eq 1
+          archive_sha="$(grep -F "${archive}" blender.sha256 | awk '{print $1}')"
+          [[ "$archive_sha" =~ ^[a-fA-F0-9]{64}$ ]]
+          echo "sha256=${archive_sha}" >> "$GITHUB_OUTPUT"
+      - name: Restore checksum-keyed official Blender archive (no executable cache)
+        id: blender-archive-cache
+        uses: actions/cache@v4
+        with:
+          path: blender-${{ matrix.blender-version }}-linux-x64.tar.xz
+          key: cbdk-official-blender-linux-x64-${{ matrix.blender-version }}-${{ steps.official-sha.outputs.sha256 }}
+      - name: Verify official Blender archive and extract for this job
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://download.blender.org/release/Blender${BLENDER_VERSION%.*}"
+          archive="blender-${BLENDER_VERSION}-linux-x64.tar.xz"
+          if [[ ! -f "$archive" ]]; then
+            curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30 \
+              "${base}/${archive}" -o "${archive}"
+          fi
+          # The SHA-256 check is mandatory on cache hits, too.
           grep -F "${archive}" blender.sha256 | sha256sum --check --status
           tar -xJf "${archive}"
           echo "BLENDER_PATH=$PWD/blender-${BLENDER_VERSION}-linux-x64/blender" >> "$GITHUB_ENV"
