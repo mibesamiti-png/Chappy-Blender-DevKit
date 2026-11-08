@@ -83,7 +83,7 @@ def _comparison(report):
 
 
 def _boundary_side(report):
-    if not isinstance(report, dict) or type(report.get("coordinate_welding_is_approximate")) is not bool:
+    if not isinstance(report, dict) or report.get("coordinate_welding_is_approximate") is not True:
         raise ValueError("Expected bounded boundary audit")
     for flag in ("fully_watertight_proven", "internal_voids_verified",
                  "hole_locations_verified", "reference_identity_proven"):
@@ -183,7 +183,8 @@ def _surface(report):
         if abs(measured - directional) > 1e-6:
             raise ValueError("Sampled max contradicts directional observations")
     elif kind == "cbdk_glb_surface_review":
-        if (report.get("schema_version") != 1
+        if (type(report.get("schema_version")) is not int
+                or report["schema_version"] != 1
                 or report.get("complete_surface_equivalence_proven") is not False
                 or report.get("auto_apply") is not False
                 or report.get("source") != "local_blender_import_aggregate_only"):
@@ -194,13 +195,17 @@ def _surface(report):
                 "saves_raw_mesh_vertices", "changes_source_glbs")
         ):
             raise ValueError("Unsafe Blender surface report")
+        counts = [_count(report.get(k), 100000000, k)
+                  for k in ("reference_triangles", "candidate_triangles")]
         if report.get("status") == "skipped":
-            if (report.get("reason") != "triangle_limit"
+            if (max(counts) <= MAX_TRIANGLES
+                    or report.get("reason") != "triangle_limit"
                     or report.get("surface_observation") != "not_measured"
                     or "fixed_surface" in report or "adaptive_surface" in report):
                 raise ValueError("Invalid skipped surface report")
             return {"status": "not_measured", "reason": "triangle_limit"}
         if (report.get("status") != "review_only"
+                or not all(1 <= n <= MAX_TRIANGLES for n in counts)
                 or not isinstance(report.get("fixed_surface"), dict)
                 or not isinstance(report.get("adaptive_surface"), dict)):
             raise ValueError("Invalid measured surface report")
