@@ -17,8 +17,10 @@ its error handler, checks retained class ownership, explicitly calls
 `disable()` alone is not documented as recovery: Blender can already mark
 the module disabled before the failing unregister call.
 
-Local Python 3.12.14: two new tests passed. Local Blender 4.3.2: existing and
-four R11 native markers passed; this is supplementary, not target-version
+Local Python 3.12.14: two new tests passed. The initial local Blender 4.3.2 run failed because the new test called
+assert_detached while intentionally retaining a foreign descriptor; the harness
+was corrected to remove its own foreign fixture after checking preservation.
+The rerun result is recorded in the benchmark; this is supplementary, not target-version
 certification. Target 4.4.3 / 4.5.15 / 5.2.1 CI evidence belongs to the benchmark
 and PR. Existing R5–R10 probes, five features and six recipes are retained.
 No Windows mouse/keyboard/Ctrl+Z test or real third-party addon coexistence

@@ -976,10 +976,13 @@ def run(path):
                         bpy.utils.unregister_class = original_unregister
                         module.__dict__.pop("delattr", None)
                         module.unregister()
-                    assert_detached(module)
+                    assert not module._REGISTERED
+                    assert not module._OWNED_PROPERTIES
+                    assert not module._OWNED_PROPERTY_TOKENS
                     assert bpy.types.Scene.__dict__.get(failing_name) is foreign
                     if foreign is not None:
                         delattr(bpy.types.Scene, failing_name)
+                    assert_detached(module)
             checks.append("native_r11_missing_scene_pending_class")
             checks.append("native_r11_foreign_and_owned_looking_identity")
             checks.append("native_r11_partial_retry_blocks_reload_register")
