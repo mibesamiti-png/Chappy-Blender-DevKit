@@ -8,7 +8,7 @@ continues (388 boxes, 193 rejected). Both return the same R2 mismatch as
 fixed R8 and unpruned R2. This demonstrates order-dependent work, not a
 semantic defect. No production algorithm change is justified by this probe.
 
-Local Python 3.11, five warmed samples, median milliseconds:
+Local Python 3.12.14, five warmed samples, median milliseconds:
 
 | Order | Fixed R8 | Adaptive R10 | Unpruned R2 | adaptive traced peak |
 | --- | ---: | ---: | ---: | ---: |
