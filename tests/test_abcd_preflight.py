@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.abdc_preflight import assess, OWNED
+from scripts.abdc_preflight import assess, OWNED, REQUIRED_JOBS
 from scripts.ci_cycle_metrics import FIVE
 
 SHA = "a" * 40
@@ -24,6 +24,11 @@ def record(team):
             "conclusion": "success", "created_at": "2026-11-08T00:00:00Z",
             "updated_at": "2026-11-08T00:01:00Z", "id": i + 10,
         } for i, name in enumerate(FIVE)]},
+        "jobs_by_run": {str(i + 10): [
+            {"name": job, "status": "completed", "conclusion": "success",
+             "head_sha": SHA}
+            for job in REQUIRED_JOBS[name]
+        ] for i, name in enumerate(FIVE)},
     }
 
 
@@ -50,6 +55,37 @@ class PreflightTests(unittest.TestCase):
         r = assess({"B": record("B"), "D": record("D")}, SHA)
         self.assertFalse(r["ready_for_manual_integration_review"])
         self.assertIn("C:missing_record", r["blockers"])
+
+    def test_skipped_blender_version_cannot_pass(self):
+        data = {team: record(team) for team in OWNED}
+        blender_run = 10 + FIVE.index("CBDK Blender multi-version runtime smoke")
+        data["C"]["jobs_by_run"][str(blender_run)][-1]["conclusion"] = "skipped"
+        result = assess(data, SHA)
+        self.assertFalse(result["ready_for_manual_integration_review"])
+        self.assertTrue(any("required_matrix_job_not_success" in x for x in result["blockers"]))
+
+    def test_missing_windows_version_cannot_pass(self):
+        data = {team: record(team) for team in OWNED}
+        windows_run = 10 + FIVE.index("CBDK Windows PowerShell launcher regression")
+        data["B"]["jobs_by_run"][str(windows_run)].pop()
+        result = assess(data, SHA)
+        self.assertFalse(result["ready_for_manual_integration_review"])
+        self.assertTrue(any("missing_required_matrix_job" in x for x in result["blockers"]))
+
+    def test_job_from_unrelated_commit_cannot_pass(self):
+        data = {team: record(team) for team in OWNED}
+        python_run = 10 + FIVE.index("CBDK Python tests")
+        data["D"]["jobs_by_run"][str(python_run)][0]["head_sha"] = "b" * 40
+        result = assess(data, SHA)
+        self.assertFalse(result["ready_for_manual_integration_review"])
+        self.assertTrue(any("job_head_sha_mismatch" in x for x in result["blockers"]))
+
+    def test_workflow_success_without_job_evidence_is_not_enough(self):
+        data = {team: record(team) for team in OWNED}
+        data["B"].pop("jobs_by_run")
+        result = assess(data, SHA)
+        self.assertFalse(result["ready_for_manual_integration_review"])
+        self.assertTrue(any("missing_job_matrix_data" in x for x in result["blockers"]))
 
 
 if __name__ == "__main__":

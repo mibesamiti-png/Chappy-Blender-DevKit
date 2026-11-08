@@ -37,6 +37,58 @@ def _api(path: str):
         return json.load(response)
 
 
+# A workflow can report overall success without every expected matrix position
+# having been observed (e.g. skipped/misconfigured jobs). Check actual jobs.
+REQUIRED_JOBS = {
+    "CBDK Python tests": ("unittest (3.11)", "unittest (3.12)", "unittest (3.13)"),
+    "CBDK Windows PowerShell launcher regression": (
+        "powershell-unittest (3.11)", "powershell-unittest (3.13)"
+    ),
+    "CBDK Blender multi-version runtime smoke": (
+        "blender-parts (4.4.3)", "blender-parts (4.5.15)", "blender-parts (5.2.1)"
+    ),
+    "CBDK offline 3D browser interaction smoke": ("chromium-offline-viewer",),
+    "CBDK durable handoff": ("Verify project state and publish actual test observation",),
+}
+
+
+def audit_job_matrix(gate: dict, jobs_by_run: dict, head_sha: str) -> list[str]:
+    """Fail closed if any mandatory matrix job is missing, skipped or non-green.
+
+    Only observed job results count. Additional intentional skipped helper jobs
+    do not erase success of the required named jobs.
+    """
+    problems = []
+    if not isinstance(jobs_by_run, dict):
+        return ["missing_job_matrix_data"]
+    for workflow in gate.get("workflows", []):
+        name = workflow["name"]
+        run_id = workflow.get("run_id")
+        expected = REQUIRED_JOBS.get(name)
+        if not expected:
+            problems.append("unknown_required_workflow")
+            continue
+        jobs = jobs_by_run.get(str(run_id))
+        if not isinstance(jobs, list) or not jobs:
+            problems.append("job_matrix_unavailable")
+            continue
+        by_name = {}
+        for job in jobs:
+            if isinstance(job, dict) and isinstance(job.get("name"), str):
+                if job["name"] in by_name:
+                    problems.append("duplicate_job_name")
+                by_name[job["name"]] = job
+        for item in expected:
+            job = by_name.get(item)
+            if not job:
+                problems.append("missing_required_matrix_job")
+            elif job.get("status") != "completed" or job.get("conclusion") != "success":
+                problems.append("required_matrix_job_not_success")
+            elif job.get("head_sha") not in (None, head_sha):
+                problems.append("job_head_sha_mismatch")
+    return sorted(set(problems))
+
+
 def fetch_team(number: int) -> dict:
     if type(number) is not int or not 1 <= number <= 100000:
         raise ValueError("Invalid PR number")
@@ -57,6 +109,19 @@ def fetch_team(number: int) -> dict:
     sha = pr.get("head", {}).get("sha")
     if not isinstance(sha, str) or not SHA_RE.fullmatch(sha):
         raise ValueError("Missing PR head SHA")
+    runs = fetch_runs(sha)
+    report = summarize(runs, sha, gate=5)
+    job_matrix = {}
+    for entry in report["workflows"]:
+        run_id = entry.get("run_id")
+        if type(run_id) is not int or not 1 <= run_id:
+            continue
+        response = _api(f"actions/runs/{run_id}/jobs?per_page=100")
+        if not isinstance(response, dict) or not isinstance(response.get("jobs"), list):
+            raise ValueError("Malformed workflow job matrix")
+        if response.get("total_count", 0) > 100:
+            raise ValueError("Job matrix exceeds bounded preflight size")
+        job_matrix[str(run_id)] = response["jobs"]
     return {
         "number": number,
         "head_sha": sha,
@@ -64,7 +129,8 @@ def fetch_team(number: int) -> dict:
         "state": pr.get("state"),
         "merged": bool(pr.get("merged")),
         "files": files,
-        "runs": fetch_runs(sha),
+        "runs": runs,
+        "jobs_by_run": job_matrix,
     }
 
 
@@ -108,6 +174,7 @@ def assess(records: dict[str, dict], dev_sha: str) -> dict:
                 gate = summarize(p.get("runs"), head, gate=5)
                 if gate["gate_result"] != "success":
                     errors.append("specialist_ci_not_all_green")
+                errors.extend(audit_job_matrix(gate, p.get("jobs_by_run"), head))
             except (ValueError, TypeError, AttributeError):
                 errors.append("invalid_ci_evidence")
         errors = sorted(set(errors))

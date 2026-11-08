@@ -61,3 +61,12 @@ PR #109の初期候補HEAD: 31fdff9560c053faabc300e57c457460fcfdd96d。
 - Blender workflow wall時間（作成→終了）は184秒（07:35:21〜07:38:25 UTC）。旧4回平均約189秒より僅差で、**速度改善が実証されたとは言えない**。
 - Blenderの3バージョンは新しい公式SHA取得/キャッシュ復元/再検証/Blender起動・実機テストを正常通過。初回の各ジョブログで対象版ごとのchecksum-keyed cache保存を確認。
 - この記録だけではcache hitが未観測。次のPR内の別HEADで、同じBlender実装・版・チェックサムキーを使った**温キャッシュ1回**を測定し、時間を比較する。温キャッシュが遅い、cache integrityが失敗する、品質回帰がある場合は採用を見送る。
+
+
+## 7. R14の独立マトリクス検証とプレフライト強化（継続実験）
+
+- 2026-11-08 UTC、R14 B#107、C#108、D#106の最終HEADの各5系統CIは成功し、Python 3版/Windows 2版/Blender 3版のジョブ名と成功結論を別途GitHub APIで照合。担当別11ファイル、所有範囲重複0件。
+- CのBlender 4.4.3/4.5.15/5.2.1全版で native_r14_* 7マーカーを実ジョブログから解析し、失敗世代のclass identity、fresh ledger unknown、foreign Scene保護、全世代の明示的復旧を確認。
+- 既存のpreflightはworkflowのsuccessだけでmatrixジョブの漏れを検出できなかったため、実ジョブ一覧を追加取得して必要ジョブ（Python3/Windows2/Blender3/Chromium1/Handoff1）を個別に確認する。未実行・skip・別HEAD・欠落は**自動レビュー合格にしない**。追加の負例テスト4件を追加。
+- GitHub repository rulesetsは0件と読み取れたが、branch protection APIは接続権限403のため**必須チェックの全構成は未確認**。Fast/Fullワークフローの現行requiredチェックを削る判断は行わない。
+- なおpreflightが合格しても、個別PR間の実行時衝突や祖先SHA検証、R14結合CI、dev統合CIの代替ではない。
