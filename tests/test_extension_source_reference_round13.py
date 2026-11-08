@@ -120,7 +120,13 @@ def _stable_reference_read(
     try:
         pinned = Path(pinned_root).resolve(strict=True)
         requested = Path(requested_root)
-        if _reparse_or_link(requested):
+        # The final root component may be an ordinary directory reached
+        # through a symlink/junction in one of its *ancestors*. Checking only
+        # the leaf spelling would wrongly allow a redirected content open.
+        # Walk the caller's literal root path before canonicalizing aliases.
+        if (not requested.is_absolute() or ".." in requested.parts or
+                any(_reparse_or_link(component)
+                    for component in (requested, *requested.parents))):
             return "inconclusive_reference_path", None
         if requested.resolve(strict=True) != pinned:
             return "inconclusive_reference_path", None
@@ -279,6 +285,46 @@ class R13FrozenReferenceTests(unittest.TestCase):
             state, data = _stable_reference_read(
                 self.source, requested_root=self.work, pinned_root=self.root)
         self.assertEqual((state, data), ("inconclusive_reference_path", None))
+
+    def test_r13_requested_root_symlinked_ancestor_has_zero_content_opens(self):
+        """Canonical root identity alone must not permit a symlinked prefix."""
+        alias_parent = self.work / "r13-requested-parent-symlink"
+        try:
+            alias_parent.symlink_to(self.root.parent, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink capability unavailable")
+        requested = alias_parent / self.root.name
+        self.assertFalse(requested.is_symlink())
+        self.assertEqual(requested.resolve(strict=True), self.root)
+        with patch.object(os, "open", side_effect=AssertionError(
+                "symlinked root ancestor must never open content")):
+            result = _stable_reference_read(
+                self.source, requested_root=requested, pinned_root=self.root)
+        self.assertEqual(result, ("inconclusive_reference_path", None))
+        self.assertEqual(self.path.read_bytes(), self.initial)
+
+    @unittest.skipUnless(os.name == "nt", "Windows requested-root ancestor junction")
+    def test_r13_windows_requested_root_junction_ancestor_zero_content_opens(self):
+        """A junction to the pinned parent is still a caller-supplied alias."""
+        junction = self.work / "r13-requested-parent-junction"
+        process = subprocess.run(
+            ["cmd.exe", "/d", "/c", "mklink", "/J",
+             str(junction), str(self.root.parent)], capture_output=True,
+        )
+        if process.returncode:
+            self.skipTest("Windows junction capability unavailable")
+        try:
+            requested = junction / self.root.name
+            self.assertFalse(requested.is_symlink())
+            self.assertEqual(requested.resolve(strict=True), self.root)
+            with patch.object(os, "open", side_effect=AssertionError(
+                    "junction root ancestor must never open content")):
+                result = _stable_reference_read(
+                    self.source, requested_root=requested, pinned_root=self.root)
+            self.assertEqual(result, ("inconclusive_reference_path", None))
+        finally:
+            junction.rmdir()
+        self.assertEqual(self.path.read_bytes(), self.initial)
 
     def test_r13_leaf_and_parent_symlink_escapes_have_zero_content_opens(self):
         outside = (self.work / "outside-fixture").resolve()
