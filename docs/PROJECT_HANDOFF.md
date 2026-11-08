@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R10 B #85/C #83/D #84の12ファイルをA PR #86で結合（HEAD 6a12b7fa、5系統CI成功）、開発統合a3ae6da1の独立7系統CIも全成功。GLB R2-AABBの適応バイパス、Scene/class同時解除失敗時の所有台帳安全性、ZIPと別管理checkoutソースのテスト専用照合を確認。R11はA正式割当PR #87統合後のみ着手可。実GLB/Windows GUI/第三者Addon/権利・公式Extensions・GitHub Pagesは未承認、main/正式v0.17.0維持。
+- 最新の節目: v0.18: R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -190,23 +190,17 @@
 - `DEC-061` 表示条件は固定literal、設定範囲はコード契約の内側のみ、生成時に挿入文字列を再置換しない。省略時の6レシピ/旧計画出力を維持。visible_inはalways/object/edit_meshだけで矛盾を拒否。型/サイズ/最大範囲をJSONへ委ねない。静的UIレビューとメタデータは実行/承認/真正性の証明ではない。
 - `DEC-062` manifest構造診断を値なしで共有し、公式検証は終了コードだけでなく項目の一致を要求する。生ログ/個人情報/私有パスを保存せず既知項目だけ正規化。unknown/partial/mismatchを完全一致へ昇格しない。fixtureのSPDXや公式パス成功を部品の承認/ライセンスへ適用しない。
 - `DEC-063` 並行A/B/C/DのR1〜R3を合体コードSHAで検証してv0.18開発ブランチへ統合し、Codex不在でもローリング方式を維持する。PR #38のCIはコードと合成Blenderでの検証。ソースPR #26〜37を二重マージせず履歴を保持。AがSTATE/Handoff/共通CI/Notionを管理し、B/C/Dは最新版dev HEADの担当ファイルにR4を作る。公開・ライセンス・実ユーザーデータ・Windows GUI・mainは別承認。
-
 - `DEC-064` R4をPR #43で統合し、統合後7CIの実測を経てR5をPR #44のローリングキューで正式割当する。B/C/DのR4専用SHAの5系統CI成功と11ファイル非重複を確認。R4 dev SHA a9a0a76のPython/Windows/Blender3版/Chromium/Handoff/Kit/Skill全7系統成功。旧PR再統合なし、R5は最新dev基点。実GUI、実ユーザーGLB、権利、正式公開とmainは別ゲート。
-
 - `DEC-065` R5統合候補で新設Blender実機検証を実行し失敗修正後の成功を確認して統合、7CI後にR6を割り当てる。B #47/C #48/D #46の各個別5CI成功。A統合#49初回b300e743は3版Blenderでテスト誤期待により失敗、修正106bf250の5系統全成功（Blender3版のnative UI反復含む）。dev SHA a1c2f847の7系統全成功後、R6キュー#51を正式統合。GUI/私有GLB/権利/公開は未検証。
-
 - `DEC-066` R6でGLBの厳密境界高速経路を保守的fallbackとともに統合し、Blender実機のreload/所有権・Extensionsの資源負例を検証してR7を割り当てる。B #54/C #55/D #53各5系統success、A結合#56 HEAD7400516aの5系統成功。R2 fallback/R3別途ガード継続、UI native R6検証3版、EXT synthetic limitsは正式公開証明ではない。dev統合e2f09e59の全7CI成功を確認しR7 #57統合。GUI/私有GLB/権利/配布/mainは別承認。
-
 - `DEC-067` R7でGLB厳密境界fastpathのゼロ長線分誤通過を再現して保守的ガードを統合し、Blender登録失敗回復とExtension TOML上限を確認後R8を正式割当。B #61 SHA182ae87、C #62 eef6bce、D #60 040036c 各5系統CI成功。B初期テストHEAD fff82a6は意図通りREDとなりゼロ長R2不一致を発見、正長ガードを修正。A統合#63 HEAD 52dea171で5系統all green、dev統合687b2acdで独立7系統success後R8 #64を統合。実GLB/GUI/権利/配布/mainと正式リリースは別ゲート。
 - `DEC-068` A所有のGitHub読み取り専用HTMLライブボードをv0.18開発ブランチに統合し、ブラウザ実機確認とPages公開は別ゲートにする。PR #68統合コードd656f62d2b70301ec34c667f89743d17e7168a1b。Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995が各success。NodeテストでチームCI・音通知dedupeを検証。公開API3回/5分+raw1回、認証情報を保存せず、5分更新・手動更新。Pages設定/main/正式v0.17.0は変更しない。
-
 - `DEC-069` Dashboard v2でBCD完了件数と通知音試聴、作業キュー代替取得を追加し、ブラウザの実ユーザー端末検証は引き続き別ゲートとする。A PR #71 combined SHA98ec697252f04fa58bdfcc1614ea5587c5446d7a: Python42417792237/Windows42417792437/Chromium42417792272/Handoff42417792410各success。dev squash SHA dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a、post-merge Python42418153530/Windows42418153594/Blender42418153563(4.4.3/4.5.15/5.2.1)/Chromium42418153533/Handoff42418153613/Kit42418153551/Skill42418153532の7系統success確認。Node版のロジックと独立したChromiumネットワークモックでBCD 2/3→3/3、完了音1回、再更新で重複なし、Raw→Contents fallbackを確認。実GitHub APIへのローカルfile://からのアクセス、実Windows Edge通知音、Pages設定はユーザー実機で未検証。
-
 - `DEC-070` R8でGLB非厳密R2の保守的AABBフィルタとBlender実機登録解除回帰、Extensions静的provenance拒否を結合し、R9を統合後CI成功まで停止。B #66 HEAD0c81b10c、C #70 HEAD07a742f1、D #67 HEADa8f1b282 各5系統CI success。A #73 結合HEADf5fd6585488e7d69501caf2ed48c54ec81e0cc2aでPython42419473291/Windows42419473354/Blender42419473288(4.4.3/4.5.15/5.2.1, native_r8 5項目実測)/Chromium42419473271/Handoff42419473294の5系統全success。開発ブランチsquash SHA ded947f85f46fb8cce0943314d6e1a9fb41717ef、post-merge7系統CIも全success（Python42419734167、Windows42419734210、Blender42419734261（4.4.3/4.5.15/5.2.1）、Chromium42419734226、Handoff42419734193、Kit42419734233、Skill42419734172）。R9正式キューPR #74 merged SHA 4e40a16e71f0036c442e604c667036045172149a。実GLB、GUI、権利、正式v0.18公開は承認していない。
-
 - `DEC-071` Aの開発ライブボードv3にPR/CI時刻由来の3種類の観測速度指標を追加し、実機ネットワーク/音声とPages公開を別ゲートとして維持。A PR #79 exact HEAD c52cc14fd74ab2a53245b6744b406960a7a8225a のPython42422092224、Windows42422092201、Chromium42422092185、Handoff42422092289の4発火CI success。Nodeテストが実走。dev squash e60d48f1461d3c57edaa7916731d19c5ede6b75b の独立post-merge7系統CIも全success（Python42422198759、Windows42422198754、Blender42422198841（4.4.3/4.5.15/5.2.1）、Chromium42422198751、Handoff42422198765、Kit42422198764、Skill42422198785）。Portable版21,353 bytesのHTML + ZIP(9,863 bytes)のファイル/JavaScript/ZIPを検査し、ChromiumモックでR9 B/D→C完了、A統合、チーム毎一回通知、390px表示を確認。実Windows音声とlive GitHub API/Pagesは未確認。
 - `DEC-072` R9統合で密集AABB非利得・Scene RNA削除失敗回復・ZIP自己hashの真正性非証明を確認し、R10を安全ゲート付きで割り当てる。B #78 HEAD60fcda39、C #77 HEADa525fa8e、D #76 HEADb29de167各5系統CI成功。A #81 HEADb5978eacもPython/Windows/Blender3版(native_r9四項目)/Chromium/Handoffの5系統成功。開発squash 914f1c8aの別7系統成功（Python42423898180、Windows42423898189、Blender42423898177、Chromium42423898202、Handoff42423898215、Kit42423898188、Skill42423898183）。実行イベントはpull_request。実GLB/GUI/ライセンス/正式公開未検証。R10は#82正式割当の統合後のみ着手可。
 - `DEC-073` R10で安全な適応GLB AABB、Blender二重解除失敗の台帳回復、ZIPと既知ソース比較の権限非昇格を検証してR11を安全ゲート付きで割り当てる。B #85 a3c57d9、C #83 9f3df76、D #84 262d646各5CI成功。A #86 HEAD6a12b7faもPython42425995892/Windows42425995843/Blender42425995934（4.4.3/4.5.15/5.2.1 native_r10五項目）/Chromium42425995902/Handoff42425995915成功。dev統合a3ae6da1の別7CI成功（Python42426258493、Windows42426258509、Blender42426258621、Chromium42426258600、Handoff42426258438、Kit42426258568、Skill42426258440）。イベントpull_request。実GLB/GUI/ライセンス/公開未検証。R11は#87統合後のみ開始可。
+- `DEC-074` R11/R12を累積で一度だけ統合し、独立7CI後にR13を従来ABCD所有区分で正式割当する。R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。 STATE schema/要件ID/要件数/正式v0.17.0 last_verifiedは維持。旧専門PRと#91/#96/#92/#97は重ねてマージしない。
 
 ## 更新・プライバシールール
 

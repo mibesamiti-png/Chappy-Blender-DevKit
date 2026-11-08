@@ -305,3 +305,11 @@ main、正式v0.17.0、実ユーザー私有GLB、GUI/Ctrl+Z、第三者Addon実
 - **D / EXT-001:** `work/v018-extension-quality-r11`。ZIPとcheckoutスナップショットの更新時差、CRLF/LF、大小文字alias、symlink-parent、未知rootやallowlistを合成一時checkoutで負例化。真正性/作者同意・SPDX/ライセンス・公式Extension公開を新たに認定しない。既知7正例とBlender synthetic validatorの従来確認を保持。D所有`cbdk/extension_*`、D専用tests/docsのみ。
 
 担当外のSTATE/Handoff/PROGRESS/Notion、A共通CI/scripts/main・正式v0.17.0は変更禁止。各R11 PRは正確な最終HEADでPython3版、Windows2版、Blender3版、Chromium、Handoffの発火5系統を実測し、専用新負例の実行をログで確認する。Aは全員を別統合SHAで再検証し、開発本流統合後の別7CIを確認して次ラウンドへ。実ユーザー私有GLB、GUI/Ctrl+Z、第三者Addon、ライセンス/署名/公式Extensions配布・GitHub Pages・正式公開は承認しない。Codex利用不能でも専門チームを停止しない。
+
+## 2026-11-08 JST — R11/R12統合・R13正式割当（#99統合後に有効）
+
+R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。
+
+統合後7系統（すべてab42913、pull_request）: [durable handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260441)、[Windows kit package](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260440)、[Agent Skill package](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260362)、[offline 3D browser interaction smoke](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260376)、[Python tests](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260317)、[Windows PowerShell launcher regression](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260329)、[Blender multi-version runtime smoke](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260358)
+
+R13の担当枝・所有パス・負例・受け入れ条件・共通開始プロンプトは[R13_ABCD_START.md](R13_ABCD_START.md)。B: GLB中間密度/seed/閾値の独立一致、C: module evictionと旧ledgerの回復、D: snapshot/inventoryとパスaliasのfail-closed。共通台帳/CI/NotionはA所有。各担当1追加draft PR、旧PR二重取り込み禁止。R13実装は本セッション対象外。
