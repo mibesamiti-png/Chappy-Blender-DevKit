@@ -132,28 +132,27 @@ def _stable_reference_read(
                 return "inconclusive_reference_path", None
         if not candidate.resolve(strict=True).is_relative_to(pinned):
             return "inconclusive_reference_path", None
-        before = candidate.stat(follow_symlinks=False)
+        before = os.stat(candidate, follow_symlinks=False)
         if not stat.S_ISREG(before.st_mode) or before.st_size > MAX_ENTRY_BYTES:
             return "inconclusive_reference_path", None
         flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
         descriptor = os.open(candidate, flags)
-        try:
-            opened = os.fstat(descriptor)
+        # Close the handle *before* the deterministic change-after-read probe:
+        # on Windows, a second writer may be denied while this handle is open.
+        with os.fdopen(descriptor, "rb") as stream:
+            opened = os.fstat(stream.fileno())
             if _fingerprint(before) != _fingerprint(opened):
                 return "inconclusive_reference_changed", None
-            with os.fdopen(descriptor, "rb", closefd=False) as stream:
-                raw = stream.read(MAX_ENTRY_BYTES + 1)
-            if after_read is not None:
-                after_read()
-            final = candidate.stat(follow_symlinks=False)
-            if (len(raw) > MAX_ENTRY_BYTES or
-                    _fingerprint(before) != _fingerprint(final)):
-                return "inconclusive_reference_changed", None
-            if _reparse_or_link(candidate):
-                return "inconclusive_reference_path", None
-            return "stable_repo_bytes", raw.replace(b"\r\n", b"\n")
-        finally:
-            os.close(descriptor)
+            raw = stream.read(MAX_ENTRY_BYTES + 1)
+        if after_read is not None:
+            after_read()
+        final = os.stat(candidate, follow_symlinks=False)
+        if (len(raw) > MAX_ENTRY_BYTES or
+                _fingerprint(before) != _fingerprint(final)):
+            return "inconclusive_reference_changed", None
+        if _reparse_or_link(candidate):
+            return "inconclusive_reference_path", None
+        return "stable_repo_bytes", raw.replace(b"\r\n", b"\n")
     except (OSError, ValueError, TypeError):
         return "inconclusive_reference_path", None
 
