@@ -28,7 +28,7 @@ class ExtensionSourceReferenceRound11Tests(unittest.TestCase):
         package, before = self.snapshot(original)
         changed, member, payload = self.fixture.mutate(
             original, 'modular_all', inventory_hash=True, part_hashes=True)
-        checkout = self.work/'synthetic-checkout'
+        checkout = (self.work/'synthetic-checkout').resolve()
         source = r10.PACKAGE_SOURCES[package][member]
         path = checkout/source
         path.parent.mkdir(parents=True)
@@ -57,7 +57,7 @@ class ExtensionSourceReferenceRound11Tests(unittest.TestCase):
         package, references = self.snapshot(original)
         member = next(iter(references))
         source = r10.PACKAGE_SOURCES[package][member]
-        checkout = self.work/'newline-checkout'
+        checkout = (self.work/'newline-checkout').resolve()
         path = checkout/source
         path.parent.mkdir(parents=True)
         lf = references[member]
@@ -103,7 +103,7 @@ class ExtensionSourceReferenceRound11Tests(unittest.TestCase):
             r10._read_fixed_repository_source(source, root=self.work)
 
     def test_symlink_parent_escape_is_rejected_without_reading_payload(self):
-        checkout = self.work/'bounded-root'
+        checkout = (self.work/'bounded-root').resolve()
         checkout.mkdir()
         outside = self.work/'outside'
         outside.mkdir()

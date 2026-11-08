@@ -30,3 +30,9 @@ unchanged. CI evidence is recorded by exact HEAD in the separate benchmark.
 No source paths/payloads enter comparison output. Equality never establishes
 authenticity, owner consent, SPDX, redistribution, official validation or
 release permission. Extension release remains blocked.
+
+Initial Windows 3.11/3.13 CI failed in the new synthetic-root fixture: the
+patched fixed root was not canonicalized, unlike R10 FIXED_REPO_ROOT. Resolve
+the synthetic root before binding it (including Windows temporary-directory
+short-name aliases); do not weaken allowlist or escape rejection. Corrected
+HEAD evidence is recorded separately; initial failure is retained for timing.
