@@ -51,3 +51,13 @@ STATE.jsonや文書だけの変更で重いBlenderを起動しない案は、ま
 - 冷キャッシュ・温キャッシュの実測、CI失敗率、誤拒否件数、A統合作業時間を比較する。目標例：A側4段階で約12分37秒のCI単純合計を6〜9分へ。ただしこれは目標であって達成済みの成果ではない。
 - Fast/Full変更後も安全上必須のゲートは残し、品質と速度の両方を確認。原因不明のCIスキップ、SHA不一致、cache hash不一致、未実証の速度改善、private情報漏えい懸念があれば停止・差し戻す。
 - 正式リリース、main、私有GLB/アドオン、実Windows GUI、ライセンス/公開/権利に関する承認は別途必要。
+
+
+## 6. 第1回実測（冷キャッシュ、2026-11-08 UTC）
+
+PR #109の初期候補HEAD: 31fdff9560c053faabc300e57c457460fcfdd96d。
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42459418028)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42459418405)、[Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42459418062)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42459418132)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42459418095)が**初回5系統すべて成功**。
+
+- Blender workflow wall時間（作成→終了）は184秒（07:35:21〜07:38:25 UTC）。旧4回平均約189秒より僅差で、**速度改善が実証されたとは言えない**。
+- Blenderの3バージョンは新しい公式SHA取得/キャッシュ復元/再検証/Blender起動・実機テストを正常通過。初回の各ジョブログで対象版ごとのchecksum-keyed cache保存を確認。
+- この記録だけではcache hitが未観測。次のPR内の別HEADで、同じBlender実装・版・チェックサムキーを使った**温キャッシュ1回**を測定し、時間を比較する。温キャッシュが遅い、cache integrityが失敗する、品質回帰がある場合は採用を見送る。
