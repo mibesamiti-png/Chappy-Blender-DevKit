@@ -182,6 +182,7 @@ class R14GLBEvidenceTriageTests(unittest.TestCase):
             lambda x: x["parts"][0].update(observed_boundary=False),
             lambda x: x["parts"][0].update(part_id="../../../private"),
             lambda x: x.update(hole_locations_verified=True),
+            lambda x: x.update(coordinate_welding_is_approximate=False),
             lambda x: x["parts"][0].update(triangle_count=513),
         ):
             with self.subTest(mutation=str(edit)):
@@ -213,6 +214,7 @@ class R14GLBEvidenceTriageTests(unittest.TestCase):
             "kind": "cbdk_glb_surface_review", "schema_version": 1,
             "source": "local_blender_import_aggregate_only",
             "status": "skipped", "reason": "triangle_limit",
+            "reference_triangles": 8, "candidate_triangles": 513,
             "surface_observation": "not_measured",
             "auto_apply": False, "complete_surface_equivalence_proven": False,
             "safety": {
@@ -229,6 +231,13 @@ class R14GLBEvidenceTriageTests(unittest.TestCase):
         bad = dict(skipped, surface_observation="no_difference_observed_at_samples")
         with self.assertRaises(ValueError):
             build_glb_evidence_triage(sampled_surface=bad)
+        for invalid in (
+            dict(skipped, candidate_triangles=512),
+            dict(skipped, reference_triangles=True),
+            dict(skipped, schema_version=True),
+        ):
+            with self.assertRaises(ValueError):
+                build_glb_evidence_triage(sampled_surface=invalid)
 
     def test_unknown_difference_cannot_become_user_identifying_code(self):
         comparison, *_ = authored_case("identical")
