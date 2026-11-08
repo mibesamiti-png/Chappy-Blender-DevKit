@@ -201,6 +201,9 @@ def unregister():
     # can retry without touching foreign add-on registrations. R10 checks
     # that simultaneous failures keep both independent class/property
     # ledgers until each cleanup step succeeds, even across multiple retries.
+    # R13: addon_utils may evict this module after an enable failure. A
+    # separately imported copy cannot see these original ownership lists:
+    # the caller must keep the old module reference for explicit recovery.
     failures = []
     for cls in reversed(tuple(_REGISTERED)):
         try:
