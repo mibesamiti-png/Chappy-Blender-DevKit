@@ -204,6 +204,9 @@ def unregister():
     # R13: addon_utils may evict this module after an enable failure. A
     # separately imported copy cannot see these original ownership lists:
     # the caller must keep the old module reference for explicit recovery.
+    # R14: multiple evicted copies can each own different Blender classes.
+    # Empty lists in a new import say nothing about those older instances;
+    # only explicit cleanup of every retained original can establish release.
     failures = []
     for cls in reversed(tuple(_REGISTERED)):
         try:
