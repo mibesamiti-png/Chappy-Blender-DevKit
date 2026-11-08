@@ -1032,6 +1032,110 @@ def run(path):
             enabled = False
             assert_detached(module)
             checks.append("native_r11_disable_failure_explicit_recovery")
+
+            # R12: Blender's enabled flag is not a cleanup-completion flag.
+            for failed_kind in ("class", "scene", "both"):
+                for replace_foreign in (False, True):
+                    for failing_name in PROPERTIES:
+                        module = addon_utils.enable(PACKAGE, default_set=False, persistent=False)
+                        assert module is not None
+                        enabled = True
+                        kept_class = module._REGISTERED[-1]
+                        original_unregister = bpy.utils.unregister_class
+                        attempts = [0, 0]
+                        errors = []
+                        foreign = None
+
+                        def r12_class_failure(cls):
+                            if (failed_kind in ("class", "both") and
+                                    cls is kept_class and attempts[0] == 0):
+                                attempts[0] += 1
+                                raise RuntimeError("CBDK R12 bounded class failure")
+                            return original_unregister(cls)
+
+                        def r12_scene_failure(owner, name):
+                            if (failed_kind in ("scene", "both") and
+                                    owner is bpy.types.Scene and name == failing_name
+                                    and attempts[1] == 0):
+                                attempts[1] += 1
+                                raise RuntimeError("CBDK R12 bounded Scene failure")
+                            return delattr(owner, name)
+
+                        bpy.utils.unregister_class = r12_class_failure
+                        module.__dict__["delattr"] = r12_scene_failure
+                        try:
+                            addon_utils.disable(PACKAGE, default_set=False,
+                                                handle_error=lambda exc: errors.append(type(exc).__name__))
+                            enabled = False
+                            assert errors == ["RuntimeError"]
+                            assert module.__addon_enabled__ is False
+                            assert bool(module._REGISTERED) == (failed_kind != "scene")
+                            assert bool(module._OWNED_PROPERTIES) == (failed_kind != "class")
+                            saved_classes = tuple(module._REGISTERED)
+                            saved_properties = tuple(module._OWNED_PROPERTIES)
+                            saved_tokens = dict(module._OWNED_PROPERTY_TOKENS)
+                            if replace_foreign:
+                                # Remove only this test's declaration, then install
+                                # a synthetic foreign owner; never private code.
+                                if hasattr(bpy.types.Scene, failing_name):
+                                    delattr(bpy.types.Scene, failing_name)
+                                if failing_name == PROPERTIES[0]:
+                                    setattr(bpy.types.Scene, failing_name,
+                                            bpy.props.StringProperty(name="Last CBDK preview result"))
+                                else:
+                                    setattr(bpy.types.Scene, failing_name,
+                                            bpy.props.FloatVectorProperty(name="Local Nudge XYZ", size=3))
+                                foreign = bpy.types.Scene.__dict__[failing_name]
+                                assert foreign is not saved_tokens.get(failing_name)
+                            # Blender skips unregister when already disabled.
+                            addon_utils.disable(PACKAGE, default_set=False,
+                                                handle_error=lambda exc: errors.append(type(exc).__name__))
+                            assert errors == ["RuntimeError"]
+                            assert tuple(module._REGISTERED) == saved_classes
+                            assert tuple(module._OWNED_PROPERTIES) == saved_properties
+                            assert all(module._OWNED_PROPERTY_TOKENS[k] is v
+                                       for k, v in saved_tokens.items())
+                            try:
+                                importlib.reload(module)
+                            except RuntimeError as exc:
+                                assert "unregistered before module reload" in str(exc)
+                            else:
+                                raise AssertionError("R12 reload accepted pending cleanup")
+                            enable_errors = []
+                            result = addon_utils.enable(
+                                PACKAGE, default_set=False, persistent=False,
+                                handle_error=lambda exc: enable_errors.append(type(exc).__name__))
+                            assert result is None and enable_errors == ["RuntimeError"]
+                            assert module.__addon_enabled__ is False
+                            assert tuple(module._REGISTERED) == saved_classes
+                            assert tuple(module._OWNED_PROPERTIES) == saved_properties
+                            # Blender removes a module after register() fails.
+                            # Keep our original explicit reference for cleanup;
+                            # importing a fresh copy now could hide the ledger.
+                            assert PACKAGE not in sys.modules
+                            module.unregister()
+                            assert not module._REGISTERED
+                            assert not module._OWNED_PROPERTIES
+                            assert not module._OWNED_PROPERTY_TOKENS
+                            assert bpy.types.Scene.__dict__.get(failing_name) is foreign
+                        finally:
+                            bpy.utils.unregister_class = original_unregister
+                            module.__dict__.pop("delattr", None)
+                            module.unregister()
+                            if foreign is not None and bpy.types.Scene.__dict__.get(failing_name) is foreign:
+                                delattr(bpy.types.Scene, failing_name)
+                        assert_detached(module)
+                        # Import only after the old module's explicit cleanup.
+                        module = addon_utils.enable(PACKAGE, default_set=False, persistent=False)
+                        assert module is not None
+                        enabled = True
+                        addon_utils.disable(PACKAGE, default_set=False)
+                        enabled = False
+                        assert_detached(module)
+            checks.append("native_r12_three_failure_kinds_foreign_matrix")
+            checks.append("native_r12_second_disable_keeps_pending_ledgers")
+            checks.append("native_r12_reenable_eviction_original_reference_cleanup")
+            checks.append("native_r12_explicit_recovery_no_owned_leaks")
         finally:
             if enabled:
                 try:
