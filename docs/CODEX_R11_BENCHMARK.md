@@ -7,7 +7,7 @@ R12は提案のみで、正式割当・実装開始・次世代移行を意味�
 
 - 実験開始：`2026-11-07T23:58:03Z`（clockツールで開始直後に採取）。以下はUTC。
 - 単独Codex、B→C→Dの逐次実装。sub-agent不使用。CI・API読み取りは並行し、実装中も先行PRのCIを継続。
-- 基点・終了時dev：`a0aa25eae608494eab4f2eb02d7aefd1bd4d40a0`。開始時fetchと終了時ls-remoteで照合。開発ブランチへpush/mergeしていない。
+- 基点・終了時dev：[`a0aa25eae608494eab4f2eb02d7aefd1bd4d40a0`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/a0aa25eae608494eab4f2eb02d7aefd1bd4d40a0)。開始時fetchと終了時ls-remoteで照合。開発ブランチへpush/mergeしていない。
 - main/正式v0.17.0、共通CI、STATE形式・ID、自動Handoff、既存ABCD役割・履歴は変更なし。Notionも指示どおり未変更。
 - PR REST APIのcreated_at/merged_at/head.sha、commits APIのcommitter.date、Actions runs/jobs APIを使用。
 - 「全成功時刻」は最終HEADの指定5系統すべてがsuccessとなったrunの **updated_at最大値**。これはGitHub APIで観測できる終了時刻代理値であり、内部で結論が確定した瞬間の高精度測定ではない。ジョブ終了は別表のcompleted_atを使用。
@@ -32,10 +32,10 @@ R12は提案のみで、正式割当・実装開始・次世代移行を意味�
 
 | R11領域 | ブランチ | draft PR | 最終HEAD |
 | --- | --- | --- | --- |
-| B | `work/v018-glb-analysis-r11-codex` | [#88](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/88) | `de2a5e12b15acb2b14281738619a4ef909db0117` |
-| C | `work/v018-ui-builder-r11-codex` | [#89](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/89) | `8ec215c97dd20e2cea2597589899b98904282eaf` |
-| D | `work/v018-extension-quality-r11-codex` | [#90](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/90) | `a5bda5bc46c69fd936de73f7fb50350b2109b505` |
-| 統合候補 | `work/v018-integration-r11-codex` | [#91](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/91) | `faab6ab023f50495c719d091b29f320aa6ab36df` |
+| B | `work/v018-glb-analysis-r11-codex` | [#88](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/88) | [`de2a5e12b15acb2b14281738619a4ef909db0117`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/de2a5e12b15acb2b14281738619a4ef909db0117) |
+| C | `work/v018-ui-builder-r11-codex` | [#89](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/89) | [`8ec215c97dd20e2cea2597589899b98904282eaf`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/8ec215c97dd20e2cea2597589899b98904282eaf) |
+| D | `work/v018-extension-quality-r11-codex` | [#90](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/90) | [`a5bda5bc46c69fd936de73f7fb50350b2109b505`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/a5bda5bc46c69fd936de73f7fb50350b2109b505) |
+| 統合候補 | `work/v018-integration-r11-codex` | [#91](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/91) | [`faab6ab023f50495c719d091b29f320aa6ab36df`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/faab6ab023f50495c719d091b29f320aa6ab36df) |
 
 レポートは別ブランチ `work/v018-r11-codex-benchmark` のdraft PR（本書を含むPR）。基点devとの差分はこのファイルのみ。専門PR・統合候補もすべて未マージ。
 
@@ -107,11 +107,11 @@ PRのPython3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1、Chrom
 
 | PR | 作成UTC | 最終HEAD | 最終commit UTC | merge UTC | 5系統全成功UTC |
 | --- | --- | --- | --- | --- | --- |
-| [#83](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/83) | 2026-11-07T23:27:27Z | `9f3df76df7356acb3670d6c44a53325f7bda6eba` | 2026-11-07T23:26:56Z | null（専門PR自体は未マージ） | 2026-11-07T23:30:18Z |
-| [#84](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/84) | 2026-11-07T23:27:31Z | `262d646dc6de394755349fab6fdc864e3ae4a3b5` | 2026-11-07T23:27:07Z | null（専門PR自体は未マージ） | 2026-11-07T23:30:19Z |
-| [#85](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/85) | 2026-11-07T23:27:57Z | `a3c57d9b8450e18033741c87d9ba41625dd7ac2a` | 2026-11-07T23:27:23Z | null（専門PR自体は未マージ） | 2026-11-07T23:31:02Z |
-| [#86](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/86) | 2026-11-07T23:36:06Z | `6a12b7fa1926912f501c80b133d0d457cdc19999` | 2026-11-07T23:36:01Z | 2026-11-07T23:39:44Z | 2026-11-07T23:39:21Z |
-| [#87](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/87) | 2026-11-07T23:37:14Z | `f850996e71ed989e53120732bd50fa4427e33fec` | 2026-11-07T23:44:02Z | 2026-11-07T23:46:59Z | 2026-11-07T23:46:41Z |
+| [#83](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/83) | 2026-11-07T23:27:27Z | [`9f3df76df7356acb3670d6c44a53325f7bda6eba`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/9f3df76df7356acb3670d6c44a53325f7bda6eba) | 2026-11-07T23:26:56Z | null（専門PR自体は未マージ） | 2026-11-07T23:30:18Z |
+| [#84](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/84) | 2026-11-07T23:27:31Z | [`262d646dc6de394755349fab6fdc864e3ae4a3b5`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/262d646dc6de394755349fab6fdc864e3ae4a3b5) | 2026-11-07T23:27:07Z | null（専門PR自体は未マージ） | 2026-11-07T23:30:19Z |
+| [#85](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/85) | 2026-11-07T23:27:57Z | [`a3c57d9b8450e18033741c87d9ba41625dd7ac2a`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/a3c57d9b8450e18033741c87d9ba41625dd7ac2a) | 2026-11-07T23:27:23Z | null（専門PR自体は未マージ） | 2026-11-07T23:31:02Z |
+| [#86](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/86) | 2026-11-07T23:36:06Z | [`6a12b7fa1926912f501c80b133d0d457cdc19999`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/6a12b7fa1926912f501c80b133d0d457cdc19999) | 2026-11-07T23:36:01Z | 2026-11-07T23:39:44Z | 2026-11-07T23:39:21Z |
+| [#87](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/87) | 2026-11-07T23:37:14Z | [`f850996e71ed989e53120732bd50fa4427e33fec`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/f850996e71ed989e53120732bd50fa4427e33fec) | 2026-11-07T23:44:02Z | 2026-11-07T23:46:59Z | 2026-11-07T23:46:41Z |
 
 #87は状態同期/割当の別工程で最終HEADにKit含む6系統、今回の開発5系統比較とは分ける。専門#83–#85自体のmerged_atはnullだが、内容は#86経由でdevに統合済み。
 
@@ -149,11 +149,23 @@ CI待ちは実装と重なるため上表の工程時間は足し合わせられ
 
 | 旧失敗run | 事象 |
 | --- | --- |
-| [#88 / 42427885113](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42427885113) | CBDK Windows PowerShell launcher regression / cancelled / HEAD `3b430e8b1c5ce5f9c872f12a73ee7ae0fa2310af` |
-| [#88 / 42427885160](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42427885160) | CBDK Python tests / cancelled / HEAD `3b430e8b1c5ce5f9c872f12a73ee7ae0fa2310af` |
-| [#89 / 42428039235](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42428039235) | CBDK Windows PowerShell launcher regression / cancelled / HEAD `6d9ac34516c45ad43a225a0859eaa1f9b39131bf` |
-| [#90 / 42428203959](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42428203959) | CBDK Windows PowerShell launcher regression / failure / HEAD `2c11e6a7d4fe27923a5809ecaf70a14ea0775069` |
-| [#91 / 42428325224](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42428325224) | CBDK Windows PowerShell launcher regression / failure / HEAD `3984f878dbb4071c1ee58f6cc0d9309d2b03b223` |
+| [#88 / 42427885113](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42427885113) | CBDK Windows PowerShell launcher regression / cancelled / HEAD [`3b430e8b1c5ce5f9c872f12a73ee7ae0fa2310af`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/3b430e8b1c5ce5f9c872f12a73ee7ae0fa2310af) |
+| [#88 / 42427885160](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42427885160) | CBDK Python tests / cancelled / HEAD [`3b430e8b1c5ce5f9c872f12a73ee7ae0fa2310af`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/3b430e8b1c5ce5f9c872f12a73ee7ae0fa2310af) |
+| [#89 / 42428039235](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42428039235) | CBDK Windows PowerShell launcher regression / cancelled / HEAD [`6d9ac34516c45ad43a225a0859eaa1f9b39131bf`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/6d9ac34516c45ad43a225a0859eaa1f9b39131bf) |
+| [#90 / 42428203959](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42428203959) | CBDK Windows PowerShell launcher regression / failure / HEAD [`2c11e6a7d4fe27923a5809ecaf70a14ea0775069`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/2c11e6a7d4fe27923a5809ecaf70a14ea0775069) |
+| [#91 / 42428325224](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42428325224) | CBDK Windows PowerShell launcher regression / failure / HEAD [`3984f878dbb4071c1ee58f6cc0d9309d2b03b223`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/3984f878dbb4071c1ee58f6cc0d9309d2b03b223) |
+
+### 失敗から修正・再検証までの観測時間
+
+| 対象 | 失敗run作成→終了代理 | 失敗終了代理→修正commit | 修正commit→最終5系統成功 |
+| --- | ---: | ---: | ---: |
+| D #90 | 00:06:00Z→00:07:07Z＝67秒 | →00:08:52Z＝105秒 | →00:12:00Z＝188秒 |
+| 統合 #91（同じD fixture） | 00:07:35Z→00:08:48Z＝73秒 | →00:08:58Z＝10秒 | →00:14:04Z＝306秒 |
+
+105秒は調査・artifact取得失敗・修正・他作業を含む経過時間で、純粋な編集時間ではない。
+統合の10秒は修正済みDの取り込み間隔であり、別の欠陥修正ではない。
+Cの失敗ローカルrun開始/終了時刻は個別未計測。first→last commit 00:03:45Z→00:04:36Z（51秒）は修正経過の参考値で、失敗検出からの正確な作業時間ではない。
+GitHubの同run再試行0、修正HEADでの再検証を別計上する。
 
 ## B性能実測（最終B PRのPythonログ）
 
@@ -220,7 +232,7 @@ Bの偏りcontourでのR2/R8判定一致と、三角形fixtureの全辞書比較
 サンプル一致は完全幾何一致や物理穴・真の部品対応を証明しない。原因候補は因果証明ではない。
 
 ローカル：Python 3.12.14、B新規4件、C新規2件（関連lifecycle 44件）、D新規4件（R10/R11関連12件）成功。
-初期結合HEAD `3984f878dbb4071c1ee58f6cc0d9309d2b03b223` の全体1,064件成功、54.481秒。
+初期結合HEAD [`3984f878dbb4071c1ee58f6cc0d9309d2b03b223`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/3984f878dbb4071c1ee58f6cc0d9309d2b03b223) の全体1,064件成功、54.481秒。
 最終結合HEADではDのroot正規化4件をローカル再実行し成功、全体回帰は対応CIで再確認。
 登録監査はstatic_checks_passed、5機能/6レシピ。ローカルBlender4.3.2の成功は対象3版の代用にしない。
 
@@ -237,9 +249,18 @@ Bの偏りcontourでのR2/R8判定一致と、三角形fixtureの全辞書比較
 ## 最終照合
 
 最終結合Python CI（run 42428440872）は3.11/3.12/3.13すべて1,064件成功。各jobの実測秒は上記runログで確認可能。
-終了dev HEADの再取得：`a0aa25eae608494eab4f2eb02d7aefd1bd4d40a0`（2026-11-08T00:15:44.535932+00:00）。開始時と一致。
+終了dev HEADの再取得：[`a0aa25eae608494eab4f2eb02d7aefd1bd4d40a0`](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/commit/a0aa25eae608494eab4f2eb02d7aefd1bd4d40a0)（2026-11-08T00:15:44.535932+00:00）。開始時と一致。
 レポート作成に先立ち、専門3件と結合1件のdraft/未マージ、各最終HEAD5系統successをAPIで再確認。
 レポートPR自体はdocs-onlyであり、開発ゲート時間/CI成功率の比較から除外する。
+
+### dev未統合の変更ファイル一覧
+
+- B：`tests/test_glb_match_bias_r11.py`、`docs/GLB_R11_PROBE_BIAS.md`
+- C：`tests/test_ui_lifecycle_r11.py`、既存 `tests/blender_ui_lifecycle_r5.py` へのR11 probe追加、`docs/UI_R11_OWNERSHIP.md`
+- D：`tests/test_extension_source_reference_round11.py`、`docs/EXTENSION_R11_SNAPSHOTS.md`
+- レポート専用：`docs/CODEX_R11_BENCHMARK.md`（統合候補には含めず別PR）
+
+専門コードの取り込み順はB→C→Dを再現できるが相互未統合依存なし。報告書の採否はコード候補と独立してAが判断する。
 
 ## Aへの引き渡しとABCD復帰
 
