@@ -19,6 +19,15 @@ optional specialist, not a required critical path. Team A owns shared status,
 generated handoff, common CI and Notion; specialists submit separate draft PRs.
 Do not merge independently verified PRs without combined-sha regression checks.
 
+For the next ABCD rolling round, inspect `docs/R14_ABCD_START.md` and
+`docs/PARALLEL_ROLLING_QUEUE.md` from the **latest development HEAD**.
+A future assignment document does not authorize implementation until its
+milestone PR is integrated and the required independent postmerge CI is
+verified. Keep specialist five-family CI, combined-head five-family CI, and
+postmerge seven-family CI as distinct evidence; avoid duplicate workflow
+runs and never remerge older specialist PRs. Main/release and third-party
+source approval remain outside this delegated workflow.
+
 ## 1. Resume from the repository, not the chat
 
 1. Identify the repository `mibesamiti-png/Chappy-Blender-DevKit`. Read
