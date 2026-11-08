@@ -313,3 +313,15 @@ R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003
 統合後7系統（すべてab42913、pull_request）: [durable handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260441)、[Windows kit package](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260440)、[Agent Skill package](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260362)、[offline 3D browser interaction smoke](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260376)、[Python tests](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260317)、[Windows PowerShell launcher regression](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260329)、[Blender multi-version runtime smoke](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260358)
 
 R13の担当枝・所有パス・負例・受け入れ条件・共通開始プロンプトは[R13_ABCD_START.md](R13_ABCD_START.md)。B: GLB中間密度/seed/閾値の独立一致、C: module evictionと旧ledgerの回復、D: snapshot/inventoryとパスaliasのfail-closed。共通台帳/CI/NotionはA所有。各担当1追加draft PR、旧PR二重取り込み禁止。R13実装は本セッション対象外。
+
+## 2026-11-08 JST — R13統合完了・R14正式割当ゲート
+
+R13 B[#100](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/100) / C[#102](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/102) / D[#103](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/103)をA統合[#104](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/104)の1コミット/9ファイルで一度だけdevへ結合。統合候補 `7d7933d` の5系統CI成功、dev squash `0a306a85d6f84ef434eb6b54f12cb4ce93251a6c` に対する独立7系統CI（Python、Windows、Blender3版、Chromium、Handoff、Kit、Skill）全success。詳細URLは[PROGRESS](PROGRESS.md)、R14の指示は[R14_ABCD_START.md](R14_ABCD_START.md)。古いR11/R12と個別R13 PRを二重取り込みしない。
+
+**R14を実装開始できるのは、Aの本マイルストーン同期PRがCIを通過してv0.18開発ブランチへ正式統合され、その新SHAの独立7系統CIが確認されてから。** R14 B/C/Dは最新dev SHAを共通基点に独立した専用PRを1件ずつ作る。新規CIの自動発火をまず確認し、不足分のみ手動起動。main/v0.17.0/私有アドオン・GLB/ライセンス/Extensions公開/Pages/保留中の直接インストールは変更しない。
+
+- **B P1 / GLB NEXT-008・GLB-020/021/022:** 合成GLBの診断・境界・距離・ASTの証拠を匿名レビュー用triageに統一し、差分と未観測の区別、原因の確定拒否を数値回帰で検証。コード候補 `cbdk/glb_*`、B専用tests/docs。
+- **C P1 / UI-001・BUILD-001:** 旧module参照の複数generation失敗時にもforeign Sceneプロパティと未解放クラスを損なわず、明示cleanup可否/未確認を安全に表す。コード候補 `templates/modular_preview/`、C専用tests/docs。実GUI保証は禁止。
+- **D P1 / EXT-001:** source rootのreparse確認とopenとの間のTOCTOU等を安全な合成fixtureで負例化し、配布不可の理由を機密値なしコードで提示する改善候補。実機安全を示せなければ本体挙動は変えない。コード候補 `cbdk/extension_*`、D専用tests/docs。
+
+AのみSTATE/Handoff/PROGRESS/共通CI/Notionを管理。各専門最終HEADの独立5系統CI→A結合の独立5系統CI→dev統合の独立7系統CI→節目文書の別CIを厳格に区別する。
