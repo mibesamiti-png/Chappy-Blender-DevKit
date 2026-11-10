@@ -20,7 +20,11 @@ from cbdk_geometry.radial_loft import radial_loft
 
 # Blender ships its own 'cycles' module; temporarily load the Geometry Lab
 # namespace package only to import the synthetic fixture modules.
-saved_cycles = sys.modules.pop("cycles", None)
+saved_cycles = sys.modules.get("cycles")
+import types
+lab_cycles = types.ModuleType("cycles")
+lab_cycles.__path__ = [str(ROOT / "cycles")]
+sys.modules["cycles"] = lab_cycles
 try:
     from cycles.r6.fixtures import cases
 finally:
