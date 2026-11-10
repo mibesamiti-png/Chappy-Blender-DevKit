@@ -29,8 +29,9 @@ def _edge_signature(verts, edge):
 
 
 def _assess(mesh, case):
-    a, b = case["a"], case["b"]
-    original = np.vstack((a, b)).astype(np.float32).astype(float)
+    a = case["a"].astype(np.float32).astype(float)
+    b = case["b"].astype(np.float32).astype(float)
+    original = np.vstack((a, b))
     actual = {tuple(v) for v in mesh.vertices}
     preserved = all(tuple(v) in actual for v in original)
     edges = Counter(tuple(sorted((int(f[i]), int(f[(i+1) % 3]))))
