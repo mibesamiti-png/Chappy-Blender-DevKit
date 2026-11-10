@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "selection_policy": "metadata_only_no_auto_execute_or_approve",
+  "algorithms": [
+    {
+      "id": "exact-static",
+      "version": "0.2.0",
+      "api": "cbdk_geometry.exact.detect_exact",
+      "purpose": "共有境界以外の静的交差・接触の検出",
+      "preconditions": [
+        "非退化三角形",
+        "binary64 coordinates",
+        "2048面以内"
+      ],
+      "input": "Mesh",
+      "output": "status / pairs / scanned / narrow_tests / certified=false",
+      "parameters": {
+        "pair_budget": 200000,
+        "seconds": 30
+      },
+      "success": "measuredかつ独立検証済みfixtureで参照一致",
+      "failure": "上限ではpairs=null、退化はValueError",
+      "validation": "tests/test_exact.py; tests/test_cgal_oracle.py; cycles/r2/benchmark.py",
+      "performance": "cycles/r2/RESULTS.md",
+      "references": [
+        "cycles/r2/RESEARCH.md"
+      ],
+      "status": "review_only",
+      "approved": false
+    },
+    {
+      "id": "sat-static",
+      "version": "0.1.0",
+      "api": "cbdk_geometry.detect",
+      "purpose": "旧近似検出baseline",
+      "preconditions": [
+        "隣接insetで見逃しあり"
+      ],
+      "input": "Mesh",
+      "output": "status / pairs",
+      "parameters": {
+        "method": "sweep",
+        "tolerance": 1e-09
+      },
+      "success": "限定旧fixture一致",
+      "failure": "微小接触のFP/FNをR2で確認",
+      "validation": "tests/test_geometry.py",
+      "performance": "RESULTS.md",
+      "references": [
+        "RESEARCH.md"
+      ],
+      "status": "baseline_known_errors",
+      "approved": false
+    },
+    {
+      "id": "motion-box",
+      "version": "0.1.0",
+      "api": "cbdk_geometry.guarded_step",
+      "purpose": "線形移動の保守的な衝突回避",
+      "preconditions": [
+        "独立triangle soup",
+        "512面以内",
+        "接続mesh不可"
+      ],
+      "input": "Mesh + displacement",
+      "output": "status / alpha / Mesh",
+      "parameters": {
+        "max_halvings": 20
+      },
+      "success": "swept boxesが非交差",
+      "failure": "共有頂点/予算/初期接触を拒否、反転は保証しない",
+      "validation": "tests/test_motion.py",
+      "performance": "RESULTS.md",
+      "references": [
+        "RESEARCH.md"
+      ],
+      "status": "experimental",
+      "approved": false
+    },
+    {
+      "id": "blender-join",
+      "version": "0.1.0",
+      "api": "cbdk_geometry.blender_backend.join",
+      "purpose": "曲面の体積union",
+      "preconditions": [
+        "Blender依存",
+        "閉じた一貫方向mesh"
+      ],
+      "input": "Mesh a,b",
+      "output": "detached Mesh",
+      "parameters": {
+        "method": [
+          "exact",
+          "voxel"
+        ],
+        "voxel_size": 0.15
+      },
+      "success": "接合後の独立評価が必要",
+      "failure": "退化/微小接触/細部消失",
+      "validation": "blender_benchmark.py; cycles/r2/recheck_blender.py",
+      "performance": "RESULTS.md; cycles/r2/RESULTS.md",
+      "references": [
+        "RESEARCH.md"
+      ],
+      "status": "experimental",
+      "approved": false
+    }
+  ]
+}

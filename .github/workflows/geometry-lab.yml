@@ -1,0 +1,37 @@
+name: Geometry Lab independent research validation
+on:
+  pull_request:
+    paths:
+      - 'research/geometry_lab/**'
+      - '.github/workflows/geometry-lab.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-lab-research-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  exact-oracle:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-oracle.txt
+      - run: python -m unittest discover -s tests -v
+      # Import failure/timeout/mismatch is a failure, never an oracle "skip".
+      - run: timeout 300 python -m cycles.r2.benchmark --output runs/ci-r2.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-r2-${{ github.sha }}
+          path: research/geometry_lab/runs/ci-r2.json
+          if-no-files-found: error
+          retention-days: 14

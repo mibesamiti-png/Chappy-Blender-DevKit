@@ -1,0 +1,4146 @@
+{
+  "schema_version": 2,
+  "cycle": "R2",
+  "synthetic_only": true,
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "cgal": "6.0.1.post202410241521",
+  "source_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "blender_failure_probe.py": "4d48704a2fc5ca579fc74dd979e53f4db8418f4d5bb478990d38b608ad885ca3",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/exact.py": "16a1f366883809889a2e0b6c34f22fd5b46a9f034f15c53bc82a3b55097e889d",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "cycles/r2/benchmark.py": "caa8a31bdb1f7b2eba671ee229b22ac1e903fc79b18d090198704f01efde2a04",
+    "cycles/r2/fixtures.py": "c57fa2b561225cb9d5469dff1098b160e0b4d85d6a96ec06d1c975edde93be70",
+    "cycles/r2/oracle.py": "11eca15f6b24254c9b14020e62e2b14e5198294809aed21eaf5a2a0e8bc13ee6",
+    "dense_benchmark.py": "92bfae6bc201233ca826bc4b6f42aaf77433f5f3f28e9777bffdd221cdb38fc0",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_exact.py": "3a5c07bacd0f836302160bd8982751a13abb3f3486034972f8dffdf6de455c8e",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5",
+    "tests/test_motion.py": "e13366c5409f46fb684c070ec1f771b776c1fd87b3b44067113ef529a1fab510"
+  },
+  "analytic": [
+    {
+      "name": "cross",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.3698420000546321,
+          "samples_ms": [
+            0.3698420000546321,
+            0.30327499962368165,
+            0.3830450000350538
+          ]
+        },
+        "exact": {
+          "median_ms": 0.9982550000131596,
+          "samples_ms": [
+            1.0181839998040232,
+            0.9937019999597396,
+            0.9982550000131596
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.9643190001042967,
+          "samples_ms": [
+            0.9643190001042967,
+            0.9659489996920456,
+            0.9341840000161028
+          ]
+        }
+      }
+    },
+    {
+      "name": "cross",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.4363259999990987,
+          "samples_ms": [
+            0.29080300009809434,
+            0.4363259999990987,
+            1.4576640000996122
+          ]
+        },
+        "exact": {
+          "median_ms": 0.9622529996704543,
+          "samples_ms": [
+            1.4958070000830048,
+            0.9621220001463371,
+            0.9622529996704543
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.934859000153665,
+          "samples_ms": [
+            1.1949969998568122,
+            0.934859000153665,
+            0.9164090001831937
+          ]
+        }
+      }
+    },
+    {
+      "name": "cross",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.29670099957002094,
+          "samples_ms": [
+            0.29670099957002094,
+            0.47099299990804866,
+            0.28197399979035254
+          ]
+        },
+        "exact": {
+          "median_ms": 1.1226370002077601,
+          "samples_ms": [
+            1.4738360000592365,
+            1.1226370002077601,
+            1.052898000125424
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.9869589998743322,
+          "samples_ms": [
+            0.9261700001843565,
+            1.0640829996191314,
+            0.9869589998743322
+          ]
+        }
+      }
+    },
+    {
+      "name": "cross",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.4874999999628926,
+          "samples_ms": [
+            0.4874999999628926,
+            0.3243779997319507,
+            1.0978529999192688
+          ]
+        },
+        "exact": {
+          "median_ms": 1.0541469996496744,
+          "samples_ms": [
+            0.9490639999967243,
+            1.187844000014593,
+            1.0541469996496744
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.8769050000410061,
+          "samples_ms": [
+            38.79428700020071,
+            0.6522250000671193,
+            0.8769050000410061
+          ]
+        }
+      }
+    },
+    {
+      "name": "cross",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.3863030001411971,
+          "samples_ms": [
+            0.3863030001411971,
+            1.0807839998960844,
+            0.25165199986076914
+          ]
+        },
+        "exact": {
+          "median_ms": 0.5279420001897961,
+          "samples_ms": [
+            0.5279420001897961,
+            0.6640690003223426,
+            0.5273300002954784
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5552620000344177,
+          "samples_ms": [
+            0.49379599977328326,
+            0.6970230001570599,
+            0.5552620000344177
+          ]
+        }
+      }
+    },
+    {
+      "name": "cross",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.21981300005791127,
+          "samples_ms": [
+            0.21981300005791127,
+            0.2449540002089634,
+            0.20859500000369735
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6232020000425109,
+          "samples_ms": [
+            0.6232020000425109,
+            0.9806709999793384,
+            0.5795919996671728
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6337499999062857,
+          "samples_ms": [
+            0.6337499999062857,
+            0.5156619999979739,
+            0.6431550000343123
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.24895500018828898,
+          "samples_ms": [
+            0.38470899971798644,
+            0.24895500018828898,
+            0.2110099999299564
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7833760000721668,
+          "samples_ms": [
+            0.7971689997248177,
+            0.7297709998965729,
+            0.7833760000721668
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7365930000560184,
+          "samples_ms": [
+            0.7946810001158156,
+            0.69962099996701,
+            0.7365930000560184
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.22004800030117622,
+          "samples_ms": [
+            0.22004800030117622,
+            0.24614999983896269,
+            0.19416699979046825
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7362110000030953,
+          "samples_ms": [
+            0.6957529999453982,
+            0.8474920000480779,
+            0.7362110000030953
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7036540000626701,
+          "samples_ms": [
+            0.7036540000626701,
+            0.6718599997839192,
+            0.8897239999896556
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2082820001305663,
+          "samples_ms": [
+            0.2737310001066362,
+            0.2082820001305663,
+            0.20053999969604774
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6331490003503859,
+          "samples_ms": [
+            0.6331490003503859,
+            0.5888870000489987,
+            0.7164399999055604
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5918760002714407,
+          "samples_ms": [
+            0.6031749999237945,
+            0.5918760002714407,
+            0.5727310003749153
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.20360300004540477,
+          "samples_ms": [
+            0.21314100013114512,
+            0.20360300004540477,
+            0.18715300029725768
+          ]
+        },
+        "exact": {
+          "median_ms": 0.66630899982556,
+          "samples_ms": [
+            0.9232789998350199,
+            0.66630899982556,
+            0.6136689999038936
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6262599999899976,
+          "samples_ms": [
+            0.6262599999899976,
+            0.5775399999947695,
+            0.6306939999376482
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.22806900005889474,
+          "samples_ms": [
+            0.2254330001960625,
+            0.32149800017577945,
+            0.22806900005889474
+          ]
+        },
+        "exact": {
+          "median_ms": 0.5765259998042893,
+          "samples_ms": [
+            0.6684039999527158,
+            0.5319739998412842,
+            0.5765259998042893
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5086420001134684,
+          "samples_ms": [
+            0.5086420001134684,
+            0.6201970004440227,
+            0.4947790002916008
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2405639997959952,
+          "samples_ms": [
+            0.24503100030415226,
+            0.20127200014030677,
+            0.2405639997959952
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6203729999469942,
+          "samples_ms": [
+            1.1971009998887894,
+            0.569586999972671,
+            0.6203729999469942
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5487809999067395,
+          "samples_ms": [
+            0.6818080000812188,
+            0.5292929999995977,
+            0.5487809999067395
+          ]
+        }
+      }
+    },
+    {
+      "name": "touch",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.20390100007716683,
+          "samples_ms": [
+            0.23530499993285048,
+            0.20390100007716683,
+            0.19007299988516024
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7046010000522074,
+          "samples_ms": [
+            0.7694460000493564,
+            0.7046010000522074,
+            0.6754129999535508
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7047000003694848,
+          "samples_ms": [
+            0.6859899999653862,
+            0.7953819999784173,
+            0.7047000003694848
+          ]
+        }
+      }
+    },
+    {
+      "name": "touch",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.21973999992042081,
+          "samples_ms": [
+            0.21960300000500865,
+            0.24041899996518623,
+            0.21973999992042081
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7131030001801264,
+          "samples_ms": [
+            0.7131030001801264,
+            0.7502260000364913,
+            0.6620369999836839
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6612980000682,
+          "samples_ms": [
+            0.6612980000682,
+            0.6361769997056399,
+            0.6678220001958834
+          ]
+        }
+      }
+    },
+    {
+      "name": "touch",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.26541399984125746,
+          "samples_ms": [
+            0.26541399984125746,
+            0.27789000023403787,
+            0.19591399995988468
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6660900003225834,
+          "samples_ms": [
+            0.6681590002699522,
+            0.5465280000862549,
+            0.6660900003225834
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5558200000450597,
+          "samples_ms": [
+            0.7396319997496903,
+            0.5363209997995,
+            0.5558200000450597
+          ]
+        }
+      }
+    },
+    {
+      "name": "touch",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.21938600002613384,
+          "samples_ms": [
+            0.21938600002613384,
+            0.23773500015522586,
+            0.18768500012811273
+          ]
+        },
+        "exact": {
+          "median_ms": 0.5901010003981355,
+          "samples_ms": [
+            0.5901010003981355,
+            0.6291520003287587,
+            0.5198610001571069
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.52468499961833,
+          "samples_ms": [
+            0.5062270001872093,
+            0.52468499961833,
+            0.6849450001027435
+          ]
+        }
+      }
+    },
+    {
+      "name": "touch",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.23978900026122574,
+          "samples_ms": [
+            0.23978900026122574,
+            0.4414780000843166,
+            0.20905299970763735
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6203419998200843,
+          "samples_ms": [
+            0.6442359999709879,
+            0.5696540001736139,
+            0.6203419998200843
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5466780003189342,
+          "samples_ms": [
+            0.5466780003189342,
+            0.5806120002489479,
+            0.5459210001390602
+          ]
+        }
+      }
+    },
+    {
+      "name": "touch",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2533749998292478,
+          "samples_ms": [
+            0.24145299994415836,
+            0.6534559997817269,
+            0.2533749998292478
+          ]
+        },
+        "exact": {
+          "median_ms": 1.1350180002409616,
+          "samples_ms": [
+            1.2501549999797135,
+            1.1350180002409616,
+            0.7418840000354976
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5555879997700686,
+          "samples_ms": [
+            0.639398000203073,
+            0.5305019999468641,
+            0.5555879997700686
+          ]
+        }
+      }
+    },
+    {
+      "name": "separate",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.01963300019269809,
+          "samples_ms": [
+            0.02444199981255224,
+            0.01963300019269809,
+            0.016277999748126604
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06425099991247407,
+          "samples_ms": [
+            0.07131100028345827,
+            0.06425099991247407,
+            0.061795000419806456
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.1992919997064746,
+          "samples_ms": [
+            0.1992919997064746,
+            0.2648859999681008,
+            0.15048200020828517
+          ]
+        }
+      }
+    },
+    {
+      "name": "separate",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.020352000319689978,
+          "samples_ms": [
+            0.07080899968059384,
+            0.020352000319689978,
+            0.017100000150094274
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06380399963745731,
+          "samples_ms": [
+            0.06720200008203392,
+            0.06300899985944852,
+            0.06380399963745731
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.1492819997110928,
+          "samples_ms": [
+            0.1492819997110928,
+            0.14645999999629566,
+            0.18434899993735598
+          ]
+        }
+      }
+    },
+    {
+      "name": "separate",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.019205000171496067,
+          "samples_ms": [
+            0.02031700023508165,
+            0.019205000171496067,
+            0.016949000382737722
+          ]
+        },
+        "exact": {
+          "median_ms": 0.05681099992216332,
+          "samples_ms": [
+            0.05923400021856651,
+            0.05587599980572122,
+            0.05681099992216332
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.12778299969795626,
+          "samples_ms": [
+            0.12778299969795626,
+            0.16364900011467398,
+            0.1253299997188151
+          ]
+        }
+      }
+    },
+    {
+      "name": "separate",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.01732400005494128,
+          "samples_ms": [
+            0.018900000213761814,
+            0.01732400005494128,
+            0.016090999906737125
+          ]
+        },
+        "exact": {
+          "median_ms": 0.056520999805798056,
+          "samples_ms": [
+            0.05835999991177232,
+            0.05641999996441882,
+            0.056520999805798056
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.1268040000468318,
+          "samples_ms": [
+            0.1268040000468318,
+            0.16652499971314683,
+            0.12413200010996661
+          ]
+        }
+      }
+    },
+    {
+      "name": "separate",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.01794599984350498,
+          "samples_ms": [
+            0.019585000245569972,
+            0.01794599984350498,
+            0.01628300014999695
+          ]
+        },
+        "exact": {
+          "median_ms": 0.05848199998581549,
+          "samples_ms": [
+            0.06233100020835991,
+            0.057995000133814756,
+            0.05848199998581549
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.12988099979338585,
+          "samples_ms": [
+            0.12933999960296205,
+            0.15139400011321413,
+            0.12988099979338585
+          ]
+        }
+      }
+    },
+    {
+      "name": "separate",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.017381999896315392,
+          "samples_ms": [
+            0.01918800035127788,
+            0.017381999896315392,
+            0.01618999976926716
+          ]
+        },
+        "exact": {
+          "median_ms": 0.059143999806110514,
+          "samples_ms": [
+            0.05995699984850944,
+            0.059143999806110514,
+            0.0581529998271435
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.13329800003702985,
+          "samples_ms": [
+            0.12868600015281118,
+            0.15069500022946158,
+            0.13329800003702985
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar_separate",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.016075000075943535,
+          "samples_ms": [
+            0.016075000075943535,
+            0.013852999927621568,
+            0.050009999995381804
+          ]
+        },
+        "exact": {
+          "median_ms": 0.05470399992191233,
+          "samples_ms": [
+            0.058365999848319916,
+            0.05470399992191233,
+            0.05457799989017076
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5059690001871786,
+          "samples_ms": [
+            0.5059690001871786,
+            0.42235599994455697,
+            3.4410660000503412
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar_separate",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.014668999938294291,
+          "samples_ms": [
+            0.018583999917609617,
+            0.014668999938294291,
+            0.013380999916989822
+          ]
+        },
+        "exact": {
+          "median_ms": 0.0628850002613035,
+          "samples_ms": [
+            0.0628850002613035,
+            0.10411299990664702,
+            0.058632000218494795
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.42552200011414243,
+          "samples_ms": [
+            0.40827599968906725,
+            0.42552200011414243,
+            3.365045000009559
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar_separate",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.015317999896069523,
+          "samples_ms": [
+            0.024127999949996592,
+            0.015317999896069523,
+            0.013672000022779685
+          ]
+        },
+        "exact": {
+          "median_ms": 0.048040999899967574,
+          "samples_ms": [
+            0.05231500017544022,
+            0.04772500005856273,
+            0.048040999899967574
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.346223999713402,
+          "samples_ms": [
+            0.2992380000250705,
+            1.8713519998527772,
+            0.346223999713402
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar_separate",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.01477999967391952,
+          "samples_ms": [
+            0.018730000192590524,
+            0.01477999967391952,
+            0.013296999895828776
+          ]
+        },
+        "exact": {
+          "median_ms": 0.05300900011206977,
+          "samples_ms": [
+            0.05300900011206977,
+            0.04889899992122082,
+            0.7629110000380024
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.33135200010292465,
+          "samples_ms": [
+            0.3385110003364389,
+            0.33135200010292465,
+            0.3066910003326484
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar_separate",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.026480000087758526,
+          "samples_ms": [
+            0.018477999674360035,
+            1.9061329999203735,
+            0.026480000087758526
+          ]
+        },
+        "exact": {
+          "median_ms": 0.05158499971003039,
+          "samples_ms": [
+            0.05711799985874677,
+            0.05158499971003039,
+            0.049158000365423504
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.36533599995891564,
+          "samples_ms": [
+            0.31459299998459755,
+            1.1300300002403674,
+            0.36533599995891564
+          ]
+        }
+      }
+    },
+    {
+      "name": "coplanar_separate",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.014337999800773105,
+          "samples_ms": [
+            0.019086999600403942,
+            0.014337999800773105,
+            0.012933000107295811
+          ]
+        },
+        "exact": {
+          "median_ms": 0.05026600001656334,
+          "samples_ms": [
+            0.054288999763230095,
+            0.0501730000905809,
+            0.05026600001656334
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.314336999963416,
+          "samples_ms": [
+            0.3636989999904472,
+            0.314336999963416,
+            0.31143000023803324
+          ]
+        }
+      }
+    },
+    {
+      "name": "near_miss",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.01803499981178902,
+          "samples_ms": [
+            0.021828000171808526,
+            0.01803499981178902,
+            0.017442999705963302
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06409400020856992,
+          "samples_ms": [
+            0.06844300014563487,
+            0.06409400020856992,
+            0.06359300004987745
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.15284799974324415,
+          "samples_ms": [
+            0.20675900032074424,
+            0.15284799974324415,
+            0.14706199999636738
+          ]
+        }
+      }
+    },
+    {
+      "name": "near_miss",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.01793100000213599,
+          "samples_ms": [
+            0.02127900006598793,
+            0.01793100000213599,
+            0.01685999995970633
+          ]
+        },
+        "exact": {
+          "median_ms": 0.0663710002299922,
+          "samples_ms": [
+            0.06814199969085166,
+            0.0663710002299922,
+            0.06420099998649675
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.19017100021301303,
+          "samples_ms": [
+            0.19017100021301303,
+            0.1569629998812161,
+            0.19451899970590603
+          ]
+        }
+      }
+    },
+    {
+      "name": "near_miss",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.024311999823112274,
+          "samples_ms": [
+            0.024311999823112274,
+            0.018878999981097877,
+            0.05382699964684434
+          ]
+        },
+        "exact": {
+          "median_ms": 0.05823299989060615,
+          "samples_ms": [
+            0.06464199987021857,
+            0.05823199990118155,
+            0.05823299989060615
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.2726059997257835,
+          "samples_ms": [
+            1.4541860000463203,
+            0.2726059997257835,
+            0.16074799987109145
+          ]
+        }
+      }
+    },
+    {
+      "name": "near_miss",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.017491000107838772,
+          "samples_ms": [
+            0.021537999600695912,
+            0.017491000107838772,
+            0.015996000001905486
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06408300032489933,
+          "samples_ms": [
+            0.06408300032489933,
+            0.06117899965829565,
+            0.08118200003082165
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.13272799969854532,
+          "samples_ms": [
+            0.13272799969854532,
+            0.16947600033745402,
+            0.1316909997512994
+          ]
+        }
+      }
+    },
+    {
+      "name": "near_miss",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.016895000044314656,
+          "samples_ms": [
+            0.02001899974857224,
+            0.016895000044314656,
+            0.01613099993846845
+          ]
+        },
+        "exact": {
+          "median_ms": 0.05744500003856956,
+          "samples_ms": [
+            0.06093599995438126,
+            0.05719199998566182,
+            0.05744500003856956
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.3897970000252826,
+          "samples_ms": [
+            2.008173999911378,
+            0.1906900001813483,
+            0.3897970000252826
+          ]
+        }
+      }
+    },
+    {
+      "name": "near_miss",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.017961999674298568,
+          "samples_ms": [
+            0.022188000002643093,
+            0.017961999674298568,
+            0.01640799973756657
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06276500016610953,
+          "samples_ms": [
+            0.06276500016610953,
+            0.05799000018669176,
+            0.09753099993758951
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.1260869998986891,
+          "samples_ms": [
+            0.12758799994116998,
+            0.1260869998986891,
+            0.12496399995143292
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-12",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2092290001201036,
+          "samples_ms": [
+            0.23873800000728806,
+            0.2092290001201036,
+            0.1911469998958637
+          ]
+        },
+        "exact": {
+          "median_ms": 0.07787999993524863,
+          "samples_ms": [
+            0.07787999993524863,
+            0.10386999974798528,
+            0.06607500017707935
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.26138199973502196,
+          "samples_ms": [
+            0.1557240002512117,
+            0.4141709996474674,
+            0.26138199973502196
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-12",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2420780001557432,
+          "samples_ms": [
+            0.2768150002339098,
+            0.2420780001557432,
+            0.21998200008965796
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06670099992334144,
+          "samples_ms": [
+            0.07187600022007246,
+            0.06670099992334144,
+            0.06514100005006185
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.1616119998288923,
+          "samples_ms": [
+            0.1890489998004341,
+            0.1616119998288923,
+            0.15418500015584868
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-12",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.19828700033031055,
+          "samples_ms": [
+            0.2509989999452955,
+            0.19828700033031055,
+            0.18847999990612152
+          ]
+        },
+        "exact": {
+          "median_ms": 0.060802000007242896,
+          "samples_ms": [
+            0.06453499963754439,
+            0.060802000007242896,
+            0.06054200002836296
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.1339360001111345,
+          "samples_ms": [
+            0.14366699997481192,
+            0.1339360001111345,
+            0.13272800015329267
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-12",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.23136500021792017,
+          "samples_ms": [
+            0.23136500021792017,
+            0.21959800005788566,
+            0.24176600027203676
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06193999979586806,
+          "samples_ms": [
+            0.06732300016665249,
+            0.06193999979586806,
+            0.061032999838062096
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.14037500022823224,
+          "samples_ms": [
+            0.14037500022823224,
+            0.13633900016429834,
+            0.1803479999580304
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-12",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2967129998978635,
+          "samples_ms": [
+            0.31703200011179433,
+            0.2967129998978635,
+            0.20019699968543136
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06294000013440382,
+          "samples_ms": [
+            0.070263999987219,
+            0.06294000013440382,
+            0.06144999997559353
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.14282099982665386,
+          "samples_ms": [
+            0.15185800020844908,
+            0.14282099982665386,
+            0.137624000217329
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-12",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2517520001674711,
+          "samples_ms": [
+            0.2517520001674711,
+            0.23490400008086,
+            0.35668900000018766
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06901300002937205,
+          "samples_ms": [
+            0.06901300002937205,
+            0.06395100035661017,
+            0.08470200009469409
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.14457499992204248,
+          "samples_ms": [
+            0.14544099985869252,
+            0.14457499992204248,
+            0.13743899990004138
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-10",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.19492799992804066,
+          "samples_ms": [
+            0.2103690003423253,
+            0.19492799992804066,
+            0.18996299968421226
+          ]
+        },
+        "exact": {
+          "median_ms": 0.07185100002971012,
+          "samples_ms": [
+            0.07185100002971012,
+            0.0959190001594834,
+            0.06579099999726168
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.1503640000919404,
+          "samples_ms": [
+            0.15797300011399784,
+            0.1503640000919404,
+            0.14640800009146915
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-10",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.22690100013278425,
+          "samples_ms": [
+            0.22690100013278425,
+            0.2132670001628867,
+            0.29636800036314526
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06826000026194379,
+          "samples_ms": [
+            0.07391999997707899,
+            0.06826000026194379,
+            0.06451200033552595
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.20964700024705962,
+          "samples_ms": [
+            0.2733030000854342,
+            0.20964700024705962,
+            0.15624100024069776
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-10",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.21046800020485534,
+          "samples_ms": [
+            0.2632630003063241,
+            0.21046800020485534,
+            0.19954199979110854
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06091600016588927,
+          "samples_ms": [
+            0.06371999961629626,
+            0.06091600016588927,
+            0.05930700035605696
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.13932700039731571,
+          "samples_ms": [
+            0.2462940001350944,
+            0.13932700039731571,
+            0.13176499987821444
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-10",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.316797999857954,
+          "samples_ms": [
+            0.351838000369753,
+            0.20120200042583747,
+            0.316797999857954
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06169700009195367,
+          "samples_ms": [
+            0.06784000015613856,
+            0.06169700009195367,
+            0.0583089999963704
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.12996500026929425,
+          "samples_ms": [
+            0.136419000227761,
+            0.12996500026929425,
+            0.1286680003431684
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-10",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.22056900024836068,
+          "samples_ms": [
+            0.22056900024836068,
+            0.20638400019379333,
+            0.24604999998700805
+          ]
+        },
+        "exact": {
+          "median_ms": 0.06381999992299825,
+          "samples_ms": [
+            0.06687500035695848,
+            0.06381999992299825,
+            0.05896199991184403
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.13836400012223748,
+          "samples_ms": [
+            0.13836400012223748,
+            0.13721100003749598,
+            0.23924700008137734
+          ]
+        }
+      }
+    },
+    {
+      "name": "positive_gap_1e-10",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": true,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL do_intersect (EPICK predicates)",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.23563200011267327,
+          "samples_ms": [
+            0.3242099996896286,
+            0.23563200011267327,
+            0.1934849997269339
+          ]
+        },
+        "exact": {
+          "median_ms": 0.062247000187198864,
+          "samples_ms": [
+            0.06766900014554267,
+            0.062247000187198864,
+            0.06061000021873042
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.14431699992201175,
+          "samples_ms": [
+            0.14431699992201175,
+            0.15922800002954318,
+            0.14272199996412382
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-09",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.27767600022343686,
+          "samples_ms": [
+            0.24709499984965078,
+            0.27767600022343686,
+            0.6059390002519649
+          ]
+        },
+        "exact": {
+          "median_ms": 0.9078620000764204,
+          "samples_ms": [
+            1.1240549997637572,
+            0.8006120001482486,
+            0.9078620000764204
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.787899999977526,
+          "samples_ms": [
+            0.811500000054366,
+            0.787899999977526,
+            0.782023000283516
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-09",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2669760001481336,
+          "samples_ms": [
+            0.2669760001481336,
+            0.4919060002066544,
+            0.22650000028079376
+          ]
+        },
+        "exact": {
+          "median_ms": 1.0142739997718309,
+          "samples_ms": [
+            0.9353640002700558,
+            1.0376700001870631,
+            1.0142739997718309
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 1.359473999855254,
+          "samples_ms": [
+            1.359473999855254,
+            2.1620729999085597,
+            0.8587759998590627
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-09",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2721110004131333,
+          "samples_ms": [
+            0.2721110004131333,
+            0.3240269998059375,
+            0.2668670003913576
+          ]
+        },
+        "exact": {
+          "median_ms": 1.71543099986593,
+          "samples_ms": [
+            1.71543099986593,
+            1.6706609999346256,
+            2.4516480002603203
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7305009999072354,
+          "samples_ms": [
+            0.7305009999072354,
+            0.6816090003667341,
+            0.8454470003016468
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-09",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.343440000051487,
+          "samples_ms": [
+            0.37019899991719285,
+            0.2849370002877549,
+            0.343440000051487
+          ]
+        },
+        "exact": {
+          "median_ms": 0.8046220000323956,
+          "samples_ms": [
+            0.8046220000323956,
+            0.78625700007251,
+            0.8457339999949909
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6978159999562195,
+          "samples_ms": [
+            0.6978159999562195,
+            0.6523020001623081,
+            0.7075609996718413
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-09",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.3635260000010021,
+          "samples_ms": [
+            0.3635260000010021,
+            0.39564799999425304,
+            0.24161400006050826
+          ]
+        },
+        "exact": {
+          "median_ms": 0.972150000052352,
+          "samples_ms": [
+            0.841692999983934,
+            1.2373449999358854,
+            0.972150000052352
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.778062999870599,
+          "samples_ms": [
+            0.778062999870599,
+            0.7166880000113451,
+            0.7922599997982616
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-09",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 1.7364349996569217,
+          "samples_ms": [
+            0.3281620001871488,
+            1.7364349996569217,
+            2.372075000039331
+          ]
+        },
+        "exact": {
+          "median_ms": 2.725918999658461,
+          "samples_ms": [
+            4.024996000225656,
+            2.725918999658461,
+            0.9558469996591157
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.948485999742843,
+          "samples_ms": [
+            1.9154949995936477,
+            0.948485999742843,
+            0.803964000169799
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-09",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.43626899969240185,
+          "samples_ms": [
+            0.43626899969240185,
+            0.33446599991293624,
+            0.7863969999561959
+          ]
+        },
+        "exact": {
+          "median_ms": 1.0194680003223766,
+          "samples_ms": [
+            0.9008480001284624,
+            1.0194680003223766,
+            1.1759359999814478
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.9779170000001614,
+          "samples_ms": [
+            0.9520400003566465,
+            0.9779170000001614,
+            1.305139000123745
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-09",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2595139999357343,
+          "samples_ms": [
+            0.2595139999357343,
+            0.2421719996164029,
+            0.26128299987249193
+          ]
+        },
+        "exact": {
+          "median_ms": 0.8482889998049359,
+          "samples_ms": [
+            0.8248049998655915,
+            0.9697720001895505,
+            0.8482889998049359
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.8001429996511433,
+          "samples_ms": [
+            0.8057330001065566,
+            0.8001429996511433,
+            0.7970890001161024
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-09",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.23894000014479388,
+          "samples_ms": [
+            0.23894000014479388,
+            0.2295409999533149,
+            0.2421559997856093
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7453120001628122,
+          "samples_ms": [
+            0.7453120001628122,
+            0.7654169999113947,
+            0.7088510001267423
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6982629997764889,
+          "samples_ms": [
+            0.7030209999356885,
+            0.6982629997764889,
+            0.6793460001972562
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-09",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.23458000032405835,
+          "samples_ms": [
+            0.24042599989115843,
+            0.2213920001850056,
+            0.23458000032405835
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7077609998304979,
+          "samples_ms": [
+            0.7234270001390541,
+            0.7077609998304979,
+            0.6705219998366374
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6868069999654836,
+          "samples_ms": [
+            0.7091669999681471,
+            0.6868069999654836,
+            0.6565399999090005
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-09",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.28304800025580334,
+          "samples_ms": [
+            0.28304800025580334,
+            0.2302930001860659,
+            0.283153000054881
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7654639998690982,
+          "samples_ms": [
+            0.7485179999093816,
+            0.7767950000925339,
+            0.7654639998690982
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7873340000514872,
+          "samples_ms": [
+            0.7514769999943383,
+            0.7873340000514872,
+            0.8397340002375131
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-09",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2528390000406944,
+          "samples_ms": [
+            0.2528390000406944,
+            0.2230000000054133,
+            0.2579729998615221
+          ]
+        },
+        "exact": {
+          "median_ms": 0.800402000095346,
+          "samples_ms": [
+            0.800402000095346,
+            0.719976999789651,
+            0.8461679999527405
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.8382789997085638,
+          "samples_ms": [
+            1.2194119999549002,
+            0.7795840001563192,
+            0.8382789997085638
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-10",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.3421189999244234,
+          "samples_ms": [
+            0.5787270001746947,
+            0.3421189999244234,
+            0.23267200003829203
+          ]
+        },
+        "exact": {
+          "median_ms": 0.8887610001693247,
+          "samples_ms": [
+            1.0470180000083928,
+            0.8887610001693247,
+            0.8460550002382661
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.9364540001115529,
+          "samples_ms": [
+            0.9848530003182532,
+            0.9203310000884812,
+            0.9364540001115529
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-10",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.30515899970851024,
+          "samples_ms": [
+            0.30515899970851024,
+            0.35044700007347274,
+            0.23334999968938064
+          ]
+        },
+        "exact": {
+          "median_ms": 0.9372250001433713,
+          "samples_ms": [
+            0.9069559996532917,
+            0.9372250001433713,
+            0.9605989998817677
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.8341160000782111,
+          "samples_ms": [
+            0.8525650000592577,
+            0.8286779998343263,
+            0.8341160000782111
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-10",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2515460000722669,
+          "samples_ms": [
+            0.25224799992429325,
+            0.22786199997426593,
+            0.2515460000722669
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7659200000489363,
+          "samples_ms": [
+            0.7750340000711731,
+            0.7222240001283353,
+            0.7659200000489363
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.782266999976855,
+          "samples_ms": [
+            0.7618089998686628,
+            0.782266999976855,
+            0.806010000360402
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-10",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2334139999220497,
+          "samples_ms": [
+            0.28217999988555675,
+            0.2334139999220497,
+            0.2244980000796204
+          ]
+        },
+        "exact": {
+          "median_ms": 0.8119539998006076,
+          "samples_ms": [
+            0.7545280000158527,
+            0.885324999671866,
+            0.8119539998006076
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7018149999566958,
+          "samples_ms": [
+            0.7018149999566958,
+            0.6643199999416538,
+            0.7341030000134197
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-10",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.23804100010238471,
+          "samples_ms": [
+            0.24859899986040546,
+            0.23804100010238471,
+            0.21772299987787846
+          ]
+        },
+        "exact": {
+          "median_ms": 0.8050779997574864,
+          "samples_ms": [
+            0.9594540001671703,
+            0.7858739995754149,
+            0.8050779997574864
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6984320002629829,
+          "samples_ms": [
+            0.6984320002629829,
+            0.7106059997568082,
+            0.6978549999985262
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_sliver_1e-10",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": true,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.30907299969840096,
+          "samples_ms": [
+            0.30907299969840096,
+            0.6016950001139776,
+            0.24718200029383297
+          ]
+        },
+        "exact": {
+          "median_ms": 0.8877240002220788,
+          "samples_ms": [
+            0.7500439996874775,
+            0.8877240002220788,
+            0.9826109999266919
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 1.981949999844801,
+          "samples_ms": [
+            0.802867999937007,
+            1.981949999844801,
+            2.9475269998329168
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-10",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2750779999587394,
+          "samples_ms": [
+            0.2750779999587394,
+            0.26817600019057863,
+            0.2981419997922785
+          ]
+        },
+        "exact": {
+          "median_ms": 0.9202689998346614,
+          "samples_ms": [
+            0.9075729999494797,
+            0.9202689998346614,
+            1.424723999662092
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.9589119999873219,
+          "samples_ms": [
+            2.2071230000619835,
+            0.9081299999706971,
+            0.9589119999873219
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-10",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2354930002184119,
+          "samples_ms": [
+            0.3003940000780858,
+            0.2354930002184119,
+            0.2183749998039275
+          ]
+        },
+        "exact": {
+          "median_ms": 0.9147719997599779,
+          "samples_ms": [
+            0.9147719997599779,
+            0.945502999911696,
+            0.8335360003002279
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.8167210003193759,
+          "samples_ms": [
+            0.7781350000186649,
+            0.8368899998458801,
+            0.8167210003193759
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-10",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.24019000011321623,
+          "samples_ms": [
+            0.3727949997482938,
+            0.24019000011321623,
+            0.2200590001848468
+          ]
+        },
+        "exact": {
+          "median_ms": 0.9726299999783805,
+          "samples_ms": [
+            0.9726299999783805,
+            1.0427819997858023,
+            0.7496979997085873
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7860770001570927,
+          "samples_ms": [
+            0.7365670003309788,
+            0.8159050003087032,
+            0.7860770001570927
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-10",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.22393199969883426,
+          "samples_ms": [
+            0.24907100032578455,
+            0.22393199969883426,
+            0.2158699999199598
+          ]
+        },
+        "exact": {
+          "median_ms": 0.8692910000718257,
+          "samples_ms": [
+            0.9215860000040266,
+            0.8692910000718257,
+            0.72851000004448
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.8810419999463193,
+          "samples_ms": [
+            0.8974590000434546,
+            0.7472409997717477,
+            0.8810419999463193
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-10",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2246690000902163,
+          "samples_ms": [
+            0.262571999883221,
+            0.2246690000902163,
+            0.2158949996555748
+          ]
+        },
+        "exact": {
+          "median_ms": 1.0666140001376334,
+          "samples_ms": [
+            0.8200659999602067,
+            1.0666140001376334,
+            1.094109999939974
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.8081529999799386,
+          "samples_ms": [
+            1.914342999953078,
+            0.8081529999799386,
+            0.7198030002655287
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_sliver_1e-10",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": false,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2560349998930178,
+          "samples_ms": [
+            0.2560349998930178,
+            0.22087399975134758,
+            0.28196599987495574
+          ]
+        },
+        "exact": {
+          "median_ms": 0.9067760001926217,
+          "samples_ms": [
+            0.7520910003222525,
+            0.9422029997949721,
+            0.9067760001926217
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7732590001978679,
+          "samples_ms": [
+            1.029452999773639,
+            0.7265419999384903,
+            0.7732590001978679
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_only",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2898210000239487,
+          "samples_ms": [
+            0.32559500004936126,
+            0.24447499981761212,
+            0.2898210000239487
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7897300001786789,
+          "samples_ms": [
+            0.7897300001786789,
+            0.7718759998169844,
+            0.930106999931013
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7504260001951479,
+          "samples_ms": [
+            0.8121119999486837,
+            0.7445689998348826,
+            0.7504260001951479
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_only",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2727559999584628,
+          "samples_ms": [
+            0.3183759999956237,
+            0.2727559999584628,
+            0.22033300001567113
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7913620002000243,
+          "samples_ms": [
+            0.7913620002000243,
+            0.8835720000206493,
+            0.7488960000046063
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.7554139997409948,
+          "samples_ms": [
+            0.8593069997004932,
+            0.7554139997409948,
+            0.7439569999405649
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_only",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2674109996405605,
+          "samples_ms": [
+            0.25126599985014764,
+            0.2700290001484973,
+            0.2674109996405605
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6528760000037437,
+          "samples_ms": [
+            0.6543049998981587,
+            0.6528760000037437,
+            0.6198269998094474
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6651359999523265,
+          "samples_ms": [
+            0.6651359999523265,
+            0.7071610002640227,
+            0.6343489999380836
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_only",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.23598699999638484,
+          "samples_ms": [
+            0.25536899966027704,
+            0.23598699999638484,
+            0.21557499985647155
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6778120000490162,
+          "samples_ms": [
+            0.6778120000490162,
+            0.7346050001615367,
+            0.6418019997909141
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6225510001058865,
+          "samples_ms": [
+            0.5935560002399143,
+            0.6225510001058865,
+            0.6251320000956184
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_only",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.24485099993398762,
+          "samples_ms": [
+            0.24485099993398762,
+            0.2689200000531855,
+            0.22834099991086987
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6689970000479661,
+          "samples_ms": [
+            0.6855910000922449,
+            0.6689970000479661,
+            0.6347240000650345
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6527859995912877,
+          "samples_ms": [
+            0.8580160001656623,
+            0.6527859995912877,
+            0.6232570003703586
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_edge_only",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "CGAL PMP self_intersections",
+      "oracle_hit": false,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2522129998396849,
+          "samples_ms": [
+            0.2522129998396849,
+            0.22454500003732392,
+            0.2970170003209205
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6766559999960009,
+          "samples_ms": [
+            0.6552240001838072,
+            0.6766559999960009,
+            0.7053079998513567
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6904249999024614,
+          "samples_ms": [
+            0.6904249999024614,
+            0.8208589997593663,
+            0.6205399999998917
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_only",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2448069999445579,
+          "samples_ms": [
+            0.2448069999445579,
+            0.22734499998477986,
+            0.42479000012463075
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6493819996649108,
+          "samples_ms": [
+            0.6493819996649108,
+            0.7268009999279457,
+            0.6076979998397292
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.584314999741764,
+          "samples_ms": [
+            0.584314999741764,
+            0.5561520001720055,
+            0.6079680001676024
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_only",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.22809700021753088,
+          "samples_ms": [
+            0.27376800017009373,
+            0.22809700021753088,
+            0.2164239999729034
+          ]
+        },
+        "exact": {
+          "median_ms": 0.635980999959429,
+          "samples_ms": [
+            0.6241880000743549,
+            0.6427859998439089,
+            0.635980999959429
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6157579996397544,
+          "samples_ms": [
+            0.6232089999684831,
+            0.6157579996397544,
+            0.5900080000174057
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_only",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.26087900005222764,
+          "samples_ms": [
+            0.24448400017718086,
+            0.26087900005222764,
+            0.4167890001554042
+          ]
+        },
+        "exact": {
+          "median_ms": 0.5929559997639444,
+          "samples_ms": [
+            0.6266499999583175,
+            0.5929559997639444,
+            0.5132890000822954
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.61988899960852,
+          "samples_ms": [
+            0.6632239997088618,
+            0.47402900008819415,
+            0.61988899960852
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_only",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2517210000405612,
+          "samples_ms": [
+            0.5240939999566763,
+            0.24151700017682742,
+            0.2517210000405612
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6150659996819741,
+          "samples_ms": [
+            0.6150659996819741,
+            0.5803249996461091,
+            1.0026800000559888
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5196279998926912,
+          "samples_ms": [
+            0.5196279998926912,
+            0.4970869999851857,
+            0.5902970001443464
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_only",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.2899930000239692,
+          "samples_ms": [
+            1.047859000209428,
+            0.2899930000239692,
+            0.2270370000587718
+          ]
+        },
+        "exact": {
+          "median_ms": 0.5775059998995857,
+          "samples_ms": [
+            0.9343220003756869,
+            0.5236699998931726,
+            0.5775059998995857
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5246340001576755,
+          "samples_ms": [
+            0.5244349999884435,
+            0.5601580000984541,
+            0.5246340001576755
+          ]
+        }
+      }
+    },
+    {
+      "name": "shared_vertex_only",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": false,
+      "legacy": false,
+      "exact": false,
+      "unfiltered": false,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.22862700006953673,
+          "samples_ms": [
+            0.27512700035003945,
+            0.22862700006953673,
+            0.21362300003602286
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7715849997111945,
+          "samples_ms": [
+            0.7715849997111945,
+            0.99682500012932,
+            0.6323170000541722
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.852516000122705,
+          "samples_ms": [
+            0.852516000122705,
+            1.0925359997600026,
+            0.6440739998652134
+          ]
+        }
+      }
+    },
+    {
+      "name": "duplicate",
+      "scale": 1e-06,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.23220799994305708,
+          "samples_ms": [
+            0.23220799994305708,
+            0.20645899985538563,
+            0.23342000031334464
+          ]
+        },
+        "exact": {
+          "median_ms": 1.206669000112015,
+          "samples_ms": [
+            1.206669000112015,
+            0.6928939997123962,
+            2.007553999646916
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 1.3031020002927107,
+          "samples_ms": [
+            1.3031020002927107,
+            1.3423640002656612,
+            0.8438700001534016
+          ]
+        }
+      }
+    },
+    {
+      "name": "duplicate",
+      "scale": 1e-06,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.21910499981458997,
+          "samples_ms": [
+            0.549450000107754,
+            0.21910499981458997,
+            0.19980400020358502
+          ]
+        },
+        "exact": {
+          "median_ms": 0.8832230000734853,
+          "samples_ms": [
+            0.8832230000734853,
+            0.7853809997868666,
+            0.903120999737439
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.720784999884927,
+          "samples_ms": [
+            0.6886539999868546,
+            1.0270099996887438,
+            0.720784999884927
+          ]
+        }
+      }
+    },
+    {
+      "name": "duplicate",
+      "scale": 1.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.21521600001506158,
+          "samples_ms": [
+            0.2620630002638791,
+            0.21521600001506158,
+            0.19552999992811237
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6095959997765021,
+          "samples_ms": [
+            0.6034180000824563,
+            0.6095959997765021,
+            0.7799469999554276
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5897089999962191,
+          "samples_ms": [
+            0.6525799999508308,
+            0.5897089999962191,
+            0.5657320002683264
+          ]
+        }
+      }
+    },
+    {
+      "name": "duplicate",
+      "scale": 1.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.20462000020415871,
+          "samples_ms": [
+            0.2465020002091478,
+            0.20462000020415871,
+            0.19744799965337734
+          ]
+        },
+        "exact": {
+          "median_ms": 0.6036639997546445,
+          "samples_ms": [
+            0.5959439999969618,
+            0.6036639997546445,
+            0.6058760000087204
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6315620003078948,
+          "samples_ms": [
+            0.6878619997223723,
+            0.5950820000180101,
+            0.6315620003078948
+          ]
+        }
+      }
+    },
+    {
+      "name": "duplicate",
+      "scale": 1000000.0,
+      "reverse": false,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.20823399972869083,
+          "samples_ms": [
+            0.26523800033828593,
+            0.20823399972869083,
+            0.19835700004477985
+          ]
+        },
+        "exact": {
+          "median_ms": 0.7014539996816893,
+          "samples_ms": [
+            0.6410080000023299,
+            0.7047509998301393,
+            0.7014539996816893
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.5828670000482816,
+          "samples_ms": [
+            0.5828670000482816,
+            0.6156009999358503,
+            0.5771149999418412
+          ]
+        }
+      }
+    },
+    {
+      "name": "duplicate",
+      "scale": 1000000.0,
+      "reverse": true,
+      "expected": true,
+      "legacy": true,
+      "exact": true,
+      "unfiltered": true,
+      "oracle": "analytic only (pair is not manifold / duplicate)",
+      "oracle_hit": null,
+      "timing": {
+        "legacy": {
+          "median_ms": 0.19757800009756465,
+          "samples_ms": [
+            0.2186730002904369,
+            0.19757800009756465,
+            0.18869999985327013
+          ]
+        },
+        "exact": {
+          "median_ms": 0.636408999980631,
+          "samples_ms": [
+            0.6441860000450106,
+            0.6130060000941739,
+            0.636408999980631
+          ]
+        },
+        "unfiltered": {
+          "median_ms": 0.6995130001996586,
+          "samples_ms": [
+            0.5878500001017528,
+            0.7696000002397341,
+            0.6995130001996586
+          ]
+        }
+      }
+    }
+  ],
+  "random": [
+    {
+      "index": 0,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 1,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 2,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 3,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 4,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 5,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 6,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 7,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 8,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 9,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 10,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 11,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 12,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 13,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 14,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 15,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 16,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 17,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 18,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 19,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 20,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 21,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 22,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 23,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 24,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 25,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 26,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 27,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 28,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 29,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 30,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 31,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 32,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 33,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 34,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 35,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 36,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 37,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 38,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 39,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 40,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 41,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 42,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 43,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 44,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 45,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 46,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 47,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 48,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 49,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 50,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 51,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 52,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 53,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 54,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 55,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 56,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 57,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 58,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 59,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 60,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 61,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 62,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 63,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 64,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 65,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 66,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 67,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 68,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 69,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 70,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 71,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 72,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 73,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 74,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 75,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 76,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 77,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 78,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 79,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 80,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 81,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 82,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 83,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 84,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 85,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 86,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 87,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 88,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 89,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 90,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 91,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 92,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 93,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 94,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 95,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 96,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 97,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 98,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 99,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 100,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 101,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 102,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 103,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 104,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 105,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 106,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 107,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 108,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 109,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 110,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 111,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 112,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 113,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 114,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 115,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 116,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 117,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 118,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 119,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 120,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 121,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 122,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 123,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 124,
+      "status": "measured",
+      "exact": true,
+      "oracle_hit": true
+    },
+    {
+      "index": 125,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 126,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    },
+    {
+      "index": 127,
+      "status": "measured",
+      "exact": false,
+      "oracle_hit": false
+    }
+  ],
+  "summary": {
+    "legacy": {
+      "false_positive": 12,
+      "false_negative": 24
+    },
+    "exact": {
+      "false_positive": 0,
+      "false_negative": 0
+    },
+    "unfiltered": {
+      "false_positive": 0,
+      "false_negative": 0
+    }
+  },
+  "python_peak_bytes": 30775,
+  "native_memory_measured": false,
+  "elapsed_seconds": 0.9489068670000051,
+  "external_mismatches": 0
+}

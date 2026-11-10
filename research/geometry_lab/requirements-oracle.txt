@@ -1,0 +1,4 @@
+# Optional test environment only. SWIG bindings GPL-3.0-or-later/commercial.
+# Never included in the library's runtime dependencies or distributed wheels.
+cgal==6.0.1.post202410241521
+numpy==2.3.5
