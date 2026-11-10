@@ -336,6 +336,33 @@
       ],
       "status": "research_R11_attribute_audit_passed_not_uv_island_or_shading_solution",
       "approved": false
+    },
+    {
+      "id": "blender-boundary-uv-charts-r12",
+      "version": "0.12.0",
+      "api": "cbdk_geometry.uv_charts.label_chart_offsets",
+      "purpose": "元Blender境界UVコーナーを保持しつつ、新面ごとのUVチャートを分岐させて境界誤差を内部シームとして再配置する研究用処理",
+      "preconditions": [
+        "source boundary edge UV differs from cylindrical base by consistent 2D translation",
+        "R10 synthetic XY-star-shaped Z-separated strip",
+        "Blender BMesh original source loop UV accessible"
+      ],
+      "input": "XYZ triangle strip and per-boundary-edge (du,dv) offsets read from source BMesh UV",
+      "output": "triangle chart offsets and seam counts/fraction/length, approved=false",
+      "parameters": {
+        "tolerance": 0.00001,
+        "method": "deterministic multi-source BFS"
+      },
+      "success": "new 8/8 and seen4/4 research checks; max new boundary gap <=6e-8; joined CGAL0 across24 arms",
+      "failure": "up to126 new interior seam edges / 41.4%; not texture seamless; source affine transforms/UV normal smoothing unsupported",
+      "validation": "tests/test_r12_charts.py; cycles/r12/blender_run.py; cycles/r12/evaluate.py",
+      "performance": "cycles/r12/RESULTS.md",
+      "references": [
+        "cycles/r12/RESEARCH.md",
+        "cycles/r12/STATUS.json"
+      ],
+      "status": "research_R12_boundary_match_relocated_seams_not_product_approved",
+      "approved": false
     }
   ]
 }

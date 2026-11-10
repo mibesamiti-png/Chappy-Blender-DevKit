@@ -1,0 +1,82 @@
+{
+  "cycle": "R12",
+  "status": "complete_scoped_UV_chart_research_gate_passed_not_integrated",
+  "parent_head": "f7fb63b1f672ab014652bb08b2013b82cf325eba",
+  "candidate": "cbdk_geometry.uv_charts.label_chart_offsets",
+  "approved": false,
+  "synthetic_only": true,
+  "blender": "4.4.3",
+  "official_blender_sha256": "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946",
+  "oracle": "external Python 3.12 CGAL 6.0.1",
+  "cases": {
+    "seen": 4,
+    "fresh_holdout": 8,
+    "methods": 2,
+    "complete_assembled_meshes": 24,
+    "strip_meshes_independently_evaluated": 24
+  },
+  "gate": {
+    "boundary_uv_error_max": 0.00001,
+    "internal_seam_fraction_max": 0.6,
+    "all_original_UV_XYZ_material_unchanged": true,
+    "full_mesh_CGAL_intersections_max": 0,
+    "uv_signed_area_delta_max": 0.00001
+  },
+  "result": {
+    "seen_pass": 4,
+    "new_pass": 8,
+    "new_continuous": 3,
+    "new_split": 3,
+    "new_blocks": 1,
+    "new_multi": 1,
+    "new_candidate_boundary_uv_error_max": 5.960464477539063e-8,
+    "noncontinuous_baseline_boundary_error_min": 0.20000004768371582,
+    "new_internal_seam_counts": [
+      0,
+      0,
+      0,
+      116,
+      84,
+      118,
+      37,
+      126
+    ],
+    "new_internal_edge_counts": [
+      246,
+      275,
+      253,
+      290,
+      260,
+      330,
+      282,
+      304
+    ],
+    "new_max_internal_seam_fraction": 0.4144736842105263,
+    "all_24_joined_CGAL_hits": 0,
+    "all_24_strip_CGAL_hits": 0,
+    "all_candidate_original_faces_unchanged": true,
+    "all_scene_restored": true,
+    "cross_method_XYZ_and_triangles_identical": true,
+    "independent_oracle_unavailable": 0,
+    "new_quality_passing_geometry": 8,
+    "source_changed_after_first_holdout": false
+  },
+  "source_sha256": {
+    "cbdk_geometry/uv_charts.py": "75acfaaff8963cfe9a0ecdfb2ad16bc1f82363625dd5e4077fe07d24c3a17e6a",
+    "cycles/r12/fixtures.py": "1f9be7006701233d436a0aa69f3c2484909169beefc953448816326c85083c18",
+    "cycles/r12/blender_run.py": "5b53c7670a6858051d3b45f339803b4de32dbf388c344163355e59edfb44d67d",
+    "cycles/r12/evaluate.py": "166ca2022e31d215ba1f1702c211fdb19a8bf00772ec5fadc6927dd7a8ff34a2"
+  },
+  "first_full_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42925218978",
+  "development_smoke_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42925018451",
+  "research_gate_met": true,
+  "limitations": [
+    "internal UV seams up to 41.4%",
+    "not optimal UV island layout",
+    "only translational chart constraints",
+    "normal continuity untested",
+    "no real assets or .blend import"
+  ],
+  "decision": "Boundary UV match with explicit interior seams on controlled synthetic collars, research only, product review not requested",
+  "next": "R13 not auto-started; future independent seam minimization or real authorized mesh and normal tests."
+}
