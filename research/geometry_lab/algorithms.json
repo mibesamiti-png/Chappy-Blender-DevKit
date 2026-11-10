@@ -104,6 +104,33 @@
       ],
       "status": "experimental",
       "approved": false
+    },
+    {
+      "id": "exact-cached-topology",
+      "version": "0.3.0",
+      "api": "cbdk_geometry.accelerated.detect_accelerated",
+      "purpose": "R2と同じ静的交差契約を保ち、面キャッシュ・厳密共有境界の早期判定で高速化",
+      "preconditions": [
+        "非退化三角形",
+        "binary64 coordinates",
+        "2048面以内"
+      ],
+      "input": "Mesh",
+      "output": "status / pairs / scanned / narrow_tests / certified=false",
+      "parameters": {
+        "pair_budget": 200000,
+        "seconds": 30,
+        "shortcuts": true
+      },
+      "success": "measuredかつ独立検証済みfixtureで参照一致",
+      "failure": "上限ではpairs=null、退化はValueError",
+      "validation": "tests/test_accelerated.py; cycles/r3/benchmark.py",
+      "performance": "cycles/r3/RESULTS.md",
+      "references": [
+        "cycles/r3/RESEARCH.md"
+      ],
+      "status": "review_only",
+      "approved": false
     }
   ]
 }

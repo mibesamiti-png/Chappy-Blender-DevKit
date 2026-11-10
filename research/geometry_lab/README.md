@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R2
+# CBDK Geometry Research Lab — R3
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -64,3 +64,17 @@ python -m cycles.r2.recheck_blender
 ```
 
 Blender exporterはruns/r2_meshes.json、再評価はruns/r2_blender.jsonを新規作成する。再実行時は既存のruns出力を別の場所へ保管してから実行する。人工mesh snapshotはruns内にだけ置き、コミットする結果は数値・ペアID・hashのみ。CGALはGPL系の検証専用依存で、ライブラリruntime requirementsには入れない。Blender PythonへCGAL wheelを直接importしない。
+
+## R3: 高速化とR1全候補の再評価
+
+[選定・停止条件](cycles/r3/RESEARCH.md)、[結果](cycles/r3/RESULTS.md)、[状態](cycles/r3/STATUS.json)。新APIは `cbdk_geometry.accelerated.detect_accelerated(mesh, shortcuts=True)`。`shortcuts=False`でcacheだけの比較ができる。R2/R1 APIは変更しない。独立研究CIはR2とR3を両方実行する。
+
+```bash
+python -m cycles.r3.benchmark --output runs/new-r3.json
+# R2人工snapshotがある場合だけ --include-blender を追加（保存hash一致必須）
+blender --background --factory-startup --disable-autoexec --python-exit-code 1 \
+  --python cycles/r3/export_joins.py
+python -m cycles.r3.reevaluate
+```
+
+再評価のsnapshot/結果はruns/r3_join_meshes.json、runs/r3_reevaluation.jsonへ新規作成。再実行前は旧runsを別名で保管する。公開結果は集計だけ。CGALの判定でR1を再評価するので、新検出器が自分の出力を合格にする構造ではない。

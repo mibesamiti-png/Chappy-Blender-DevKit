@@ -1,0 +1,306 @@
+{
+  "schema_version": 3,
+  "synthetic_only": true,
+  "blender": "4.3.2",
+  "cgal": "6.0.1.post202410241521",
+  "source_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "blender_failure_probe.py": "4d48704a2fc5ca579fc74dd979e53f4db8418f4d5bb478990d38b608ad885ca3",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/accelerated.py": "3541dcf7805ecdb1378ea714960516691c5a254f632f890ce29a4e122113ce39",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/exact.py": "16a1f366883809889a2e0b6c34f22fd5b46a9f034f15c53bc82a3b55097e889d",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "cycles/r2/benchmark.py": "caa8a31bdb1f7b2eba671ee229b22ac1e903fc79b18d090198704f01efde2a04",
+    "cycles/r2/export_blender.py": "957c079ab28daafcdc137fe2764c51a52870f1b194e4dba1f67bf01e5c7df2ee",
+    "cycles/r2/fixtures.py": "c57fa2b561225cb9d5469dff1098b160e0b4d85d6a96ec06d1c975edde93be70",
+    "cycles/r2/oracle.py": "11eca15f6b24254c9b14020e62e2b14e5198294809aed21eaf5a2a0e8bc13ee6",
+    "cycles/r2/recheck_blender.py": "8891f812120f737cb20fac46d96f40781fa410c1f58a32f6c5b84afa2da2dbb9",
+    "cycles/r3/benchmark.py": "070aea558a6474affe6b29b570eff0a1f9d3c1cd847a030e0449040c09346c6a",
+    "cycles/r3/export_joins.py": "748a22b9a8b26262c97ee8e963bf1bc665b226f833cd95926ebe5bdd2854c774",
+    "cycles/r3/fixtures.py": "322695c092617323888edb34bd4203cd339e57f517600695ca5ffab3d00dc3bb",
+    "cycles/r3/reevaluate.py": "33f2f4057ffd3670651b70924fa484e765828593fd4126caa7a52bb84d3ec7b6",
+    "dense_benchmark.py": "92bfae6bc201233ca826bc4b6f42aaf77433f5f3f28e9777bffdd221cdb38fc0",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_accelerated.py": "012a42f21b37605924192c0350153cfc73b550e8c33f7d2e50eab0c99c8b4199",
+    "tests/test_cgal_oracle.py": "a3cd6e48fd16c1846d078829c3e2a970c1e07c70cddf9e8ede6cf1d0a54131a3",
+    "tests/test_exact.py": "3a5c07bacd0f836302160bd8982751a13abb3f3486034972f8dffdf6de455c8e",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5",
+    "tests/test_motion.py": "e13366c5409f46fb684c070ec1f771b776c1fd87b3b44067113ef529a1fab510"
+  },
+  "generator_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "blender_failure_probe.py": "4d48704a2fc5ca579fc74dd979e53f4db8418f4d5bb478990d38b608ad885ca3",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/accelerated.py": "3541dcf7805ecdb1378ea714960516691c5a254f632f890ce29a4e122113ce39",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/exact.py": "16a1f366883809889a2e0b6c34f22fd5b46a9f034f15c53bc82a3b55097e889d",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "cycles/r2/benchmark.py": "caa8a31bdb1f7b2eba671ee229b22ac1e903fc79b18d090198704f01efde2a04",
+    "cycles/r2/export_blender.py": "957c079ab28daafcdc137fe2764c51a52870f1b194e4dba1f67bf01e5c7df2ee",
+    "cycles/r2/fixtures.py": "c57fa2b561225cb9d5469dff1098b160e0b4d85d6a96ec06d1c975edde93be70",
+    "cycles/r2/oracle.py": "11eca15f6b24254c9b14020e62e2b14e5198294809aed21eaf5a2a0e8bc13ee6",
+    "cycles/r2/recheck_blender.py": "8891f812120f737cb20fac46d96f40781fa410c1f58a32f6c5b84afa2da2dbb9",
+    "cycles/r3/benchmark.py": "070aea558a6474affe6b29b570eff0a1f9d3c1cd847a030e0449040c09346c6a",
+    "cycles/r3/export_joins.py": "748a22b9a8b26262c97ee8e963bf1bc665b226f833cd95926ebe5bdd2854c774",
+    "cycles/r3/fixtures.py": "322695c092617323888edb34bd4203cd339e57f517600695ca5ffab3d00dc3bb",
+    "cycles/r3/reevaluate.py": "33f2f4057ffd3670651b70924fa484e765828593fd4126caa7a52bb84d3ec7b6",
+    "dense_benchmark.py": "92bfae6bc201233ca826bc4b6f42aaf77433f5f3f28e9777bffdd221cdb38fc0",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_accelerated.py": "012a42f21b37605924192c0350153cfc73b550e8c33f7d2e50eab0c99c8b4199",
+    "tests/test_cgal_oracle.py": "a3cd6e48fd16c1846d078829c3e2a970c1e07c70cddf9e8ede6cf1d0a54131a3",
+    "tests/test_exact.py": "3a5c07bacd0f836302160bd8982751a13abb3f3486034972f8dffdf6de455c8e",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5",
+    "tests/test_motion.py": "e13366c5409f46fb684c070ec1f771b776c1fd87b3b44067113ef529a1fab510"
+  },
+  "input_sha256": "400f764d319fae6dcb8cfd083c3676b7316d658f615c74004bb03566c880274e",
+  "cases": [
+    {
+      "case": "overlap",
+      "method": "exact",
+      "voxel_size": null,
+      "distance": 1.0,
+      "status": "rejected",
+      "reason": "degenerate or nearly degenerate triangle",
+      "old_status": "error"
+    },
+    {
+      "case": "overlap",
+      "method": "voxel",
+      "voxel_size": 0.2,
+      "distance": 1.0,
+      "quality": {
+        "triangles": 1268,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 6.6799523685309055,
+        "min_triangle_quality": 5.158192712136217e-06
+      },
+      "volume_relative_error": 0.0549800541599041,
+      "status": "passed",
+      "old_status": "failed",
+      "oracle_hits": 0
+    },
+    {
+      "case": "overlap",
+      "method": "voxel",
+      "voxel_size": 0.1,
+      "distance": 1.0,
+      "quality": {
+        "triangles": 5516,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 6.836138837373053,
+        "min_triangle_quality": 1.0317899706471245e-05
+      },
+      "volume_relative_error": 0.032884188772974283,
+      "status": "passed",
+      "old_status": "failed",
+      "oracle_hits": 0
+    },
+    {
+      "case": "thin_neck",
+      "method": "exact",
+      "voxel_size": null,
+      "distance": 1.95,
+      "quality": {
+        "triangles": 1076,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 8.13990271767104,
+        "min_triangle_quality": 3.879308091231565e-07
+      },
+      "volume_relative_error": 0.027918818785045568,
+      "status": "failed",
+      "old_status": "failed",
+      "oracle_hits": 3
+    },
+    {
+      "case": "thin_neck",
+      "method": "voxel",
+      "voxel_size": 0.2,
+      "distance": 1.95,
+      "quality": {
+        "triangles": 1716,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 7.900777357803409,
+        "min_triangle_quality": 5.763962364176261e-06
+      },
+      "volume_relative_error": 0.05647558049841966,
+      "status": "passed",
+      "old_status": "failed",
+      "oracle_hits": 0
+    },
+    {
+      "case": "thin_neck",
+      "method": "voxel",
+      "voxel_size": 0.1,
+      "distance": 1.95,
+      "quality": {
+        "triangles": 7220,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 8.102731398229468,
+        "min_triangle_quality": 1.0704485360555982e-05
+      },
+      "volume_relative_error": 0.032357881678468044,
+      "status": "passed",
+      "old_status": "failed",
+      "oracle_hits": 0
+    },
+    {
+      "case": "tangent",
+      "method": "exact",
+      "voxel_size": null,
+      "distance": 2.0,
+      "quality": {
+        "triangles": 1056,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 2,
+        "volume": 8.141104781522666,
+        "min_triangle_quality": 0.4052235757468483
+      },
+      "volume_relative_error": 0.028227198843702252,
+      "status": "ambiguous_contact",
+      "old_status": "ambiguous_contact",
+      "oracle_hits": 0
+    },
+    {
+      "case": "tangent",
+      "method": "voxel",
+      "voxel_size": 0.2,
+      "distance": 2.0,
+      "quality": {
+        "triangles": 1724,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 7.848307153436032,
+        "min_triangle_quality": 5.158964485956065e-06
+      },
+      "volume_relative_error": 0.06317734122037984,
+      "status": "ambiguous_contact",
+      "old_status": "ambiguous_contact",
+      "oracle_hits": 0
+    },
+    {
+      "case": "tangent",
+      "method": "voxel",
+      "voxel_size": 0.1,
+      "distance": 2.0,
+      "quality": {
+        "triangles": 7356,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 8.078826897661827,
+        "min_triangle_quality": 1.0317899706471245e-05
+      },
+      "volume_relative_error": 0.03566107364001884,
+      "status": "ambiguous_contact",
+      "old_status": "ambiguous_contact",
+      "oracle_hits": 0
+    },
+    {
+      "case": "gap",
+      "method": "exact",
+      "voxel_size": null,
+      "distance": 2.2,
+      "quality": {
+        "triangles": 1056,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 2,
+        "volume": 8.14110471711019,
+        "min_triangle_quality": 0.4052233492779188
+      },
+      "volume_relative_error": 0.02822720653237514,
+      "status": "passed",
+      "old_status": "passed",
+      "oracle_hits": 0
+    },
+    {
+      "case": "gap",
+      "method": "voxel",
+      "voxel_size": 0.2,
+      "distance": 2.2,
+      "quality": {
+        "triangles": 1748,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 7.9321032262274,
+        "min_triangle_quality": 5.158964485956065e-06
+      },
+      "volume_relative_error": 0.05317492182305396,
+      "status": "failed",
+      "old_status": "failed",
+      "oracle_hits": 0
+    },
+    {
+      "case": "gap",
+      "method": "voxel",
+      "voxel_size": 0.1,
+      "distance": 2.2,
+      "quality": {
+        "triangles": 7416,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 2,
+        "volume": 8.053716923254205,
+        "min_triangle_quality": 1.0317899706471245e-05
+      },
+      "volume_relative_error": 0.038658356050931826,
+      "status": "passed",
+      "old_status": "failed",
+      "oracle_hits": 0
+    },
+    {
+      "case": "rotated_overlap",
+      "method": "exact",
+      "voxel_size": null,
+      "distance": 1.000864626210758,
+      "quality": {
+        "triangles": 1078,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 6.897390100665589,
+        "min_triangle_quality": 2.6617486233312447e-07
+      },
+      "volume_relative_error": 0.024499974174165284,
+      "status": "failed",
+      "old_status": "failed",
+      "oracle_hits": 4
+    },
+    {
+      "case": "rotated_overlap",
+      "method": "voxel",
+      "voxel_size": 0.15,
+      "distance": 1.000864626210758,
+      "quality": {
+        "triangles": 2432,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 6.771683149440272,
+        "min_triangle_quality": 0.13237204540917089
+      },
+      "volume_relative_error": 0.0422787473589603,
+      "status": "passed",
+      "old_status": "passed",
+      "oracle_hits": 0
+    }
+  ]
+}

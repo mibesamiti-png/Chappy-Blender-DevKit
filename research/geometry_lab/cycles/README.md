@@ -12,3 +12,5 @@ R1: ルートRESULTS.mdとresults/（親commit159e89f）。
 R2: r2/STATUS.json、RESEARCH.md、RESULTS.md。新規アルゴリズムの横展開より評価器の信頼性を優先。
 
 これは再開可能な研究プロトコルであり、チャット終了後の常駐実験・自動学習を起動するものではない。
+
+R3: r3/STATUS.json。R2と同じ厳密判定の高速化、球以外のshape追加、R1全候補の独立再評価。

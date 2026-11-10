@@ -56,3 +56,7 @@ Python 3.12.14 / NumPy 2.3.5 / Linux、ローカルBlender 4.3.2。人工fixture
 起点8665a3cの7workflowがcompleted/successであることをGitHub APIで確認。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811503)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811589)。これは研究コードのCI結果ではない。
 
 研究専用CIは未配線。Blender対象3版、Windows、GUI、実ユーザーmesh、G1/G2連続、材料/UV、完全CCD、厳密交差oracleは未検証。4.3.2のローカル結果を対象3版の成功に流用しない。次の研究はRESEARCH.md参照。
+
+## R3追補
+
+[R3再評価](cycles/r3/RESULTS.md)でR1全14候補をCGAL判定に置き換えて再検査。旧集計は履歴として保持し、新判定と区別する。

@@ -28,10 +28,13 @@ jobs:
       - run: python -m unittest discover -s tests -v
       # Import failure/timeout/mismatch is a failure, never an oracle "skip".
       - run: timeout 300 python -m cycles.r2.benchmark --output runs/ci-r2.json
+      - run: timeout 300 python -m cycles.r3.benchmark --output runs/ci-r3.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: geometry-lab-r2-${{ github.sha }}
-          path: research/geometry_lab/runs/ci-r2.json
+          name: geometry-lab-r2-r3-${{ github.sha }}
+          path: |
+            research/geometry_lab/runs/ci-r2.json
+            research/geometry_lab/runs/ci-r3.json
           if-no-files-found: error
           retention-days: 14
