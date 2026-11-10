@@ -27,3 +27,5 @@ R7: r7/RESEARCH.md、RESULTS.md、STATUS.json。軽度非平面Z境界に対し�
 R8: r8/RESEARCH.md、RESULTS.md、STATUS.json。R7固定内部密度を上下の頂点数に沿って段階変更し、R7既知10件で10/10、fresh人工holdout6件で5/6（R7とBlender3-cut各3/6）。CGAL交差0、入力境界保持。失敗スレンダーケースを隠さず記録。処理時間・形状RMSがやや悪化、製品未承認、R9を自動開始しない。
 
 R9: r9/RESEARCH.md、RESULTS.md、STATUS.json。元の入力境界頂点/面数不変で内部対角線を条件付きで反転。Blender4.4.3・CGAL独立66ケース検証。既知16/16、新holdout5/6（R8 4/6、Blender3cut 2/6）、自己交差0。未知reverse_narrow 0.08078で不合格、R8より処理時間約12.5倍。研究のみ成功、製品未承認、R10自動開始なし。
+
+R10: r10/RESEARCH.md、RESULTS.md、STATUS.json。品質0.1以上のR8はそのまま返し、未満だけR9反転。Blender4.4.3、CGALで30人工形状×4方式=120を独立検証。新規8ケースR10 8/8、R9 8/8、R8 6/8、Blender 4/8。fast6、repair2、平均時間R9の50.2%、CGAL交差0。既知不合格r9_reverse_narrowは未解決。品質/速度の研究は成功、製品は未承認・R11自動開始なし。

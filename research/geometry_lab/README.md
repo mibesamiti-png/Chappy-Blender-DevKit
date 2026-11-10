@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R9
+# CBDK Geometry Research Lab — R10
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -143,3 +143,12 @@ python -m cycles.r5.run --output runs/my-r5-result.json
 R8の `tapered_radial_loft` を凍結したまま、研究専用 `cbdk_geometry.flip_loft.conservative_flip_loft` を追加。上下の境界頂点・全頂点座標・面数を変えず、内部対角線を条件付きで最大3パス反転する。CGAL独立検証を必須とする（局所の法線検査だけでは交差ゼロを保証しない）。
 
 旧R7/R8既知16件でR9 **16/16**（R8 15/16）。未使用人工holdout6件でR9 **5/6**、R8 **4/6**、Blender標準3-cuts **2/6**。既知逆スレンダー品質0.0786→0.1272で全条件合格。ただし未知reverse_narrow品質0.08078はまだ不合格。R9 median約90.9msはR8約7.26msと高コスト。製品採用を意味せず `approved=false`。Aレビュー待ち・R10自動開始なし。
+
+
+## R10: 品質が足りないときだけR9の内部エッジ補正を実行
+
+[事前計画](cycles/r10/RESEARCH.md) / [全120出力と速度実測](cycles/r10/RESULTS.md) / [状態](cycles/r10/STATUS.json)。
+
+R8を一度生成して最小三角形品質が0.1以上なら即採用、未満ならR9の凍結内部エッジ反転コアを最大3パス実行する研究用ルーター。**別CGAL検証が必須**。新規人工8ケースでR10 **8/8**、R9常時補正8/8、R8補正なし6/8、Blender標準4/8。6件は補正を省略し、2件を救済。R10新8ケースの平均処理34.6ms、R9の68.9msの**約50.2%**。ただしR8単独6.86msより高コストで、R9の追加品質改善をスキップする場合もある。既知22件でR9と同一合否21/22、未解決 `r9_reverse_narrow` は残る。
+
+研究ゲートと速度ゲートを達成したが、実モデル/UV/法線/Blender一般形状は未検証。本体統合はA司令塔審査が必要。PR #114はDraft/未マージ、`approved=false`。R11は自動開始しない。

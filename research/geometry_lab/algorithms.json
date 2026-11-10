@@ -275,6 +275,35 @@
       ],
       "status": "research_success_quality_specialized_costly_not_approved",
       "approved": false
+    },
+    {
+      "id": "boundary-quality-dispatch-r10",
+      "version": "0.10.0",
+      "api": "cbdk_geometry.quality_router.conditional_flip_loft",
+      "purpose": "R8の品質が0.1以上なら補正を省略し、未満の場合だけR9内部エッジ反転を実行する研究用品質・速度ルーター",
+      "preconditions": [
+        "R8用のordered XY star-shaped nonplanar XYZ ring",
+        "fully disjoint Z envelopes",
+        "each loop 3..48 finite XYZ points"
+      ],
+      "input": "two ordered XYZ rings",
+      "output": "detached Mesh / path fast|repair / initial_min_quality / final_min_quality / flips / approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10,
+        "trigger_quality": 0.1,
+        "max_flip_passes": 3
+      },
+      "success": "R10 fresh 8/8 vs R8 6/8, always R9 8/8; fast 6/8, new R8 failures rescued 2; 120 CGAL checks 0 intersections",
+      "failure": "R9 known reverse_narrow still fails; R10 intentionally skips possible extra quality on already-acceptable R8; R10 mean 34.6ms versus R8 6.86ms",
+      "validation": "tests/test_r10_dispatch.py; cycles/r10/evaluate.py; official Blender 4.4.3 CGAL CI",
+      "performance": "cycles/r10/RESULTS.md",
+      "references": [
+        "cycles/r10/RESEARCH.md",
+        "cycles/r10/STATUS.json"
+      ],
+      "status": "research_r10_quality_and_speed_gate_passed_not_product_approved",
+      "approved": false
     }
   ]
 }
