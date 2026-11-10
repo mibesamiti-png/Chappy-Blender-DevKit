@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R7
+# CBDK Geometry Research Lab — R8
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -125,3 +125,12 @@ python -m cycles.r5.run --output runs/my-r5-result.json
 `cbdk_geometry.warped_loft.warped_radial_loft` を研究用に追加。XY投影がstar-shapedで、上下Z包絡が分離した軽度非平面ループだけをサポート。元境界頂点/辺を保持するが、一般的な3D接合やUV・法線保存を保証しない。
 
 公式Blender4.4.3で10人工形状×3方式=30生成＋CGAL独立評価、新規6ケースで研究R7 5/6、標準3-cuts Linear 4/6、標準no-cuts 4/6。細長い横ずれケースでは全方式不合格、R7 min quality=0.06183で標準より悪い。研究ゲート達成、製品未承認（`approved=false`）。AレビューまでCBDK本体へ反映しない。R8は自動開始しない。
+
+
+## R8: 中間リング密度を段階変化し、細長い三角形を減らす実験
+
+[事前登録条件](cycles/r8/RESEARCH.md) / [R8実測・不合格・限界](cycles/r8/RESULTS.md) / [最新状態](cycles/r8/STATUS.json)。
+
+従来R7が内部中間輪郭で均一な頂点数`max(n,m,12)`を使っていたのに対して、R8 `cbdk_geometry.tapered_loft.tapered_radial_loft` は中間の頂点数を上下に合わせて変化。入力境界の頂点・エッジは変えず、非平面ながらXY star-shapedでZが分離した輪郭のみに対応。CGALで正式に評価した人工R7既知10ケースでR8 10/10（旧R7 9/10）、新6ケースでR8 **5/6**、R7 **3/6**、Blender標準3-cuts **3/6**。新6ケースのすべてで最小三角形品質が改善。唯一の失敗`r8_slender_opposite`は最小品質0.0786で不合格。
+
+平均面数はR8 189 < R7 248 < Blender3-cut 331（新6ケース）、一方でR8の処理時間・解析形状RMSは旧R7より悪化。実モデル/UV/任意方向境界・人手作業は未検証。製品採用承認ではなく`approved=false`、PR Draft維持。R9は自動開始しない。

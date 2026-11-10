@@ -219,6 +219,34 @@
       ],
       "status": "research_only_nonplanar_synthetic_advantage_not_approved",
       "approved": false
+    },
+    {
+      "id": "boundary-density-taper-r8",
+      "version": "0.8.0",
+      "api": "cbdk_geometry.tapered_loft.tapered_radial_loft",
+      "purpose": "上下の境界頂点数に合わせて3本の中間リング密度を段階変化させ、元の境界を動かさず細長い三角形を緩和する研究用方式",
+      "preconditions": [
+        "star-shaped XY projection",
+        "ordered 3..48 XYZ points per ring",
+        "upper Z envelope > lower Z envelope",
+        "finite unduplicated coordinates"
+      ],
+      "input": "two ordered nonplanar XYZ rings",
+      "output": "detached Mesh, cuts=3, internal_counts, added_vertices, approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10
+      },
+      "success": "R8 old R7 slender quality 0.0618->0.1295, original R7 9 successes retained; R8 new holdout 5/6 vs R7 3/6, CGAL 0",
+      "failure": "r8_slender_opposite remains quality fail at 0.078598; R8 slower and slightly higher analytic mean RMS vs R7",
+      "validation": "tests/test_r8_tapered.py; cycles/r8/evaluate.py; independent CGAL official Blender4.4.3 job",
+      "performance": "cycles/r8/RESULTS.md",
+      "references": [
+        "cycles/r8/RESEARCH.md",
+        "cycles/r8/STATUS.json"
+      ],
+      "status": "research_r8_density_taper_promising_not_production_approved",
+      "approved": false
     }
   ]
 }
