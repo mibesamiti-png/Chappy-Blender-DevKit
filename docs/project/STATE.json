@@ -2,7 +2,7 @@
   "schema_version": 1,
   "project": "Chappy Blender DevKit (CBDK)",
   "repository": "mibesamiti-png/Chappy-Blender-DevKit",
-  "updated_on": "2026-11-08",
+  "updated_on": "2026-11-11",
   "release": {
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
@@ -14,6 +14,7 @@
     "docs/PROJECT_HANDOFF.md",
     "docs/project/STATE.json",
     "docs/PROJECT_SPEC.md",
+    "docs/future/CBDK-LONG-TERM-VISION.md",
     "docs/PROGRESS.md",
     "AGENTS.md",
     "docs/GLB_ROADMAP.md",
@@ -1028,6 +1029,11 @@
       "id": "DEC-074",
       "decision": "R11/R12を累積で一度だけ統合し、独立7CI後にR13を従来ABCD所有区分で正式割当する",
       "note": "R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。 STATE schema/要件ID/要件数/正式v0.17.0 last_verifiedは維持。旧専門PRと#91/#96/#92/#97は重ねてマージしない。"
+    },
+    {
+      "id": "DEC-075",
+      "decision": "CBDKの長期目標を「AI自律開発・3Dモデリング支援エンジン」とし現行ロードマップと区別して正式登録する",
+      "note": "2026-11-11ユーザー決定。AI自律開発系と3Dモデリング支援系を独立発展させ、必要な知識・検証・状態だけ共有。自律/共同制作切替、対象単位の排他的操作権、検証済み保存・中断・差分確認付き再開、鮮度付き随時進捗、高度AI依存軽減を長期方針とする。LT-01〜LT-12は将来設計で未実装。v0.18のNEXT・要件・検証済みrelease、承認済みv0.19〜v0.22の非有効状態と移行条件、ABCD担当・Geometry Lab #114・Development Intelligence Lab #115の独立性、現行品質・公開・私有データ許可境界を維持する。"
     }
   ],
   "last_verified": {
