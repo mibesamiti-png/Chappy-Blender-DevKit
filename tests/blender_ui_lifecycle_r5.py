@@ -1739,6 +1739,188 @@ def run(path):
             enabled = False
             assert_detached(module)
             checks.append("native_r15_foreign_scene_reenable_preserves_parity")
+
+            # R16: A Panel.draw snapshot must never grant later execution
+            # rights. Deliberately change live mode or selection BETWEEN
+            # recording a previously enabled button and real bpy.ops calls.
+            # Fixtures are authored in this test; no user add-on is loaded.
+            module = addon_utils.enable(
+                PACKAGE, default_set=False, persistent=False)
+            assert module is not None
+            enabled = True
+            r16_mesh = bpy.data.meshes.new("CBDK_R16_stale_draw_mesh")
+            r16_mesh.from_pydata(
+                [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0),
+                 (0.0, 1.0, 0.0)], [], [(0, 1, 2)])
+            r16_mesh.update()
+            r16_obj = bpy.data.objects.new(
+                "CBDK_R16_stale_draw_object", r16_mesh)
+            bpy.context.scene.collection.objects.link(r16_obj)
+
+            def r16_coords():
+                if bpy.context.mode == "EDIT_MESH":
+                    return tuple(tuple(v.co) for v in
+                                 bmesh.from_edit_mesh(r16_mesh).verts)
+                return tuple(tuple(v.co) for v in r16_mesh.vertices)
+
+            def r16_expect_cancel(call):
+                # Take the observation after changing live context, before
+                # invoking the actual operator (never a mock or stale poll).
+                coordinates = r16_coords()
+                result_before = bpy.context.scene.cbdk_modular_result
+                active_before = bpy.context.view_layer.objects.active
+                mode_before = bpy.context.mode
+                outcome = call()
+                assert outcome == {"CANCELLED"}, (
+                    "R16 stale-draw operator was not cancelled", outcome)
+                assert r16_coords() == coordinates, (
+                    "R16 cancelled operation mutated geometry")
+                assert bpy.context.scene.cbdk_modular_result == (
+                    result_before), "R16 cancelled operation wrote Scene result"
+                assert bpy.context.view_layer.objects.active is (
+                    active_before)
+                assert bpy.context.mode == mode_before
+
+            try:
+                bpy.ops.object.select_all(action="DESELECT")
+                bpy.context.view_layer.objects.active = r16_obj
+                r16_obj.select_set(True)
+                bpy.context.scene.cbdk_modular_nudge_offset = (
+                    0.0, 0.0, 0.1)
+                assert bpy.context.mode == "OBJECT"
+                before_ui, _ = panel_events(module)
+                for feature in ("object_selection", "mesh_bounds",
+                                "modifier_summary"):
+                    assert before_ui[IDS[feature]] is True
+
+                # OBJECT Panel.draw said three read-only actions were ready;
+                # Edit Mode now forbids every one of their real operators.
+                bpy.ops.object.mode_set(mode="EDIT")
+                assert bpy.context.mode == "EDIT_MESH"
+                r16_expect_cancel(bpy.ops.cbdk.modular_selected_meshes)
+                r16_expect_cancel(bpy.ops.cbdk.modular_mesh_bounds)
+                r16_expect_cancel(bpy.ops.cbdk.modular_modifier_summary)
+                assert r16_coords() == (
+                    (0.0, 0.0, 0.0), (1.0, 0.0, 0.0),
+                    (0.0, 1.0, 0.0))
+                checks.append("native_r16_object_draw_then_edit_cancel")
+
+                # Live Edit BMesh: draw the nudge enabled with exactly
+                # one selected vertex, then clear selection before execute.
+                bpy.ops.mesh.select_all(action="DESELECT")
+                bm = bmesh.from_edit_mesh(r16_mesh)
+                bm.verts.ensure_lookup_table()
+                bm.verts[0].select_set(True)
+                bm.select_flush_mode()
+                bmesh.update_edit_mesh(r16_mesh)
+                assert sum(bool(v.select) for v in
+                           bmesh.from_edit_mesh(r16_mesh).verts) == 1
+                edit_ui, _ = panel_events(module)
+                assert edit_ui[IDS["vertex_nudge"]] is True
+                assert edit_ui[IDS["edit_selection"]] is True
+                bpy.ops.mesh.select_all(action="DESELECT")
+                assert sum(bool(v.select) for v in
+                           bmesh.from_edit_mesh(r16_mesh).verts) == 0
+                r16_expect_cancel(bpy.ops.cbdk.modular_vertex_nudge)
+                updated_ui, _ = panel_events(module)
+                assert updated_ui[IDS["vertex_nudge"]] is False
+                checks.append("native_r16_edit_draw_then_deselect_cancel")
+
+                # Restore one selected vertex, draw both Edit operators
+                # enabled, then switch to OBJECT before invoking them.
+                bm = bmesh.from_edit_mesh(r16_mesh)
+                bm.verts.ensure_lookup_table()
+                bm.verts[0].select_set(True)
+                bm.select_flush_mode()
+                bmesh.update_edit_mesh(r16_mesh)
+                old_edit_ui, _ = panel_events(module)
+                assert old_edit_ui[IDS["vertex_nudge"]] is True
+                assert old_edit_ui[IDS["edit_selection"]] is True
+                bpy.ops.object.mode_set(mode="OBJECT")
+                assert bpy.context.mode == "OBJECT"
+                r16_expect_cancel(bpy.ops.cbdk.modular_vertex_nudge)
+                r16_expect_cancel(bpy.ops.cbdk.modular_edit_selection)
+                checks.append("native_r16_edit_draw_then_object_cancel")
+
+                # A fresh draw in a valid mode must still permit actual
+                # execution. The earlier cancellation is not sticky.
+                new_object_ui, _ = panel_events(module)
+                assert new_object_ui[IDS["mesh_bounds"]] is True
+                before_read = r16_coords()
+                assert bpy.ops.cbdk.modular_mesh_bounds() == {"FINISHED"}
+                assert r16_coords() == before_read
+                bpy.ops.object.mode_set(mode="EDIT")
+                bpy.ops.mesh.select_all(action="DESELECT")
+                bm = bmesh.from_edit_mesh(r16_mesh)
+                bm.verts.ensure_lookup_table()
+                bm.verts[0].select_set(True)
+                bm.select_flush_mode()
+                bmesh.update_edit_mesh(r16_mesh)
+                new_edit_ui, _ = panel_events(module)
+                assert new_edit_ui[IDS["edit_selection"]] is True
+                assert bpy.ops.cbdk.modular_edit_selection() == {"FINISHED"}
+                checks.append("native_r16_redraw_valid_actions_still_finish")
+
+                # Last stale OBJECT button: keep a synthetic foreign Scene
+                # descriptor intact while the actual call cancels due to a
+                # live mode switch. Old Scene ownership must not delete it.
+                bpy.ops.object.mode_set(mode="OBJECT")
+                foreign_ready_ui, _ = panel_events(module)
+                assert foreign_ready_ui[IDS["object_selection"]] is True
+                bpy.types.Scene.cbdk_modular_result = (
+                    bpy.props.StringProperty(
+                        name="CBDK R16 synthetic foreign", default="foreign"))
+                foreign_r16 = bpy.types.Scene.__dict__[PROPERTIES[0]]
+                assert foreign_r16 is not None
+                try:
+                    bpy.ops.object.mode_set(mode="EDIT")
+                    r16_expect_cancel(bpy.ops.cbdk.modular_selected_meshes)
+                    assert bpy.types.Scene.__dict__[PROPERTIES[0]] is (
+                        foreign_r16)
+                    bpy.ops.object.mode_set(mode="OBJECT")
+                    addon_utils.disable(PACKAGE, default_set=False)
+                    enabled = False
+                    assert not module._REGISTERED
+                    assert not module._OWNED_PROPERTIES
+                    assert not module._OWNED_PROPERTY_TOKENS
+                    assert bpy.types.Scene.__dict__[PROPERTIES[0]] is (
+                        foreign_r16)
+                    assert not hasattr(
+                        bpy.types.Scene, PROPERTIES[1])
+                    assert not hasattr(
+                        bpy.types, "VIEW3D_PT_cbdk_modular_preview")
+                finally:
+                    if bpy.context.mode == "EDIT_MESH":
+                        bpy.ops.object.mode_set(mode="OBJECT")
+                    # Only remove the exact synthetic foreign fixture.
+                    if (bpy.types.Scene.__dict__.get(PROPERTIES[0])
+                            is foreign_r16):
+                        delattr(bpy.types.Scene, PROPERTIES[0])
+                assert_detached(module)
+                checks.append("native_r16_foreign_scene_stale_cancel_safe")
+
+                # Registration/ownership recovery after stale-draw and
+                # foreign descriptor removal uses the supported lifecycle.
+                module = addon_utils.enable(
+                    PACKAGE, default_set=False, persistent=False)
+                assert module is not None
+                enabled = True
+                assert set(module._FEATURE_IDS) == set(IDS)
+                final_ui, _ = panel_events(module)
+                assert final_ui[IDS["object_selection"]] is True
+                assert bpy.ops.cbdk.modular_selected_meshes() == {"FINISHED"}
+                addon_utils.disable(PACKAGE, default_set=False)
+                enabled = False
+                assert_detached(module)
+                checks.append("native_r16_reenable_after_stale_draw")
+            finally:
+                if bpy.context.mode == "EDIT_MESH":
+                    bpy.ops.object.mode_set(mode="OBJECT")
+                bpy.context.view_layer.objects.active = obj
+                r16_obj.select_set(False)
+                bpy.data.objects.remove(r16_obj, do_unlink=True)
+                if r16_mesh.users == 0:
+                    bpy.data.meshes.remove(r16_mesh)
         finally:
             if enabled:
                 try:
