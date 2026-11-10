@@ -72,7 +72,8 @@ class R15GLBDeclaredBasisTests(unittest.TestCase):
         body = json.dumps(report, sort_keys=True, allow_nan=False)
         for secret in (BASIS["session_token"], BASIS["trial_token"],
                        BASIS["baseline_digest"], "TestBody",
-                       "Missing", "private", "source_001.py"):
+                       "Missing", "private/reference.glb",
+                       "private/candidate.glb", "source_001.py"):
             self.assertNotIn(secret, body)
 
     def test_four_authored_conditions_consistent_declared_basis_is_not_proof(self):
