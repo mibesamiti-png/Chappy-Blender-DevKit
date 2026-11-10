@@ -79,6 +79,14 @@ test values, not asset fingerprints. Tests cover:
     source paths and opaque tokens never appear in returned
     aggregate JSON, and no report input is modified.
 
+One additional mocked-IO guard in `tests/test_glb_regression.py`
+checks that substituting an equal-count boundary audit while replaying
+self-declared basis tokens **cannot override a detected changed-opening
+GLB comparison**. It also triggers the existing Blender 3-version
+native GLB smoke workflow without touching A-owned CI scripts.
+This is a Python synthetic regression, **not** a new Blender-exported
+R16 provenance fixture.
+
 Each returned report and inner R14 summary must remain
 `review_only`. Tests check `authenticates_evidence=false`,
 `proves_identity=false`, `auto_applies=false`, and R15's
@@ -95,8 +103,9 @@ establish that R16 provenance scenarios ran in Blender.
 
 ## Safety and gates
 
-- **Code delta:** only B-owned `tests/test_glb_evidence_basis_r16.py`
-  and `docs/GLB_EVIDENCE_BASIS_R16.md`; no new `cbdk/glb_*` API.
+- **Code delta:** only B-owned `tests/test_glb_evidence_basis_r16.py`,
+  `tests/test_glb_regression.py` and
+  `docs/GLB_EVIDENCE_BASIS_R16.md`; no new `cbdk/glb_*` API.
 - R2/R3/R8/R13 matching, R14/R15 validators and their `unknown`,
   `review_only`, 256-edge, 512-triangle and 64-part limits remain
   untouched. Hash agreement can never prove geometry, hole location
