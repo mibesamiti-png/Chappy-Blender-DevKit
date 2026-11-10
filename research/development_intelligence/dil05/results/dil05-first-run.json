@@ -1,0 +1,1234 @@
+{
+  "synthetic_only": true,
+  "environment": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "python": "3.13.5",
+  "source_sha256": {
+    "planner.py": "14031075a8743182bc6a1eff0b0a3328de3db0767fa12a50bdfbc263542e412a",
+    "benchmark.py": "b04eb66106f3ec0f44062c215883bf983ad232a0693b494ada23526bc6d8d304",
+    "test_planner.py": "fb97759a0f5aeeb7385e13d766d99fdacb8bd668172d784ea7e4172181180499",
+    "build_fixtures.py": "0e89093d2dea861c9849dd86fe7abfef6b54d788b4e14f9018292652c28d9593",
+    "fixtures/development.json": "20e98c69cf0ca861af72cd2b378a092d3e3b128832b62d1e5aff7786fcb3725d",
+    "fixtures/holdout.json": "304cf081a9e96d9b499443c9d96b0b8d1bdafdcd5f9bdb634e60a5e9e7e5f290",
+    "observed_r14.json": "9ea0dafa9a92e7b2c296ec44aa292c9e6c57e5f359c202c9dc09da2681086b9a",
+    "METHOD.md": "beec3c299b2685863b1eb72acc6aa90945f176a555560a46bb9cb190ae7d7b9a"
+  },
+  "splits": {
+    "development": {
+      "late_only": {
+        "correct_current_eligibility": 12,
+        "unsafe_reuse_cases": 0,
+        "batch_eligible": 5,
+        "post_ready_review_units": 15,
+        "overlap_window_seconds_sum": 0,
+        "total_review_units": 15,
+        "details": [
+          {
+            "id": "d01",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "d02",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "d03",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "d04",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "d05",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d06",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d07",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d08",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d09",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d10",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d11",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "d12",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          }
+        ]
+      },
+      "eager_unpinned": {
+        "correct_current_eligibility": 12,
+        "unsafe_reuse_cases": 4,
+        "batch_eligible": 5,
+        "post_ready_review_units": 7,
+        "overlap_window_seconds_sum": 106,
+        "total_review_units": 32,
+        "details": [
+          {
+            "id": "d01",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 30
+          },
+          {
+            "id": "d02",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "d03",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 30
+          },
+          {
+            "id": "d04",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 1,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 10
+          },
+          {
+            "id": "d05",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d06",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d07",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d08",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 1,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d09",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 1,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d10",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d11",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 36
+          },
+          {
+            "id": "d12",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 1,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          }
+        ]
+      },
+      "sha_pinned": {
+        "correct_current_eligibility": 12,
+        "unsafe_reuse_cases": 0,
+        "batch_eligible": 5,
+        "post_ready_review_units": 7,
+        "overlap_window_seconds_sum": 111,
+        "total_review_units": 33,
+        "details": [
+          {
+            "id": "d01",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 30
+          },
+          {
+            "id": "d02",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "d03",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 30
+          },
+          {
+            "id": "d04",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 15
+          },
+          {
+            "id": "d05",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d06",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d07",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d08",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d09",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d10",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "d11",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 36
+          },
+          {
+            "id": "d12",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          }
+        ]
+      }
+    },
+    "holdout": {
+      "late_only": {
+        "correct_current_eligibility": 12,
+        "unsafe_reuse_cases": 0,
+        "batch_eligible": 7,
+        "post_ready_review_units": 21,
+        "overlap_window_seconds_sum": 0,
+        "total_review_units": 21,
+        "details": [
+          {
+            "id": "h01",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h02",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h03",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h04",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h05",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h06",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h07",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h08",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h09",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h10",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h11",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h12",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          }
+        ]
+      },
+      "eager_unpinned": {
+        "correct_current_eligibility": 12,
+        "unsafe_reuse_cases": 4,
+        "batch_eligible": 7,
+        "post_ready_review_units": 7,
+        "overlap_window_seconds_sum": 977,
+        "total_review_units": 33,
+        "details": [
+          {
+            "id": "h01",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 480
+          },
+          {
+            "id": "h02",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 130
+          },
+          {
+            "id": "h03",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h04",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 1,
+            "post_ready_review_units": 0,
+            "overlap_window_seconds_sum": 35
+          },
+          {
+            "id": "h05",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h06",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h07",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 1,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h08",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 6
+          },
+          {
+            "id": "h09",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h10",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 1,
+            "post_ready_review_units": 0,
+            "overlap_window_seconds_sum": 26
+          },
+          {
+            "id": "h11",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 300
+          },
+          {
+            "id": "h12",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 1,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          }
+        ]
+      },
+      "sha_pinned": {
+        "correct_current_eligibility": 12,
+        "unsafe_reuse_cases": 0,
+        "batch_eligible": 7,
+        "post_ready_review_units": 9,
+        "overlap_window_seconds_sum": 977,
+        "total_review_units": 36,
+        "details": [
+          {
+            "id": "h01",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 480
+          },
+          {
+            "id": "h02",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 130
+          },
+          {
+            "id": "h03",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 3,
+            "overlap_window_seconds_sum": 0
+          },
+          {
+            "id": "h04",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 35
+          },
+          {
+            "id": "h05",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h06",
+            "right": true,
+            "valid": [
+              "B",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h07",
+            "right": true,
+            "valid": [
+              "C",
+              "D"
+            ],
+            "gold": [
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h08",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 6
+          },
+          {
+            "id": "h09",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          },
+          {
+            "id": "h10",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 26
+          },
+          {
+            "id": "h11",
+            "right": true,
+            "valid": [
+              "B",
+              "C",
+              "D"
+            ],
+            "gold": [
+              "B",
+              "C",
+              "D"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": 1,
+            "overlap_window_seconds_sum": 300
+          },
+          {
+            "id": "h12",
+            "right": true,
+            "valid": [
+              "B",
+              "C"
+            ],
+            "gold": [
+              "B",
+              "C"
+            ],
+            "unsafe_reuse_count": 0,
+            "post_ready_review_units": null,
+            "overlap_window_seconds_sum": null
+          }
+        ]
+      }
+    }
+  },
+  "wall_seconds": 0.0022709939999003836
+}
