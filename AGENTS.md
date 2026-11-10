@@ -4,6 +4,10 @@
 
 並行開発時は [docs/PARALLEL_DEVELOPMENT.md](docs/PARALLEL_DEVELOPMENT.md) を先に読む。AだけがSTATE/引き継ぎ/共通CI/Notionを更新し、B（GLB）、C（UI生成）、D（Extensions品質）は各専用ブランチ・ドラフトPRで作業する。Codexは任意の追加戦力で、上限・利用不能でも開発はB/C/Dと既存GitHub Actionsで継続する。個別CI成功は統合CI成功ではない。mainマージ・正式リリース・未承認採用・私有データ実行は別承認。
 
+## 長期ビジョンの扱い（将来方針・未実装）
+
+CBDKの最終目標は「AI自律開発・3Dモデリング支援エンジン」。詳細は [正式長期ビジョン](docs/future/CBDK-LONG-TERM-VISION.md) を参照。現行v0.18と承認済み・非有効のv0.19〜v0.22を置き換えず、通常ABCD開発は継続。Geometry Lab #114とDevelopment Intelligence Lab #115は独立した研究PRで、正式な採用・権限・実装済みを意味しない。自律/共同制作モードの表示やCI成功、heartbeat、保存候補は操作権・復元成功・公開許可を証明しない。将来の操作権切替では旧writer遮断とrevision照合、人間の変更保護が必須。高度AIなしで可能な作業を通常ChatGPT/Codex/GitHub Actions/ローカルツールへ配分する場合も、既存の権限・品質・私有データゲートを省略しない。
+
 ## 最優先: 開発引き継ぎと状態管理
 
 **チャット履歴を前提にしないこと。** 最初に `docs/PROJECT_HANDOFF.md`（未生成なら `docs/project/STATE.json`）、`docs/PROJECT_SPEC.md`、`pyproject.toml`、このファイル、対象コードとテストを読む。最新のGitHub `main` とCIの実測を優先し、古い文章の将来予定を現在の未実装と誤認しない。
