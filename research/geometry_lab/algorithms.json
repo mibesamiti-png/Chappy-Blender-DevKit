@@ -40,7 +40,7 @@
       "output": "status / pairs",
       "parameters": {
         "method": "sweep",
-        "tolerance": 1e-09
+        "tolerance": 1e-9
       },
       "success": "限定旧fixture一致",
       "failure": "微小接触のFP/FNをR2で確認",
@@ -161,6 +161,34 @@
         "cycles/r4/RESEARCH.md"
       ],
       "status": "experimental_not_preferred_over_blender",
+      "approved": false
+    },
+    {
+      "id": "boundary-radial-loft-r5",
+      "version": "0.5.0",
+      "api": "cbdk_geometry.radial_loft.radial_loft",
+      "purpose": "平面star-shaped境界の頂点・元境界エッジを固定し、放射対応の3中間輪郭で接続する研究候補",
+      "preconditions": [
+        "各ループ3..48頂点",
+        "XYにほぼ平行な単純star-shaped境界",
+        "正のZ分離",
+        "放射順の頂点配列"
+      ],
+      "input": "Nx3/Mx3 ordered coordinate arrays",
+      "output": "mesh / cuts / added_vertices / approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10
+      },
+      "success": "R4既知5/6・新holdout4/5、CGALで交差0、合格にはR4同一形状誤差と品質基準を使用",
+      "failure": "ValueError/TimeoutError、低poly RMS不合格、横ずれ楕円の最小三角品質0.0634",
+      "validation": "tests/test_r5.py; cycles/r5/run.py",
+      "performance": "cycles/r5/RESULTS.md",
+      "references": [
+        "cycles/r5/RESEARCH.md",
+        "cycles/r5/STATUS.json"
+      ],
+      "status": "review_only_research_gate_met_not_approved",
       "approved": false
     }
   ]

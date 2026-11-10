@@ -1,14 +1,14 @@
 {
   "cycle": "R5",
-  "phase": "preregistered",
+  "status": "experiment_complete_promising_not_adopted",
   "theme": "boundary_preserving_radial_loft",
   "parent_cycle": "R4",
   "candidate": "radial_loft_3cuts",
   "development_r4_cases": 10,
   "fresh_holdout_cases": 5,
-  "holdout_tested": false,
-  "blender_native_fresh_holdout": false,
-  "gate": {
+  "holdout_tested": true,
+  "algorithm_revisions_after_holdout": 0,
+  "gates": {
     "r4_seen_min_pass": 5,
     "fresh_holdout_min_pass": 4,
     "cgal_hits": 0,
@@ -16,7 +16,40 @@
     "analytic_rms_max": 0.08,
     "analytic_max_distance": 0.2
   },
+  "results": {
+    "r4_seen_loft": {
+      "passed": 5,
+      "total": 6
+    },
+    "r4_all_development": {
+      "passed": 9,
+      "total": 10
+    },
+    "r4_archived_blender_native": {
+      "passed": 4,
+      "total": 6,
+      "blender": "4.4.3",
+      "rerun_in_r5": false
+    },
+    "r5_fresh_holdout_loft": {
+      "passed": 4,
+      "total": 5
+    },
+    "r5_fresh_holdout_phase": {
+      "passed": 3,
+      "total": 5
+    },
+    "fresh_holdout_intersection_pairs": 0,
+    "original_boundary_edges_preserved": true
+  },
+  "source_sha256": {
+    "radial_loft": "0b404cc2f5b8b6440b7ab44035a608a41942c8efb329c2a3028df014d175c7ac",
+    "fixtures": "3ee0c363b5f60e7e8d7955748c2423cfd53ca3808af4ccb5d44b8302bacfd972",
+    "runner": "ba7f823307c369d873d46f45148f5e1e868a3a7df45c63c7821445233e8e45f0"
+  },
+  "ci_run": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42898272486",
+  "blender_native_fresh_holdout": false,
   "approved": false,
-  "freeze_rule": "No algorithm tuning after first new holdout execution",
-  "end_rule": "Stop after one preregistered cycle; review without auto merging"
+  "decision": "Research gate reached. Keep experimental proposal; do not integrate before A review and native-cut comparison.",
+  "next": "Compare Blender GUI Bridge Edge Loops number_cuts/interpolation on same fixtures; separate cycle only"
 }

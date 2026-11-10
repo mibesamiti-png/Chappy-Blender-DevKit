@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R4
+# CBDK Geometry Research Lab — R5
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -91,3 +91,19 @@ python -m cycles.r3.reevaluate
 未使用6ケースの合格はindex0、phase2、DP3、Blender標準4。
 DPは標準より遅く、置換不採用。4.3.2/4.4.3で全40出力一致、他版・実作品は未検証。
 R1〜R3の検出改善を制作能力改善とは混同しない。次候補は形状保存制約付き接続。
+
+
+## R5: 元境界の保存を優先したRadial Loft
+
+[実験設計](cycles/r5/RESEARCH.md) / [初回実測と失敗](cycles/r5/RESULTS.md) / [状態](cycles/r5/STATUS.json)。
+`cbdk_geometry.radial_loft.radial_loft(a,b,cuts=3)`はXY平面上のstar-shaped輪郭専用。入力境界の頂点・辺を変えず、3本の中間輪郭を補間する。独立した三角形meshを返す（approved=false）。Blender sceneは触らない。
+
+R4の既知6ケースで5/6、R5の新規人工holdout5ケースで4/5。後者のphaseは3/5。CGAL交差0。横ずれ楕円では最小三角品質0.0634で不合格、R4 lowpolyでは形状誤差で不合格。Blender GUI版Bridgeの中間cut/補間とは未比較であり、CBDK本体へは未採用。
+
+```bash
+python -m pip install -r requirements-oracle.txt
+python -m unittest discover -s tests -v
+python -m cycles.r5.run --output runs/my-r5-result.json
+```
+
+専用CIでR1〜R4の既存回帰とR5を別々に実行し、R5出力JSONのhash・測定値をartifactに保存。実作品・私有モデルは読まない。

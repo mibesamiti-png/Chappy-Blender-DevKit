@@ -16,3 +16,5 @@ R2: r2/STATUS.json、RESEARCH.md、RESULTS.md。新規アルゴリズムの横�
 R3: r3/STATUS.json。R2と同じ厳密判定の高速化、球以外のshape追加、R1全候補の独立再評価。
 
 R4: r4/STATUS.json。境界ループ接続3方式と標準Blenderを比較。標準置換不採用。2版で一致、6未使用ケースの失敗を形状保存研究へ引き継ぐ。
+
+R5: r5/RESEARCH.md、RESULTS.md、STATUS.json。既知R4の10ケースを開発用に移し、新規5ケースのholdoutでradial 4/5・phase 3/5。研究ゲート達成だがBlender GUI標準未比較で本体未承認。以後このholdoutでモデル調整しない。
