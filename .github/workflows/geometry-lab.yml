@@ -97,3 +97,58 @@ jobs:
             research/geometry_lab/runs/ci-r6-eval.json
           if-no-files-found: warn
           retention-days: 14
+
+  r7-nonplanar-bridge:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install independent research CGAL oracle
+        run: python -m pip install -r requirements-oracle.txt
+      - name: Download verified official Blender 4.4.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://download.blender.org/release/Blender4.4"
+          curl --fail --location --retry 3 --max-time 300 "$base/blender-4.4.3.sha256" --output "$RUNNER_TEMP/blender.sha256"
+          curl --fail --location --retry 3 --max-time 400 "$base/blender-4.4.3-linux-x64.tar.xz" --output "$RUNNER_TEMP/blender.tar.xz"
+          python - "$RUNNER_TEMP/blender.sha256" "$RUNNER_TEMP/blender.tar.xz" <<'PY'
+          import pathlib, re, sys, hashlib
+          published = pathlib.Path(sys.argv[1]).read_text()
+          matched = [row for row in published.splitlines() if 'blender-4.4.3-linux-x64.tar.xz' in row]
+          if len(matched) != 1:
+              raise SystemExit('Official Blender SHA256 entry missing or ambiguous')
+          checksums = re.findall(r'\b[0-9a-fA-F]{64}\b', matched[0])
+          if len(checksums) != 1:
+              raise SystemExit('Official Blender SHA256 invalid')
+          actual = hashlib.sha256(pathlib.Path(sys.argv[2]).read_bytes()).hexdigest()
+          if actual.lower() != checksums[0].lower():
+              raise SystemExit('Blender archive SHA256 does not match the publisher')
+          print('VERIFIED_BLENDER_SHA256', actual)
+          PY
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Generate R7 and native nonplanar synthetic meshes
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r7/blender_run.py -- --output runs/ci-r7-raw.json
+      - name: Evaluate R7 via independent CGAL and 3D analytic target
+        run: timeout 360 python -m cycles.r7.evaluate --input runs/ci-r7-raw.json --output runs/ci-r7-eval.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-r7-${{ github.sha }}
+          path: |
+            research/geometry_lab/runs/ci-r7-raw.json
+            research/geometry_lab/runs/ci-r7-eval.json
+          if-no-files-found: warn
+          retention-days: 14
