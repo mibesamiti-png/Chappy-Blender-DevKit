@@ -309,7 +309,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  r11-editmode-attributes-dev-smoke:
+  r11-editmode-attributes-frozen-holdout:
     if: startsWith(github.head_ref, 'research/geometry-lab-')
     runs-on: ubuntu-latest
     timeout-minutes: 14
@@ -348,9 +348,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r11/blender_run.py -- --output runs/ci-r11-raw.json --development-only
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r11/blender_run.py -- --output runs/ci-r11-raw.json
       - name: Independently validate R11 and preregistered quality gate
-        run: timeout 360 python -m cycles.r11.evaluate --input runs/ci-r11-raw.json --output runs/ci-r11-eval.json --development-only
+        run: timeout 360 python -m cycles.r11.evaluate --input runs/ci-r11-raw.json --output runs/ci-r11-eval.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
