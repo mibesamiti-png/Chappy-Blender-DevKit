@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R14 B#107/C#108/D#106と長期ビジョンDEC-075をA統合PR #117でdevへ一度だけ反映（db25585342e19e629fc32e2cc94ceae5d2e3d7b4）。結合fba1607の6CIとdevの独立7CI全成功。R15はA節目同期PRの統合後7CI成功を条件とする。実ユーザーGLB/Windows GUI/権利/正式公開未検証、v0.19未有効。
+- 最新の節目: v0.18: R15 B#120/C#121/D#119の11ファイルをA統合PR #122でdevへ一度だけ反映（08ddb3e3a51e526ddfe857268f31b2de443c0fec）。各担当5CI、結合5CI（Windows既存Nodeテスト一時timeout後の単独再試行成功）、dev独立7CI成功。R16はA節目同期後の新dev HEAD独立7CIを条件とする。実GLB/Windows GUI/権利/正式公開未検証、v0.19未有効。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -203,6 +203,7 @@
 - `DEC-074` R11/R12を累積で一度だけ統合し、独立7CI後にR13を従来ABCD所有区分で正式割当する。R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。 STATE schema/要件ID/要件数/正式v0.17.0 last_verifiedは維持。旧専門PRと#91/#96/#92/#97は重ねてマージしない。
 - `DEC-075` CBDKの長期目標を「AI自律開発・3Dモデリング支援エンジン」とし現行ロードマップと区別して正式登録する。2026-11-11ユーザー決定。AI自律開発系と3Dモデリング支援系を独立発展させ、必要な知識・検証・状態だけ共有。自律/共同制作切替、対象単位の排他的操作権、検証済み保存・中断・差分確認付き再開、鮮度付き随時進捗、高度AI依存軽減を長期方針とする。LT-01〜LT-12は将来設計で未実装。v0.18のNEXT・要件・検証済みrelease、承認済みv0.19〜v0.22の非有効状態と移行条件、ABCD担当・Geometry Lab #114・Development Intelligence Lab #115の独立性、現行品質・公開・私有データ許可境界を維持する。
 - `DEC-076` R14のB/C/Dと長期ビジョンをAのPR #117で開発ブランチへ一度だけ統合し、独立7系統CI成功後にR15を従来ABCD担当で割り当てる。B#107/C#108/D#106の個別5CI、A結合fba1607の6CI成功。dev統合db255853で独立7CI成功（Python42905403010、Windows42905402793、Blender42905402730の3版、Chromium42905402841、Handoff42905402989、Kit42905402745、Skill42905402775）。R14 11パスとA長期文書5パスを重複0で統合。v0.17.0/44要件/24 NEXT/last_verified不変、次期計画active=false。実GLB/Windows GUI/ライセンス/公開/研究コード採用/自律実行は未検証。R15は節目同期PRがCI/開発統合/独立7CIを終えた後に着手。
+- `DEC-077` R15のB/C/D限定成果をAのPR #122で一度だけ統合し、独立7CI成功後にR16を小さく割り当てる。B#120 70b27ab/C#121 54832e7/D#119 cae75c5は各最終HEADの5CI成功。A結合#122 25180ceの5CI成功。Windows Python3.13の既存dashboard Node 15秒timeoutは失敗ジョブ単独再試行でsuccess、原因未断定。dev squash 08ddb3e3a51e526ddfe857268f31b2de443c0fecの独立7CI全成功（Python42915099059、Windows42915098806、Blender42915099109、Chromium42915098872、Handoff42915098940、Kit42915098954、Skill42915098964）。Blender3版にnative R15各6項目。正式v0.17.0/44要件/24 NEXT/last_verified/next v0.19 active=false維持。実GLB/GUI/権利/研究コード採用は未承認。R16実装はA節目同期統合後の新dev独立7CI成功まで禁止。
 
 ## 更新・プライバシールール
 

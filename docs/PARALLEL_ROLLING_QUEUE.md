@@ -337,3 +337,11 @@ A統合PR [#117](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/11
 
 **実装停止ゲート:** 本節とR15割当を含むAの節目同期PRが開発devに統合され、その**新dev HEADに対する独立7系統CI全成功**をAが確認するまで各R15作業は設計のみ。研究PR #114/#115は独立、v0.19は未有効。Codexは必須でない。
 
+
+## 2026-11-11 JST — R15一回統合完了、R16候補（節目ゲートまで設計限定）
+
+- B#120 / C#121 / D#119 各最終HEADの5CI成功、A [#122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/122) 結合5CI成功、dev `08ddb3e3a51e526ddfe857268f31b2de443c0fec` の**独立7CI成功**。11ファイルの担当重複0。旧PRの重複採用禁止。
+- R16 B: 自己申告だけで同一試行を証明しない前提で、偽/再利用/古いローカル測定basisの負例を追加。既存のunknown/review_onlyを維持し、検証できない真正性のために大規模manifestを作らない。
+- R16 C: Panel.drawからexecuteまでの間にmode/selectionが変わる現実のBlender負例で、不正な操作をCANCELLEDしメッシュを壊さないことを実証。失敗再現なしならtest/docsのみ。
+- R16 D: 同じinodeの読み取り間レースを合成2回サンプルで試し、二度読んでも現在の安定性は保証不能な限界を記録。実ファイルの検証済み安全リーダーや配布承認に昇格しない。
+- 正式な所有パス、受け入れ基準、次への指示は [R16正式割当](R16_ABCD_START.md) に従う。**R16は本節を含むA同期PRがdevへ反映され、その統合後HEADの独立7CI全成功まで実装着手不可。** main/正式公開/私有資産/研究は別ゲート。Codex必須でない。
