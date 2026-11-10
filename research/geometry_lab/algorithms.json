@@ -131,6 +131,37 @@
       ],
       "status": "review_only",
       "approved": false
+    },
+    {
+      "id": "boundary-loop-bridge",
+      "version": "0.4.0",
+      "api": "cbdk_geometry.bridge.bridge_loops",
+      "purpose": "順序付き境界間の三角形帯生成",
+      "preconditions": [
+        "各ループ3..48頂点",
+        "有限座標abs<=1e8",
+        "重複頂点なし",
+        "一般の非平面形状は未検証"
+      ],
+      "input": "Nx3 / Mx3 ordered coordinate arrays",
+      "output": "mesh/objective/shift/reverse/trials/approved=false",
+      "parameters": {
+        "method": [
+          "index",
+          "phase",
+          "dp"
+        ],
+        "seconds": 10
+      },
+      "success": "生成後の独立交差・境界・形状誤差・品質評価が必要",
+      "failure": "ValueError/TimeoutError、生成成功でも形状誤差で不合格あり",
+      "validation": "tests/test_bridge*.py; cycles/r4/evaluate.py",
+      "performance": "cycles/r4/RESULTS.md",
+      "references": [
+        "cycles/r4/RESEARCH.md"
+      ],
+      "status": "experimental_not_preferred_over_blender",
+      "approved": false
     }
   ]
 }

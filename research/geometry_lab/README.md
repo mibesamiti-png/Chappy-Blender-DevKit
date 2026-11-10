@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R3
+# CBDK Geometry Research Lab — R4
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -78,3 +78,16 @@ python -m cycles.r3.reevaluate
 ```
 
 再評価のsnapshot/結果はruns/r3_join_meshes.json、runs/r3_reevaluation.jsonへ新規作成。再実行前は旧runsを別名で保管する。公開結果は集計だけ。CGALの判定でR1を再評価するので、新検出器が自分の出力を合格にする構造ではない。
+
+
+## R4: 検出から形状生成の評価へ
+
+[研究選定・出典](cycles/r4/RESEARCH.md) / [実測・失敗・再現](cycles/r4/RESULTS.md)。
+境界ループ接続API `cbdk_geometry.bridge.bridge_loops(a,b,method="dp",seconds=10)` を追加。
+順序付きNx3/Mx3配列（各3..48頂点）から入力を変更せずdetached三角形帯を返す。
+戻り値はmesh/objective/shift/reverse/trials/approved=false。`method`はindex/phase/dp。
+無効入力・非退化候補なしはValueError、予算はTimeoutError。自動採用/scene編集なし。
+
+未使用6ケースの合格はindex0、phase2、DP3、Blender標準4。
+DPは標準より遅く、置換不採用。4.3.2/4.4.3で全40出力一致、他版・実作品は未検証。
+R1〜R3の検出改善を制作能力改善とは混同しない。次候補は形状保存制約付き接続。
