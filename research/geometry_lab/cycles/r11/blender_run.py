@@ -289,9 +289,11 @@ def execute(case,arm):
     return result
 
 
-def run():
+def run(development_only=False):
     records=[]
     for case in cases():
+        if development_only and case['split']!='development':
+            continue
         for arm in ARMS:
             try:
                 entry=execute(case,arm)
@@ -308,14 +310,15 @@ def run():
         "cycles/r11/fixtures.py","cycles/r11/blender_run.py",
         "cbdk_geometry/quality_router.py")}
     return dict(cycle="R11",synthetic_only=True,blender=bpy.app.version_string,
-                source_sha256=hashes,arms=list(ARMS),cases=records,approved=False)
+                source_sha256=hashes,arms=list(ARMS),cases=records,development_only=development_only,approved=False)
 
 
 if __name__=="__main__":
     parser=argparse.ArgumentParser()
     parser.add_argument("--output",required=True)
+    parser.add_argument("--development-only",action="store_true")
     args=parser.parse_args(sys.argv[sys.argv.index("--")+1:])
-    data=run()
+    data=run(development_only=args.development_only)
     out=Path(args.output)
     out.parent.mkdir(parents=True,exist_ok=True)
     with out.open("x") as f:json.dump(data,f,indent=2)
