@@ -121,11 +121,12 @@ def execute(case,arm):
             face[tag]=i+1
         before={int(face[tag]):face_sig(face,uv_attr,tag) for face in bm.faces}
         original_verts={key:bm.verts[vert_id] for key,vert_id in source_id.items()}
+        source_faces=list(bm.faces) # stable BMFace refs after BMesh table invalidation
         # The collar polygons were created in exactly the strip boundary-edge order.
         edge_to_bridge_face=_boundary_face_indices(strip.faces)
         boundary_offsets={}
         for face_i,(u,v) in enumerate(ordered_edges):
-            source_face=bm.faces[face_i]
+            source_face=source_faces[face_i]
             du=_face_uv(source_face,original_verts[u],uv_attr)-np.array(base_uv[u])
             dv=_face_uv(source_face,original_verts[v],uv_attr)-np.array(base_uv[v])
             if np.max(np.abs(du-dv))>1e-5:
@@ -165,7 +166,7 @@ def execute(case,arm):
         pairs=0
         boundary_pair_uv_samples=[]
         for face_i,(u,v) in enumerate(ordered_edges):
-            source_face=bm.faces[face_i]
+            source_face=source_faces[face_i]
             edge=tuple(sorted((u,v)))
             new_face=new_faces[edge_to_bridge_face[edge]]
             for key in (u,v):
