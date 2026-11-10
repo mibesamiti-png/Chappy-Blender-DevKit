@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R13 B#100/C#102/D#103の9ファイルをA統合PR #104で一度だけdevへ統合（0a306a85d6f84ef434eb6b54f12cb4ce93251a6c）。結合候補7d7933dの5CIと統合SHAの独立7CI成功、Python1101件・Blender3版のnative_r13各5件確認。R14はAの正式割当文書統合後に着手。実GUI/私有GLB/第三者addon/権利は未確認、v0.19未有効。
+- 最新の節目: v0.18: R14 B#107/C#108/D#106と長期ビジョンDEC-075をA統合PR #117でdevへ一度だけ反映（db25585342e19e629fc32e2cc94ceae5d2e3d7b4）。結合fba1607の6CIとdevの独立7CI全成功。R15はA節目同期PRの統合後7CI成功を条件とする。実ユーザーGLB/Windows GUI/権利/正式公開未検証、v0.19未有効。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -202,6 +202,7 @@
 - `DEC-073` R10で安全な適応GLB AABB、Blender二重解除失敗の台帳回復、ZIPと既知ソース比較の権限非昇格を検証してR11を安全ゲート付きで割り当てる。B #85 a3c57d9、C #83 9f3df76、D #84 262d646各5CI成功。A #86 HEAD6a12b7faもPython42425995892/Windows42425995843/Blender42425995934（4.4.3/4.5.15/5.2.1 native_r10五項目）/Chromium42425995902/Handoff42425995915成功。dev統合a3ae6da1の別7CI成功（Python42426258493、Windows42426258509、Blender42426258621、Chromium42426258600、Handoff42426258438、Kit42426258568、Skill42426258440）。イベントpull_request。実GLB/GUI/ライセンス/公開未検証。R11は#87統合後のみ開始可。
 - `DEC-074` R11/R12を累積で一度だけ統合し、独立7CI後にR13を従来ABCD所有区分で正式割当する。R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。 STATE schema/要件ID/要件数/正式v0.17.0 last_verifiedは維持。旧専門PRと#91/#96/#92/#97は重ねてマージしない。
 - `DEC-075` CBDKの長期目標を「AI自律開発・3Dモデリング支援エンジン」とし現行ロードマップと区別して正式登録する。2026-11-11ユーザー決定。AI自律開発系と3Dモデリング支援系を独立発展させ、必要な知識・検証・状態だけ共有。自律/共同制作切替、対象単位の排他的操作権、検証済み保存・中断・差分確認付き再開、鮮度付き随時進捗、高度AI依存軽減を長期方針とする。LT-01〜LT-12は将来設計で未実装。v0.18のNEXT・要件・検証済みrelease、承認済みv0.19〜v0.22の非有効状態と移行条件、ABCD担当・Geometry Lab #114・Development Intelligence Lab #115の独立性、現行品質・公開・私有データ許可境界を維持する。
+- `DEC-076` R14のB/C/Dと長期ビジョンをAのPR #117で開発ブランチへ一度だけ統合し、独立7系統CI成功後にR15を従来ABCD担当で割り当てる。B#107/C#108/D#106の個別5CI、A結合fba1607の6CI成功。dev統合db255853で独立7CI成功（Python42905403010、Windows42905402793、Blender42905402730の3版、Chromium42905402841、Handoff42905402989、Kit42905402745、Skill42905402775）。R14 11パスとA長期文書5パスを重複0で統合。v0.17.0/44要件/24 NEXT/last_verified不変、次期計画active=false。実GLB/Windows GUI/ライセンス/公開/研究コード採用/自律実行は未検証。R15は節目同期PRがCI/開発統合/独立7CIを終えた後に着手。
 
 ## 更新・プライバシールール
 
