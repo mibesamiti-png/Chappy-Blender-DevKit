@@ -455,6 +455,42 @@ class GLBRegressionTests(unittest.TestCase):
             self.assertEqual(actual["surface_status"], "not_requested")
 
 
+    def test_r16_replayed_basis_cannot_approve_changed_opening(self):
+        """Matching self-declared records never override real GLB comparison.
+
+        Existing native Blender smoke runs independently; these inputs are
+        tiny CBDK-authored Python synthetic data, not private GLB exports.
+        """
+        from cbdk.glb_evidence_basis_r15 import build_bound_glb_evidence_triage
+        from test_glb_evidence_basis_r15 import BASIS, claimed_sources, reports
+
+        evidence = reports("opening")
+        other = reports("identical")
+        # Substitute same-count audit from a different synthetic batch while
+        # reusing identical untrusted trial/session/digest declarations.
+        evidence["boundary_reference"] = other["boundary_reference"]
+        summary = build_bound_glb_evidence_triage(
+            **evidence, source_basis=claimed_sources(evidence),
+            expected_basis=BASIS)
+        self.assertEqual(summary["basis_review"]["status"],
+                         "declared_consistent_unverified")
+        self.assertIs(summary["basis_review"]["sources_verified_same_run"], False)
+        self.assertIs(summary["status"], "review_only")
+        self.assertFalse(any(summary["safety"].values()))
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with patch("cbdk.glb_regression.write_glb_inspection"), \
+                 patch("cbdk.glb_regression.render_glb_preview"), \
+                 patch("cbdk.glb_regression.write_scene_comparison",
+                       return_value=evidence["comparison"]):
+                actual = run_glb_regression(
+                    root / "blender", root / "source.glb",
+                    root / "candidate.glb", root / "out")
+        self.assertFalse(actual["passed"])
+        self.assertTrue(actual["passed_is_metadata_only"])
+        self.assertTrue(actual["surface_does_not_auto_approve"])
+
+
     def test_optional_surface_stage_can_report_skipped_without_false_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
