@@ -235,6 +235,32 @@ class ExtensionPreflightTests(unittest.TestCase):
         self.assertFalse(observed["source_authenticity_verified"])
         self.assertFalse(observed.get("release_authorized", False))
 
+    def test_r15_missing_independent_digest_never_implies_authority(self):
+        """R15 watched CI: absent prior reference fails without a source read."""
+        import test_extension_reference_digest_round15 as r15
+        from unittest.mock import patch
+        with patch.object(
+            r15.r14, "_anchored_reference_probe",
+            side_effect=AssertionError("missing digest must not read source"),
+        ):
+            report = r15._digest_review(
+                None, None, "parts/blender/context.py",
+                independent_digest=None,
+            )
+        self.assertEqual(report["reason_code"], "inconclusive_reference_basis")
+        self.assertEqual(report["content_opens"], 0)
+        self.assertEqual(report["bytes_read"], 0)
+        self.assertFalse(report["source_authenticity_verified"])
+        self.assertFalse(report["owner_consent_verified"])
+        self.assertFalse(report["license_compatibility_verified"])
+        self.assertFalse(report["redistribution_authorized"])
+        self.assertFalse(report["release_authorized"])
+        self.build("mesh_inspector")
+        known = inspect_preview_archive(self.zip)
+        self.assertEqual(known["status"], "blocked_for_extension_release")
+        self.assertFalse(known["source_authenticity_verified"])
+        self.assertFalse(known.get("release_authorized", False))
+
     def test_all_feature_preview_is_verified_but_not_extension_approved(self):
         self.build()
         result = inspect_preview_archive(self.zip)
