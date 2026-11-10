@@ -304,6 +304,38 @@
       ],
       "status": "research_r10_quality_and_speed_gate_passed_not_product_approved",
       "approved": false
+    },
+    {
+      "id": "blender-attribute-roundtrip-r11",
+      "version": "0.11.0",
+      "api": "cycles.r11.blender_run.execute",
+      "purpose": "Blender編集モードで研究用R10接続メッシュを既存の合成カラー面に追加し、元面/UV/マテリアルの完全保持と新面UV/材質の付与、UV島不一致・法線角度を診断する",
+      "preconditions": [
+        "Blender 4.4.3",
+        "frozen R10 ordered XY-star-shaped and Z-separated rings",
+        "two temporary researcher-authored open collar surfaces",
+        "single basic UV layer"
+      ],
+      "input": "synthetic fixture plus arm and continuous/split UV mode",
+      "output": "raw temp Blender edit-mode result and independent CGAL/attribute evaluation, approved=false",
+      "parameters": {
+        "bridge_material_index": 2,
+        "uv_mode": [
+          "continuous",
+          "split"
+        ],
+        "negative_control": true
+      },
+      "success": "R11 controlled candidate14/14 attribute audits, 14/14 bad-attribute controls detected, whole joined CGAL 0, scene restored",
+      "failure": "split UV island gap .25 remains; fresh case max normal dihedral 56.35°, artist models/custom normals/UV layers/Undo unverified",
+      "validation": "cycles/r11/blender_run.py; cycles/r11/evaluate.py; official Blender 4.4.3 and independent CGAL CI",
+      "performance": "cycles/r11/RESULTS.md",
+      "references": [
+        "cycles/r11/RESEARCH.md",
+        "cycles/r11/STATUS.json"
+      ],
+      "status": "research_R11_attribute_audit_passed_not_uv_island_or_shading_solution",
+      "approved": false
     }
   ]
 }

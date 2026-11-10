@@ -29,3 +29,5 @@ R8: r8/RESEARCH.md、RESULTS.md、STATUS.json。R7固定内部密度を上下の
 R9: r9/RESEARCH.md、RESULTS.md、STATUS.json。元の入力境界頂点/面数不変で内部対角線を条件付きで反転。Blender4.4.3・CGAL独立66ケース検証。既知16/16、新holdout5/6（R8 4/6、Blender3cut 2/6）、自己交差0。未知reverse_narrow 0.08078で不合格、R8より処理時間約12.5倍。研究のみ成功、製品未承認、R10自動開始なし。
 
 R10: r10/RESEARCH.md、RESULTS.md、STATUS.json。品質0.1以上のR8はそのまま返し、未満だけR9反転。Blender4.4.3、CGALで30人工形状×4方式=120を独立検証。新規8ケースR10 8/8、R9 8/8、R8 6/8、Blender 4/8。fast6、repair2、平均時間R9の50.2%、CGAL交差0。既知不合格r9_reverse_narrowは未解決。品質/速度の研究は成功、製品は未承認・R11自動開始なし。
+
+R11: r11/RESEARCH.md、RESULTS.md、STATUS.json。Blender4.4.3 Edit Mode BMeshで人工カラー元面へのR10接続を検証。既知UV8+新UV6=14の属性保持監査に合格、悪いUV/材質の対照も14/14検出。接続後全体メッシュのCGAL交差0。元面は完全保持される一方、分割UV島の継ぎ目0.25と最大法線差約56.35°（新規）は残る。実アセット/Undo/任意UVに未対応、本体未承認、R12自動開始なし。
