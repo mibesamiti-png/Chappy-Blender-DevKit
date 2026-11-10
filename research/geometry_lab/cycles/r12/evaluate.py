@@ -201,5 +201,5 @@ if __name__=="__main__":
     print("R12_SUMMARY",json.dumps({k:output[k] for k in
            ("summary","candidate_passed_new","cross_arm_invariant_errors",
             "preregistered_research_gate_met","decision")}),flush=True)
-    if any(r["audit_status"]=="oracle_unavailable" for r in output["results"]):
-        raise SystemExit("R12 oracle unavailable: research cannot be accepted")
+    if not output["preregistered_research_gate_met"]:
+        raise SystemExit("R12 research gate failed or unverifiable; do not report success")
