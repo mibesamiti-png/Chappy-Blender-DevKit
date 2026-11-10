@@ -423,6 +423,38 @@ class GLBRegressionTests(unittest.TestCase):
         self.assertEqual(result["surface_status"], "not_requested")
 
 
+    def test_r15_declared_basis_cannot_approve_glb_regression(self):
+        """A matching self-declared basis is not a geometry or file verdict.
+
+        Mock the GLB launcher I/O; the existing Blender workflow separately
+        runs CBDK's synthetic GLB exports on all three native versions.
+        """
+        from cbdk.glb_evidence_basis_r15 import build_bound_glb_evidence_triage
+        from test_glb_evidence_basis_r15 import BASIS, claimed_sources, reports
+
+        inputs = reports("missing")
+        bound = build_bound_glb_evidence_triage(
+            **inputs, source_basis=claimed_sources(inputs),
+            expected_basis=BASIS)
+        self.assertEqual(bound["basis_review"]["status"],
+                         "declared_consistent_unverified")
+        self.assertFalse(bound["basis_review"]["sources_verified_same_run"])
+        self.assertFalse(any(bound["safety"].values()))
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with patch("cbdk.glb_regression.write_glb_inspection"), \
+                 patch("cbdk.glb_regression.render_glb_preview"), \
+                 patch("cbdk.glb_regression.write_scene_comparison",
+                       return_value=inputs["comparison"]):
+                actual = run_glb_regression(
+                    root / "blender", root / "reference.glb",
+                    root / "candidate.glb", root / "out")
+            self.assertIs(actual["passed"], False)
+            self.assertIs(actual["passed_is_metadata_only"], True)
+            self.assertIs(actual["surface_does_not_auto_approve"], True)
+            self.assertEqual(actual["surface_status"], "not_requested")
+
+
     def test_optional_surface_stage_can_report_skipped_without_false_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
