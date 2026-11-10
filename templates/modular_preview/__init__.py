@@ -2,7 +2,9 @@
 
 Only trusted authored feature modules are loaded, selected at build time.
 Do not install two modular-preview variants simultaneously: they share class
-and operator identifiers and are intended to replace one another.
+and operator identifiers and are intended to replace one another. A partially
+failed unregister keeps its class ownership ledger until an explicit retry;
+a Scene declaration replaced by a foreign owner is never deleted by CBDK.
 """
 bl_info = {
     "name": __CBDK_DISPLAY_NAME__,
@@ -15,13 +17,77 @@ bl_info = {
 }
 
 import importlib
+from math import isfinite
 import bpy
 
+# importlib.reload() re-executes a module in its existing namespace.  If the
+# preview is still registered, resetting the lists below would orphan Blender
+# classes and Scene declarations.  Require explicit unregister/disable first.
+# Place this check *before* recreating the operator/Panel classes and ledgers.
+if any(globals().get(key) for key in (
+        "_REGISTERED", "_OWNED_PROPERTIES", "_OWNED_PROPERTY_TOKENS")):
+    raise RuntimeError("CBDK preview must be unregistered before module reload")
+
 _FEATURE_IDS = __CBDK_FEATURE_IDS__
-_OPERATORS = [
-    importlib.import_module("." + feature, __name__ + ".features").OPERATOR_CLASS
-    for feature in _FEATURE_IDS
-]
+_UI_SECTIONS = __CBDK_UI_SECTIONS__
+_UI_OPTIONS = __CBDK_UI_OPTIONS__
+_FEATURE_MODULES = {feature: importlib.import_module("." + feature, __name__ + ".features")
+                    for feature in _FEATURE_IDS}
+_OPERATORS = [_FEATURE_MODULES[feature].OPERATOR_CLASS for feature in _FEATURE_IDS]
+_OPERATORS_BY_FEATURE = dict(zip(_FEATURE_IDS, _OPERATORS))
+# Fixed context map for the five reviewed CBDK-authored operators.
+# Recipes/JSON cannot inject a new context or an arbitrary operator.
+_OBJECT_MODE_FEATURES = frozenset(("object_selection", "mesh_bounds", "modifier_summary"))
+_EDIT_MODE_FEATURES = frozenset(("edit_selection", "vertex_nudge"))
+assert set(_FEATURE_IDS) <= _OBJECT_MODE_FEATURES | _EDIT_MODE_FEATURES
+
+
+
+# This is only a cheap panel hint; every operator must revalidate its live
+# context and geometry during execute(). Never scan BMesh in Panel.draw.
+# R15 checks this distinction using live Blender Panel.draw enabled flags
+# versus real bpy.ops FINISHED/CANCELLED results across selection/mode changes.
+# A previous enabled hint is not authorization to bypass execute() guards.
+def _preview_unavailable_reason(feature_id, context):
+    active = getattr(context, "active_object", None)
+    mesh = getattr(active, "data", None)
+    if active is None or getattr(active, "type", None) != "MESH" or mesh is None:
+        return "An active mesh object is required"
+    required_mode = "EDIT_MESH" if feature_id in _EDIT_MODE_FEATURES else "OBJECT"
+    if getattr(context, "mode", None) != required_mode:
+        return "Switch to " + required_mode + " mode"
+
+    if feature_id == "object_selection":
+        # The matching read-only helper refuses a context with no selection
+        # collection. This is a context hint, not a scan of selected objects.
+        if getattr(context, "selected_objects", None) is None:
+            return "Context does not expose selected_objects"
+    elif feature_id == "mesh_bounds":
+        vertices = getattr(mesh, "vertices", None)
+        if vertices is None or len(vertices) == 0:
+            return "Active mesh must contain vertices"
+        corners = getattr(active, "bound_box", None)
+        if corners is None or len(corners) != 8:
+            return "Active mesh has no valid bounding box"
+        # At most 24 scalar checks, independent of mesh size. A non-finite
+        # corner is known to make the bounds helper refuse execution; a
+        # finite preview still is NOT a guarantee that its world transform
+        # or any subsequent operator calculation will succeed.
+        try:
+            if any(len(corner) != 3 or any(not isfinite(float(v)) for v in corner)
+                   for corner in corners):
+                return "Mesh bounding box contains non-finite coordinates"
+        except (TypeError, ValueError, OverflowError):
+            return "Mesh bounding box contains non-finite coordinates"
+    elif feature_id == "edit_selection":
+        objects = getattr(context, "objects_in_mode_unique_data", None)
+        if objects is None:
+            return "Cannot verify multi-object Edit Mode state"
+        if sum(1 for obj in objects if getattr(obj, "type", None) == "MESH") != 1:
+            return "Exactly one unique mesh must be in Edit Mode"
+    elif feature_id == "vertex_nudge":
+        return _FEATURE_MODULES[feature_id].ui_unavailable_reason(context)
+    return None
 
 
 class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
@@ -33,8 +99,51 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
 
     def draw(self, context):
         col = self.layout.column(align=True)
-        for cls in _OPERATORS:
-            col.operator(cls.bl_idname)
+        # Snapshot the UI mode once for consistent composition during a mode
+        # switch. A missing/non-string mode is unsupported, never ready.
+        raw_mode = getattr(context, "mode", None)
+        visible_mode = raw_mode.lower() if type(raw_mode) is str else None
+        visible_sections = 0
+        for index, (title, buttons) in enumerate(_UI_SECTIONS):
+            style = _UI_OPTIONS["section_styles"][index]
+            if style["visible_in"] not in ("always", visible_mode):
+                continue
+            control_modes = _UI_OPTIONS["control_visibility"][index]
+            visible_buttons = [(feature_id, label) for (feature_id, label), mode in
+                               zip(buttons, control_modes)
+                               if mode in ("always", visible_mode)]
+            if not visible_buttons:
+                continue
+            visible_sections += 1
+            group = col.box() if style["boxed"] else col.column(align=True)
+            group.label(text=title)
+            body = group.row(align=True) if style["layout"] == "row" else group
+            for feature_id, label in visible_buttons:
+                button_row = body.row(align=True)
+                reason = _preview_unavailable_reason(feature_id, context)
+                if feature_id == "vertex_nudge":
+                    # A disabled nudge action must not also disable its XYZ
+                    # editor. Only disable the input for invalid mesh/mode.
+                    active = getattr(context, "active_object", None)
+                    button_row.enabled = (
+                        getattr(active, "type", None) == "MESH"
+                        and getattr(active, "data", None) is not None
+                        and getattr(context, "mode", None) == "EDIT_MESH"
+                    )
+                    button_row.prop(context.scene, "cbdk_modular_nudge_offset", text="XYZ")
+                    action = button_row.row(align=True)
+                    action.enabled = reason is None
+                    button = action.operator(
+                        _OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label
+                    )
+                    button.offset = context.scene.cbdk_modular_nudge_offset
+                else:
+                    button_row.enabled = reason is None
+                    button_row.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
+                if reason is not None:
+                    body.label(text=label + ": " + reason)
+        if not visible_sections:
+            col.label(text="No preview controls for this mode")
         col.label(text=context.scene.cbdk_modular_result)
 
 
@@ -42,27 +151,95 @@ _CLASSES = tuple(_OPERATORS) + (VIEW3D_PT_cbdk_modular_preview,)
 _REGISTERED = []
 
 
+_PROPERTY_NAMES = ("cbdk_modular_result", "cbdk_modular_nudge_offset")
+_OWNED_PROPERTIES = []
+# Blender's registered bpy.props declarations also remain in Scene.__dict__.
+# Keep the exact descriptor to avoid deleting a foreign replacement by name.
+_OWNED_PROPERTY_TOKENS = {}
+
+
 def register():
-    # Roll back even if a later operator/panel fails to register.
-    bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
-        name="Last CBDK preview result", default="No inspection yet"
-    )
+    # Refuse collisions before touching another add-on's Scene data.
+    if (_REGISTERED or _OWNED_PROPERTIES or _OWNED_PROPERTY_TOKENS
+            or any(hasattr(bpy.types.Scene, name) for name in _PROPERTY_NAMES)):
+        raise RuntimeError("CBDK preview is already registered or Scene properties conflict")
     try:
+        bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
+            name="Last CBDK preview result", default="No inspection yet"
+        )
+        _OWNED_PROPERTIES.append("cbdk_modular_result")
+        _OWNED_PROPERTY_TOKENS["cbdk_modular_result"] = (
+            bpy.types.Scene.__dict__.get("cbdk_modular_result"))
+        parameter = _UI_OPTIONS["nudge_offset"]
+        bpy.types.Scene.cbdk_modular_nudge_offset = bpy.props.FloatVectorProperty(
+            name="Local Nudge XYZ", description="Local-space offset for selected vertices",
+            size=parameter["size"], default=parameter["default"],
+            min=parameter["min"], max=parameter["max"], subtype="TRANSLATION",
+        )
+        _OWNED_PROPERTIES.append("cbdk_modular_nudge_offset")
+        _OWNED_PROPERTY_TOKENS["cbdk_modular_nudge_offset"] = (
+            bpy.types.Scene.__dict__.get("cbdk_modular_nudge_offset"))
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
             _REGISTERED.append(cls)
-    except Exception:
-        for cls in reversed(_REGISTERED):
-            bpy.utils.unregister_class(cls)
-        _REGISTERED.clear()
-        if hasattr(bpy.types.Scene, "cbdk_modular_result"):
-            del bpy.types.Scene.cbdk_modular_result
+    except Exception as error:
+        # A class-registration callback may fail after one operator attaches,
+        # while a Scene declaration has been removed or replaced. Reuse the
+        # ownership-aware unregister path: preserve foreign replacements,
+        # release only still-owned declarations, and retain failed ledgers for
+        # an explicit retry instead of silently resetting them.
+        try:
+            unregister()
+        except Exception as cleanup_error:
+            # Keep the original registration error and retain failed entries
+            # in the ownership lists so a later cleanup can be retried.
+            error.add_note("CBDK preview rollback was incomplete; retry unregister()")
+            raise error from cleanup_error
         raise
 
 
 def unregister():
-    for cls in reversed(_REGISTERED):
-        bpy.utils.unregister_class(cls)
-    _REGISTERED.clear()
-    if hasattr(bpy.types.Scene, "cbdk_modular_result"):
-        del bpy.types.Scene.cbdk_modular_result
+    # A failing operator unregister must not prevent owned Scene property
+    # cleanup. Entries are removed only after a successful detach so a caller
+    # can retry without touching foreign add-on registrations. R10 checks
+    # that simultaneous failures keep both independent class/property
+    # ledgers until each cleanup step succeeds, even across multiple retries.
+    # R13: addon_utils may evict this module after an enable failure. A
+    # separately imported copy cannot see these original ownership lists:
+    # the caller must keep the old module reference for explicit recovery.
+    # R14: multiple evicted copies can each own different Blender classes.
+    # Empty lists in a new import say nothing about those older instances;
+    # only explicit cleanup of every retained original can establish release.
+    failures = []
+    for cls in reversed(tuple(_REGISTERED)):
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception as error:
+            failures.append(error)
+        else:
+            _REGISTERED.remove(cls)
+    for name in reversed(tuple(_OWNED_PROPERTIES)):
+        try:
+            # A different addon may have removed/replaced our declaration.
+            # Blender retains assigned bpy.props on the type __dict__; a
+            # replacement has a different descriptor even with the same name.
+            # Releasing a lost ownership claim must NOT delete the new value.
+            current = bpy.types.Scene.__dict__.get(name)
+            token = _OWNED_PROPERTY_TOKENS.get(name)
+            # A missing descriptor is never proof of ownership. In particular
+            # "None is None" must not authorize deleting an inherited or
+            # otherwise foreign RNA property with a matching name.
+            if token is not None and current is token:
+                if hasattr(bpy.types.Scene, name):
+                    # If Blender RNA deletion raises, keep the ownership
+                    # ledger for a later explicit unregister() retry.
+                    # R9's CBDK-only probe shadows this module's builtin
+                    # delattr to simulate the error without altering Blender.
+                    delattr(bpy.types.Scene, name)
+        except Exception as error:
+            failures.append(error)
+        else:
+            _OWNED_PROPERTIES.remove(name)
+            _OWNED_PROPERTY_TOKENS.pop(name, None)
+    if failures:
+        raise RuntimeError("CBDK preview cleanup incomplete; retry unregister()") from failures[0]

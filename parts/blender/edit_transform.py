@@ -27,14 +27,7 @@ class VertexTranslationResult:
     audit: MeshEditDiff
 
 
-def translate_selected_vertices(context, offset) -> VertexTranslationResult:
-    """Move only currently selected BMesh vertices by a *local-space* delta.
-
-    Reject multi-object edit, linked/shared mesh data and shape keys, so one
-    operation never unexpectedly changes other objects or shape keys.
-    The calling bpy Operator must use UNDO. Direct scripting calls are NOT
-    automatically undoable unless the caller creates an undo step.
-    """
+def _translation_delta(offset):
     if not isinstance(offset, (tuple, list)) or len(offset) != 3:
         raise BlenderContextError("Offset must have exactly three local-space components")
     try:
@@ -44,7 +37,11 @@ def translate_selected_vertices(context, offset) -> VertexTranslationResult:
     if (not all(isfinite(x) and abs(x) <= MAX_OFFSET for x in delta)
             or all(x == 0.0 for x in delta)):
         raise BlenderContextError("Offset must be finite, nonzero and within +/-10 units")
+    return delta
 
+
+def _translation_context(context):
+    """Shared structural guard; no BMesh creation, vertex scan or mutation."""
     obj = require_active_mesh(context, mode="EDIT_MESH")
     objects = getattr(context, "objects_in_mode_unique_data", None)
     if objects is None or len([o for o in objects if getattr(o, "type", None) == "MESH"]) != 1:
@@ -56,6 +53,36 @@ def translate_selected_vertices(context, offset) -> VertexTranslationResult:
         raise BlenderContextError("Shared mesh datablocks are not supported")
     if getattr(mesh, "shape_keys", None) is not None:
         raise BlenderContextError("Meshes with shape keys are not supported")
+    return obj
+
+
+def translation_unavailable_reason(context, offset) -> str | None:
+    """Advisory panel state using Blender's cached selected-vertex count.
+
+    A ready panel is not an edit authorization: selection can change, cached
+    RNA can be stale, and numeric/topology/resource audits still run on execute.
+    This function never imports BMesh or scans/copies mesh elements.
+    """
+    try:
+        _translation_delta(offset)
+        obj = _translation_context(context)
+    except BlenderContextError as exc:
+        return str(exc)
+    count = getattr(obj.data, "total_vert_sel", None)
+    if type(count) is not int or count < 1:
+        return "Select at least one vertex before translating"
+    return None
+
+
+def translate_selected_vertices(context, offset) -> VertexTranslationResult:
+    """Guarded selected-only edit; operator must provide native Undo.
+
+    UI readiness is advisory. Recheck structure and actual BMesh selection,
+    then audit all elements within the existing resource limit before editing.
+    """
+    delta = _translation_delta(offset)
+    obj = _translation_context(context)
+    mesh = obj.data
 
     import bmesh
 

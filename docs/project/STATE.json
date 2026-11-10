@@ -2,20 +2,24 @@
   "schema_version": 1,
   "project": "Chappy Blender DevKit (CBDK)",
   "repository": "mibesamiti-png/Chappy-Blender-DevKit",
-  "updated_on": "2026-11-06",
+  "updated_on": "2026-11-11",
   "release": {
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18でworld bounds比較＋32x32シルエットIoU比較まで実装。PR #24でPython 347件×3版、Windows 2版、Blender 3版、Windows kit、handoffが全成功。同bounds異輪郭の実機検出も成功"
+    "milestone": "v0.18: R15 B#120/C#121/D#119の11ファイルをA統合PR #122でdevへ一度だけ反映（08ddb3e3a51e526ddfe857268f31b2de443c0fec）。各担当5CI、結合5CI（Windows既存Nodeテスト一時timeout後の単独再試行成功）、dev独立7CI成功。R16はA節目同期後の新dev HEAD独立7CIを条件とする。実GLB/Windows GUI/権利/正式公開未検証、v0.19未有効。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
     "docs/PROJECT_HANDOFF.md",
     "docs/project/STATE.json",
     "docs/PROJECT_SPEC.md",
+    "docs/future/CBDK-LONG-TERM-VISION.md",
     "docs/PROGRESS.md",
-    "AGENTS.md"
+    "AGENTS.md",
+    "docs/GLB_ROADMAP.md",
+    "docs/DEVELOPMENT_PLAN.md",
+    "docs/NOTION_SYNC.md"
   ],
   "requirements": [
     {
@@ -80,7 +84,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/modular_builder.py",
-      "note": "レガシー形式・固定の自作プレビューのみ"
+      "note": "レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。"
     },
     {
       "id": "EDIT-001",
@@ -109,18 +113,18 @@
     {
       "id": "UI-001",
       "title": "汎用アドオンUI組み立て",
-      "status": "not_implemented",
-      "verification": "not_tested",
-      "source": "",
-      "note": "任意レイアウトの生成は未対応"
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "cbdk/ui_layout.py",
+      "note": "既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。"
     },
     {
       "id": "EXT-001",
       "title": "正式Blender Extensions形式と公開パッケージ",
-      "status": "not_implemented",
-      "verification": "not_tested",
-      "source": "",
-      "note": "法的/ライセンス確認を先に行う"
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "cbdk/extension_preflight.py",
+      "note": "必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。"
     },
     {
       "id": "INST-001",
@@ -152,7 +156,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "scripts/blender_undo_redo_smoke.py",
-      "note": "PR #21でBlender 4.4.3/4.5.15/5.2.1の背景プローブを実行。背景ではundo.poll不可をunavailableとして正しく記録し、GUIショートカットは対象外"
+      "note": "c80f2a0/Blender42368190461の3版で明示ed.undo_pushの単一/複数頂点2ケースNative Undo/Redo成功。正確な接続/選択・取消無変更を確認。通常背景Undo不可、GUI/実ユーザー未検証でpartialを維持。"
     },
     {
       "id": "PLAN-002",
@@ -160,7 +164,7 @@
       "status": "partial",
       "verification": "python",
       "source": "cbdk/recipe_matrix.py",
-      "note": "6レシピ・5機能・7部品の整合性と3版の静的互換性を照合。PR #21のPython 3.11/3.12/3.13全体テスト成功"
+      "note": "6レシピ・5機能・7部品の依存/3版互換性に加え、生成前AST相対import/export・登録衝突・実機KNOWN/CI一覧を照合。NEXT-003の受け入れ完了。固定自作previewのみで一般の新規登録/承認は未対応、全体partialを維持。Python767件×3/Windows2/Blender3版確認。"
     },
     {
       "id": "REG-001",
@@ -217,6 +221,158 @@
       "verification": "blender_ci",
       "source": "scripts/blender_glb_render.py",
       "note": "scene metadata schema 4で32x32 binary silhouetteを全体7方向＋最大32部品のfront/right/top/isoへ保存。IoU比較をglb-compare/glb-regressionへ接続。PR #24でPython 347件×3版、Windows 2版、Blender 4.4.3/4.5.15/5.2.1が成功し、Cubeと同boundsの八面体をsilhouette差だけで失敗判定できることを実機確認"
+    },
+    {
+      "id": "GLB-005",
+      "title": "形状診断の数値根拠集約と矛盾データ拒否",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_diagnose.py",
+      "note": "参考/候補GLBのscene・部品差分を影響視点、最悪IoU、相対誤差、体積割合、重大度別で集約し、異常JSON・矛盾カウンタを拒否。PR #25のコードcommit e971b784でPython3版/Windows2版/Blender3版の実機診断と回帰テスト成功。公開・実ユーザーGLB再現の保証なし"
+    },
+    {
+      "id": "GLB-006",
+      "title": "GLB差分から確認すべきアドオン設定候補を提示",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_repair_plan.py",
+      "note": "GLB診断から設定候補群・確認手順・最悪IoU・代表軸をレビュー専用JSONへ出力。PR #25のコードcommit d9c5c925でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・Windowsキット・引き継ぎCIが全成功。実アドオン内にその設定が存在することや完全形状一致は未検証"
+    },
+    {
+      "id": "GLB-007",
+      "title": "GLB修正候補とローカル自作アドオンのプロパティ宣言を静的照合",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_property_map.py",
+      "note": "元アドオンを実行せず指定Pythonのbpy.props宣言とGLB修正候補を名前完全一致で照合。匿名ソース名/クラス/行/種類のみ出力。PR #25のコードcommit c3635075でPython3版、Windows2版、Blender3版の合成fixture、Windows kit、handoffが全成功。実アドオンでの登録と形状影響は未検証"
+    },
+    {
+      "id": "GLB-008",
+      "title": "Blenderプロパティ候補の静的参照・書き込み追跡",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_property_usage.py",
+      "note": "AST-onlyで同名属性へのread/write/read_write/deleteの可能性を匿名ソース、関数、行番号、件数で出力。PR #25実装commit c640ad06でPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1の合成fixture・kit・引き継ぎCI全成功。受信オブジェクトの実体と実際の形状への影響は未検証"
+    },
+    {
+      "id": "GLB-009",
+      "title": "プロパティ宣言と同クラスself参照を別オブジェクトの参照から区別",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_property_map.py",
+      "note": "匿名ソース/同クラスself参照と別クラス・別オブジェクト参照をAST上区別しread/write等を全件集計。PR #25の実装commit 2c000dadでPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1・kit・handoff CI全成功。宣言プロパティの実体同一/登録・ジオメトリ効果は未検証"
+    },
+    {
+      "id": "GLB-010",
+      "title": "プロパティ式からメッシュ生成APIまでの構文上の経路を追跡",
+      "status": "partial",
+      "verification": "not_tested",
+      "source": "cbdk/glb_geometry_flow.py",
+      "note": "bpy.ops.meshのプリミティブ、bmesh.opsの一部、object寸法等へselfプロパティまたは直線的ローカル別名が引数として届くAST上の経路を検出。関数内共起のみでは判定しない。分岐/ループ/関数間は未追跡、実際の形状効果は未証明。新規20回帰テスト・Blender3版合成fixtureを追加、現head CI成功確認前"
+    },
+    {
+      "id": "GLB-011",
+      "title": "プロパティ値からBoolean/Bevel/Solidify等のモディファイア設定までAST上で追跡",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_geometry_flow.py",
+      "note": "直線的selfプロパティ/別名からmodifier.width/thickness/operation/object等の代入・複合代入までAST経路を検出。PR #25 commit b1a57e57のPython3版・Windows2版・Blender 4.4.3/4.5.15/5.2.1合成fixture・kit・handoff CI全成功。実際のモディファイア実体・形状効果は未検証"
+    },
+    {
+      "id": "GLB-012",
+      "title": "信頼済み合成Blenderアドオンのパラメータ変更前後を定量測定",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/parameter_experiment_metrics.py",
+      "note": "CBDK製合成アドオンの球半径/Bevel幅変更を生成直後とGLB再読込後で平均/最大頂点変位と変化点数として測定し、他の部品が不変の対照実験を確認。PR #25 commit 04526f1dのPython3版/Windows2版/Blender4.4.3/4.5.15/5.2.1/kit/handoff全CI成功。任意GLB・ユーザーアドオンへ一般化できない"
+    },
+    {
+      "id": "GLB-013",
+      "title": "CBDK合成GLBの設定値を上下プローブして参考形状への改善方向を判定",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/parameter_direction.py",
+      "note": "自作合成モデルで基準・参照2・上下4の計7 GLBを生成/再読込。頂点順不変の局所半径分布で球半径とBevel幅の増加方向のみ参考に近づくこと、減少方向で遠ざかること、非対象部品が不変であることをBlender4.4.3/4.5.15/5.2.1 CIで検証。PR #25 commit e73f7ebaはPython3版/Windows2版/Blender3版/kit/handoff全成功。実ユーザーGLBには適用保証なし"
+    },
+    {
+      "id": "GLB-014",
+      "title": "三角面サンプリングの双方向表面距離で頂点順・面分割の違いと開口差を検出",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_surface_distance.py",
+      "note": "24 Haltonサンプル/三角形の面積重み付き双方向3D表面距離（最大128面）で、同じ面の別三角分割=0、同外寸の中央開口=非ゼロ、Z+0.25=0.25を自作合成4 GLBで実測。実装/文書commit f7e9e114のPython3版/Windows2版/Blender4.4.3/4.5.15/5.2.1/kit/handoff CI全成功。Blender4.5.15の対称距離: 別分割0、中央開口0.0081329、Z+0.25=0.25。小穴/密閉空洞/大規模GLBと真のHausdorffは未検証"
+    },
+    {
+      "id": "GLB-015",
+      "title": "三角面の最近接距離をBVHで高速化し安全上限を512面へ拡張",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_surface_distance.py",
+      "note": "決定的な三角形AABB-BVHの枝刈りで精密点→三角面距離の候補計算を削減し128→512面/meshへ拡張。Python総当たり照合含む新規10回帰テスト成功。PR #25 commit bcef8572でPython3版、Windows2版、Blender4.4.3/4.5.15/5.2.1、kit/handoff CI全成功。256面GLB（Blender4.5.15）の精密三角形距離計算は総当たり1,572,864回→BVH49,152回（32分の1）。実測実行時間の改善と実大規模GLBの処理は未検証"
+    },
+    {
+      "id": "GLB-016",
+      "title": "BVH/総当たりの実時間中央値を比較し512面の合成GLBを実機測定",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/surface_benchmark.py",
+      "note": "同一合成64面でBVHと総当たりのウォームアップ後3回の時間中央値を比較、512面GLBはBVH単独で測定。合成GLB6種をBlender4.4.3/4.5.15/5.2.1で生成→再読込し、距離一致/512面距離0を確認（commit 9581ab20、Blender run 42240589340成功）。64面ms: Blender4.4.3 BVH35.510505/総当たり161.156313、4.5.15 BVH19.356758/86.027068、5.2.1 BVH32.46785/149.716417。512面BVH ms: 352.050953/192.798623/321.247609。Python3版/Windows PowerShell2版/kit/handoff含む全5 CI成功。速度比はCI閾値でなくランナー依存"
+    },
+    {
+      "id": "GLB-017",
+      "title": "粗い8点から疑わしい面と探索枠だけ48点へ細分化する多解像度表面比較",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_multires_surface.py",
+      "note": "粗8点/面から疑わしい最大8面＋面積上位2面を48点/面まで選択精査するレビュー専用双方向距離。従来24点と粗8点で見逃した幅0.44の中央開口を精査で検出（最大距離0.0657466）。Blender4.4.3/4.5.15/5.2.1で自作合成7 GLBの書出・再読込に成功。コード+文書commit 4c7248c8のPython3版、Windows2版、Blender3版、Windows kit、handoff全CI成功。閉じた内部空洞・任意の微小穴の検出保証なし"
+    },
+    {
+      "id": "GLB-018",
+      "title": "角・開口境界・微細面・頂点密集から多解像度の精査対象を優先選択",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_feature_priority.py",
+      "note": "特徴ヒント（外寸内の境界・鋭角・細面・頂点近傍・非多様体疑い）で追加探索2枠中1枠を選び、残りは面積上位を調べる。旧area-onlyとの比較で、大型板2枚＋小部品の幅0.44の穴が旧方式では最大距離0、新方式で0.0657466。Blender4.4.3/4.5.15/5.2.1にて自作合成9 GLBの書出/再読込実CI成功（commit 676e92f8, run 42246918883）。Python3版/Windows2版/kit/handoff含む全5ワークフロー成功。どの境界が実際の穴か・閉じた空洞・一般GLB最適化は未証明"
+    },
+    {
+      "id": "GLB-019",
+      "title": "ローカル2GLBを安全に読み込みBVH表面距離と特徴優先多解像度の比較を既存パイプラインに統合",
+      "status": "implemented",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_surface_pipeline.py",
+      "note": "静的preflight後に固定Blenderで2GLBを読込しBVH/特徴優先距離、匿名上位32部品一覧と弱い面数候補を集計。型付き候補再計算、完全/省略/skip総面数整合性、1〜512面測定/実超過skipを検証。コード31bf3de18c357d796194dcac369c66e55b3973bfでPython707件×3版/Windows2版/Blender4.4.3/4.5.15/5.2.1合成4ケース（ユニーク/曖昧/33部品/561面skip）成功。6CI: Python42359722780、Windows42359722774、Blender42359722777、Kit42359722842、Handoff42359722778、Chromium42359722853。実ユーザー・完全幾何一致・部品同一性は未保証。"
+    },
+    {
+      "id": "GLB-020",
+      "title": "形状差分の3D可視化",
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "docs/GLB020_MVP_ACCEPTANCE.md",
+      "note": "GLB-020のレビューMVPは合成3部品・正常/開口狭窄/ボール移動/ソケットリップ欠損で総合受け入れテスト成功。正常時の誤検出0、変更部品だけの異常、欠損リップ境界+4、入力GLBのSHA256不変を検証。コードSHA db33ce4242bbe98b3c5f9ac43d89bf21c3657089：Python 42289898364、Windows 42289898499、Blender3版 42289898512、Kit 42289898604、Handoff 42289898325、Chromium 42289898701 の全6系統成功。MVP受け入れで追加機能は凍結しGLB-021へ。真の内部空洞/細穴/512面超/部品同一性・実ユーザーGLB未検証につき全機能ステータスはpartialを維持"
+    },
+    {
+      "id": "GLB-021",
+      "title": "アドオン設定の改善候補と連携",
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_visual_experiment_review.py",
+      "note": "AST候補/日本語シート/変更履歴に、初期GLB-020集計SHA一致の合成反復レビューを追加。宣言/参照/構文経路と完了・未完了・失敗prefixを私有JSON/MDに整理。手動socket役割と完全一致名は合成操作の確認候補のみで、実プロパティ効果/因果/値は未証明。79fea17e70665392731780ed5a518982530b7323でPython752件×3/Windows2/Blender4.4.3/4.5.15/5.2.1の連携・別集計拒否・元データ不変に成功。6CI: Python42366055143、Windows42366055138、Blender42366055131、Kit42366055135、Handoff42366055133、Chromium42366055162。全体partial、実データ・GUI・実インスタンス検証は未完了。 今回NEXT-008/009: 双方向調査focus・複数宣言triage・constructor再束縛の安全側除外を追加。b17fa4dでPython787件×3/Windows2/Blender3と全6CI成功。宣言不確実性・実体/因果未証明のため全体partial維持。"
+    },
+    {
+      "id": "GLB-022",
+      "title": "生成→比較→改善の反復実験",
+      "status": "partial",
+      "verification": "blender_ci",
+      "source": "cbdk/glb_synthetic_run_compare.py",
+      "note": "合成最大4試行/失敗レビューに条件付きschema2と旧schema1読取互換、同条件2〜16実行比較を追加。プロトコル/ソースSHA/Blender版（LTS保持）/基準・初期GLB SHA/スケール/初期観測/予算を照合。失敗・未完了・改変・不一致を除外し距離/面数混在は人手確認。2867ab31cf355486232f1f1b257315c9e73146a1でPython742件×3/Windows2/Blender3の独立通常4試行2回比較・失敗除外成功。6CI: Python42364086005、Windows42364086014、Blender42364085988、Kit42364085981、Handoff42364085980、Chromium42364085989。全体partial、任意実ユーザー因果/最適値/完全一致は未保証。 b17fa4d/Blender42374909099で検証済み経過と双方向focus/AST曖昧さの私有triageを接続。自動再実行/実プロパティ因果は認定せずpartial維持。"
+    },
+    {
+      "id": "DASH-001",
+      "title": "GitHub開発状況をブラウザから確認・自動更新・完了通知",
+      "status": "partial",
+      "verification": "python",
+      "source": "docs/dashboard/index.html",
+      "note": "v0.18開発にGitHub公開データ読取専用ライブボードを追加（#68）：STATE/PR/CI/キュー表示、手動/5分更新、チーム完了時の一度だけの通知。v2（#71）：BCD人数表示、音試聴、Raw取得失敗時の公開API fallback。v3（#79, dev e60d48f1）：PR/CI実測時刻由来のBCD提出→全員CI、BCD完了→Aマージ、A統合PR所要を追加。不足データは―、CI updated_atは近似。Node/ChromiumモックとポータブルHTML/ZIPを検証。実Windows Edge/可聴音/live GitHub通信/Pagesは未検証。"
     }
   ],
   "known_issues": [
@@ -283,6 +439,54 @@
       "title": "32x32シルエット比較でも小さな穴・内部形状・サブグリッド細部は見逃しうる",
       "workaround": "world bounds＋全体7方向＋部品4方向シルエットIoUを併用し、必要なら次段階で表面距離/ボクセル比較を追加する。シルエット一致だけで完全な形状同一を主張しない",
       "related_requirement": "GLB-003"
+    },
+    {
+      "id": "LIM-009",
+      "severity": "medium",
+      "status": "open",
+      "title": "GLB-020の部品対応は位置・寸法・面数の保守的推定であり、真の部品同一性や未測定領域は未保証",
+      "workaround": "参照と生成の匿名部品候補は必ず人が確認。曖昧/弱い場合は自動で対応付けず、同一パーツとの断定を避ける。HTMLの奥行き描画はCanvas 2D近似で、灰色もサンプル差分の低さのみ示す",
+      "related_requirement": "GLB-020"
+    },
+    {
+      "id": "LIM-010",
+      "severity": "medium",
+      "status": "open",
+      "title": "追加24点の感度監査が合成CI成功でも未観測領域・隠れた空洞・真の部品同一性・複雑な遮蔽は未保証",
+      "workaround": "紫枠は追加のサンプルで実際に誤差が増大した面のみを示す。紫枠無しも全域検査済みでなく、灰色も厳密一致ではない。幾何や部品候補はユーザー確認と別の高解像度検証が必要",
+      "related_requirement": "GLB-020"
+    },
+    {
+      "id": "LIM-011",
+      "severity": "medium",
+      "status": "open",
+      "title": "GLB-020の境界エッジ監査は座標の近接統合を用いた近似であり、境界0本も完全な閉曲面・内部空洞無しを証明しない",
+      "workaround": "境界件数はあくまで調査の手掛かり。意図的な開放面、部品の継ぎ目、T字接続、細い隙間などは別途検証し、対応候補や元コードを自動修正しない",
+      "related_requirement": "GLB-020"
+    },
+    {
+      "id": "LIM-012",
+      "severity": "medium",
+      "status": "open",
+      "title": "GLB-020の水色境界線は座標の近接統合とCanvas2DのX-ray描画による近似であり、穴の位置と奥行き関係を正確には証明しない",
+      "workaround": "ローカルビューで水色線を目視確認する補助とし、境界0本を穴無しの証明にせず、手動確認と別のトポロジー/内部空洞評価を組み合わせる。実GLBの私有座標は公開JSON・GitHub・Notionに保存しない",
+      "related_requirement": "GLB-020"
+    },
+    {
+      "id": "LIM-013",
+      "severity": "medium",
+      "status": "open",
+      "title": "GLB-021のASTによるプロパティ候補は名前と静的参照の手掛かりに過ぎず、実行時の登録・因果関係・正しい修正量は未検証",
+      "workaround": "ユーザーが部品役割と対象コードを明示し、ローカルレビューで候補設定の宣言・使用・メッシュ生成箇所を確認。自動コード実行や値適用は禁止。実データ検証と許可済み合成GLB-022実験で因果を追加確認",
+      "related_requirement": "GLB-021"
+    },
+    {
+      "id": "LIM-014",
+      "severity": "low",
+      "status": "open",
+      "title": "強制終了やディスク障害では最終レビューの完全保存を保証できない",
+      "workaround": "上書きしない最後の有効チェックポイントを読取CLIで確認し、最終証拠が無ければ未完了として扱う。自動再開せず新しい出力先で人手確認後に再実行。真正性・完全な原子性は保証しない。",
+      "related_requirement": "GLB-022"
     }
   ],
   "next_actions": [
@@ -298,14 +502,14 @@
       "priority": 2,
       "status": "in_progress",
       "title": "Blender Undo・Redoの実機検証を拡充",
-      "acceptance": "自動化可能なUndo/Redoの機械的チェックと、GUI操作未検証部分を切り分けて記録する"
+      "acceptance": "c80f2a0/Blender42368190461の対象3版で、明示ed.undo_pushによる単一頂点1操作/複数頂点2操作のNative Undo/Redo成功。座標・全接続・全選択と取消無変更を確認。通常背景Undoは3版ともunavailable/Redo未試行。Windows GUI Ctrl+Z/Ctrl+Shift+Z・実ユーザー操作は未検証のため継続。"
     },
     {
       "id": "NEXT-003",
       "priority": 4,
-      "status": "in_progress",
+      "status": "done",
       "title": "機能登録と新レシピ構築の自動化を改善",
-      "acceptance": "新規許可部品で台帳・依存・CIの不一致を検出する"
+      "acceptance": "c80f2a0/b5d3273: 生成前AST相対依存/静的export/OPERATOR_CLASS/ID重複検査、6レシピ実生成と実機smoke機能一覧/CIレシピ一覧照合、不一致拒否を実装。Python767件×3版42368307965・Windows2版42368305584・Blender3版42368190461ほか対象6系統成功で受け入れ完了。任意部品の自動採用/権利承認は対象外。"
     },
     {
       "id": "NEXT-004",
@@ -317,9 +521,9 @@
     {
       "id": "NEXT-005",
       "priority": 3,
-      "status": "todo",
+      "status": "done",
       "title": "v0.17：ベンチマーク実測を比較して監査の追加最適化・Undo/Redo回帰テストを検討",
-      "acceptance": "3つのBlender版の監査結果とメモリ測定を比較し、速度/安全性の妥協点と残るGUI検証を記録"
+      "acceptance": "2867ab3/Blender run42364085988の3版で70×70格子19,881要素の時間/割当ピークを比較しdocs/AUDIT_RUNTIME_REVIEW.mdへ記録。追加最適化や20万要素上限緩和の根拠はないため現行安全策を維持。背景Undo実行不能/Redo未試行/GUI未検証を明記しNEXT-002は継続。"
     },
     {
       "id": "NEXT-006",
@@ -340,7 +544,119 @@
       "priority": 8,
       "status": "in_progress",
       "title": "参考GLB→アドオン生成→GLB再出力→形状差分の自動デバッグ",
-      "acceptance": "参照GLB/生成GLBをBlenderで別々に実レンダリングし、world-space bounds・部品対応・7方向画像・構造を比較して、ズレの種類と対象部品を機械可読JSONへ記録する。boundsだけでは判別できない形状差は次段階で画像/表面距離比較を追加する"
+      "acceptance": "既存bounds/7方向/表面距離/BVHに双方向debug_focusを追加。参照側だけの差分保持、三角面数で正規化した調査順・未確認対応・等しい境界観測を区別し測定元一致の実験triageへ接続。b17fa4d/Blender42374909099の3版と全6CI成功。実ユーザー生成元との全工程・真の部品対応・局所距離/穴位置は未保証で全体継続。"
+    },
+    {
+      "id": "NEXT-009",
+      "priority": 9,
+      "status": "in_progress",
+      "title": "診断した設定候補と実アドオンのプロパティの安全な照合",
+      "acceptance": "AST宣言/参照/形状経路と合成反復のSHA結合に、constructor別名shadowing除外・複数宣言の曖昧さ・直前試行との観測差分を追加。b17fa4dのPython787件×3/Windows2/Blender3で検証、全6CI成功。構文件数は候補名全体なので宣言を自動選択しない。実インスタンス/登録/因果・私有データ実行は未確認で全体継続。"
+    },
+    {
+      "id": "NEXT-010",
+      "priority": 10,
+      "status": "done",
+      "title": "安全な合成アドオンで形状変化を数値実証",
+      "acceptance": "CBDK製合成アドオンで球半径/Bevel幅の単独変更をGLB再読込後まで定量比較。変更対象の頂点移動が正・非対象は0を3版Blender CIで確認（commit 04526f1d）"
+    },
+    {
+      "id": "NEXT-011",
+      "priority": 11,
+      "status": "done",
+      "title": "合成GLBの上下パラメータ探索で改善方向を検証",
+      "acceptance": "生成前後・GLB再読込後の7条件に対し半径分布スコアを使い、正方向で誤差減、負方向で誤差増、非対象の頂点変化0をBlender3版で確認（commit e73f7eba）。"
+    },
+    {
+      "id": "NEXT-012",
+      "priority": 12,
+      "status": "done",
+      "title": "合成GLBの3D表面距離で異三角分割・中央開口・高さ方向のズレを検証",
+      "acceptance": "自作4 GLBをBlender4.4.3/4.5.15/5.2.1で実生成→再読込し別分割=距離0、同外寸中央開口は差分検出、Z+0.25=0.25を確認（CI commit f7e9e114）。元アドオン非実行・自動承認なし"
+    },
+    {
+      "id": "NEXT-013",
+      "priority": 13,
+      "status": "done",
+      "title": "BVHで256面GLBの比較計算を削減し512面まで回帰検証",
+      "acceptance": "総当たりとBVHの距離結果一致、400/512面比較・過大入力拒否をPython CIで確認。256面合成GLBのBlender4.4.3/4.5.15/5.2.1実再読込比較は距離0・4倍以上の精密距離計算削減で成功（commit bcef8572）。Blender4.5.15の計算回数1,572,864→49,152"
+    },
+    {
+      "id": "NEXT-014",
+      "priority": 14,
+      "status": "done",
+      "title": "Blenderの合成64面/512面GLBで実行時間中央値と正確性を検証",
+      "acceptance": "3版Blenderで6 GLB生成/再読込、64面の同一入力BVH/総当たりの距離一致と実行時間中央値、512面BVH単独中央値を観測（Blender run 42240589340）。速度倍率をCI合否条件としない。実ユーザーGLBに対する性能は未検証"
+    },
+    {
+      "id": "NEXT-015",
+      "priority": 15,
+      "status": "done",
+      "title": "細い開口を検出する多解像度表面サンプリングを合成GLBで検証",
+      "acceptance": "実測済: Pythonの13回帰テストとBlender4.4.3/4.5.15/5.2.1自作合成7 GLB。従来24点最大距離0、粗8点0、精査48点0.0657466（run 42244257499）。同一性認定・私有モデルの実行/公開なし"
+    },
+    {
+      "id": "NEXT-016",
+      "priority": 16,
+      "status": "done",
+      "title": "特徴優先で大型板に埋もれた小さい開口を見つける合成GLB比較を検証",
+      "acceptance": "Python13回帰テストとBlender4.4.3/4.5.15/5.2.1合成9 GLBの実生成・再読込成功。大型板に囲まれた小部品でarea-only最大誤差0／feature-aware 0.0657466（run 42246918883）。旧GLB-017見逃し検出と512面BVH CIは維持、実ユーザーソース実行なし"
+    },
+    {
+      "id": "NEXT-017",
+      "priority": 17,
+      "status": "done",
+      "title": "本物の2つのGLB入力から表面誤差を出力し既存glb-regressionにopt-in統合",
+      "acceptance": "Blender 4.4.3/4.5.15/5.2.1で自作合成GLB2組を新CLIに実読込し、中央開口は差分検出・同じ面の別分割は差分なしを確認。既存glb-regression --surface-reviewとの共存を実機(4.5.15)とモック回帰テストで確認（run 42257317535）。Pythonの12 launcher+3 regressionテスト成功。未解析/一致保証の混同なし"
+    },
+    {
+      "id": "NEXT-018",
+      "priority": 18,
+      "status": "done",
+      "title": "GLB-020 MVP: 閉じた3部品の正常/開口狭窄/ボール移動/面欠損とソース不変性をBlender3版で合格",
+      "acceptance": "CBDK合成の3部品GLBで正常負例の色誤検出0、開口狭窄/位置ずれ/欠損リップの検出と未変更部品の非誤判定、境界0→4、ソースSHA256不変。Python/Windows/Blender3版/Windows Kit/Handoff/Chromiumの6 CI成功。実ユーザーGLBと完全幾何検証は未達を明示"
+    },
+    {
+      "id": "NEXT-019",
+      "priority": 19,
+      "status": "done",
+      "title": "GLB-021: 測定元一致のAST候補と許可済み合成反復レビューの接続",
+      "acceptance": "79fea17の6CI成功。初期集計SHA/距離/面数/スケール一致を検査してAST-only候補と合成反復を結合。対象3版で完了/未完了/模擬失敗、別集計拒否、元ソース/JSONのSHA不変・私有候補のstdout非表示を確認。実アドオン因果/値の未証明を保持。NEXT-009とGLB-021全体の実データ検証は別途未完了。"
+    },
+    {
+      "id": "NEXT-020",
+      "priority": 20,
+      "status": "done",
+      "title": "GLB-022: 合成適応探索の失敗/打切りと同条件複数実行レビューを検証",
+      "acceptance": "NEXT-022の失敗/打切り記録とNEXT-023の同条件複数実行比較を実装。2867ab3の6CIで正常独立2実験/失敗除外/既存プロトコルを確認。固定合成範囲の受け入れ条件を達成。GLB-022全体の任意実ユーザー対応・因果/最適値/完全一致は未完成のまま維持する。"
+    },
+    {
+      "id": "NEXT-021",
+      "priority": 21,
+      "status": "done",
+      "title": "GLB-019: 匿名部品一覧・弱い候補の証拠整合性補強と引き継ぎ同期",
+      "acceptance": "コード31bf3deのPython707件×3版、Windows2版、Blender3版合成4ケース、Kit/Handoff/Chromiumの全6系統CI成功を実ジョブとログで確認。安全フラグ型偽装・一覧/面数/skip矛盾を拒否し入力SHA256不変を確認。既存Notionへの最終CI結果の同期はmaintenance_policy参照。次はNEXT-019/020の失敗/打切り/レビュー。"
+    },
+    {
+      "id": "NEXT-022",
+      "priority": 22,
+      "status": "done",
+      "title": "GLB-022第6段階: 途中失敗でも合成反復の検証済み経過と日本語レビューを保存",
+      "acceptance": "5dc799aのPython727件×3版、Windows2版、Blender3版の通常4試行・14チェックポイント検査と明示的な模擬タイムアウト保存、Kit/Handoff/Chromiumの6CI全成功。関連Python56件、新規20回帰を含む。失敗保存と予算完了/目標内観測を分離。Notionの最終同期結果はmaintenance_policy参照。"
+    },
+    {
+      "id": "NEXT-023",
+      "priority": 23,
+      "status": "done",
+      "title": "GLB-021/022: 同条件の複数合成実行の比較レビュー",
+      "acceptance": "2867ab3の6CI成功。条件証拠schema2、旧schema1読取、同条件照合/失敗・不一致除外/距離・面数混在を検証。Python742件×3/Windows2とBlender3版の独立4試行2回比較・失敗除外成功。時間/割当ピークを観測、仕様/STATE/HANDOFF/進捗へ記録。最終Notion同期状態はmaintenance_policy参照。"
+    },
+    {
+      "id": "NEXT-024",
+      "priority": 24,
+      "status": "in_progress",
+      "title": "ライブボードの実ブラウザ確認と任意のWeb公開方法の確定",
+      "acceptance": "Edge/Chromeなどでローカルindex.htmlを開き、最新R8以降のSTATE/PR/CI/キュー表示、初回無音、新しいB/C/D/Aの成功時だけ各ラウンド1通知、音量/タブ復帰、GitHub API制限表示を実機確認。GitHub Pagesは公開範囲をユーザーが確認・承認した場合のみ設定。GitHubトークンや私有データは使わない。"
     }
   ],
   "decisions": [
@@ -423,6 +739,311 @@
       "id": "DEC-016",
       "decision": "形状差分は修正判断の証拠であり、比較結果だけでアドオンコードを自動採用・承認しない",
       "note": "v0.18のglb-compare/glb-regressionはズレを機械可読化する。修正は通常のコードレビュー・Python/Windows/Blender CIを再度通し、ユーザー私有GLBは公開GitHubへ保存しない"
+    },
+    {
+      "id": "DEC-017",
+      "decision": "GLB診断は検証可能な比較差分に基づくレビュー仮説であり、自動修正・完全一致認定をしない",
+      "note": "最悪IoUと差分誤差を証拠として並べ、32x32輪郭の死角を明示。未知の差分コードやwarning/infoが存在したら未確認事項として記録し、比較結果の矛盾は拒否する"
+    },
+    {
+      "id": "DEC-018",
+      "decision": "診断から生成した設定候補は推測として表示し自動変更しない",
+      "note": "ボール/ソケット/ヒンジ名称は弱いロール推測に限り、元ソースとの実一致・数値修正量は判断しない。候補→人手確認→生成GLB再出力→再比較を推奨し、コード実行/書換/自動承認/私有GLB公開を禁止"
+    },
+    {
+      "id": "DEC-019",
+      "decision": "プロパティ宣言の静的検出をBlender登録や形状への影響の証明と混同しない",
+      "note": "未確認アドオンはimport/execせず明示選択されたファイルのみAST検査。完全一致した宣言も登録済みとはみなさず、非一致を不存在と断定しない。私有コード本文/値/元パスはignored領域のレポートにも出さず、結果は自動適用/承認しない"
+    },
+    {
+      "id": "DEC-020",
+      "decision": "ASTの同名属性参照は実際のBlenderプロパティや形状変更の証拠に昇格しない",
+      "note": "関数・クラス名とアクセス区分はレビュー用の手がかりのみ。receiver一致・Blender登録・実行時の効果はnot_verified。動的getattrや他モジュール参照は未捕捉、参照サンプル数に上限。コード・値・パスは保存せず全データをignored reports領域に限定"
+    },
+    {
+      "id": "DEC-021",
+      "decision": "同クラスself属性参照は強めのレビュー手がかりに限り実行時の同一プロパティと断定しない",
+      "note": "匿名ソース+クラスの一致とself構文のみで分類。未解決/他クラス/他ファイルを分離し、長いクラス名の匿名化衝突は照合から除外。関数呼出・実登録・メッシュへの影響・設定値の自動提案は未証明で、私有ソースを実行/公開しない"
+    },
+    {
+      "id": "DEC-022",
+      "decision": "プロパティ値とメッシュAPIの構文的データフローは原因確定・自動修正の根拠にしない",
+      "note": "許可リスト内Blender APIに明示的なselfプロパティ値/簡易ローカル別名が流れる場合に限って静的証拠を報告。分岐/ループ/ネスト/メソッド間は安全側で未検証。コード本文・数値・私有パスを出力せず、受信実体・ジオメトリへの効果・Blender登録は常に未確認"
+    },
+    {
+      "id": "DEC-023",
+      "decision": "モディファイア名に似た属性への代入は未確認の構文上の経路に限定して表示する",
+      "note": "modifier.widthやthickness等は任意のPythonオブジェクトにも存在可能。変数の型・実modifier・Boolean効果は証明できず、潜在経路をpossible_modifier_setting_assignmentとしてのみ記録。私有ソース実行/コード変更/自動承認は行わない"
+    },
+    {
+      "id": "DEC-024",
+      "decision": "幾何の実測はCBDK自作の合成fixture限定としユーザーアドオンへ一般化しない",
+      "note": "比較可能な同一頂点順の合成メッシュだけで局所頂点距離を数値化。一般モデルの別頂点順/トポロジ/内部穴の比較には不適用。パラメータの単独変更と他部品非変化の対照実験を必須とし、私有アドオンは実行/公開しない"
+    },
+    {
+      "id": "DEC-025",
+      "decision": "パラメータ上下プローブの最適化方向は同一合成fixture・同一距離指標内だけでレビュー提案する",
+      "note": "参考を固定して頂点順不変な原点半径分布スコアを基準・上下プローブで比較（局所原点が固定された合成モデル限定）。GLB再読込による頂点再番号付けの偽差分を回避するが同一半径分布の異形は区別できない。微小差/不明はinconclusive、設定値やコード自動変更は行わない"
+    },
+    {
+      "id": "DEC-026",
+      "decision": "3D表面距離は双方向・サンプルベースと明記し完全な幾何同一性や内部空洞の証明には使わない",
+      "note": "座標一致・同じ頂点番号・同じ三角分割は不要。サンプルが実表面を覆う範囲のみ検査するため微小穴/密閉内部空洞/閉体積/非多様体は証明できない。入力三角面数と座標を制限し、degenerate面は拒否。大きな実ユーザーGLBや非公開アドオンは公開CIに入力・実行しない"
+    },
+    {
+      "id": "DEC-027",
+      "decision": "表面距離の探索だけBVHで高速化しサンプル密度・距離精度の限界を変えない",
+      "note": "AABB下界で三角形候補を枝刈り。真の距離算出には従来の点→三角面処理を使い、総当たり経路と一致を回帰試験。改善は比較回数で示し、ウォールクロックの高速化や任意GLBの完全形状一致を断定しない。Python CPU/Blender3版での合成モデルに限り実行する"
+    },
+    {
+      "id": "DEC-028",
+      "decision": "BVH性能は同一実験入力のウォールクロック中央値と計算回数を分けて記録し高速化倍率を保証しない",
+      "note": "BVH構築・サンプル採取を含む1方向の時間を3回・交互順序で測り、同一64面の総当たり結果と照合。512面はCIコスト上総当たりを実行せずBVH実時間のみ測定。時間はrunner/CPU負荷依存のため合否閾値を設けず実ユーザーGLBの予測にも使わない"
+    },
+    {
+      "id": "DEC-029",
+      "decision": "多解像度では差分が大きい面だけでなく未検出面も少数探索し『誤差ゼロ＝同一』と扱わない",
+      "note": "粗8/精48点、疑わしい面最大8＋探索2面/方向の上限を固定し、実際の追加サンプル数を報告。面積上位の探索は無差分保証ではなく選択バイアスあり。サンプル数が異なる面の加重平均は単調とは限らず、元GLBアドオンを自動実行/修正しない"
+    },
+    {
+      "id": "DEC-030",
+      "decision": "幾何学的な優先候補は欠陥の確定ではなくレビュー用ヒントとし、面積探索枠を必ず残す",
+      "note": "原点/外寸を利用した内部候補境界、隣接三角形法線の鋭角差、面積中央値比、共頂点近傍の多さ、非多様体疑いで候補を比較。同名頂点座標による局所接続は厳密なメッシュ位相の証明にならず、境界は外周・切れ目かもしれない。精査枠2面のうち最大1面を特徴優先、1面を面積探索に保持し、従来area-only切替も維持。私有幾何をレポート出力せず、自動修正しない"
+    },
+    {
+      "id": "DEC-031",
+      "decision": "GLB表面解析はローカル明示オプトイン・静的preflight・512三角形上限・集計値のみ保存とし、メタデータの合否と分離する",
+      "note": "GLB自体はBlender輸入時に実データとして読み込むため、未知ファイルのリスクはゼロではない。既定オフの明示コマンド/--surface-reviewだけで実行し、外部URI・大容量・大量頂点参照を事前拒否。オブジェクト単位の差分や同一性は推定しない。三角形の多すぎるモデルはskippedを明示。メタデータpassedを表面一致の保証として扱わない。元アドオンのPythonコードは実行せず、非公開GLBは外部にアップロードしない"
+    },
+    {
+      "id": "DEC-032",
+      "decision": "GLB-019完了の次はGLB-020可視化→GLB-021設定候補連携→GLB-022合成反復実験の順で進める",
+      "note": "ユーザー提示ロードマップを継承。020〜022は計画・未検証。019は合成GLB CI完了、実ユーザーGLBの一般的精度は未検証。私有アドオンの実行/書換や自動修正には別審査を要する"
+    },
+    {
+      "id": "DEC-033",
+      "decision": "GLB-020の色付きGLBはレビュー用の局所可視化であり誤差色から因果関係や完全一致を認定しない",
+      "note": "参照/生成の両方向、共有AABBの1%/5%しきい値、24点/面BVHサンプル、512三角面上限。出力GLBはローカル派生ジオメトリを含むため公開せず、集計JSONに生座標や元パスを含めない。オブジェクト別/連動UIは未完成"
+    },
+    {
+      "id": "DEC-034",
+      "decision": "GLB-020は元部品名を公開せず、元GLB内でのみ有効な匿名部品IDにより個別メッシュの色差を確認する",
+      "note": "Blenderの合成2部品GLBを差分出力し、選択可能な別メッシュの再読込と赤/灰の材料を3バージョンCIで確認。参照/生成に同じIDがあっても同一部品とは証明しない。派生色付きGLBは形状を含むため私有モデルは公開しない"
+    },
+    {
+      "id": "DEC-035",
+      "decision": "GLB-020の連動比較UIは外部依存なしのローカルHTMLとして出力し、公開レポートと私有形状ファイルを区別する",
+      "note": "Canvas 2Dの3D投影で左右視点を同期、部品フィルタを個別に切替。HTMLには有限値・最大512三角面ずつの派生座標を埋め込むためローカル保管専用。CSPで外部通信を拒否。CIはBlender生成とJS構文までで、ブラウザGUI実操作・正確な奥行き描画や部品対応は検証しない"
+    },
+    {
+      "id": "DEC-036",
+      "decision": "GLB-020の部品対応は空間特徴の保守的な候補推定に限定し、Chromium実操作CIを別ワークフローで継続する",
+      "note": "相互最近傍・しきい値・第2候補との差を要求し、曖昧/未対応を明示。合成2部品の順序入替テストとChromium連動回転/ズーム/候補クリック/灰色面絞込/HTTP禁止のCIをSHA 72e9bd4eで確認。実ユーザーGLBの同一性・内部空間・未測定領域は証明しない"
+    },
+    {
+      "id": "DEC-037",
+      "decision": "GLB-020追加サンプリングは未検出可能性の一部を可視化するレビュー指標として導入し、完全カバレッジと区別する",
+      "note": "基本の赤黄灰24点指標を変更せず、別の24点Haltonプローブで0.5%対角線比以上の増分または色閾値横断を紫枠とする。aggregate-only JSONと個別フラグを含む私有HTMLを分離。合成データの6 CI成功は実ユーザーGLBの全域一致証明ではない"
+    },
+    {
+      "id": "DEC-038",
+      "decision": "GLB-020で匿名部品単位の境界/非多様体エッジ観測を採用し、空間的な部品対応候補を過信しない",
+      "note": "世界座標の頂点をシーン対角線比1e-7、最小1e-9で近接統合。合成Blender4.4.3/4.5.15/5.2.1で閉四面体の境界0本と1面欠損3本、曖昧な部品対応に降格するCI成功。JSONは数値集計のみ、私有HTML/GLBはローカル。実ユーザーGLBの完全な穴/内壁検出は未証明"
+    },
+    {
+      "id": "DEC-039",
+      "decision": "GLB-020の開放境界の近似線分はローカルHTMLにのみ含め、公開可能な集計JSONと分離する",
+      "note": "座標近接統合で一度だけ共有された辺の両端を匿名部品番号付きで再構築し、左右の同期3Dビューに水色のX-ray近似線として重ねる。最大512面・64部品・1536線分を維持。コードSHA 2a2bc8cの6系統CI成功は合成四面体の境界線0対3本とChromium表示切替に限定し、任意モデルの穴・遮蔽精度の証明ではない"
+    },
+    {
+      "id": "DEC-040",
+      "decision": "GLB-020は合成3部品の総合検証を通過したレビューMVPとしてスコープ凍結し、次の優先実装をGLB-021へ移す",
+      "note": "初回負例で合成の軸に本当に開放端があることを検出し、テスト形状の軸を両端閉鎖に修正。最終コードSHA db33ce424の6 CI全成功。開口狭窄、ボール位置ずれ、リップ面欠損を検出し、無変更部品・元GLB SHA256と集計レポートのプライバシーを確認。GLB-020全体はpartialのまま、複雑な実GLB、高精度穴/内壁/遮蔽、512面超は後日バックログ。GLB-021/022は未実装、v0.18ドラフトPR #25と正式v0.17.0は維持"
+    },
+    {
+      "id": "DEC-041",
+      "decision": "GLB-021は新規の推測エンジンを作らずGLB-020集計情報と既存のASTプロパティ宣言/参照/形状フロー解析をレビュー専用で結合する",
+      "note": "コードSHA 8c51a867のPython/Windows/Blender3版/Kit/Handoff/Chromiumの6系統CI成功。roleは人間が付ける未認証の部品名ヒント。赤黄灰の差分だけで開口径や位置の具体的原因・補正値を断定しない。出力はignored reports/latestのみ新規作成、私有ソースはimport/exec/変更せず、レポートの候補宣言/行情報はローカルに限定。GLB-021全体はpartial、GLB-022未実装、v0.18ドラフトPR #25を維持"
+    },
+    {
+      "id": "DEC-042",
+      "decision": "GLB-021の日本語ローカルレビューシートは構文上の証拠で確認順を整えるが、因果確度ランキングや自動設定変更とは明確に区別する",
+      "note": "表示は構文上の形状処理経路あり→属性参照あり→宣言名のみ。人が調べやすい順序であって真の原因確率ではない。合成コードSHA af8e873aの6系統CI成功。ソース・プロパティ名・行番号を含むローカルJSON/MDは公開しない。GLB-021 partialとGLB-020 MVP凍結、GLB-022未実装を維持"
+    },
+    {
+      "id": "DEC-043",
+      "decision": "GLB-021の因果検証はまずCBDK固定値・固定構造の合成ジェネレーターで行い、無関係なパラメータ操作を対照にして実アドオン原因と明確に区別する",
+      "note": "ソケット開口直径の0.78/1.70はテスト専用。狭窄時は差分あり、元へ戻すと0、ボール位置だけ変えるプラセボはソケットの差分を解消しない。Blender3版含む6系統CIはコードSHA 3b553039968e982e973d10d3427bf0607bbad88dで成功。合成GLBの入力不変性はSHA-256で検証、ユーザーの元ソースや任意アドオンは実行せず、自動修正はしない。GLB-021 partial、GLB-022未実装、v0.18ドラフトPR維持"
+    },
+    {
+      "id": "DEC-044",
+      "decision": "GLB-021の変更履歴は既存GLB-020集計とCBDKが許可した固定合成条件のみから作成し、数値の改善を実アドオンの原因/最適値と混同しない",
+      "note": "ソケット口0.78→既知正常1.70の復元で観測差分0、無関係なボール移動はソケット差分が残る。JSON/日本語Markdownの履歴はローカルの合成CI出力のみ。悪意ある試験名・数値や虚偽の因果フラグを拒否。コードSHA ece5b0a6の6系統CI成功。GLB-021 partial、GLB-022未実装、GLB-020 MVP凍結を維持"
+    },
+    {
+      "id": "DEC-045",
+      "decision": "GLB-022の最初の反復はCBDK合成モデルの固定2試行に限り、実Blenderによる再生成→サンプリング比較→非改善なら不採用→改善なら採用→上限/差分0停止まで検証する",
+      "note": "候補narrow_placeboはソケット改善なしなので不採用、identicalは既知正常合成値で差分0のため採用。固定生成スクリプト以外を実行せず、元スクリプト/GLB SHA256不変・匿名履歴JSON/MDを新規ローカル保存。コードSHA 9f1bb66eの6系統CI成功。一般のアドオン実行やユーザーGLBの自動修正、正しい数値の自由探索、完全な幾何等価性は未達。GLB-022はpartial、GLB-021 partial、正式v0.17.0維持・v0.18 PR #25ドラフト"
+    },
+    {
+      "id": "DEC-046",
+      "decision": "GLB-022の合成反復は改善量だけでなく他部品の悪化を採用拒否条件に加え、固定3候補と打切り時の未修復状態保持まで検証する",
+      "note": "試行1はソケット改善なしで棄却、試行2はソケット改善でもボール悪化で棄却、試行3はソケット・他部品の観測差分0で採用停止。既存の固定2候補もCI継続。コードSHA d8d233e8の6系統CI成功は合成の匿名・サンプリング面数による判断に限定。実モデルの最適値や全形状一致は保証しない。GLB-022 partial、GLB-021 partial、正式v0.17.0維持・v0.18 PR #25ドラフト"
+    },
+    {
+      "id": "DEC-047",
+      "decision": "GLB-022の合成中間改善は面色の件数に加え双方向サンプリング最大距離で判定し、他部品悪化の棄却を必須として段階的改善を保存する",
+      "note": "既知固定合成開口0.78→1.24→1.70、ボール位置ずれ時の棄却を実Blender3バージョンCIで検証。最大距離はGLB-020の全体双方向サンプル最大値（部品別/正確なHausdorff距離ではない）で、完全形状一致や本当の原因の証明ではない。コードSHA 44e15f8fの全6系統CI success。実ユーザーアドオンや私有GLB実行・編集なし。GLB-022 partial、正式v0.17.0、v0.18ドラフトPR #25を維持"
+    },
+    {
+      "id": "DEC-048",
+      "decision": "GLB-022第4段階でCBDKの合成ソケットの安全な固定範囲だけを等分し数値候補を計算生成する。採否はサンプル双方向最大距離と他部品の退行防止、未完了の正確な記録を両立",
+      "note": "合成直径0.78から既知正常1.70の間を算術4等分して候補1.01/1.24/1.47/1.70を生成。実Blenderで4候補のGLBをそれぞれ作り直し評価、ルール外の値・任意のユーザーアドオン・既存出力上書きを拒否。テスト対象コードSHA 23e9dec5の6系統CI成功。固定格子であって測定に応じた探索方針変更はない。全体最大距離は厳密Hausdorffではなく、GLB-022 partial、正式v0.17.0とv0.18ドラフトPRを維持"
+    },
+    {
+      "id": "DEC-049",
+      "decision": "GLB-022の適応探索は実測された全体双方向サンプル最大距離に基づく安全な0.01刻みの二分区間更新を、CBDK合成モデルの最大4試行に限定して許可する",
+      "note": "固定目標0.12は合成テスト用の入力座標単位で、実物公差ではない。Blender4.4.3/4.5.15/5.2.1で1.24→1.47→1.35→1.41を実生成・測定し、1.47が目標内、停止時は区間1.41〜1.47で最小値未確定。分岐はPython回帰で測定を変えると1.24→1.01となることも検証。実行はCBDK自作の合成生成器のみ、入力SHA256不変、匿名ローカル履歴、未知数値・嘘の保証を拒否。コードSHA 37ee124aのPython/Windows/Blender3版/Kit/Handoff/Chromium全6系統成功。実ユーザーアドオン修正や適切な公差・最適値は未検証、GLB-022 partialのまま"
+    },
+    {
+      "id": "DEC-050",
+      "decision": "反復機能を広げる前にGLB-019の既存匿名部品証拠を型と面数境界で検証し、Notionの現在要約をGitHub台帳へ同期する",
+      "note": "数値/真偽値のPython等価性では安全フラグを検証しない。省略一覧の未列挙部品も順位から総面数範囲を制約。合成4ケースを既存3版CIへ追加し、私有ソース/GLBは使わない。GLB-020追加機能凍結、GLB-021/022 partial、正式v0.17.0とlast_verified維持。現状と優先順はdocs/DEVELOPMENT_PLAN.md。"
+    },
+    {
+      "id": "DEC-051",
+      "decision": "合成適応探索の範囲を広げる前に、工程開始前の新規チェックポイントと失敗/打切りレビューを残す",
+      "note": "検証済みprefixだけを再生し、失敗候補は除外。目標内観測と実行完了は別。固定診断コードで私有パス/例外自由文を保存せず、自動再試行/再開なし。読取CLIは非実行。従来成功履歴と最大4試行を維持。合成CIの候補比較タイムアウトは明示的な模擬注入で、自然ハング再現ではない。強制終了/書込障害の完全保存は保証しない。"
+    },
+    {
+      "id": "DEC-052",
+      "decision": "同条件比較は条件証拠と完了/整合性を必須にし、旧記録・失敗・不一致を成功比較から除外する",
+      "note": "生成/比較/検証の固定ソース集約SHAとGLB SHA、Blender版、初期観測、予算を照合。LTSは明示許可して生版名を保持。指標混在は人手確認、自動採用・因果/全形状認定なし。SHAは真正性を認証しない。独立2実験と16件複製負荷を区別して記録。2867ab3の6CI成功。"
+    },
+    {
+      "id": "DEC-053",
+      "decision": "3版の監査実測だけでは追加最適化・上限緩和を行わず、背景Undo不能をGUI成功へ昇格させない",
+      "note": "NEXT-005の既存検討課題を実測比較して完了。70×70格子の単一CI観測、Python割当だけの測定、上限100への一時引下げ拒否テストの限界を明記。NEXT-002/GUI-001/UNDO-001や巨大メッシュ保証は未完了を維持。新しい開発タスク番号は追加しない。"
+    },
+    {
+      "id": "DEC-054",
+      "decision": "生成前の静的登録整合性と、明示Undo履歴による制御実験を既存NEXT-003/002として拡充する",
+      "note": "新規コードの自動採用/承認を行わない。AST検査は静的に明示したhelper exportのみ対応し動的exportは拒否。制御undo_push成功を通常の自動履歴/GUI成功に昇格しない。旧Undo schema1を読取互換で保持する。"
+    },
+    {
+      "id": "DEC-055",
+      "decision": "双方向の既存観測を調査順に使い、宣言曖昧さを維持して実験へ接続する",
+      "note": "三角面割合は面積でも信頼度でもない。等しい境界観測だけで差分にせず、ID同一性を仮定しない。候補名全体の構文集計から複数宣言を選ばず、別名再束縛は安全側に除外。GLB-020任意拡張/自動実行/因果認定は行わない。"
+    },
+    {
+      "id": "DEC-056",
+      "decision": "UI-001は当面CBDK自作5機能の宣言的パネル表示に限定し、レシピから任意コードや未知operatorを登録させない",
+      "note": "catalog/ui_layouts.jsonの全5機能配置だけを受け付け、宣言をコードではなくリテラルに変換。ea0a4bfの対象6CIで生成ZIPとBlender3版Panel.draw/登録/無効化が成功。未知ボタンID、JSON重複キーなどは拒否。Windows GUI操作、自由なUI・正式Extensions・再配布は未完成。UI-001 partial/blender_ci、PRドラフト・正式v0.17.0維持。"
+    },
+    {
+      "id": "DEC-057",
+      "decision": "UI-001の固定自作機能プレビューでモード別有効化とBlender RNAの安全な頂点移動XYZ入力を追加する",
+      "note": "対象は既存5自作operatorのみ。active meshとOBJECT/EDIT_MESHで押下可否を制御し、移動値はScene FloatVectorProperty[-10,10]で既存operator.offsetへ渡す。597ed5cの対象全6CIと3版Blender headless Panel.draw成功。Windows GUI操作や任意UI・自動承認の証拠にはしない。UI-001 partial、正式v0.17.0、PR #25ドラフト維持。"
+    },
+    {
+      "id": "DEC-058",
+      "decision": "EXT-001は公開可能なExtensions ZIPを生成せず、まずCBDK自作preview ZIPの出自/ハッシュ/構成と正式公開ブロッカーの自動検査に限定する",
+      "note": "構造/サイズ/パス/重複/シンボリックリンク/ハッシュ/承認フラグを検証し、必須メタデータの未確定値はJSON nullに留める。1f31506の対象6CI・Blender3版合格。コード/元ファイルは実行せず、blender_manifest.tomlと正式ZIP、公式extension validate、GUI実操作、ライセンス・再配布承認は未実装。EXT-001 partial/blender_ci、PR #25ドラフトと正式v0.17.0を維持。"
+    },
+    {
+      "id": "DEC-059",
+      "decision": "必須manifest構造と権利承認を分離し、型付きUIと登録復旧を既存プレビュー内で拡充する",
+      "note": "公式validatorは合成データ専用fixtureのみ。例示SPDXを実部品へ適用せず、正式ZIP/公開/採用なし。未知UIコードを組み込まず既存6レシピ/5機能を維持。自己整合hashは出自認証ではない。"
+    },
+    {
+      "id": "DEC-060",
+      "decision": "パネルの助言判定と実編集の安全検査を区別し、構造/入力ガードだけを共通化する",
+      "note": "UIはcached total_vert_selを読みBMesh走査/座標コピーなし。RNAが古い場合もexecuteが実選択/数値/トポロジー/上限を再検査。ゼロ値で入力を無効にして修正不能にしない。両property factory失敗の回復も検証する。"
+    },
+    {
+      "id": "DEC-061",
+      "decision": "表示条件は固定literal、設定範囲はコード契約の内側のみ、生成時に挿入文字列を再置換しない",
+      "note": "省略時の6レシピ/旧計画出力を維持。visible_inはalways/object/edit_meshだけで矛盾を拒否。型/サイズ/最大範囲をJSONへ委ねない。静的UIレビューとメタデータは実行/承認/真正性の証明ではない。"
+    },
+    {
+      "id": "DEC-062",
+      "decision": "manifest構造診断を値なしで共有し、公式検証は終了コードだけでなく項目の一致を要求する",
+      "note": "生ログ/個人情報/私有パスを保存せず既知項目だけ正規化。unknown/partial/mismatchを完全一致へ昇格しない。fixtureのSPDXや公式パス成功を部品の承認/ライセンスへ適用しない。"
+    },
+    {
+      "id": "DEC-063",
+      "decision": "並行A/B/C/DのR1〜R3を合体コードSHAで検証してv0.18開発ブランチへ統合し、Codex不在でもローリング方式を維持する",
+      "note": "PR #38のCIはコードと合成Blenderでの検証。ソースPR #26〜37を二重マージせず履歴を保持。AがSTATE/Handoff/共通CI/Notionを管理し、B/C/Dは最新版dev HEADの担当ファイルにR4を作る。公開・ライセンス・実ユーザーデータ・Windows GUI・mainは別承認。"
+    },
+    {
+      "id": "DEC-064",
+      "decision": "R4をPR #43で統合し、統合後7CIの実測を経てR5をPR #44のローリングキューで正式割当する",
+      "note": "B/C/DのR4専用SHAの5系統CI成功と11ファイル非重複を確認。R4 dev SHA a9a0a76のPython/Windows/Blender3版/Chromium/Handoff/Kit/Skill全7系統成功。旧PR再統合なし、R5は最新dev基点。実GUI、実ユーザーGLB、権利、正式公開とmainは別ゲート。"
+    },
+    {
+      "id": "DEC-065",
+      "decision": "R5統合候補で新設Blender実機検証を実行し失敗修正後の成功を確認して統合、7CI後にR6を割り当てる",
+      "note": "B #47/C #48/D #46の各個別5CI成功。A統合#49初回b300e743は3版Blenderでテスト誤期待により失敗、修正106bf250の5系統全成功（Blender3版のnative UI反復含む）。dev SHA a1c2f847の7系統全成功後、R6キュー#51を正式統合。GUI/私有GLB/権利/公開は未検証。"
+    },
+    {
+      "id": "DEC-066",
+      "decision": "R6でGLBの厳密境界高速経路を保守的fallbackとともに統合し、Blender実機のreload/所有権・Extensionsの資源負例を検証してR7を割り当てる",
+      "note": "B #54/C #55/D #53各5系統success、A結合#56 HEAD7400516aの5系統成功。R2 fallback/R3別途ガード継続、UI native R6検証3版、EXT synthetic limitsは正式公開証明ではない。dev統合e2f09e59の全7CI成功を確認しR7 #57統合。GUI/私有GLB/権利/配布/mainは別承認。"
+    },
+    {
+      "id": "DEC-067",
+      "decision": "R7でGLB厳密境界fastpathのゼロ長線分誤通過を再現して保守的ガードを統合し、Blender登録失敗回復とExtension TOML上限を確認後R8を正式割当",
+      "note": "B #61 SHA182ae87、C #62 eef6bce、D #60 040036c 各5系統CI成功。B初期テストHEAD fff82a6は意図通りREDとなりゼロ長R2不一致を発見、正長ガードを修正。A統合#63 HEAD 52dea171で5系統all green、dev統合687b2acdで独立7系統success後R8 #64を統合。実GLB/GUI/権利/配布/mainと正式リリースは別ゲート。"
+    },
+    {
+      "id": "DEC-068",
+      "decision": "A所有のGitHub読み取り専用HTMLライブボードをv0.18開発ブランチに統合し、ブラウザ実機確認とPages公開は別ゲートにする",
+      "note": "PR #68統合コードd656f62d2b70301ec34c667f89743d17e7168a1b。Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995が各success。NodeテストでチームCI・音通知dedupeを検証。公開API3回/5分+raw1回、認証情報を保存せず、5分更新・手動更新。Pages設定/main/正式v0.17.0は変更しない。"
+    },
+    {
+      "id": "DEC-069",
+      "decision": "Dashboard v2でBCD完了件数と通知音試聴、作業キュー代替取得を追加し、ブラウザの実ユーザー端末検証は引き続き別ゲートとする",
+      "note": "A PR #71 combined SHA98ec697252f04fa58bdfcc1614ea5587c5446d7a: Python42417792237/Windows42417792437/Chromium42417792272/Handoff42417792410各success。dev squash SHA dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a、post-merge Python42418153530/Windows42418153594/Blender42418153563(4.4.3/4.5.15/5.2.1)/Chromium42418153533/Handoff42418153613/Kit42418153551/Skill42418153532の7系統success確認。Node版のロジックと独立したChromiumネットワークモックでBCD 2/3→3/3、完了音1回、再更新で重複なし、Raw→Contents fallbackを確認。実GitHub APIへのローカルfile://からのアクセス、実Windows Edge通知音、Pages設定はユーザー実機で未検証。"
+    },
+    {
+      "id": "DEC-070",
+      "decision": "R8でGLB非厳密R2の保守的AABBフィルタとBlender実機登録解除回帰、Extensions静的provenance拒否を結合し、R9を統合後CI成功まで停止",
+      "note": "B #66 HEAD0c81b10c、C #70 HEAD07a742f1、D #67 HEADa8f1b282 各5系統CI success。A #73 結合HEADf5fd6585488e7d69501caf2ed48c54ec81e0cc2aでPython42419473291/Windows42419473354/Blender42419473288(4.4.3/4.5.15/5.2.1, native_r8 5項目実測)/Chromium42419473271/Handoff42419473294の5系統全success。開発ブランチsquash SHA ded947f85f46fb8cce0943314d6e1a9fb41717ef、post-merge7系統CIも全success（Python42419734167、Windows42419734210、Blender42419734261（4.4.3/4.5.15/5.2.1）、Chromium42419734226、Handoff42419734193、Kit42419734233、Skill42419734172）。R9正式キューPR #74 merged SHA 4e40a16e71f0036c442e604c667036045172149a。実GLB、GUI、権利、正式v0.18公開は承認していない。"
+    },
+    {
+      "id": "DEC-071",
+      "decision": "Aの開発ライブボードv3にPR/CI時刻由来の3種類の観測速度指標を追加し、実機ネットワーク/音声とPages公開を別ゲートとして維持",
+      "note": "A PR #79 exact HEAD c52cc14fd74ab2a53245b6744b406960a7a8225a のPython42422092224、Windows42422092201、Chromium42422092185、Handoff42422092289の4発火CI success。Nodeテストが実走。dev squash e60d48f1461d3c57edaa7916731d19c5ede6b75b の独立post-merge7系統CIも全success（Python42422198759、Windows42422198754、Blender42422198841（4.4.3/4.5.15/5.2.1）、Chromium42422198751、Handoff42422198765、Kit42422198764、Skill42422198785）。Portable版21,353 bytesのHTML + ZIP(9,863 bytes)のファイル/JavaScript/ZIPを検査し、ChromiumモックでR9 B/D→C完了、A統合、チーム毎一回通知、390px表示を確認。実Windows音声とlive GitHub API/Pagesは未確認。"
+    },
+    {
+      "id": "DEC-072",
+      "decision": "R9統合で密集AABB非利得・Scene RNA削除失敗回復・ZIP自己hashの真正性非証明を確認し、R10を安全ゲート付きで割り当てる",
+      "note": "B #78 HEAD60fcda39、C #77 HEADa525fa8e、D #76 HEADb29de167各5系統CI成功。A #81 HEADb5978eacもPython/Windows/Blender3版(native_r9四項目)/Chromium/Handoffの5系統成功。開発squash 914f1c8aの別7系統成功（Python42423898180、Windows42423898189、Blender42423898177、Chromium42423898202、Handoff42423898215、Kit42423898188、Skill42423898183）。実行イベントはpull_request。実GLB/GUI/ライセンス/正式公開未検証。R10は#82正式割当の統合後のみ着手可。"
+    },
+    {
+      "id": "DEC-073",
+      "decision": "R10で安全な適応GLB AABB、Blender二重解除失敗の台帳回復、ZIPと既知ソース比較の権限非昇格を検証してR11を安全ゲート付きで割り当てる",
+      "note": "B #85 a3c57d9、C #83 9f3df76、D #84 262d646各5CI成功。A #86 HEAD6a12b7faもPython42425995892/Windows42425995843/Blender42425995934（4.4.3/4.5.15/5.2.1 native_r10五項目）/Chromium42425995902/Handoff42425995915成功。dev統合a3ae6da1の別7CI成功（Python42426258493、Windows42426258509、Blender42426258621、Chromium42426258600、Handoff42426258438、Kit42426258568、Skill42426258440）。イベントpull_request。実GLB/GUI/ライセンス/公開未検証。R11は#87統合後のみ開始可。"
+    },
+    {
+      "id": "DEC-074",
+      "decision": "R11/R12を累積で一度だけ統合し、独立7CI後にR13を従来ABCD所有区分で正式割当する",
+      "note": "R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。 STATE schema/要件ID/要件数/正式v0.17.0 last_verifiedは維持。旧専門PRと#91/#96/#92/#97は重ねてマージしない。"
+    },
+    {
+      "id": "DEC-075",
+      "decision": "CBDKの長期目標を「AI自律開発・3Dモデリング支援エンジン」とし現行ロードマップと区別して正式登録する",
+      "note": "2026-11-11ユーザー決定。AI自律開発系と3Dモデリング支援系を独立発展させ、必要な知識・検証・状態だけ共有。自律/共同制作切替、対象単位の排他的操作権、検証済み保存・中断・差分確認付き再開、鮮度付き随時進捗、高度AI依存軽減を長期方針とする。LT-01〜LT-12は将来設計で未実装。v0.18のNEXT・要件・検証済みrelease、承認済みv0.19〜v0.22の非有効状態と移行条件、ABCD担当・Geometry Lab #114・Development Intelligence Lab #115の独立性、現行品質・公開・私有データ許可境界を維持する。"
+    },
+    {
+      "id": "DEC-076",
+      "decision": "R14のB/C/Dと長期ビジョンをAのPR #117で開発ブランチへ一度だけ統合し、独立7系統CI成功後にR15を従来ABCD担当で割り当てる",
+      "note": "B#107/C#108/D#106の個別5CI、A結合fba1607の6CI成功。dev統合db255853で独立7CI成功（Python42905403010、Windows42905402793、Blender42905402730の3版、Chromium42905402841、Handoff42905402989、Kit42905402745、Skill42905402775）。R14 11パスとA長期文書5パスを重複0で統合。v0.17.0/44要件/24 NEXT/last_verified不変、次期計画active=false。実GLB/Windows GUI/ライセンス/公開/研究コード採用/自律実行は未検証。R15は節目同期PRがCI/開発統合/独立7CIを終えた後に着手。"
+    },
+    {
+      "id": "DEC-077",
+      "decision": "R15のB/C/D限定成果をAのPR #122で一度だけ統合し、独立7CI成功後にR16を小さく割り当てる",
+      "note": "B#120 70b27ab/C#121 54832e7/D#119 cae75c5は各最終HEADの5CI成功。A結合#122 25180ceの5CI成功。Windows Python3.13の既存dashboard Node 15秒timeoutは失敗ジョブ単独再試行でsuccess、原因未断定。dev squash 08ddb3e3a51e526ddfe857268f31b2de443c0fecの独立7CI全成功（Python42915099059、Windows42915098806、Blender42915099109、Chromium42915098872、Handoff42915098940、Kit42915098954、Skill42915098964）。Blender3版にnative R15各6項目。正式v0.17.0/44要件/24 NEXT/last_verified/next v0.19 active=false維持。実GLB/GUI/権利/研究コード採用は未承認。R16実装はA節目同期統合後の新dev独立7CI成功まで禁止。"
     }
   ],
   "last_verified": {
@@ -485,6 +1106,45 @@
     "registration_scaffold": "2026-11-06: REG-002回帰テストはPR #21のPython/Windows CIで成功。Windows hosted runnerの8.3短縮パス差を修正",
     "registration_behavior": "2026-11-06: REG-003回帰テストはPR #21のPython 3版CIで成功。behavior申告は実機安全性の自動証明ではない",
     "v018_shape_regression": "2026-11-06: PR #23でGLB-003の初期実装を検証。Python 343件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1で全成功。Blender synthetic GLBのworld bounds生成とscene metadata self-comparisonも3版成功。last_verifiedは正式リリースv0.17.0のまま",
-    "v018_silhouette_regression": "2026-11-06: PR #24 head 2735aa974539ec95fde20e2c9f1de155f6687209 でPython 347件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windows kit、handoffが全成功。実Blenderでreference Cubeと同bounds八面体のsilhouette driftを3版すべて検出。GLB-004をimplementedへ昇格"
+    "v018_silhouette_regression": "2026-11-06: PR #24 head 2735aa974539ec95fde20e2c9f1de155f6687209 でPython 347件を3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1、Windows kit、handoffが全成功。実Blenderでreference Cubeと同bounds八面体のsilhouette driftを3版すべて検出。GLB-004をimplementedへ昇格",
+    "glb_diagnosis_evidence": "2026-11-06: PR #25 e971b784e5f6694252e924c0b8183dd393aa3860 のPython(42202420004), Windows(42202419886), Blender3版(42202419874), Windows kit(42202419926), durable handoff(42202419869)で成功を観測。追加19テストを含む。PRはドラフトでmain未統合、last_verifiedはv0.17.0を維持",
+    "glb_repair_plan": "2026-11-06: PR #25 code SHA d9c5c92590759faac158824d84e4f8ca94c7c5bb; Python 42204425313, Windows 42204425351, Blender3版 42204425335, kit 42204425475, handoff 42204425288 の5ワークフロー全成功。GLB-006 implemented/blender_ci。PRはドラフト、mainと正式last_verified v0.17.0は不変",
+    "glb_property_mapping": "2026-11-06: PR #25 code HEAD c36350754770e54ed30695b63661382bf815682c で5ワークフロー全成功: Python 42206398064 (3版), Windows 42206398098 (2版), Blender 42206398080 (4.4.3/4.5.15/5.2.1), kit 42206398068, handoff 42206398078。GLB-007 implemented/blender_ci。ただし正式release v0.17.0は維持しユーザー実アドオンは未実測",
+    "glb_property_usage": "2026-11-06: PR #25 c640ad06e5f55bf5a4112ba3bb5635751f2023a7 に対するPython 42208333161、Windows 42208333343、Blender3版 42208333010、kit 42208333310、handoff 42208332987 の全ワークフローsuccessを確認。GLB-008 implemented/blender_ci、PRドラフト・last_verified v0.17.0を保持",
+    "glb_binding_hints": "2026-11-06: PR #25 code SHA 2c000dad0980ee76562576ba63c0e7b568284748の全CI成功: Python 42210546730、Windows 42210546742、Blender3版 42210546751、kit 42210546861、handoff 42210546734。GLB-009 implemented/blender_ci。PR draftのまま正式v0.17.0 last_verified変更なし",
+    "glb_geometry_flow": "2026-11-06: PR #25 GLB-010 source glb_geometry_flow.py、20件の回帰テスト、3版Blender合成GLB fixtureを追加。メッシュ生成API引数までの静的経路は推測であり実行時因果は未検証。実ジョブの結果確認前は partial/not_tested。正式last_verified v0.17.0は保持",
+    "glb_modifier_flow": "2026-11-06: PR #25 SHA b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 全5ワークフロー成功: Python 42214954563; Windows 42214954671; Blender 3版 42214954642; kit 42214954657; handoff 42214954600。GLB-011 implemented/blender_ci、PR draft、last_verified v0.17.0維持",
+    "trusted_parameter_displacement": "2026-11-06: GLB-012 PR #25実装コミット04526f1ddd9f336df16d2841ccafc278cd8edf4fで全成功: Python 42220053230, Windows 42220053331, Blender3版 42220053332, kit 42220053222, handoff 42220053158。GLB-012 implemented/blender_ci。PRドラフト・正式last_verified v0.17.0維持",
+    "trusted_parameter_direction": "2026-11-06: GLB-013 code/CI commit e73f7eba0cd0bd5ceafacab53b64c397a7bd45a4; Python (42223468580), Windows (42223468045), Blender3 version (42223468513), kit (42223468046), handoff (42223468069) all SUCCESS. Includes 11 direction plus 5 radial metric regression tests. Direction from synthetic GLB scores only; GLB-013 implemented/blender_ci, NEXT-011 done. PR draft; last_verified 0.17.0 unchanged.",
+    "surface_distance": "2026-11-06 GLB-014 code+docs SHA f7e9e114e3484da650044737189ae20395a53e74: Python 42235161491, Windows 42235161515, Blender 42235161529 (4.4.3/4.5.15/5.2.1), kit 42235161511, handoff 42235161506 all SUCCESS. 13 new tests, sampled bidirectional surface distance, open-hole and alternate triangulation synthetic roundtrip. GLB-014 implemented/blender_ci, NEXT-012 done; PR draft and formal last_verified 0.17.0 unchanged.",
+    "surface_bvh": "2026-11-06: GLB-015 code/docs SHA bcef8572994065f73d05e2e9c37245d64a13035e: Python 42238115233, Windows 42238115886, Blender3-version 42238114860, kit 42238115035, handoff 42238115141 all SUCCESS. Blender 4.5.15 256-face GLB observed 1,572,864 brute vs 49,152 BVH exact triangle computations (32x fewer), 0 distance. GLB-015 implemented/blender_ci; NEXT-013 done. Formal v0.17.0 unchanged; PR draft.",
+    "surface_benchmark": "2026-11-07: GLB-016 implementation+docs SHA ca9ad5076fb911bc8337bc525c163b1b069c6bcb all 5 workflows SUCCESS: Python 42241396452, Windows PowerShell 42241396094, Blender 3-version 42241395979, Windows kit 42241396296, durable handoff 42241396289. Synthetic 64-face BVH/brute median ms by Blender version: 4.4.3 35.510505/161.156313, 4.5.15 19.356758/86.027068, 5.2.1 32.467850/149.716417; synthetic 512-face BVH-only median ms 352.050953/192.798623/321.247609. No portable speedup promise; GLB-016 implemented/blender_ci, NEXT-014 done; v0.17.0 formal release remains.",
+    "multires_surface": "2026-11-07: GLB-017 SHA 4c7248c853047b1f21088e01441a6c5fed9ca4b2 all CI SUCCESS: Blender 4.4.3/4.5.15/5.2.1 42244257499 (narrow hole legacy24=0, coarse8=0, selected48=0.0657466), Python3-version 42244257474 (13 new tests), Windows PowerShell 42244257438, Windows kit 42244257461, durable handoff 42244257445. GLB-017 implemented/blender_ci, NEXT-015 done. General coverage and enclosed cavities not proven. PR draft, release last_verified 0.17.0 preserved.",
+    "feature_priority": "2026-11-07 GLB-018 code/docs SHA 676e92f8cc4ad48774ea6e0702710576fe97a286 all five GitHub CI SUCCESS: Python3 42246918798, Windows PowerShell 2 42246918818, Blender4.4.3/4.5.15/5.2.1 42246918883, Windows kit 42246918868, durable handoff 42246918953. Real synthetic 9-GLB: large panels with narrow small-part opening area-only max 0.0 vs feature-aware max 0.0657466 all Blender versions; review-only false defect-equivalence/auto-apply flags. GLB-018 implemented/blender_ci, NEXT-016 done. PR draft; formal v0.17.0 preserved.",
+    "real_glb_surface_bridge": "2026-11-07 GLB-019 docs/implementation HEAD 5b6196a59f86318128c768507fea53237e3a6e11 ALL FIVE CI SUCCESS: Python3 42258076642, Windows PowerShell3.11/3.13 42258076781, Blender4.4.3/4.5.15/5.2.1 42258076658, Windows kit 42258076681, durable handoff 42258076822. Local opt-in GLB pair compares fixed BVH and adaptive feature-aware sampling; 512 triangle strict cap; external URI reject; no private model uploads or auto edits. GLB-019 implemented/blender_ci, NEXT-017 done. PR draft, official last_verified v0.17.0.",
+    "milestone_notion_sync": "GitHub STATE更新→push/PRと実測検証→既存Notionプロジェクト/タスクへ状態と証拠を同期。失敗時はGitHubへpending記録。常駐同期なし、私有ソース/GLB/個人情報は対象外。",
+    "notion_sync_status": "success 2026-11-08 UTC: existing CBDK page410948b7-4937-8144-9462-ca76e9567e75 received ab42913 integration/seven successful CI, unchanged counts/blockers and R13 gated on #99 merge. No warnings; initial insert_content missing-content validation error made no edit, corrected call succeeded. No new page/private data.",
+    "surface_inventory_integrity": "2026-11-07: code SHA 31bf3de18c357d796194dcac369c66e55b3973bf ALL SUCCESS: Python https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722780 (707 tests x 3), Windows 42359722774, Blender 42359722777 (4.4.3/4.5.15/5.2.1, 4 new synthetic cases), Kit 42359722842, Handoff 42359722778, Chromium 42359722853. Local Python3.12.14 707/707 and Blender4.3.2 synthetic4 passed separately. Release last_verified 0.17.0 unchanged.",
+    "synthetic_run_review": "2026-11-07 code 5dc799ac6dd46ed27f249dfea694c67644d4ab22 all SUCCESS: Python https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082109 (727 x3), Windows42361081999, Blender42361082117 (4.4.3/4.5.15/5.2.1, normal4 + 14 checkpoints + real baseline with simulated candidate timeout), Kit42361082094, Handoff42361082165, Chromium42361082252. Local Python3.12.14 727/727; related56; local4.3.2 budget1 and controlled failure passed separately. Partial overall, last_verified0.17.0 unchanged.",
+    "synthetic_comparison_first_ci": "2026-11-07 f4130ff: Python42363769046/Windows42363769107/Kit42363769048/Handoff42363769039/Chromium42363769071 success. Blender42363769064: 4.4.3 success, 4.5.15/5.2.1 failed because official declared version strings include LTS, rejected by new condition validator. Fix explicitly allows bounded LTS suffix, preserves full version as a comparison condition; final CI pending. Parent-symlink output escape guard also fixed with regression coverage.",
+    "same_condition_comparison": "2026-11-07 code2867ab31cf355486232f1f1b257315c9e73146a1 all6 success: Python742x3 run42364086005, Windows42364086014, Blender42364085988 (4.4.3/4.5.15/5.2.1, independent4-trial repeat and failed-run exclusion), Kit42364085981, Handoff42364085980, Chromium42364085989. First f4130ff failed on LTS version labels and was fixed, not blindly rerun. Resource data: docs/GLB023_RUN_COMPARISON.md; audit/Undo review: docs/AUDIT_RUNTIME_REVIEW.md. Formal last_verified0.17.0 unchanged.",
+    "bound_ast_experiment_review": "2026-11-07 code79fea17e70665392731780ed5a518982530b7323 ALL6 success: Python752x3 run42366055143, Windows42366055138, Blender42366055131 (4.4.3/4.5.15/5.2.1, bound complete/incomplete/controlled-timeout review and mismatched-baseline rejection), Kit42366055135, Handoff42366055133, Chromium42366055162. AST fixture never executed; private sheets stay outside uploaded artifacts; source/aggregate hashes unchanged. NEXT-019 done; real property identity/effect remains unverified.",
+    "registration_undo_milestone": "実装コードc80f2a0a174a37074c283641ce288a378261e92dのBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium成功。テストだけUTF-8指定を修正したb5d32734d4a74e6acd7ff896baeb3aa3088e661aのPython767件×3版・Windows2版成功。両SHA間の変更はtests/test_registration_audit.pyだけで実装は同一。対象6系統の結果は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368307965)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368305584)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190461)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190510)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190490)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190614)。 初回Windows42368028009は短縮パス、42368190855はテスト文字コードで失敗。修正後のみ成功と記録。NEXT-003完了、NEXT-002はGUI待ち。",
+    "focus_ambiguity_triage": "コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。 既知shadowing負例4件の名前だけの旧判定4検出→新inventory0。7回のローカルtriage中央値0.00449秒/最大Python割当28,130bytes（RSSではない）。一般精度/速度最適化は未保証。NEXT-008/009全体継続、UI-001等の自動化が残り将来移行条件未達。詳細docs/GLB_DEBUG_TRIAGE.md。",
+    "ui_declarative_preview": "2026-11-07 verified code 597ed5c: fixed five authored operator UI now guards context/active mesh and provides RNA-bounded vertex-nudge XYZ input. Six workflows successful including Blender 4.4.3/4.5.15/5.2.1; not an actual Windows GUI test, UI-001 remains partial.",
+    "extension_preflight": "2026-11-07 code 1f31506 verified: EXT-001 safe offline authored preview ZIP integrity + non-release manifest readiness blockers. Python 42383597364, Windows 42383597323, Blender3 versions 42383597324, Kit 42383597344, Handoff 42383597328, Chromium 42383597372 all success; no real Blender Extension ZIP or official validate; owner/license approval missing.",
+    "extension_ui_validation": "機能実装8d28b69を含む統合HEAD 63bddb9dcd47ca985995f000efb06b14f056a2cfでPython820件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761850)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761797)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761748)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761811)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761787)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761776)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761778)。 各Blender版で合成公式validator3例、既存6レシピ+横並び/カスタムXYZ例、登録途中失敗/再登録/foreign property保存を確認。実レンダリング13枚のSHA/サイズ・同方向比較とChromium実画面4枚を保持。自己整合hashは出自認証ではなく、SPDX例は実部品へのライセンス適用ではない。",
+    "ui_readiness_recovery": "コードeac7453b3e052267c45a83fa7c47180882d02419でPython823件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411841)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411842)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411863)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412044)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412165)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411889)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412036)。 各Blender版の既存6レシピ+追加UI例で、selection/zero/shared/shape-key理由表示とStringProperty/FloatVectorProperty割当失敗の後片付け/再登録を確認。RNAが古い場合も実行時の実選択を再検査するPython回帰あり。ローカル4.3.2は補助証拠、詳細docs/UI_GUARD_VALIDATION.md。",
+    "ui_modes_settings": "コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。 各Blender版の既存6レシピ+追加UI例で、モード表示切り替え・範囲±1のRNA入力制限・生成メタデータ一致を確認。未対応modeの空表示は模擬contextであり実Sculpt GUI未検証。静的計画は非実行で既定出力互換。置換語ラベルの不具合は失敗再現→修正後成功。通常の追加UI ZIPは修正前後byte-identical。詳細docs/UI_MODE_SETTINGS.md。",
+    "extension_diagnostic_alignment": "実装ede29deb459232b3de4a64d32a8f73ec53103cb4でBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium/Skill成功。データ専用パーサーと回帰入力だけの修正1e18232379924939dd7529ad09c967b65018838aでPython839件×3.11/3.12/3.13・Windows3.11/3.13成功。影響のないBlenderを再実行せず、異なる検証SHAを区別する。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391763231)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391766410)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587199)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587164)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587159)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587181)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587167)。 各対象Blender版で6例の診断項目一致、未分類/不一致/部分一致を成功にしないPython回帰を確認。レビューCLIの値/パス/未知キー非出力、原本不変、fresh出力、symlink/重複/サイズ/深い入れ子拒否を検証。実部品ライセンス/実Extension/GUIは未確認。",
+    "rolling_r4_integration": "2026-11-08 JST: B PR #41 e94febeb、C PR #42 ae6ad0b、D PR #39 f0fa735各個別5系統成功。A候補PR #43 667f2e4の5系統成功→devへsquash merge SHA a9a0a76a963ab4ae41b68126f419546b80871e2b。統合後Python42403131307/Windows42403131264/Blender42403131258/Chromium42403131308/Handoff42403131276/Kit42403131296/Skill42403131270の7系統success。R5をPR #44で正式割当、更新後HEAD af7a5f0436bce631cb7cddbd81b10d2d0c932619。正式リリースv0.17.0、last_verifiedは未変更。",
+    "rolling_r5_integration": "2026-11-08 JST: Team B PR #47 head0d388155、C PR #48 c56b641、D PR #46 a86ebdb各5系統成功。A PR #49初回b300e743 Blender3版失敗→テストのみ修正。修正SHA106bf250にPython42405240225/Windows42405240226/Blender42405240271/Chromium42405240247/Handoff42405240230の5系統成功（3版native UI marker）。dev squash a1c2f84715acce1f8cd33abaf003556708c13c07: Python42405529257/Windows42405529241/Blender42405529262/Chromium42405529203/Handoff42405529311/Kit42405529324/Skill42405529212 全7系統成功。R6キューPR #51統合 d2414e1cfa7a053d347637c77ddd6011447b5945。formal last_verified v0.17.0維持。",
+    "rolling_r6_integration": "2026-11-08 JST: B #54 0c293687、C #55 4624c83c、D #53 d6263f4d各個別5系統成功。A結合PR #56 SHA 7400516a9ab8230eda60a0daea8141e0c03c2844でPython42410170293/Windows42410170317/Blender42410170354(3版)/Chromium42410170318/Handoff42410170290 all success。dev squash SHA e2f09e593d9c7bdff66695c7e8972eea98e160caでPython42410463309/Windows42410463276/Blender42410463269/Chromium42410463349/Handoff42410463353/Kit42410463251/Skill42410463244の7系統すべてsuccess。R7割当PR #57 merged d491fe30cec57cf5ca4b8db307c715c5e7073053。実GLB/GUI/配布/権利未検証、formal v0.17.0 last_verified維持。",
+    "rolling_r7_integration": "2026-11-08 JST: B #61 182ae87a、C #62 eef6bcea、D #60 040036c7各5系統成功。B初回zero-length負例 fff82a6 は意図した失敗、同一strict-positive segmentガードを追加して修正。A結合PR #63 52dea171587888be2c26045808bbaf24a76bee7cでPython42413415247/Windows42413415263/Blender42413415266(3版)/Chromium42413415159/Handoff42413415103 all success。dev squash 687b2acdc920253d69eda8c5e9c1c102d02aaef3でPython42413646111/Windows42413646149/Blender42413646135/Chromium42413646129/Handoff42413646222/Kit42413646126/Skill42413646165の7系統success。R8 queue PR #64 merged 91f89578ba038c6486e3a4150d8d0fd27e4744ad。formal last_verified v0.17.0維持。",
+    "dashboard_mvp": "2026-11-08 JST: A単独PR #68 dev squash d656f62d2b70301ec34c667f89743d17e7168a1b。docs/dashboard/index.html・README.md、tests/test_dashboard_static.pyのスタンドアロンHTML GitHub API READ-ONLY画面。post-merge7 family success（Python42415931899/Windows42415931966/Blender42415932008/Chromium42415932098/Handoff42415931922/Kit42415931942/Skill42415931995）。実ブラウザネットワーク接続/通知音/Pages配備は未確認でNEXT-024。",
+    "dashboard_v2": "2026-11-08 JST: A専用PR #71 (98ec6972) merged to dev dd8ae12b; progress count, optional preview chime, queue fallback, Node regression and separate Chromium mocked browser UI tests. Exact-head Python/Windows/Chromium/Handoff passed. Post-merge seven workflow families success: Python42418153530 Windows42418153594 Blender42418153563 Chromium42418153533 Handoff42418153613 Kit42418153551 Skill42418153532. Browser real GitHub API/Windows sound/Pages NOT verified; DASH-001 stays partial and NEXT-024 open.",
+    "rolling_r8_integration": "2026-11-08 JST: B #66 0c81b10c C #70 07a742f1 D #67 a8f1b282 each five source CI families success. Combined A #73 HEAD f5fd6585488e7d69501caf2ed48c54ec81e0cc2a five CI families success (Python42419473291 Windows42419473354 Blender42419473288 3 versions, Chromium42419473271 Handoff42419473294). Dev squash SHA ded947f85f46fb8cce0943314d6e1a9fb41717ef. Post-merge seven families all SUCCESS: Python42419734167 Windows42419734210 Blender42419734261 Chromium42419734226 Handoff42419734193 Kit42419734233 Skill42419734172. R9 queue PR #74 officially merged SHA 4e40a16e71f0036c442e604c667036045172149a. Main/formal v0.17.0 unchanged.",
+    "dashboard_v3": "2026-11-08 JST A dashboard empirical speed v3 PR #79 merged dev e60d48f1461d3c57edaa7916731d19c5ede6b75b; exact HEAD four triggered families success. Post-merge seven workflow families all success: Python42422198759 Windows42422198754 Blender42422198841 Chromium42422198751 Handoff42422198765 Kit42422198764 Skill42422198785. Isolated portable HTML/ZIP browser mocked tests passed; no claim of real GitHub API or Windows audible chime. DASH-001 remains partial, NEXT-024 in_progress, no Pages/main mutation.",
+    "rolling_r11_r12_integration": "R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。 Python42433260317 Windows42433260329 Blender42433260358 Chromium42433260376 Handoff42433260441 Kit42433260440 Skill42433260362。詳細docs/ASTRA_COORDINATOR_R11_R12_BENCHMARK.md。"
   }
 }

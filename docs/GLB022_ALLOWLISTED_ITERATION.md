@@ -1,0 +1,39 @@
+# GLB-022 第1段階：固定の合成モデルだけを生成→比較→採否判定
+
+## 目的・範囲
+
+CBDK自作の小規模な3部品（ボール、軸、ソケット）で、**生成 → GLB-020比較 → 変更候補の採用/棄却 → 履歴保存 → 停止**を2試行だけ実際に行う。これはGLB-021の検査履歴を踏まえた最初の自動反復の安全な実験で、**ユーザーの任意アドオンを自動調整する汎用機能ではない**。
+
+`cbdk/glb_synthetic_iteration.py` は匿名の集計`review.json`から判定する純Pythonモジュール。実行用`scripts/run_glb022_synthetic_iteration.py`は、リポジトリ内に固定された`scripts/blender_make_glb_joint_mvp_fixtures.py`を、明示されたBlenderバイナリで実行する。その他のPythonソース、アドオン、任意のGLB生成処理、ユーザー製モデルは受け付けない。
+
+## 固定の試験経路
+
+1. **初期状態**：ソケット開口を狭めた`narrow`（合成口直径0.78）。観測された赤/黄面数を測定。
+2. **試行1：無関係な変更**：ソケット径は0.78のままボールを移動した`narrow_placebo`を**Blenderで新規生成**し、参照GLBと再比較。ソケットの誤差が減らないため**棄却**。採用済みの基準状態は更新しない。
+3. **試行2：既知の復元**：ソケットをCBDKの合成正常値1.70へ戻した`identical`を**別のGLBとして再生成**、参照と再比較。ソケットの赤/黄面数が厳密に減り、他の2部品が悪化しない場合のみ**採用**。
+4. **停止**：最大2回。合成モデルで観測された対象部品の差分が0で他部品に退行がない場合は、それ以上試行せず終了。
+
+これらはソケット径0.78/1.70という**CBDK合成モデル専用の固定値**で、実ユーザーのジョイントへの推奨値ではない。
+
+## 判定指標と正確性の限界
+
+- GLB-020が報告した生成側の匿名部品別`medium+high`面数を使用。ソケットの面数が厳密に減り、ボールと軸に追加の観測異常面がない場合だけ採用する。
+- 変化がない、悪化した、他部品が悪化した、レポートが欠けた、未知の試行名、安全フラグが不正、期待通り停止しない、などは失敗扱いにする。
+- **観測差分が0でもメッシュの全域一致・内部空洞の完全性・部品の真の同一性は証明されない。** 低密度の面サンプリングに基づく限定的な合格判定に過ぎない。
+- `--blender`はCIが検証して明示的に指定するBlenderバイナリ。`--output`もリポジトリの`reports/ci`直下の**新規ディレクトリ**のみ。任意のユーザーアドオンや私有ソースコードをimport/execしたり、元データを書き換えたりしない。
+- 元の合成生成スクリプトと生成したGLBは処理前後のSHA-256で不変性を確認。出力はローカルの`synthetic_iteration_history.json` / `synthetic_iteration_history.md`の匿名試験名・観測面数・採否・停止条件。既存ファイルへの上書きは不可。
+- 生成した形状を含む各GLBと派生`compare_viewer.html`は非公開のCIローカル環境に保管し、GitHub・Notionへ出力しない。公開用ドキュメントに個別ユーザーの座標・部品名・ソースパスを記録しない。
+
+## 開発中の品質ゲート
+
+`tests/test_glb_synthetic_iteration.py`で棄却→採用→上限2・停止条件・不正レポート・偽の自動承認・上書き防止を検査する。Blender 4.4.3/4.5.15/5.2.1 のCIでも`scripts/run_glb022_synthetic_iteration.py`を実行し、**毎回GLBを実際に別ファイルへ出力し直して**差分レポートを新規作成する。
+
+CIで成功が確認されたコードのコミットSHAとrun IDを記録するまでは、GLB-022全体を実装済みとはしない。正式版v0.17.0は維持、v0.18はドラフトPR #25のまま。今後の課題は、合成モデルでの複数パラメータ候補・失敗時の中断と再実行・ユーザーの明示許可付き実データ検証・隔離環境・反復品質評価など。
+
+## 第1段階の実測CI結果（2026-11-07）
+
+テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`： [Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)、[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)、[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)、[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)、[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)、[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+
+CBDK自作の固定3部品GLBで、初期合成不具合を再生成し、無関係なボール位置移動を**実Blenderで新規生成→GLB比較して棄却**。次にCBDK合成ソケットの既知正常状態を新規生成して**採用**、観測差分0で停止することをBlender3バージョンのCIで実証。入力として自作の固定ジェネレーターのみを実行し、生成器・GLBのSHA-256不変を確認。ローカルの匿名JSON/日本語Markdownに判断履歴を保存。
+
+このコードの成功は、**実ユーザーのボールジョイントアドオンが自動修正できることや、どの数値が最適かを自由に探索できることの証拠ではない**。GLB-022全体の管理状態は`partial`、GLB-020レビューMVPは合格/追加改良凍結、GLB-021も`partial`。正式v0.17.0は変更せず、v0.18のドラフトPR #25に含まれる。

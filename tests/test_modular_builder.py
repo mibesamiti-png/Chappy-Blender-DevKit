@@ -19,7 +19,8 @@ class ModularBuilderTests(unittest.TestCase):
         self.addCleanup(self.work.cleanup)
         self.root = Path(self.work.name)
         sources = [
-            'catalog/authored_parts.json', 'catalog/addon_features.json', 'parts/blender/context.py',
+            'catalog/authored_parts.json', 'catalog/addon_features.json',
+            'catalog/ui_layouts.json', 'parts/blender/context.py',
             'parts/blender/edit_mesh.py', 'parts/blender/measure.py',
             'parts/blender/modifiers.py', 'parts/blender/edit_transform.py',
             'parts/blender/edit_audit.py',
@@ -111,6 +112,67 @@ class ModularBuilderTests(unittest.TestCase):
             self.assertIn(f'{PACKAGE_ID}/helpers/measure.py', z.namelist())
             self.assertIn(f'{PACKAGE_ID}/helpers/modifiers.py', z.namelist())
             self.assertEqual(len(json.loads(z.read(f'{PACKAGE_ID}/CBDK_BUILD_INFO.json'))['features']), 5)
+
+    def test_ui_sections_are_safe_and_subset_only(self):
+        import ast
+        self.build()
+        with ZipFile(self.output) as archive:
+            source = archive.read(f'{PACKAGE_ID}/__init__.py').decode('utf-8')
+            manifest = json.loads(archive.read(f'{PACKAGE_ID}/CBDK_BUILD_INFO.json'))
+        tree = ast.parse(source)
+        section_assignments = [node.value for node in tree.body
+                               if isinstance(node, ast.Assign)
+                               and any(isinstance(t, ast.Name) and t.id == '_UI_SECTIONS'
+                                       for t in node.targets)]
+        self.assertEqual(len(section_assignments), 1)
+        layout = ast.literal_eval(section_assignments[0])
+        self.assertEqual(layout, (
+            ('Inspection', (('object_selection', 'Selected Meshes'),)),
+            ('Edit Mode', (('edit_selection', 'Selection Counts'),)),
+        ))
+        self.assertEqual(manifest['ui_section_titles'], ['Inspection', 'Edit Mode'])
+        self.assertNotIn('__CBDK_UI_SECTIONS__', source)
+        self.assertEqual(manifest['ui_options']['section_styles'][0]['visible_in'], 'always')
+
+    def test_invalid_declared_bounds_stop_before_zip_creation(self):
+        path = self.root / 'catalog/ui_layouts.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        data['sections'][1]['controls'][1]['parameters'] = {
+            'offset': {'default': [0, 0, 2], 'min': -1, 'max': 1}}
+        path.write_text(json.dumps(data), encoding='utf-8')
+        with self.assertRaisesRegex(ValueError, 'outside declared'):
+            self.build()
+        self.assertFalse(self.output.exists())
+
+    def test_template_marker_text_in_labels_is_an_inert_literal(self):
+        import ast
+        self.data['display_name'] = 'CBDK __CBDK_FEATURE_IDS__'
+        self.save_recipe()
+        path = self.root / 'catalog/ui_layouts.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        data['sections'][0]['controls'][0]['label'] = '__CBDK_UI_OPTIONS__'
+        path.write_text(json.dumps(data), encoding='utf-8')
+        self.build()
+        with ZipFile(self.output) as archive:
+            tree = ast.parse(archive.read(f'{PACKAGE_ID}/__init__.py'))
+        literals = {node.targets[0].id: node.value for node in tree.body
+                    if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)}
+        self.assertEqual(ast.literal_eval(literals['bl_info'])['name'], self.data['display_name'])
+        self.assertEqual(ast.literal_eval(literals['_UI_SECTIONS'])[0][1][0][1], '__CBDK_UI_OPTIONS__')
+
+    def test_generated_panel_has_guarded_operator_arguments(self):
+        self.data['features'] = ['vertex_nudge']
+        self.save_recipe()
+        self.build()
+        with ZipFile(self.output) as archive:
+            source = archive.read(f'{PACKAGE_ID}/__init__.py').decode('utf-8')
+        import ast
+        tree = ast.parse(source)
+        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+        self.assertIn('_EDIT_MODE_FEATURES', names)
+        self.assertIn('cbdk_modular_nudge_offset', source)
+        self.assertIn('button_row.enabled', source)
+        self.assertIn('button.offset', source)
 
     def test_feature_order_does_not_affect_zip(self):
         self.build()

@@ -1,4 +1,4 @@
 interface:
   display_name: "Chappy Blender DevKit"
-  short_description: "Blenderアドオン開発・再利用・実機検証"
-  default_prompt: "Chappy Blender DevKitの既存部品を確認してから、今回のBlenderアドオン開発を進めて。安全性、テスト結果、GitHubの変更履歴も報告して。"
+  short_description: "CBDKの引き継ぎ・安全な開発・6系統CI検証"
+  default_prompt: "GitHubの現行CBDK開発ブランチとSTATE.json、AGENTS.md、v0.18移行条件を確認し、未完了の安全な関連タスクを実装・検証して。実測CIだけを報告し、PRドラフトを維持。GitHub引き継ぎと既存Notion進捗を節目で同期して。"

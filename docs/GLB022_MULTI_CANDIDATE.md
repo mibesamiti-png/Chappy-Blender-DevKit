@@ -1,0 +1,44 @@
+# GLB-022 第2段階：複数の合成候補と部品間の悪化防止
+
+## 目的と範囲
+
+BlenderでCBDK自作の3部品モデルを毎回再生成し、GLB-020の匿名集計から候補を採用または棄却する。初期状態の狭窄ソケットから、3つの**固定・許可済み合成条件**を順番に試す。実ユーザーのアドオン、プライベートGLB、Pythonコードは実行も変更もしない。正式版はv0.17.0、v0.18はドラフトPR #25。
+
+## 固定合成実験の3候補
+
+| 順番 | 合成試験 | ソケット開口直径 | ボール | 判断 |
+| ---: | --- | ---: | --- | --- |
+| 初期 | `narrow` | 0.78 | 元の位置 | ソケット差分あり |
+| 1 | `narrow_placebo` | 0.78 | 移動 | 棄却：ソケット改善なし |
+| 2 | `shifted` | 1.70 | 移動 | 棄却：ソケット改善でもボール悪化 |
+| 3 | `identical` | 1.70 | 元の位置 | 採用：ソケット改善・他部品悪化なし |
+
+0.78と1.70はCBDKの合成データ専用の固定値であり、実際のジョイントへの推奨値ではない。
+
+## 採用・停止ルール
+
+- 変更対象ソケットの**観測された黄色+赤色面数**が厳密に減り、ボールと軸の観測悪化が増えない場合だけ採用する。
+- 棄却時は採用済みの基準を更新しない。ソケットだけ改善してもボールに新たな差が出る`shifted`は棄却。
+- 最大3試行。予算を1回または2回に制限して終了する場合も、未改善の状態を勝手に解消済みとしない。
+- 最後の合成正常形状で観測差分0に到達したら停止。ただしこれはサンプリング上の値で、内部空洞やメッシュ全域の一致を保証しない。
+- 赤/黄面数は連続的な幾何誤差ではなく、微小な改善量を細かく順位付けする仕組みではない。
+
+## コードと検証
+
+- `cbdk/glb_synthetic_multi.py`は安全性検証済みのGLB-020集計だけで候補を評価する純Pythonの採否エンジン。未知の試験名・偽の安全フラグ・不整合な値・勝手な採用・停止理由を拒否する。
+- `scripts/run_glb022_synthetic_iteration.py --protocol cross_part`は信頼されたCBDK合成スクリプトをBlenderで実行し、実際にGLBを再生成してGLB-020で再比較する。既存の`--protocol basic`は維持。
+- 各モデル・生成スクリプトはSHA-256で不変性を確認。派生GLBとHTMLはローカルだけで扱い、GitHubやNotionにアップロードしない。
+- 結果は新規のローカル`synthetic_multi_iteration_history.json`と`synthetic_multi_iteration_history.md`へ匿名の試行・採否・停止理由を保存し、同名ファイル上書きは拒否。
+- `tests/test_glb_synthetic_multi.py`で3候補の採否、1/2回の打ち切り、安全フラグ、不正な候補や偽の履歴を回帰テスト。CIではBlender 4.4.3、4.5.15、5.2.1の全てで従来の2候補と新しい3候補の両方を実行。
+
+## 未達成
+
+GLB-022はまだ**一部実装**。任意アドオンの自動修正、ユーザーの非公開GLBでの検証、連続数値の最適化、完全形状の保証は未達。次の段階も明示的に許可された合成データから拡張する。
+
+CI成功の記録は、実際に全テストが完了したコードSHAとrun IDに限定する。
+
+## 検証結果（2026-11-07）
+
+コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
+
+Blender3版で合成GLBを毎試行再生成し、**改善なし**と**他部品の悪化**の2種類の棄却、その後の既知正常状態の採用・観測差分0停止を確認。Python単体テストでは1/2試行の予算打切りで未修復のまま正直に終了し、偽の採用・不正な試験名・非公開情報を拒否。前段の2候補プロトコルもそのままCIで合格。これは合成モデル・固定候補での確認で、実ユーザーのアドオンの正しい補正値を見つけた証拠ではない。

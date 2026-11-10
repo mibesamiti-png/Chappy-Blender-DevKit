@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>CBDK | 開発ライブボード v3</title>
+<style>
+  :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#0b101b;color:#edf3ff;color-scheme:dark}
+  *{box-sizing:border-box}body{margin:0;min-height:100vh}a{color:#9cc3ff;text-decoration:none}a:hover{text-decoration:underline}
+  button{font:inherit;cursor:pointer;border:1px solid #42536c;background:#202c42;color:#f3f7ff;border-radius:10px;padding:9px 13px}
+  button:hover{background:#2e405a}button:focus-visible,a:focus-visible{outline:2px solid #78bcff;outline-offset:3px}
+  button:disabled{opacity:.55;cursor:wait}.wrap{max-width:1100px;margin:auto;padding:24px 18px 50px}
+  .top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:18px}
+  .eyebrow{color:#91adce;font-weight:700;letter-spacing:.12em;font-size:11px}
+  h1{font-size:clamp(24px,4vw,34px);letter-spacing:-.03em;margin:6px 0 8px}
+  h2{font-size:17px;margin:0 0 14px}.sub{font-size:13px;color:#a6b5cc;line-height:1.65;margin:0}
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .controls button{font-size:13px}.meta{font-size:12px;color:#a6b5cc;margin-bottom:18px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#f5bc57;margin-right:6px}
+  .dot.ok{background:#46ce9c}.dot.fail{background:#ff7385}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .panel{border:1px solid #2a3950;background:#141e2e;border-radius:15px;padding:17px;min-width:0}
+  .metric-label{color:#a4b6cf;font-size:12px}.metric{font-size:29px;font-weight:800;letter-spacing:-.035em;margin:8px 0 4px;line-height:1.1}
+  .metric-note{font-size:11px;color:#9daec6;line-height:1.5}.bar{width:100%;height:7px;background:#263650;border-radius:20px;overflow:hidden;margin-top:14px}
+  .bar > div{height:100%;width:0;background:linear-gradient(90deg,#3d89fa,#3bdbb8);border-radius:20px;transition:width .35s}
+  .section{margin-top:25px}.rowhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .teams{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .teamline{display:flex;align-items:center;gap:12px}.initial{background:#294564;border-radius:11px;display:grid;place-items:center;width:42px;height:42px;font-weight:900;font-size:20px}
+  .teamrole{font-size:12px;color:#a3b6cb}.teamname{font-size:15px;font-weight:800}
+  .pill{display:inline-flex;align-items:center;border-radius:100px;font-size:11px;padding:4px 8px;font-weight:700;margin-top:13px;background:#263246;color:#a6b8d6}
+  .pill.done{background:#174b3a;color:#9cf1cb}.pill.running{background:#463d23;color:#ffe09d}
+  .pill.error{background:#4c2530;color:#ffabb5}.teamdesc{margin-top:11px;color:#aebcd1;font-size:12px;min-height:55px;line-height:1.6;overflow-wrap:anywhere}
+  .smalllink{display:block;margin-top:11px;font-size:12px}.two{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px}
+  .tasks{list-style:none;margin:0;padding:0}.tasks li{border-top:1px solid #27374d;padding:12px 0}.tasks li:first-child{border-top:none;padding-top:0}
+  .tasktop{font-size:13px;font-weight:750;margin-bottom:4px}.taskbody{font-size:12px;color:#a9b9ce;line-height:1.6}
+  .recent{display:flex;flex-direction:column;gap:9px}.recententry{display:flex;gap:11px;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #27374d;padding-bottom:9px}
+  .recententry:last-child{border:0}.recenttitle{font-size:12px;line-height:1.5}.recenttime{white-space:nowrap;color:#93a9c5;font-size:11px}
+  .notice{font-size:12px;line-height:1.65;color:#9baec9;border-top:1px solid #293951;margin-top:24px;padding-top:17px}
+  .alert{background:#392b24;border:1px solid #806043;border-radius:10px;padding:10px 13px;color:#ffe0b6;font-size:12px;line-height:1.55;margin-bottom:15px}
+  .hidden{display:none!important}#flash{font-size:12px;color:#a5efc9}#live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  @media(max-width:850px){.grid,.teams{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:1fr}}
+  @media(max-width:500px){.wrap{padding:16px 12px 38px}.grid{gap:8px}.teams{grid-template-columns:1fr}.panel{padding:14px}.metric{font-size:25px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">CHAPPY BLENDER DEVKIT / GITHUB LIVE</div>
+      <h1>開発ライブボード <small style="font-size:.4em;color:#9cc3ff;vertical-align:middle">v3</small></h1>
+      <p class="sub">GitHubの公開データを読み取り専用で表示。評価値ではなく、確認できたPR・CI・状態台帳を基準にします。</p>
+    </div>
+    <div class="controls">
+      <button type="button" id="refresh" title="GitHubから取得">↻ 手動更新</button>
+      <button type="button" id="automatic" aria-pressed="true">● 自動更新 ON（5分）</button>
+      <button type="button" id="sound" aria-pressed="false">♪ 通知音 OFF</button>
+      <button type="button" id="previewSound" class="hidden" title="通知音を一回鳴らして確認">♫ 試聴</button>
+    </div>
+  </header>
+  <div class="meta">
+    <span><span class="dot" id="connectionDot"></span><span id="connection">取得準備中</span></span>
+    <span id="checked">最終確認: ―</span>
+    <span id="rate">API残量: ―</span>
+    <span id="flash" aria-live="polite"></span>
+  </div>
+  <div class="alert hidden" id="errorBox" role="alert"></div>
+
+  <section class="grid" aria-label="数値パラメータ">
+    <div class="panel"><div class="metric-label">機能実装率（推定）</div><div class="metric" id="progress">―</div><div class="metric-note" id="progressNote">STATEを確認中</div><div class="bar"><div id="progressBar"></div></div></div>
+    <div class="panel"><div class="metric-label">開発ラウンド</div><div class="metric" id="round">―</div><div class="metric-note" id="roundNote">ローリングキュー基準</div></div>
+    <div class="panel"><div class="metric-label">コード統合 / 直近24時間</div><div class="metric" id="mergeRate">―</div><div class="metric-note">Aの統合PR（実測件数）</div></div>
+    <div class="panel"><div class="metric-label">統合間隔 / 直近3区間</div><div class="metric" id="cadence">―</div><div class="metric-note">A統合PRの実測時刻から算出</div></div>
+    <div class="panel"><div class="metric-label">BCD提出→全員CI成功</div><div class="metric" id="teamLead">―</div><div class="metric-note" id="teamLeadNote">現在のラウンド / PR作成時刻から計測</div></div>
+    <div class="panel"><div class="metric-label">BCD完了→Aマージ</div><div class="metric" id="waitAfterBCD">―</div><div class="metric-note" id="waitAfterBCDNote">CI最終更新時刻を完了時刻の近似に使用</div></div>
+    <div class="panel"><div class="metric-label">A統合PRの所要</div><div class="metric" id="aLead">―</div><div class="metric-note" id="aLeadNote">PR作成→マージの所要時間</div></div>
+  </section>
+
+  <section class="section">
+    <div class="rowhead"><h2>チーム別状況</h2><span class="sub" id="teamSummary">同じラウンドのPRと正確なHEADのCIを照合</span></div>
+    <div class="teams">
+      <article class="panel" id="teamA"><div class="teamline"><div class="initial">A</div><div><div class="teamname">司令塔</div><div class="teamrole">統合・CI・次回計画</div></div></div><span class="pill" id="statusA">読み込み中</span><div class="teamdesc" id="detailA">―</div><a class="smalllink hidden" id="linkA" target="_blank" rel="noopener noreferrer">PRを開く</a></article>
+      <article class="panel" id="teamB"><div class="teamline"><div class="initial">B</div><div><div class="teamname">GLB解析</div><div class="teamrole">形状・境界照合</div></div></div><span class="pill" id="statusB">読み込み中</span><div class="teamdesc" id="detailB">―</div><a class="smalllink hidden" id="linkB" target="_blank" rel="noopener noreferrer">PRを開く</a></article>
+      <article class="panel" id="teamC"><div class="teamline"><div class="initial">C</div><div><div class="teamname">UI・生成</div><div class="teamrole">登録・解除・安全性</div></div></div><span class="pill" id="statusC">読み込み中</span><div class="teamdesc" id="detailC">―</div><a class="smalllink hidden" id="linkC" target="_blank" rel="noopener noreferrer">PRを開く</a></article>
+      <article class="panel" id="teamD"><div class="teamline"><div class="initial">D</div><div><div class="teamname">Extensions</div><div class="teamrole">配布前診断・品質</div></div></div><span class="pill" id="statusD">読み込み中</span><div class="teamdesc" id="detailD">―</div><a class="smalllink hidden" id="linkD" target="_blank" rel="noopener noreferrer">PRを開く</a></article>
+    </div>
+  </section>
+
+  <section class="section two">
+    <div class="panel"><h2>次に実装・検証するもの</h2><ul class="tasks" id="tasks"><li class="sub">ローリングキューを取得しています</li></ul></div>
+    <div class="panel"><h2>最近の統合・PR</h2><div class="recent" id="recent"><div class="sub">取得しています</div></div></div>
+  </section>
+
+  <div class="notice">
+    <div>● 音が鳴るか試したいときは「♪ 通知音」をONにして「♫ 試聴」をクリック。初回読込済みの完了・すでに通知したラウンドでは鳴らしません。</div>
+    <div>● 画面を開いている間のみ5分ごとに更新。閉じたタブでは監視しません。通知音は「♪ 通知音」を押して有効化した後に、新しく完了を確認したA/B/C/Dにつき一度だけ鳴ります。初回表示の過去の完了は鳴りません。ブラウザの省電力・音声制限が優先されます。</div>
+    <div>● 完了 = B/C/Dは担当PRのHEADで5系統CI成功、Aは統合PRのマージ後に別SHAの7系統push CI成功。未実行のCIを成功扱いしません。数字は自動推定を含み、一般ユーザー向け完成・ライセンス承認を意味しません。</div>
+    <div>● v3の速度値はGitHubのPR created_at / merged_at とActions updated_atから計算します。Actions最終更新は厳密なテスト終了時刻ではないため、BCD完了→Aマージ時間は近似値です。PR/CIが取得できない場合は「―」を表示します。開発着手時刻や作業時間そのものではありません。</div>
+    <div>● 公開GitHub APIのみ使用。トークン不要・送信データなし。通常の未認証API上限は60回/時。 <a href="https://github.com/mibesamiti-png/Chappy-Blender-DevKit" target="_blank" rel="noopener noreferrer">GitHubリポジトリ</a> / <a href="https://github.com/mibesamiti-png/Chappy-Blender-DevKit/blob/feature/v0.18-shape-diagnostics/docs/PARALLEL_ROLLING_QUEUE.md" target="_blank" rel="noopener noreferrer">作業キュー</a></div>
+  </div>
+  <span id="live" role="status" aria-live="polite"></span>
+</main>
+<script>
+(function(){
+  "use strict";
+  const REPO="mibesamiti-png/Chappy-Blender-DevKit";
+  const BRANCH="feature/v0.18-shape-diagnostics";
+  const API="https://api.github.com/repos/"+REPO;
+  const PERIOD=5*60*1000;
+  const REQUIRED=["CBDK Python tests","CBDK Windows PowerShell launcher regression","CBDK Blender multi-version runtime smoke","CBDK offline 3D browser interaction smoke","CBDK durable handoff"];
+  const EXTRA=["CBDK Windows kit package","CBDK Agent Skill package"];
+  const KEYS={seen:"cbdk-live-v1-seen",auto:"cbdk-live-v1-auto"};
+  const $=id=>document.getElementById(id);
+  let auto=true, timer=null, busy=false, firstLoad=true, seen={}, audio=null, audioEnabled=false;
+  function getStore(key){try{return localStorage.getItem(key)}catch(_){return null}}
+  function setStore(key,val){try{localStorage.setItem(key,val)}catch(_){}}
+  try{seen=JSON.parse(getStore(KEYS.seen)||"{}")||{}}catch(_){seen={}}
+  auto=getStore(KEYS.auto)!=="false";
+  const fmtDate=val=>val?new Date(val).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}):"―";
+  function cap(str,n){str=String(str||"").replace(/[\s\n]+/g," ").trim();return str.length>n?str.slice(0,n-1)+"…":str}
+  function setText(id,text){$(id).textContent=String(text)}
+  function setConnection(what,cls){setText("connection",what);$("connectionDot").className="dot "+cls}
+  async function request(url,api){
+    const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),18000);
+    try{
+      const res=await fetch(url,{mode:"cors",cache:"no-store",signal:abort.signal,headers:api?{"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"}:{}});
+      if(!res.ok){const left=res.headers.get("x-ratelimit-remaining");if(res.status===403&&left==="0")throw Error("GitHub APIの利用上限。しばらくして更新してください");throw Error("取得エラー HTTP "+res.status)}
+      if(api){const left=res.headers.get("x-ratelimit-remaining");if(left!==null)setText("rate","API残量: "+left)}
+      return api?res.json():res.text()
+    }finally{clearTimeout(timer)}
+  }
+  async function github(path){return request(API+path,true)}
+  function decodeUtf8(o){
+    if(!o||!o.content||o.encoding!=="base64")throw Error("GitHubファイルの形式が不正");
+    const raw=atob(o.content.replace(/\s/g,"")),buf=Uint8Array.from(raw,c=>c.charCodeAt(0));
+    return new TextDecoder("utf-8",{fatal:true}).decode(buf)
+  }
+  function decodeContent(o){return JSON.parse(decodeUtf8(o))}
+  function roundFromQueue(md){
+    const hs=[...md.matchAll(/^## .+$/gm)].filter(m=>/R\d+/.test(m[0])&&/割当|ローリング/.test(m[0]));
+    if(!hs.length)return {round:0,section:""};
+    const last=hs[hs.length-1],numbers=last[0].match(/R(\d+)/g)||[];
+    const round=Number(numbers[numbers.length-1].slice(1));
+    return {round:round,section:md.slice(last.index)}
+  }
+  function taskText(section,round,team){
+    const header=new RegExp("^### R"+round+"[^\\n]*\\b"+team+"\\b[^\\n]*$","m");
+    let m=header.exec(section);
+    if(m){
+      const after=section.slice(m.index+m[0].length).trimStart().split(/\n(?=### |## )/)[0];
+      const first=after.split(/\n\s*\n/)[0].replace(/^\s*[-*]\s*/,"").replace(/[*\x60]/g,"");
+      return cap(first,180)
+    }
+    m=new RegExp("^[-*] \\*\\*"+team+"[^\\n]*","m").exec(section);
+    return m?cap(m[0].replace(/[*\x60]/g,""),180):"詳細はGitHubのローリングキューを確認"
+  }
+  function isForRound(pr,round,team){
+    const t=String(pr.title||"");
+    return new RegExp("\\bteam\\s*"+team+"\\b","i").test(t)&&new RegExp("\\bR"+round+"\\b","i").test(t)
+  }
+  function latestPR(prs,round,team){
+    return prs.filter(p=>isForRound(p,round,team)).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))[0]||null
+  }
+  function latestWorkflow(runs,name,sha,event,prNum){
+    return runs.filter(x=>x.name===name&&x.head_sha===sha&&(!event||x.event===event)&&
+      (!prNum||event!=="pull_request"||!(x.pull_requests||[]).length||(x.pull_requests||[]).some(p=>p.number===prNum)))
+      .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0]||null
+  }
+  function ci(runs,names,sha,event,prNum){
+    if(!sha)return {status:"unknown",ok:0,total:names.length};
+    const data=names.map(n=>latestWorkflow(runs,n,sha,event,prNum));
+    const ok=data.filter(r=>r&&r.status==="completed"&&r.conclusion==="success").length;
+    if(data.some(r=>r&&r.status==="completed"&&r.conclusion&&r.conclusion!=="success"))return {status:"error",ok,total:names.length};
+    if(ok===names.length)return {status:"done",ok,total:names.length};
+    if(data.some(r=>r&&r.status!=="completed"))return {status:"running",ok,total:names.length};
+    return {status:"unknown",ok,total:names.length}
+  }
+  function teamStatus(team,round,prs,runs){
+    if(team==="A"){
+      const ip=prs.filter(p=>isForRound(p,round,"A")&&/integration/i.test(p.title)).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))[0];
+      if(!ip){const finished=["B","C","D"].filter(t=>{const p=latestPR(prs,round,t);return p&&ci(runs,REQUIRED,p.head&&p.head.sha,"pull_request",p.number).status==="done"}).length;
+        return {state:finished===3?"running":"waiting",text:finished===3?"BCD全員完了・Aの統合フェーズ":("BCD "+finished+"/3 完了・A先行レビュー中"),pr:null,completedId:null}}
+      if(!ip.merged_at)return {state:"running",text:"統合候補PRの検証中",pr:ip,completedId:null};
+      const c=ci(runs,REQUIRED.concat(EXTRA),ip.merge_commit_sha,"push");
+      return {state:c.status==="done"?"done":c.status==="error"?"error":"running",
+        text:c.status==="done"?"統合後7系統CI成功":c.status==="error"?"統合後CIに失敗":("統合済・検証 "+c.ok+"/7"),
+        pr:ip,completedId:c.status==="done"?round+":A":null}
+    }
+    const pr=latestPR(prs,round,team);
+    if(!pr)return {state:"waiting",text:"R"+round+"担当PRの提出待ち",pr:null,completedId:null};
+    const c=ci(runs,REQUIRED,pr.head&&pr.head.sha,"pull_request",pr.number);
+    return {state:c.status==="done"?"done":c.status==="error"?"error":"running",
+      text:c.status==="done"?"担当HEADの5系統CI成功":c.status==="error"?"担当HEADのCI失敗":("PR #"+pr.number+" / CI "+c.ok+"/5（未確認・実行中を含む）"),
+      pr,completedId:c.status==="done"?round+":"+team:null}
+  }
+  function showTeam(team,item){
+    const labels={done:"完了",running:"作業・確認中",waiting:"待機・準備中",error:"要修正"};
+    const el=$("status"+team);el.textContent=labels[item.state]||"未確認";el.className="pill "+(item.state==="done"?"done":item.state==="error"?"error":item.state==="running"?"running":"");
+    setText("detail"+team,item.text);
+    const link=$("link"+team);
+    if(item.pr&&Number.isInteger(item.pr.number)){link.href="https://github.com/"+REPO+"/pull/"+item.pr.number;link.textContent="PR #"+item.pr.number+" を開く";link.classList.remove("hidden")}
+    else{link.removeAttribute("href");link.classList.add("hidden")}
+  }
+  function clearChildren(el){while(el.firstChild)el.removeChild(el.firstChild)}
+  function addItem(tag,text,cls,parent){const el=document.createElement(tag);el.textContent=text;if(cls)el.className=cls;parent.appendChild(el);return el}
+  function renderSummary(items,round){
+    const done=items.filter(x=>x.team!=="A"&&x.item.state==="done");
+    const names=done.map(x=>x.team).join("・");
+    setText("teamSummary","R"+round+"　BCD完了 "+done.length+"/3"+(names?"（"+names+"）":""));
+  }
+  function renderTasks(section,round,state){
+    const list=$("tasks");clearChildren(list);
+    ["B","C","D"].forEach(team=>{const li=document.createElement("li");addItem("div",team+" / R"+round,"tasktop",li);addItem("div",taskText(section,round,team),"taskbody",li);list.appendChild(li)});
+    const next=(state.next_actions||[]).find(a=>a.status==="in_progress");
+    if(next){const li=document.createElement("li");addItem("div","共通の継続課題: "+next.id,"tasktop",li);addItem("div",cap(next.title,150),"taskbody",li);list.appendChild(li)}
+  }
+  function renderRecent(prs){
+    const root=$("recent");clearChildren(root);
+    const recent=prs.filter(p=>/team\s*[ABCD]/i.test(p.title||"")).slice().sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).slice(0,5);
+    if(!recent.length){addItem("div","表示できる直近PRはありません","sub",root);return}
+    recent.forEach(p=>{
+      const div=document.createElement("div");div.className="recententry";
+      const a=document.createElement("a");a.className="recenttitle";a.textContent="#"+p.number+" "+cap(p.title,84);a.href="https://github.com/"+REPO+"/pull/"+p.number;a.target="_blank";a.rel="noopener noreferrer";
+      const time=addItem("div",fmtDate(p.merged_at||p.updated_at),"recenttime",div);div.insertBefore(a,time);root.appendChild(div)
+    })
+  }
+  function completionTime(pr,runs,required,event){
+    if(!pr)return null;
+    const sha=event==="push"?pr.merge_commit_sha:(pr.head&&pr.head.sha);
+    if(!sha)return null;
+    const results=required.map(name=>latestWorkflow(runs,name,sha,event,pr.number));
+    if(results.some(x=>!x||x.status!=="completed"||x.conclusion!=="success"||!x.updated_at))return null;
+    const times=results.map(x=>Date.parse(x.updated_at));
+    return times.every(Number.isFinite)?Math.max(...times):null
+  }
+  function speedMetrics(round,prs,runs,now){
+    const teams=["B","C","D"].map(team=>latestPR(prs,round,team));
+    const completed=teams.map(pr=>completionTime(pr,runs,REQUIRED,"pull_request"));
+    const first=teams.every(Boolean)?Math.min(...teams.map(pr=>Date.parse(pr.created_at))):NaN;
+    const last=completed.every(t=>Number.isFinite(t)&&t!==null)?Math.max(...completed):null;
+    const a=prs.filter(pr=>isForRound(pr,round,"A")&&/integration/i.test(pr.title||""))
+      .sort((x,y)=>new Date(y.updated_at)-new Date(x.updated_at))[0];
+    const mergedAt=a&&a.merged_at?Date.parse(a.merged_at):null;
+    const startedAt=a?Date.parse(a.created_at):null;
+    const lead=Number.isFinite(first)&&last!==null&&last>=first?(last-first)/60000:null;
+    const waiting=last!==null?(Number.isFinite(mergedAt)&&mergedAt>=last
+      ?(mergedAt-last)/60000:!mergedAt&&now>=last?(now-last)/60000:null):null;
+    const integration=Number.isFinite(startedAt)&&Number.isFinite(mergedAt)&&mergedAt>=startedAt
+      ?(mergedAt-startedAt)/60000:null;
+    return {teamLeadMinutes:lead,waitMinutes:waiting,aLeadMinutes:integration,
+      waitingLive:!mergedAt&&waiting!==null,complete:completed.filter(Number.isFinite).length}
+  }
+  function displayMinutes(v){return v===null||!Number.isFinite(v)?"―":(v>=120?(v/60).toFixed(1)+"時間":Math.round(v)+"分")}
+  function renderSpeed(round,prs,runs){
+    const t=speedMetrics(round,prs,runs,Date.now());
+    setText("teamLead",displayMinutes(t.teamLeadMinutes));
+    setText("teamLeadNote",t.complete+"/3人のHEAD CI確認済。PR作成から最後のCI更新まで");
+    setText("waitAfterBCD",displayMinutes(t.waitMinutes));
+    setText("waitAfterBCDNote",t.waitingLive?"BCD全員成功後、Aマージまで経過中（更新時点）":"BCD全員成功からAマージまで（CI更新時刻の近似）");
+    setText("aLead",displayMinutes(t.aLeadMinutes));
+    setText("aLeadNote","Aの統合PR作成→マージ。未マージなら―");
+  }
+  function renderMetrics(state,round,prs){
+    const list=state.requirements||[],total=list.length,done=list.filter(x=>x.status==="implemented").length,partial=list.filter(x=>x.status==="partial").length;
+    const percent=total?Math.round(100*(done+partial*.5)/total):0;
+    setText("progress",percent+"%");setText("progressNote",done+" 実装済 / "+partial+" 部分 / "+total+" 要件（部分を半分換算）");
+    $("progressBar").style.width=percent+"%";setText("round","R"+round);setText("roundNote","正式版 v"+(state.release&&state.release.current||"―")+" ／ v"+(state.release&&state.release.next_planned||"―")+" 開発中");
+    const merged=prs.filter(p=>p.merged_at&&/team\s*A/i.test(p.title||"")&&/integration/i.test(p.title||"")).sort((a,b)=>new Date(b.merged_at)-new Date(a.merged_at));
+    const now=Date.now(),past24=merged.filter(p=>now-new Date(p.merged_at).getTime()<=86400000&&now>=new Date(p.merged_at).getTime());
+    setText("mergeRate",past24.length+"件");
+    const last=merged.slice(0,4),gaps=[];
+    for(let i=0;i<last.length-1;i++){const gap=(new Date(last[i].merged_at)-new Date(last[i+1].merged_at))/60000;if(gap>=0&&gap<10080)gaps.push(gap)}
+    if(gaps.length){gaps.sort((a,b)=>a-b);setText("cadence",Math.round(gaps[Math.floor(gaps.length/2)])+"分")}
+    else setText("cadence","測定待ち")
+  }
+  function playCompletion(n){
+    if(!audioEnabled||!audio)return;
+    try{
+      if(audio.state==="suspended")audio.resume().catch(()=>{});
+      const base=audio.currentTime+.05+n*.65;
+      [660,880,1047].forEach((hz,i)=>{
+        const osc=audio.createOscillator(),gain=audio.createGain(),start=base+i*.105;
+        osc.type="sine";osc.frequency.value=hz;gain.gain.setValueAtTime(.0001,start);
+        gain.gain.exponentialRampToValueAtTime(.055,start+.02);
+        gain.gain.exponentialRampToValueAtTime(.0001,start+.15);
+        osc.connect(gain);gain.connect(audio.destination);osc.start(start);osc.stop(start+.17)
+      })
+    }catch(_){}
+  }
+  function announce(items){
+    let newly=[];
+    items.forEach(x=>{if(x.item.completedId&&!seen[x.item.completedId]){
+      seen[x.item.completedId]=Date.now();
+      if(!firstLoad)newly.push(x.team)
+    }});
+    const keys=Object.keys(seen).sort((a,b)=>seen[b]-seen[a]).slice(0,150);
+    const trimmed={};keys.forEach(k=>trimmed[k]=seen[k]);seen=trimmed;setStore(KEYS.seen,JSON.stringify(seen));
+    firstLoad=false;
+    if(newly.length){
+      setText("flash",newly.join("・")+" 完了を新規検出");
+      setText("live",newly.join("、")+" チームの完了を検出しました");
+      if(audioEnabled)newly.forEach((_,i)=>playCompletion(i))
+    }else setText("flash","")
+  }
+  async function refresh(){
+    if(busy)return;busy=true;$("refresh").disabled=true;setConnection("GitHubを確認中","");$("errorBox").classList.add("hidden");
+    try{
+      const qs="?ref="+encodeURIComponent(BRANCH);
+      const fetched=await Promise.all([
+        github("/contents/docs/project/STATE.json"+qs),
+        github("/pulls?state=all&sort=updated&direction=desc&per_page=100"),
+        github("/actions/runs?per_page=100"),
+        request("https://raw.githubusercontent.com/"+REPO+"/"+BRANCH+"/docs/PARALLEL_ROLLING_QUEUE.md?_="+Math.floor(Date.now()/60000),false).catch(async()=>decodeUtf8(await github("/contents/docs/PARALLEL_ROLLING_QUEUE.md"+qs)))
+      ]);
+      const state=decodeContent(fetched[0]),prs=fetched[1],runs=(fetched[2]||{}).workflow_runs||[],q=roundFromQueue(fetched[3]);
+      if(!Array.isArray(prs)||!Array.isArray(runs)||!q.round)throw Error("GitHub応答・作業キューを解析できません");
+      renderMetrics(state,q.round,prs);renderSpeed(q.round,prs,runs);renderTasks(q.section,q.round,state);renderRecent(prs);
+      const items=["A","B","C","D"].map(team=>({team,item:teamStatus(team,q.round,prs,runs)}));
+      items.forEach(x=>showTeam(x.team,x.item));renderSummary(items,q.round);announce(items);
+      setConnection("更新成功","ok");setText("checked","最終確認: "+fmtDate(new Date().toISOString()))
+    }catch(err){
+      setConnection("取得失敗・以前の表示を保持","fail");
+      $("errorBox").textContent="GitHubからの取得に失敗: "+(err&&err.message||"ネットワークエラー")+". 公開リポジトリへの接続、API制限、ブラウザのネットワーク許可を確認してください。";
+      $("errorBox").classList.remove("hidden")
+    }finally{busy=false;$("refresh").disabled=false}
+  }
+  function applyAutomatic(){
+    $("automatic").textContent=auto?"● 自動更新 ON（5分）":"○ 自動更新 OFF";
+    $("automatic").setAttribute("aria-pressed",String(auto));
+    if(timer)clearInterval(timer);timer=auto?setInterval(refresh,PERIOD):null;setStore(KEYS.auto,String(auto))
+  }
+  $("refresh").addEventListener("click",refresh);
+  $("automatic").addEventListener("click",()=>{auto=!auto;applyAutomatic()});
+  $("sound").addEventListener("click",async()=>{
+    if(audioEnabled){audioEnabled=false;$("sound").textContent="♪ 通知音 OFF";$("sound").setAttribute("aria-pressed","false");$("previewSound").classList.add("hidden");return}
+    try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)throw Error("Web Audio非対応");
+      if(!audio)audio=new Audio();await audio.resume();audioEnabled=true;
+      $("sound").textContent="♫ 通知音 ON";$("sound").setAttribute("aria-pressed","true");$("previewSound").classList.remove("hidden");setText("flash","次の新規完了から通知します")
+    }catch(_){setText("flash","音声が使えません。ブラウザ設定を確認してください")}
+  });
+  $("previewSound").addEventListener("click",()=>{if(audioEnabled){playCompletion(0);setText("flash","通知音を試聴しました")}});
+  applyAutomatic();refresh()
+})();
+</script>
+</body>
+</html>

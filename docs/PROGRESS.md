@@ -537,3 +537,846 @@ GitHubのCIジョブが実行ステップ0・runner_id=0で終了する状態を
 - reference Cubeと、同じworld boundsを持つ八面体candidateを作り、bounds許容差を緩めても`scene_silhouette`または`object_silhouette`で失敗判定することを3版すべてで確認。
 - Blender 4.5.15では`glb-regression`のreference→candidate一括経路も意図どおりexit 1となり、比較レポートを生成。
 - GLB-004を実装済み/Blender CI検証済みに更新。小穴・内部形状・32x32未満細部は次段階の課題。
+
+## v0.18 開発中 — 2026-11-06（GLB診断の数値根拠とフェイルクローズ）
+
+- PR #25の `cbdk/glb_diagnose.py` を拡充。全体7視点のシルエット差分はscene単位で束ね、部品別の差分は個別に保持。`evidence_summary`へ、対象視点、最悪IoU、最大相対誤差、欠落部品の体積割合、重大度ごとの件数を集約。
+- 比較元の`passed`とerrors/差分数が矛盾する場合は診断を拒否。JSON重複キー・NaN/Infinity・不正なseverityや数値、過大な証拠データを拒否。
+- 警告/情報や未対応の差分コードだけが残っていても、`needs_review=true`とする。比較合格は指定許容差での判定に過ぎず、3D形状の完全一致・内部の空洞を保証しない。
+- `tests/test_glb_diagnose_evidence.py` に19件の回帰テストを追加。既存7件は残す。
+- 原本GLBの自動編集、アドオンコード修正、許可やマージは行わない。私有GLBの公開GitHubへのアップロードも行わない。
+
+**検証状態**：追加19件のCI実走とBlender実機・Windowsでの現在のPR headの成功は未確認。合格記録は以前の実測release v0.17.0を維持（GLB-005: not_tested）。
+
+### v0.18 GLB-005 — 実測CI検証結果（2026-11-06）
+
+PR #25の実装コミット `e971b784e5f6694252e924c0b8183dd393aa3860` に対するGitHub Actionsで次を確認。
+
+- Python 3.11/3.12/3.13: 全ジョブ成功（run [42202420004](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202420004)）。GLB数値診断の追加19回帰テストを含む。
+- Windows PowerShell 3.11/3.13: 全ジョブ成功（run [42202419886](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419886)）。
+- Blender 4.4.3/4.5.15/5.2.1: 全ジョブ成功（run [42202419874](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419874)）。形状差分fixtureの診断レポートについて対象視点・最悪IoU・error件数と非自動承認をCIで検証した。
+- Windowsキット生成: 成功（run [42202419926](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419926)）。
+- 永続引き継ぎチェック: 成功（run [42202419869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42202419869)）。
+
+**境界**：これは上記コミットの実測。検証記録を追記する後続のドキュメント変更やユーザー個別GLBの再現率まで保証しない。PR #25はドラフト、mainに統合していない。`last_verified`の正式v0.17.0は変更しない。
+
+## v0.18 開発中 — 2026-11-06（形状原因から設定候補へ）
+
+- `cbdk/glb_repair_plan.py` 新規実装。既存のGLB診断から、原因カテゴリ別の設定候補群、確認項目、対象部品、該当視点、最悪IoU、観測誤差の主軸を出力。ボール・ソケット・ヒンジの部品名を手がかりにした候補は、あくまで未確認の推測として表示する。
+- CLI `python -m cbdk glb-repair-plan <comparison.json> --output reports/latest/glb_repair_plan.json` を追加。入力を再診断してから候補計画に変換し、元のユーザーGLBやアドオンコードは実行しない。
+- `cbdk/glb_regression.py` に `repair_plan.json` の自動出力を統合。比較・診断・修正確認プランの3つのJSONをまとめて記録できる。
+- `tests/test_glb_repair_plan.py` に20件追加。部品別候補、軸方向の観測値、安全フラグ、未知差分、入力不正、CLI、出力と元データ不変性を回帰確認するテストを用意。`tests/test_glb_regression.py` も統合検証を追加。
+- Blender 4.4.3 / 4.5.15 / 5.2.1 のGLB差分fixtureで`glb-repair-plan`を実行し、レビュー専用・未承認・影響視点・最悪IoUを検査するCIを追加。Blender 4.5.15ではe2eの`repair_plan.json`も検査する。
+- 正本STATE.json/引き継ぎの新要件`GLB-006`、新設計判断`DEC-018`、次タスク`NEXT-009`を登録。
+
+**実測CI結果（2026-11-06）:** PR #25のコードHEAD `d9c5c92590759faac158824d84e4f8ca94c7c5bb` で、次のGitHub Actionsが全成功。
+
+- Python 3.11/3.12/3.13：[run 42204425313](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425313)。新規20回帰テストを含む。
+- Windows PowerShell 3.11/3.13：[run 42204425351](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425351)。
+- Blender 4.4.3/4.5.15/5.2.1：[run 42204425335](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425335)。GLBの同外寸・異輪郭fixtureから比較・診断・設定候補プランを生成し、安全フラグ・最悪IoU・対象視点を検証。
+- Windowsキット：[run 42204425475](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425475)。
+- 引き継ぎ検証：[run 42204425288](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42204425288)。
+
+これを根拠にGLB-006は実装済/Blender CI検証とする。参照GLBと生成GLBの完全一致、内部空洞、実アドオンの設定と候補名の合致は未検証。後続の記録更新コミットのCI成功とは区別する。PR #25は未マージ、正式last_verified=v0.17.0を維持。
+
+## v0.18 開発中 — 2026-11-06（GLB-007: 静的プロパティ照合）
+
+- `cbdk/glb_property_map.py`を新規実装。`ast.parse`のみでBlender `bpy.props`のクラスレベル宣言を列挙し、GLB修正プランの候補群へ名前完全一致で対応付ける。import別名に対応。実際のBlenderアドオンをインポート・実行しない。
+- CLI `python -m cbdk glb-map-properties <repair_plan.json> --source <local-addon.py> --output reports/latest/glb_property_mapping.json` を追加。入力Pythonファイルは明示指定のみ（最大16、各1MiB）。プランJSONは安全フラグ/候補名/件数を照合する。
+- 出力は`cbdk_glb_property_mapping` JSON。完全一致した宣言と未一致候補を分離。匿名ファイルラベル、クラス、行、Property種別だけを出力し、私有コード本文・デフォルト値・実ファイル名・絶対パスは含めない。
+- `tests/test_glb_property_map.py`に24件の回帰テストを追加。AST注釈型/通常代入、import別名、偽のFloatProperty、関数ローカル変数の誤検出、トップレベル副作用の非実行、私有データ遮断、入力異常、symlink、無害な結果、CLIを検証する。
+- Blender CIへ合成プロパティ定義ファイルを作成するステップを追加し、GLB差分fixtureの`glb-repair-plan`に含まれる候補名へAST照合する。**合成ソースは実行しない**。
+- `docs/GLB_PROPERTY_MAPPING.md`を作成、STATE.jsonへ`GLB-007`、`DEC-019`と進行中タスク`NEXT-009`を記録し、引き継ぎを同期。
+
+**検証境界:** このコードの追加時点での静的記録。最新headのPython/Windows/Blender CIは実際の成功ジョブを見てから検証状態を更新する。GUI上の登録確認・実アドオンのジオメトリ変化・ユーザー私有GLBでの完全一致は未検証。正式v0.17.0のlast_verifiedは保持。
+
+### GLB-007の実測CI（2026-11-06）
+
+実装コミット `c36350754770e54ed30695b63661382bf815682c` に対して、次の5ワークフローが実際に全成功。
+
+- Python 3.11/3.12/3.13： [run 42206398064](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398064)。新規24回帰テストを含む。
+- Windows PowerShell 3.11/3.13： [run 42206398098](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398098)。
+- Blender 4.4.3 / 4.5.15 / 5.2.1： [run 42206398080](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398080)。合成GLBから得た原因候補と合成Pythonファイル内のBlenderプロパティをASTのみで照合し、名前一致・未実行・未適用の安全フラグを確認。
+- Windowsキット： [run 42206398068](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398068)。
+- 引き継ぎ： [run 42206398078](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42206398078)。
+
+GLB-007は実装済/Blender CI確認済みとして記録。正式バージョンはv0.17.0のまま、v0.18 PR #25はドラフト。**未検証:** 個人用アドオンに実際に登録されたプロパティか、その値が形状に影響するか、ユーザーのGLBが正確に再現できるか。元私有ソースはコミット・実行していない。
+
+## v0.18 開発中 — 2026-11-06（GLB-008：プロパティ参照のAST静的追跡）
+
+- `cbdk/glb_property_usage.py` 新設。宣言名と同じ属性に対するread/write/read_write/deleteの4種をASTで識別し、関数・クラス・行番号・匿名ソースラベルをレポートに収録する。受け手の型・登録状態は**未検証**と明示。
+- `cbdk/glb_property_map.py` に `exact_name_matches[].possible_code_references` を統合。宣言がない同名のアクセスだけではプロパティが存在する扱いにしない。`static_possible_attribute_references_found` は宣言と同名属性のAST出現総数。
+- `tests/test_glb_property_usage.py` に新規23回帰テストを追加。読み取り/代入/拡張代入/削除、関数・クラス・複数ソース、動的getattrの未検出、機密値遮断、ソース副作用の未実行、上限超の拒否、マッピング連携を検証する。
+- Blender 3バージョンの合成fixtureを拡張し、静的参照読み書き・未検証フラグをCLIから検証するワークフローを追加。
+- 引き継ぎ仕様の`GLB-008` / `DEC-020` と `NEXT-009` の進捗記録を追加。
+
+**実測CI検証（GLB-008）**：実装コミット `c640ad06e5f55bf5a4112ba3bb5635751f2023a7` について、次のGitHub Actionsで全成功を確認。
+
+- [Python run 42208333161](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333161)：3.11 / 3.12 / 3.13。新規23回帰テストを含む。
+- [Windows run 42208333343](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333343)：PowerShell 3.11 / 3.13。
+- [Blender run 42208333010](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333010)：Blender 4.4.3 / 4.5.15 / 5.2.1。合成GLBから作った修正候補と合成PythonのAST読み書きを照合して成功。
+- [Windows kit run 42208333310](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208333310) と [引き継ぎ run 42208332987](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42208332987) も成功。
+
+**未検証範囲**：ユーザー私有アドオンの実際のBlender登録、プロパティの受信元オブジェクトとの結びつき、メッシュ形状への効果。上記は実装コミットに対する実測であり、後続ドキュメント更新のコード実行結果とは区別する。PRはドラフト、正式版`last_verified=v0.17.0`を保持。
+
+## v0.18 開発中 — 2026-11-06（GLB-009: 受け手の構文上の関連）
+
+- `cbdk/glb_property_usage.py` にクラスと匿名ソース別の `self.<prop>` 参照の集計を追加。ASTのみを読むため元アドオンの実行はなし。16件の表示サンプルと集計件数を切り離した。
+- `cbdk/glb_property_map.py` に `same_class_reference_review` を追加。宣言クラスと一致するselfアクセス候補/他の受け手・別クラス・別ファイル由来の候補を分離し、`read/write/read_write/delete`を集計。クラス名匿名化の誤衝突を除外。
+- `tests/test_glb_property_binding.py` に14件の回帰テストを追加。別クラス・別ファイル同名クラス・ローカルの`self`・動的getattr・19件以上の例示上限、プライバシーと非実行/非承認を確認。
+- Blender 4.4.3/4.5.15/5.2.1の合成GLBと合成アドオン宣言を用いるCIに、同クラスself属性参照を見付けても実行時登録・geometry効果は未確認とするチェックを追加。
+- STATE.json: `GLB-009`、`DEC-021`、`NEXT-009`更新。引き継ぎ文書を同期。
+
+**検証状態:** 上記テストとCIのコードは追加済み。成功した最新実ジョブを確認するまではGLB-009を一部実装・未検証のまま管理。実ユーザーアドオン/GLBの動作、GUI、コードの自動修正は対象外。
+
+### GLB-009 実測CI（2026-11-06）
+
+実装コミット `2c000dad0980ee76562576ba63c0e7b568284748` に対して、GitHub Actions 5ワークフローの成功を確認。
+
+- Python 3.11/3.12/3.13： [run 42210546730](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546730)。GLB-009の新規15回帰テストを含む。
+- Windows PowerShell 3.11/3.13： [run 42210546742](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546742)。
+- Blender 4.4.3/4.5.15/5.2.1： [run 42210546751](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546751)。合成GLBから候補を出し合成プロパティの同クラスself参照の集計と`binding_verified=false`等をチェック。
+- Windows kit： [run 42210546861](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546861)。
+- GitHub handoff： [run 42210546734](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42210546734)。
+
+この実測に基づき、GLB-009を「実装済/Blender CI確認」としてSTATE/HANDOFFへ記録した。これは**実装コミット**の証拠。後続ドキュメント更新コミットの成功と混同しない。PR #25は未マージ・ドラフトで、正式リリース`last_verified`はv0.17.0のまま。実私有アドオンでの正しいクラス・受信実体・形状効果は未検証。
+
+## v0.18 開発中 — 2026-11-06（GLB-011: モディファイア候補経路）
+
+- `cbdk/glb_geometry_flow.py`に安全側の `MODIFIER_FIELDS` を追加。Blenderプロパティ式/直線的ローカル別名から `width`, `thickness`, `segments`, `levels`, `operation`, `object` などの属性代入・複合代入への構文上の経路を `possible_modifier_setting_assignment` として報告する。
+- `tests/test_glb_modifier_flow.py`の専用15回帰テストを追加。既存メッシュ経路テストは維持。Blender3版CIの合成ソースに `modifier.width` と `modifier.thickness` の候補を追加してチェックする。
+- 元アドオンソースはAST解析のみ。実Blenderモディファイアかどうか、モデルへの効果と適正値は未検証。候補を原因確定・自動修正には使わない。
+- `GLB-011`と`DEC-023`をSTATE/HANDOFFに記録。
+
+**検証境界:** 追加コード・テスト/CI定義のGitHub保存は完了。現headのCI成功を確認するまではGLB-011を一部実装・未検証とし、正式v0.17.0の`last_verified`を変更しない。
+
+### GLB-011 CI結果（2026-11-06）
+
+実装コミット b1a57e5789cacd5e1e07ae1ee17ce364fd4e1fb1 で、Python 3版（run 42214954563）、Windows 2版（42214954671）、Blender 4.4.3/4.5.15/5.2.1（42214954642）、Windowsキット（42214954657）、引き継ぎ（42214954600）の全ジョブが成功。GLB-011は実装済・Blender CI検証。実アドオンの型・ジオメトリへの効果は未検証。PRドラフト、正式v0.17.0は維持。
+
+## v0.18 開発中 — 2026-11-06（GLB-012 頂点移動量の実測）
+
+- CBDK自作の合成Blenderアドオンを用いた3条件（基準、球半径だけ変更、Bevel幅だけ変更）のGLB実験を定量化。
+- `cbdk/parameter_experiment_metrics.py` 新規: 同一頂点順・有限XYZの比較に限り平均/最大局所移動距離、変化頂点数を算出。頂点数不一致・NaN・異常入力は拒否。一般GLBへの形状一致証明を明示的に否定。
+- `scripts/blender_parameter_experiment_smoke.py` 改善: 生成直後・GLB再読込後の2段階で比較対象と無変更対照の頂点移動量を計測し、個別に影響対象だけが動いたことをアサート。レポートには生の頂点リストを含めず集計値のみ残す。
+- `tests/test_parameter_experiment_metrics.py` に10件の純Python回帰テスト追加。`.github/workflows/blender-smoke.yml` で全Blender版の定量チェックを追加。
+- 要件GLB-012、設計判断DEC-024、NEXT-010をSTATE.json/PROJECT_HANDOFF.mdへ追加。
+
+**状態:** 最新コミットのCI合否を観測するまでGLB-012は部分実装/未検証。PR #25ドラフト、正式版v0.17.0維持。実ユーザーアドオンを実行しない。
+
+### GLB-012 CI実測成功（2026-11-06）
+
+実装コミット `04526f1ddd9f336df16d2841ccafc278cd8edf4f` に対する次の5ワークフローがすべて成功した。
+
+- Python 3.11/3.12/3.13： [42220053230](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053230)（10件の新規定量測定テストを含む）。
+- Windows 2環境： [42220053331](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053331)。
+- Blender 4.4.3/4.5.15/5.2.1： [42220053332](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053332)。球の半径とBevel幅をそれぞれ変え、生成・GLB再読込後の頂点移動量と無変更対照を計測、すべて合格。
+- Windows kit： [42220053222](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053222)。
+- 引き継ぎ： [42220053158](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42220053158)。
+
+GLB-012を実装済/Blender CI検証、NEXT-010をdoneとしてSTATE/HANDOFFに記録した。証拠はこの**実装コミット**の結果であり、後続の文書更新のCIとは分ける。PR #25はドラフトで、正式v0.17.0の`last_verified`は維持。任意GLBの表面距離や他者アドオンの効果は未検証。
+
+## v0.18 開発中 — 2026-11-06（GLB-013 設定値上下の実測）
+
+- `cbdk/parameter_direction.py`追加。固定された参考形状に対する基準・増加・減少の距離からレビュー専用`increase/decrease/inconclusive`を判定。不正値、同点、差が小さい状況は修正方向を断定せず、数値設定値と自動適用は返さない。
+- `scripts/blender_parameter_experiment_smoke.py`のCBDK製合成アドオン実験を3→7 GLBへ拡張。球半径とBevel幅の既知参考値に対し、基準より増加プローブが近く、減少プローブが遠いことを、生成直後・GLB再読み込み後に比較。
+- 両方向プローブについて無関係の部品の頂点変化件数が0であることを独立チェック。出力は距離集計のみで頂点XYZ生配列は保存しない。
+- `tests/test_parameter_direction.py`に純Python回帰テスト11件追加。3版Blender CIで7 GLBの実出力と方向・無変更対照・非自動承認フラグをチェック。
+- 要件GLB-013・設計判断DEC-025・タスクNEXT-011をSTATE.json/HANDOFFで管理。
+
+**検証境界:** 最新PR headのCIを見てからGLB-013の検証状態を更新する。これは合成メッシュの頂点順不変な局所半径分布による実験であり、一般GLBの表面一致や実ユーザーアドオンの最適設定値の証明ではない。PRはドラフト、正式last_verified v0.17.0維持。
+
+### GLB-013 CI実測結果（2026-11-06）
+
+コード・仕様の検証コミット `e73f7eba0cd0bd5ceafacab53b64c397a7bd45a4` に対して、次の5ワークフローの全成功を観測した。
+
+- Python 3.11/3.12/3.13: [run 42223468580](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468580)。方向判定11件＋頂点並び順に依存しない半径分布の追加5件を含む。
+- Windows PowerShell 3.11/3.13: [run 42223468045](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468045)。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42223468513](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468513)。7種類の実GLBを出力し、参照を固定した上下プローブで増加側が改善、減少側が悪化、非対象部品は不変、GLB再読込後も方向が一致した。
+- Windows kit: [run 42223468046](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468046)。
+- GitHub handoff: [run 42223468069](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42223468069)。
+
+初回のBlender5.2検証では、GLBインポートによる頂点番号の変更がindex-aligned局所距離を歪めて誤判定した。そこで**局所原点からの頂点半径をソートして比較する合成モデル専用の指標**に切り替え、変更後の3版Blender CIはすべて成功。頂点順不変である一方、別形状で同じ半径分布のケースは区別できず、一般GLBの形状同一性を証明しない。
+
+Blender4.5.15の実測例（生成・再読込とも同じ値）：球半径は基準誤差0.4000002、増加0.2、減少0.6。Bevel幅は基準0.240685、増加0.1308848、減少0.2875242。いずれも非対象部品の頂点変化数は0。
+
+これを根拠にSTATE/HANDOFFのGLB-013を実装済/Blender CI確認、NEXT-011をdoneへ更新。記録変更後のコミットのCI結果とは区別する。PR #25はドラフトで正式release last_verified v0.17.0維持。実ユーザーアドオン/私有GLBの実行とアップロード、自動パラメータ修正なし。
+
+## v0.18 開発中 — 2026-11-06（GLB-014: 頂点順非依存の3D表面距離）
+
+- `cbdk/glb_surface_distance.py` を新規実装。面積重み付きのサンプル点→相手三角形への最近接3D距離を双方向で集計。頂点順/三角分割は不一致でも可能。上限128面、24 Halton点/面。
+- `tests/test_glb_surface_distance.py`に13件の単体テストを追加。同面の別三角分割/頂点順変更=ゼロ、Z+0.25、同外寸の中央開口、片方向では見逃しうる違い、異常数値・退化面拒否・完全一致を主張しないことを検証。
+- 初回のPython CIが中央開口テスト失敗を検出。相関の強い12点/面のサンプリングが中央の穴を外していた。base2/3 Halton列24点/面へ変更後、Python3版CI成功を確認。
+- `scripts/blender_surface_distance_smoke.py`を新規追加。CBDK自身が生成する4 GLBをBlenderで実書出/再読込し、異三角分割・開口・Z移動を比較するCIを3版Blenderで追加。
+- `docs/GLB_SURFACE_DISTANCE.md`を作成。GLB-014/DEC-026/NEXT-012をSTATE/HANDOFFへ記録。
+
+**制限:** 現時点は小規模でレビュー専用の合成モデル検証。小さな穴・内部空洞や大規模実モデルの比較を保証しない。Blender実機CIの成功を実測するまではGLB-014は一部実装/未検証。PRドラフト、正式v0.17.0維持。
+
+### GLB-014 実測CI（2026-11-06）
+
+変更コード/仕様書コミット `f7e9e114e3484da650044737189ae20395a53e74` に対し、次の全ワークフロー成功を観測した。
+
+- Python 3.11/3.12/3.13: [run 42235161491](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161491)、新規13件の表面比較テストを含む。
+- Windows PowerShell 3.11/3.13: [run 42235161515](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161515)。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42235161529](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161529)、合成4 GLBを実生成・再読込して計測。4.5.15で別三角分割の対称距離0、中央開口0.0081329、Z方向0.25差0.25を観測。各3版のテストは成功。
+- Windows kit: [run 42235161511](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161511)。
+- Durable handoff: [run 42235161506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42235161506)。
+
+初期サンプリング12点/面は中心開口を見逃してPython CIで失敗。原因を確認し、相関の少ないHalton24点/面へ変更した後に3版Pythonと3版Blenderで成功。この実測からGLB-014はimplemented/blender_ci、NEXT-012はdoneとしてSTATE/HANDOFFへ反映した。これは実装/仕様書コードコミット`f7e9e114`の観測であり、後続の記録更新HEADのCIとは別に扱う。
+
+**検証の限界:** 0のスコアは形状が数学的に完全一致する証明ではなく、小さな穴・内部空洞や大規模な実ユーザーGLBの形状比較は未検証。サンプル距離の最大値は真のHausdorff値ではない。PR #25はドラフト、正式リリースlast_verified v0.17.0のまま。
+
+## v0.18 開発中 — 2026-11-06（GLB-015：BVH最近接面探索）
+
+- `cbdk/glb_surface_distance.py` にAABB-BVHを導入。決定的な中央値分割で三角形を木構造に整理し、AABBの下界距離で遠方の三角面候補を省く。採用面では従来同様の正確な点→三角形距離を算出。
+- 1メッシュの上限を128→512三角面へ拡張。`triangle_distance_evaluations` と `brute_force_evaluations` を方向別に記録。これは計算回数の削減指標であり、実測時間の高速化ではない。
+- `tests/test_glb_surface_bvh.py` を新規10回帰テスト追加。総当たりと結果一致、400/512面、4分の1未満の評価回数、面順・向き変更、距離の非承認などをチェック。
+- `scripts/blender_surface_distance_smoke.py` にCBDK製の256三角面`grid_256.glb`を追加。4→5種類の合成GLBを生成/再読込して距離0とBVHによる計算回数削減を調べる。Blender 4.4.3/4.5.15/5.2.1 CIへ統合。
+- GLB-015 / DEC-027 / NEXT-013をSTATE.json/HANDOFFに記録。手引き文書をBVH・上限512・5GLBに更新。
+
+**状態:** 最新コミットの実CIの成功を確認するまで一部実装・未検証。512面は初期の128面から4倍の上限だが、一般的な大規模モデルへの適用能力を保証しない。PRドラフト、正式v0.17.0を維持。
+
+### GLB-015 BVH高速化・実測CI成功（2026-11-06）
+
+実装・仕様書コミット `bcef8572994065f73d05e2e9c37245d64a13035e` に対して、次のGitHub Actions 5ワークフローすべてがsuccess。
+
+- Python 3.11/3.12/3.13: [run 42238115233](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238115233) — BVH/総当たりの結果一致、400/512面の上限、別順序、非承認など新規10件を含む。
+- Windows PowerShell 3.11/3.13: [run 42238115886](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238115886)。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42238114860](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238114860) — 合成GLB5種類を生成・再読込し、256面の`grid_256.glb`を使って誤差0と総当たり比較回数25%未満を全バージョンで検証。
+- Windows kit: [run 42238115035](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238115035)。
+- Durable handoff: [run 42238115141](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42238115141)。
+
+Blender4.5.15の`CBDK_SURFACE_DISTANCE_PASS`実機ログにて、**256面、総当たりの精密距離計算1,572,864回→BVH方式49,152回（32分の1、96.875%削減）**、同一表面距離0を観測。他の合成条件も従来同様、別三角分割誤差0、開口誤差0.0081329、Z+0.25誤差0.25を維持。
+
+これは**精密三角形距離の計算回数**の削減を示すもので、ウォールクロック時間での32倍速・大規模実GLBの完全対応を証明しない。表面サンプリングの粗さ、密閉空洞、真のHausdorff距離、ユーザー私有GLBなどは未検証。
+
+STATE/HANDOFFのGLB-015を`implemented/blender_ci`、NEXT-013を`done`へ更新。上記は実装/文書コミットのCIであり、その後の記録更新コミットは別CIで検証する。PR #25ドラフト、正式v0.17.0維持。
+
+## v0.18 開発中 — GLB-016: ウォールクロックの実測
+
+- `cbdk/surface_benchmark.py`を追加。ウォームアップ後にBVH・総当たりを交互順序で計測し、繰り返し3回の実行時間中央値をmsで保存する。BVH木構築・表面サンプリングを含む。64面では同一入力のスコア一致を確認し、512面ではBVHのみを観測。最小/最大時間、面数、精密三角形距離の評価回数も記録する。
+- `tests/test_surface_benchmark.py`に10回帰テストを追加。大きな入力で総当たりを許可しない安全制限、正常/不正入力、測定時間の非移植性、非公開データを出さないことを検証する。
+- `scripts/blender_surface_distance_smoke.py`のCBDK製合成fixtureを5→6 GLBへ拡張、512三角面のGLBを実出力・再読込。既存256面BVH計算回数の検証も維持。
+- `.github/workflows/blender-smoke.yml`でBlender 4.4.3/4.5.15/5.2.1上、64面BVH/総当たりのタイミング記録、512面BVHのみのタイミング、スコア0・速度比をCI閾値としないことをチェック。
+- 正本STATE.jsonにGLB-016、DEC-028、NEXT-014を追加してPROJECT_HANDOFFと同期。実測CIの合否は現在のコミットが完了した後に記録する。
+
+**検証境界:** CPU・Blender・ランナー負荷が異なるとミリ秒や速度比は変わる。計算回数32分の1と実行時間32倍速は別概念。512面は一般的な高密度メッシュへの実用性を保証しない。PRはドラフト、正式v0.17.0は保持。
+
+### GLB-016 実時間比較結果（実装コミット 9581ab20、2026-11-06）
+
+CBDK製の6種類の合成GLBを実際に書き出し/再読み込みするBlender 4.4.3・4.5.15・5.2.1のCI [run 42240589340](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240589340) はすべて**成功**。64面の共通入力でBVHと総当たりのウォームアップ後3回の実行時間中央値（ms）を測った。512面ではBVHの時間のみを計測。
+
+| Blender | 64面BVH | 64面総当たり | 512面BVH |
+|---|---:|---:|---:|
+| 4.4.3 | 35.510505ms | 161.156313ms | 352.050953ms |
+| 4.5.15 | 19.356758ms | 86.027068ms | 192.798623ms |
+| 5.2.1 | 32.467850ms | 149.716417ms | 321.247609ms |
+
+両方式は64面の表面誤差について同じ数値を返し、512面合成GLB同士のサンプル距離は0。既存の256面での精密三角形距離回数削減と、中央開口・高さ変位の検査も維持。Python [run 42240590020](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240590020)・Windows kit [42240588950](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588950)・handoff [42240588940](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588940) も成功。Windows PowerShell [42240588999](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42240588999) も成功。
+
+3バージョンでBVHの64面処理時間が総当たりより短いことを**観測**した。ただしCIランナーのCPU/負荷に依存して数値が変動し、全PCへの性能保証や実製品用大規模GLBの処理能力は意味しない。速度比をCIの合否閾値にはしていない。正本STATE/HANDOFFでGLB-016をimplemented/blender_ci、NEXT-014をdoneへ更新。v0.18ドラフトPR #25内の作業で、正式v0.17.0のlast_verifiedは変更なし。
+
+## v0.18 開発中 — GLB-017: 粗8点→選択面48点の多解像度比較
+
+- `cbdk/glb_multires_surface.py`新規。粗8 Halton点/面、差分の疑いがある最大8面＋面積上位の探索2面を48点まで増やし、両方向のサンプル距離を集計。BVHは再利用し、追加の精密距離評価回数と変更面数を出力。上限512面/メッシュを維持。
+- `tests/test_glb_multires_surface.py`に13回帰テストを追加。従来の固定24点では見逃す幅0.44の中央開口を、48点の選択精査が検出するケース、異三角分割・順序入替・高さ変位、探索枠、上限・非公開入力拒否を確認する。
+- `scripts/blender_surface_distance_smoke.py`へ`with_narrow_hole.glb`を追加し合成6→7 GLB。新旧方式の差をBlender4.4.3/4.5.15/5.2.1で実出力/再読込して検証するCIを追加。512面・BVH実時間テストは残す。
+- GLB-017 / DEC-029 / NEXT-015を正本STATE.jsonとPROJECT_HANDOFF.mdへ記録。
+
+**境界:** 完全形状一致の証明ではない。サンプルがない面や小穴・内部空洞はまだ見逃し得る。最新headのCI実測が揃うまで一部実装・未検証、PR #25ドラフト・正式last_verified v0.17.0維持。
+
+### GLB-017 多解像度表面比較・実測CI成功（2026-11-06）
+
+実装・仕様書コミット `4c7248c853047b1f21088e01441a6c5fed9ca4b2` の5ワークフロー全成功を観測した。
+
+- Python 3.11/3.12/3.13: [run 42244257474](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257474) — 13件の新規多解像度回帰テストを含む。
+- Windows PowerShell 3.11/3.13: [run 42244257438](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257438)。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42244257499](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257499) — 自作合成GLB7種を実生成・再読込。**幅0.44の中央開口**で従来固定24点/面のサンプル最大距離0、新方式粗8点/面も0、精査で選んだ面を48点/面まで増やすと最大距離**0.0657466**。3版すべて同値。
+- Windows kit: [run 42244257461](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257461)。
+- Durable handoff: [run 42244257445](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42244257445)。
+
+本成果は**限られた合成モデル**における見逃しを改善した実測であり、完全な穴の網羅性、密閉空洞やトポロジ正しさは保証しない。精査しなかった面にある異常は依然見逃し得る。GLB-017をimplemented/blender_ci、NEXT-015をdoneとしてSTATE/HANDOFFに記録した。これは4c7248c8のCI結果であり、後続の記録更新コミットのCIは別途観測。PR #25はドラフト、正式v0.17.0のlast_verifiedは変更なし。
+
+## v0.18 開発中 — GLB-018: 幾何ヒントを使った精査の優先順位
+
+- `cbdk/glb_feature_priority.py`を追加。メッシュ内の境界/外寸内にある境界、面同士の折れ角、面積が相対的に小さい領域、共通頂点が多い領域、非多様体の疑いを**確認候補**として抽出。
+- `cbdk/glb_multires_surface.py`で、粗8点で差が出た面は最優先のまま、追加探索2面のうち1面を上記ヒントから、1面を面積順から選ぶ。旧方式`feature_aware=False`も維持。精査48点、BVH、上限512面は継続。
+- `tests/test_glb_feature_priority.py`に新規13件の回帰テスト追加。大きな板に埋もれた小部品の穴、鋭角・外寸内部の境界、細かい三角形、別三角分割・頂点順、実行/公開/自動承認なしを検証。
+- Blender合成GLBに`panels_filled.glb`/`panels_narrow_hole.glb`を追加し9種を実出力/再読込するCIを追加。旧面積方式と新特徴方式を同一入力で比較する。
+- 正本STATE.jsonにGLB-018/DEC-030/NEXT-016を登録して、PROJECT_HANDOFFを同期。
+
+**境界:** 幾何特徴は優先候補であり欠陥の確定ではない。新方式は小部品を優先できても、未選択領域の穴を見逃し得る。公開CIにユーザーの非公開GLB・アドオンは入れず、自動修正もしない。最新headの実CIを確認するまではGLB-018は部分実装/未検証。v0.18ドラフト、正式v0.17.0維持。
+
+### GLB-018 特徴ヒント優先・合成9 GLB実測成功（2026-11-07）
+
+コード・仕様・引き継ぎコミット `676e92f8cc4ad48774ea6e0702710576fe97a286` に対して、5つのGitHub Actionsワークフローは**すべて成功**した。
+
+- Python 3.11/3.12/3.13: [42246918798](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918798)（新規13件の特徴優先回帰テスト含む）。
+- Windows PowerShell 3.11/3.13: [42246918818](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918818)。
+- Blender 4.4.3/4.5.15/5.2.1: [42246918883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918883)。CBDK製合成GLB9種を実際に生成・再読み込み。大型板2枚と中央小部品の開口差は、面積のみを追加調査する旧方式で**サンプル最大距離0**、特徴優先方式では**0.0657466**。3版のログで同値を確認。
+- Windows kit: [42246918868](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918868)。
+- Durable handoff: [42246918953](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42246918953)。
+
+既存の7 GLB検証、GLB-017の狭穴検出、256/512面BVHの精密距離・ウォールクロック測定、非公開データを実行/公開しないチェックも成功。GLB-018を`implemented/blender_ci`、NEXT-016を`done`としてSTATE/HANDOFFに反映した。
+
+**結果の解釈**：これは特定の自作合成モデル上での改善証拠。開放辺が本物の穴かどうか、粗いサンプルの未調査箇所に欠陥がないこと、すべての小部品/内部空洞が見つかることを意味しない。計算優先順位のヒューリスティックであり完全な表面一致は未証明。上記は実装コミットのCIであり、後続の記録更新コミットの再CIとは区別する。v0.18はドラフトPR #25、正式v0.17.0の`last_verified`は保持。
+
+## v0.18 開発中 — GLB-019（実2GLB表面比較への統合）
+
+- `cbdk/glb_surface_pipeline.py`新規。ローカルGLB2個の静的preflight、外部URI・大型入力拒否、factory-startup/disable-autoexecで固定Blenderスクリプト実行。結果JSONのschema/kind/status/privacy flags/最大サイズを検証し、不正な結果を採用しない。
+- `scripts/blender_glb_surface_review.py`新規。各GLBを別の初期化シーンでインポートし、全メッシュのworld-space三角形を比較。既存GLB-014の固定24点BVH距離＋GLB-017/018の特徴優先多解像度をまとめて計算し、集計のみ出力。512面を超えた場合は`skipped`、一致や合格とは呼ばない。
+- CLI `glb-surface-review`追加。既存`glb-regression`には`--surface-review`（明示任意指定）を追加。従来の`comparison.json`/`diagnosis.json`/`repair_plan.json`とは別に`surface_review.json`を出力し、`passed_is_metadata_only`を返す。
+- `tests/test_glb_surface_pipeline.py`に新規12件と`tests/test_glb_regression.py`に新規3件の回帰テスト追加。Blender 3版CIで自作合成GLBを読み込む新CLI・旧regression opt-inの統合試験を追加。
+- 正本STATE.json/PROJECT_HANDOFF.mdにGLB-019、DEC-031、NEXT-017を登録。利用手順と制限は`docs/GLB_SURFACE_PIPELINE.md`へ保存。
+
+**未検証境界:** GitHub CIの本head結果を観測するまでGLB-019を部分実装/未検証とする。512面超の実GLB、個別オブジェクト名対応、未知GLBのBlender輸入リスクゼロ化、内部空洞などは未対応。ユーザーの非公開GLBを公開GitHub/CIに含めない。v0.18 PR #25はドラフト・正式last_verified v0.17.0を保持。
+
+### GLB-019 実GLB比較の統合検証（2026-11-07）
+
+**実装コミット `ec13972f45f73617536d718491eee57f98a21e26` で観測した結果:**
+
+- Python 3.11/3.12/3.13: [run 42257317519](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317519) **成功**。12件の新しいpreflight/レポート/サブプロセス安全回帰テストと、3件の既存回帰への任意統合テストを含む。
+- Blender 4.4.3/4.5.15/5.2.1: [run 42257317535](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317535) **3版すべて成功**。CBDK製の実GLB `filled_main` vs `with_open_hole`で`sampled_difference_detected`、`filled_main` vs `filled_other`で`no_difference_observed_at_samples`を新CLIから確認。元の`glb-regression --surface-review`との共存もBlender4.5.15で検証した。
+- Windows kit: [run 42257317475](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317475) **成功**。
+- GitHub durable handoff: [run 42257317601](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317601) **成功**。
+- Windows PowerShell: [run 42257317637](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42257317637) は後続コミットによる新たなCI起動で**cancelled**となり、上記コミット単体での成功は未確認。先行するWindowsテストのパス区切り問題はプラットフォーム非依存な`Path(...).name`チェックに修正した。
+
+`glb-surface-review` は非公開モデルをネットワークへ送らず、Blenderの局所読み込みで比較する。外部URI・過大入力を拒否し、512面超は`skipped`、完全一致の証明はしない。集計結果のみJSONへ残す。
+
+この証拠に基づきSTATE/HANDOFFのGLB-019を**implemented / blender_ci**、NEXT-017を**done**に更新。後続の記録更新HEADのCI結果とは区別する。正式release last_verified v0.17.0維持、PR #25はドラフト。
+
+### GLB-019 最終再CI（2026-11-07）
+
+実装と記録のコミット`5b6196a59f86318128c768507fea53237e3a6e11`では、**全5ワークフローがsuccess**：Python3版 [42258076642](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076642)、Windows PowerShell2版 [42258076781](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076781)、Blender4.4.3/4.5.15/5.2.1 [42258076658](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076658)、Windows kit [42258076681](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076681)、引き継ぎ [42258076822](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42258076822)。旧Windows専用テストのパス区切り前提は修正済み。
+
+`glb-surface-review`の2種類の実GLBペアで、開口の検出と同じ形の別三角分割に差がないことを確認。GLB-019は実装済/Blender CI確認済み。報告の`status=review_only`は「観測した形状差のサンプル結果」であり、0も完全一致・内部空洞なし・安全な自動修正を意味しない。512面超はskippedであり大規模GLBの自動解析は今後の課題。これはコミット5b6196a5の実測であり、後続の文書記録コミットのCIとは区別する。PR #25ドラフト/正式v0.17.0維持。
+
+## 2026-11-07 GLB-020 — 形状差分の3D可視化（試作実装）
+
+- `cbdk/glb_diff_colors.py`: 既存の安全制限付きBVH距離測定により、元の三角面順を保って参照→生成／生成→参照の方向ごとに24点サンプル最大誤差を集計。共有AABB対角線1%未満=灰、1〜5%=黄、5%以上=赤。サンプル密度・見逃し制約を明示。
+- `cbdk/glb_diff_visualize.py`, `scripts/blender_glb_diff_visualize.py`: オプトインの`glb-diff-visualize`CLIから、固定Blenderスクリプトだけを実行し2つの着色GLBと生座標なし`review.json`をローカル新規フォルダに生成。元GLB・私有アドオンは変更せず、レビュー専用。
+- `tests/test_glb_diff_visualize.py`: 同一形状／位置ずれ／面順／無効入力／プライバシー／上書き防止／ランナー検証のテストを追加。Windowsパス区切りのテスト差異を修正。
+- `.github/workflows/blender-smoke.yml`: CBDK自作の合成2組のGLBを色分け、統計検証後、着色出力をBlenderへ再インポートして材料を確認。既存GLB-019の計測と併走。
+- 実装コードのテストSHA `01fff17403b931390c1813dcce4577363eb9077f` で[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143616) / [Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143956) / [Windows kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143564) / [handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143732) **成功**。Windowsテストは同SHAでパス区切り差異により失敗（[run 42264143652](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42264143652)）。その後コミット `91e8b6a2` でテストのパス扱いを修正し、最新HEADのCI再確認を行う。
+- **ステータスは一部実装**。色付きGLB書き出しは動いたが、オブジェクト別選択・連動比較ビュー・未測定部の表示・より大きな実ユーザーGLBは未実装。正式リリースはv0.17.0、ドラフトPR #25維持。
+
+## 2026-11-07 GLB-020 — 匿名部品別カラー差分（第二段階）
+
+- `scripts/blender_glb_diff_visualize.py`: 初版の「全部の面を1メッシュに統合」を改良。入力GLBの個々の**非空メッシュ**を保持して、`CBDK_Reference_Part_001` / `CBDK_Candidate_Part_001` のような匿名の部品に分けて着色GLBを出力。元の部品名は出力しない。
+- `cbdk/glb_diff_colors.py`: `summarize_anonymous_parts` を追加。部品ごとの赤/黄/灰の面数と三角形数を集計し、入力順・合計・最大64部品の整合を検証。部品名・元頂点座標・私有ファイルパスはJSONに保存しない。
+- `cbdk/glb_diff_visualize.py`: 返却JSONの部品ID順、面数、集計合計、匿名化フラグ・64部品制限をチェック。`cross_file_part_identity_proven=false` を固定して、双方の同じ番号が対応部品だと誤認しない。
+- `tests/test_glb_diff_visualize.py`: 部品集計や不正な部品構造のPythonテスト。`scripts/blender_make_glb_diff_parts_fixture.py` で意図的に非公開風の名前を持つ2部品の合成GLBを生成し、`scripts/blender_verify_glb_diff_visualize.py` で別部品・色付け・元名称の非継承を実機再読込で確認するCIを追加。
+- CI対象: コード・テストSHA `7365828b287e08046d66d62fc01c5fcfc2457fed`。Python/Windows/Blender実機は全5系統成功を確認。`[skip ci]`文書コミットは同SHAのテスト結果として扱わない。
+- Code SHA `7365828b287e08046d66d62fc01c5fcfc2457fed`: [Python 42265921528](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921528), [Windows 42265921533](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921533), [Blender 4.4.3/4.5.15/5.2.1 42265921506](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921506), [kit 42265921516](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921516), [handoff 42265921493](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42265921493): **all five completed/success**.
+- **部分実装を維持**：出力GLBの部品はBlenderで個別に選択・非表示可能となる想定だが、元の対応部品を自動で結び付ける機能、同期カメラ、未測定領域の厳密表示、512三角形を超えるデータは未対応。安全なローカル比較と公開GitHubへの非公開モデル混入防止を優先。
+
+
+## 2026-11-07 GLB-020 — ローカルHTMLの3D連動比較（第3段階・検証中）
+
+- `cbdk/glb_diff_viewer_template.html` に外部依存のない左右2画面を追加。マウスドラッグで両方の3D視点を同時回転、Shift+ドラッグで平行移動、ホイールでズーム。各画面は匿名部品を独立選択でき、灰色の面を隠せる。左右の共通中心・縮尺を維持し、位置ズレが自動正規化で隠れないようにする。
+- `cbdk/glb_diff_viewer.py` は有限・最大512三角面/GLBの**数値形状のみ**をHTMLに埋め込み。JSONレポートには生頂点や元部品名を含めず、HTML自体は非公開の派生ジオメトリを含むことを明示。
+- `scripts/blender_glb_diff_visualize.py` が従来の着色GLB2件・集計JSONに加えて`compare_viewer.html`を作成。`cbdk/glb_diff_visualize.py`が出力存在/フラグ/容量/テンプレートを検証、CLIに閲覧パスを表示。`pyproject.toml`でテンプレートをパッケージ化。
+- テスト: PythonでJSON埋め込みとプライバシー/安全上限・HTML構造を検証。Blender3版CIの合成2部品GLBでHTML生成とJSON安全フラグ、NodeでインラインJavaScript構文を確認する追加ゲートを用意。
+- **未完了**: ブラウザ実機での回転・部品切替・ズームの操作検証、Canvas 2Dの奥行き描画の正確さ、正確なクロスGLB部品対応、未解析領域の明示、大規模な実データ検証。完成扱いではなく一部実装を継続。正式v0.17.0/ドラフトPR #25は維持。
+
+### GLB-020 第3段階 CI実測（2026-11-07）
+
+- 実装・テストSHA `b5d1d27f5e7834fa22faeefb02792091c1ac87d0`：Python [42268089086](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268089086)、Windows [42268088883](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088883)、Blender 4.4.3/4.5.15/5.2.1 [42268088779](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088779)、Windowsキット [42268088823](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088823)、引き継ぎ [42268088869](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42268088869) **全成功**。これはHTML生成とJS構文のCIであり、ブラウザ実機の操作試験ではない。
+- `compare_viewer.html`はローカルでの2画面比較用。**ブラウザ操作・表示の正確さ・任意実ユーザーGLBの検証は未実施**。`GLB-020`は引き続き一部実装、v0.18 PR #25はドラフト。
+
+## 2026-11-07 GLB-020 — 空間的な部品対応候補とChromium実操作CI（第4段階）
+
+- \`cbdk/glb_part_match.py\`：各GLBの匿名部品のワールド座標AABB中心・寸法・三角形数から、参照→生成の**部品対応候補**をヒューリスティックに推定。相互最近傍・距離上限・第2候補との差の閾値を満たすものだけ\`suggested\`、同位置等の区別不能は\`ambiguous\`、遠すぎれば\`unmatched\`。同一部品の確定、コード修正、自動パラメータ調整は禁止。
+- 既存のローカルHTML比較画面に「候補を右側に表示」ボタンを追加。ユーザーが押した場合にだけ右側の部品表示が切り替わり、曖昧な場合は無効。JSONには候補の匿名ID・集計スコアのみを記録し、生座標・元部品名・私有パスは含めない。
+- \`tests/test_glb_part_match.py\` に部品の順番入替、同位置の曖昧性、未対応部品、軽微移動、異常データの回帰テストを追加。既存の\`tests/test_glb_diff_visualize.py\`も候補表示・安全フラグを確認。
+- \`scripts/glb_viewer_browser_fixture.py\` でCBDK自作の入替2部品モデルからテストHTMLを生成。Playwright/Chromiumによる\`scripts/glb_viewer_browser_smoke.mjs\`で左右のカメラ連動、ズーム、候補ボタン、灰色面表示、HTTP通信禁止をチェックするCIを追加。Ubuntu 26.04非対応のPlaywrightブラウザインストーラ問題を避けるため、ブラウザCIランナーをUbuntu 24.04に固定。
+- **開発中・リリースはまだv0.17.0。** ブラウザでの実操作検証とBlender3版CIの最新版SHAの結果が出たら、状態台帳・Notionに正確な成功/失敗を追記。部品の因果・一致判定、未知領域、大規模GLBは未解決。
+
+### GLB-020 第4段階：CI検証結果（2026-11-07）
+
+コードSHA `72e9bd4e4ad2cb9b9716ee0cb5ea10de60cd779e` では、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183982)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184368)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184086)・[Windowsキット](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274184021)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183990)・[Chromium実ブラウザ操作](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42274183979)が**全6系統success**。
+
+Chromium CIはUbuntu24.04でPlaywrightを導入し、CBDK自作の合成2部品モデルから生成したHTMLで、左右回転/ズーム・部品候補の手動表示・灰色面切替・HTTP通信の不発生・JS例外なしを確認。Ubuntu26.04でのPlaywright1.56.1インストール不対応による初回CI失敗はUbuntu24.04固定で解消。**部品の本当の対応関係や任意の実GLB精度はまだ未検証**。GLB-020は一部実装を維持。
+
+## 2026-11-07 GLB-020 第5段階：追加測定で見逃しに注意する面を可視化
+
+- `cbdk/glb_sampling_audit.py` を追加。従来の24点/三角面に加え、重複しないHalton24点でも相手のBVH面までの距離を調べる。追加測定で観測誤差が共有AABB対角線の0.5%以上増えるか、灰/黄/赤の閾値を横断した面を**「サンプリング感度あり」**とする。
+- ローカルの`compare_viewer.html`では、該当面に**紫色の枠**を重ねる。チェックボックスから表示切替が可能。通常の面の赤/黄/灰の色は従来24点の指標を維持。
+- `review.json`はセンシティブな面の総数と匿名部品別の集計のみ保存。個別のフラグは**元の3D形状が含まれるローカルHTML側のみ**。公開GitHub/Notionには私有モデルを書き出さない。
+- `tests/test_glb_sampling_audit.py`と既存テストを更新し、異常数値・部品境界・HTMLの不正フラグを拒否する。Blender CIは集計・フラグの保守的な定義を確認し、Chromiumの合成HTML試験は紫枠表示切替による描画変化を検査。
+- **重要**：紫枠がない部分も未観測領域が残る可能性がある。これは未知部分の完全な特定でも、元アドオン設定を自動修正する機能でもない。GLB-020は一部実装のまま、正式v0.17.0とドラフトPR #25を維持する。
+
+### GLB-020 第5段階CI結果（2026-11-07）
+
+コードSHA `38057b1da49eeb61020664c4923ced2b2bad8406`： [Python 42279824321](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824321)、[Windows 42279824307](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824307)、[Blender 4.4.3/4.5.15/5.2.1 42279824378](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824378)、[Windows kit 42279824398](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824398)、[引き継ぎ 42279824427](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824427)、[Chromium GUI 42279824304](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42279824304) **全6系統success**。
+
+合成GLB上で追加24点の数値監査と匿名部品別統計の整合が確認できた。ヘッドレスChromiumで、人工的に感度フラグを付けた合成ビューの紫枠表示切替を実際に検証。**フラグなしを全域検証済みと主張しない**。私有大規模モデル/小穴・空洞の完全検出/真の部品同一性は未検証。GLB-020の一部実装を維持。
+
+## 2026-11-07 GLB-020 第6段階 — 境界エッジの補助解析
+
+- `cbdk/glb_boundary_audit.py` を追加。各匿名メッシュ部品の三角形を世界座標で近接統合し、1面だけが接する境界エッジ、2面が共有する辺、3面以上が共有する非多様体候補を**数値として観測**する（512面/64部品の上限維持）。
+- `cbdk/glb_part_match.py`：位置や大きさが似ていても境界の有無・非多様体の観測が食い違う場合、単独の対応候補を確定的に提示せず `ambiguous` に降格する。`topology_review_required`を明示し、候補が複数・不在の場合と区別する。
+- `scripts/blender_glb_diff_visualize.py` / `cbdk/glb_diff_visualize.py` / `cbdk/glb_diff_viewer.py`：参照・生成の匿名部品別エッジ集計を`review.json`に加え、ローカルHTMLの部品選択に境界数と注意表示を追加。JSONには元頂点、元部品名、パスは含めない。
+- `tests/test_glb_boundary_audit.py` / `tests/test_glb_part_match.py`：閉じた四面体0本、1面欠損の四面体3本、非多様体候補、近接頂点、部品不整合入力をテスト。
+- `scripts/blender_make_glb_boundary_fixture.py` と Blender CI：自作の閉/開四面体を実GLBとして書き出し、再読込して境界数と、対応候補を曖昧と判定することを検証。Chromium CIで部品セレクターの境界数表示も確認。
+- **注意**：境界エッジ0本は閉曲面や穴無しの証明ではない。近接座標の統合は数値近似であり、意図的な開口とバグは区別できない。対応部品の同一性・内部空洞・完全体積一致も未検証。正式v0.17.0、ドラフトPR #25、GLB-020一部実装を維持。詳しくは`docs/GLB_BOUNDARY_AUDIT.md`。
+
+### GLB-020 第6段階 — 検証記録
+
+コードSHA `2cec6c99082107a4f2a65459f36f641b189f3bc5` の [Python 42284401645](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401645)・[Windows 42284401719](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401719)・[Blender 4.4.3/4.5.15/5.2.1 42284401757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401757)・[Windowsキット 42284401594](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401594)・[引き継ぎ 42284401833](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401833) は全て success。 [Chromium 42284401610](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42284401610) は別途結果確認中。
+
+closed/open 四面体のBlender3版での差分と、元ソースを公開しない匿名集計が確認できた。これをもってGLB-020全体を完成とはせず、手動レビュー・モデルの細部や本当の部品同一性は未解決のまま維持する。
+
+## 2026-11-07 GLB-020 第7段階 — 境界線の位置を3D比較画面に表示
+
+- `local_boundary_segments`で座標近接統合後の**境界エッジ両端の世界座標**を、匿名部品番号付きでローカル画面専用に出力。既存の境界集計との本数一致を必須とし、最大512三角面由来の1536線分に制限。公開レポートには座標を出さない。
+- `compare_viewer.html`に水色の境界線オーバーレイと表示切替を追加。参照/生成の独立した部品選択・同期カメラに追従。Canvas 2Dの描画は**奥側の線も見えるX-ray的な近似**で、正確な遮蔽判定や実物の穴位置の証明には使わない。
+- `tests/test_glb_boundary_audit.py`と`tests/test_glb_diff_visualize.py`で閉/開四面体の線分座標・非公開HTMLの保持・匿名部品ごとの分離を検証。Chromium GUIで左右の境界線の表示切替と、Blender3版CIでGLB由来HTMLの境界線0対3本を検証するゲートを追加。
+- これは**形状の検査を補助する表示**であり、内部空洞の一致・小穴の完全検出・元アドオンの自動修正は行わない。GLB-020部分実装、GLB-021/022未実装、正式版v0.17.0のまま。
+
+### GLB-020 第7段階・CI検証結果（2026-11-07）
+
+テスト対象のコードSHA `2a2bc8c33aaf4d11811e7892a8bbc51542b316b4`： [Python 42286544157](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544157)、[Windows 42286544061](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544061)、[Blender 4.4.3/4.5.15/5.2.1 42286543992](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543992)、[Windowsキット 42286543968](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543968)、[引き継ぎ 42286543977](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286543977)、[Chromium実GUI 42286544018](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42286544018) **全6系統成功**。
+
+合成GLBで「閉四面体の推定境界線は0本、1面欠損では3本」を実表示用のHTMLデータでも検証。実Chromiumで線のオン/オフ・左右両方の描画変化を確認。試験用HTMLはCBDK合成モデルのみで私有GLBを含まない。第7段階もレビュー補助の部分実装であり、v0.18正式マージ・リリースは行わない。
+
+## 2026-11-07 — GLB-020レビューMVP総合受け入れ（スコープ凍結）
+
+- BlenderでCBDK自作の3部品（12分割中空ソケット、8三角形ボール、端面付き12分割軸）を作り、**正常・開口狭窄・ボール移動・ソケット面欠損**の4条件でGLB実出力→読込→比較→集計検証。
+- 初回の「正常なのに開放境界がある」失敗はテスト形状の軸が開いていたことによる。軸の端面を修正し、**正常モデルの誤検出0**を確認。変更した部品を検出し、変更していない他部品は誤検出しない条件も成功。
+- ソケット上端リップの2三角面を抜くと**観測境界4本**を検出。ソースGLBのSHA256一致、私有データ非含有の集計JSON、生成HTML/GLBのローカル扱いも確認。
+- 最終テスト対象コード SHA `db33ce4242bbe98b3c5f9ac43d89bf21c3657089`：
+[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898364)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898499)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898512)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898604)・[引き継ぎ](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898325)・[Chromium実GUI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42289898701) **全6系統成功**。
+- スコープ判断：`GLB-020`は**レビューMVPの受け入れ合格**として細かな機能増築を凍結。ただし実GLB・完全精度が未保証なので機能全体は`partial`を維持。`NEXT-018`を`done`、**次は`GLB-021`の改善候補レビュー連携**を優先し、その後`GLB-022`へ。詳細 [受け入れ条件](GLB020_MVP_ACCEPTANCE.md)。
+
+## 2026-11-07 GLB-021 第1段階 — 形状差分からASTプロパティ候補へ接続
+
+- `cbdk/glb_visual_property_review.py`と`glb-visual-property-review` CLIを追加。GLB-020の匿名部品別の赤/黄の観測数と境界エッジ数を、既存のASTプロパティ宣言・参照・形状フローと**レビュー専用で照合**。
+- 候補名は汎用設定ファミリに限定。使用者が`--role part_003=socket`などを明示した場合だけ、その役割に紐付く設定名を候補に含める。ソースの実行・修正、設定値の推測、原因や部品の真の対応の断定は禁止。
+- コマンド出力はignored `reports/latest/*.json` の新規ローカルファイルのみ。標準出力は匿名集計の概要に限定し、候補プロパティ名・元アドオンパス・設定値を漏らさない。
+- Pythonテストで悪意のある安全フラグ/異常なJSON/偽の部品役割/元ソース副作用の非実行/出力非上書きを検証。Blender3版ではCBDK合成の正常/ソケット狭窄/ボール移動/リップ欠損の4比較結果を実際にGLB-021へ入力する。
+- コードSHA `8c51a867415738dcca6616a4a197b62a105075e5`： [Python 42292708122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708122)、[Windows 42292708128](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708128)、[Blender 4.4.3/4.5.15/5.2.1 42292708248](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708248)、[Windows Kit 42292708114](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708114)、[引き継ぎ 42292708111](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708111)、[Chromium実GUI 42292708124](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42292708124) **全6系統success**。
+- **GLB-020のMVPスコープ凍結は維持**。GLB-021は`partial`、次の`NEXT-019`は`in_progress`、GLB-022は未実装、正式版v0.17.0は変更しない。詳細： [GLB-021仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。
+
+## 2026-11-07 GLB-021 第2段階：非公開の人間向けレビューシート
+
+- `cbdk/glb_visual_review_markdown.py` を追加。GLB-020からの匿名差分（黄/赤面数・観測境界辺）と、ASTの宣言名一致/参照件数/構文上の形状処理経路を**「観測」「候補」「未確認」の区別付き**の日本語Markdownで表示する。
+- 新しいCLI `python -m cbdk glb-visual-property-review ... --markdown` は、元のJSONに加えて、同名の`.md`をローカルのignored `reports/latest`に新規作成。Markdownにも候補名と宣言行が含まれるので**私有データ**として扱い、GitHub/Notionへのアップロードは禁止。
+- 正常合成GLB（候補0件）、開口狭窄、ボール移動、リップ欠損に対し、コード実行/値の自動適用をせずに人手のチェックリストを生成。公開パス・元ソース本文/既定値の不掲載、既存ファイル非上書き、シンボリックリンクや不正な安全フラグ拒否を回帰テストへ追加。
+- 人の役割ラベルは未確認。部品の本当の対応・設定の実行時登録・差分の原因や修正値は**未証明**。`GLB-021`は一部実装、`GLB-022`は未実装、`GLB-020`の細かな機能増築は引き続き凍結。
+- 詳細：[GLB-021のレビューシート仕様](GLB021_VISUAL_PROPERTY_REVIEW.md)。検証証拠は対象コードのSHAとGitHub Actionsの結果を確かめた後で別途追記する。
+
+## 2026-11-07 GLB-021 第2〜3段階：日本語レビューシートの確認順とCI実測
+
+- GLB-020の差分集計とAST設定名候補を、ローカル`reports/latest/*.md`の人手向けチェックシートへ整理。コードの宣言・参照・形状処理への構文上の経路を分けて表示。確認する順は形状経路→参照→宣言名のみであり、原因の確信度順ではない。
+- `tests/test_glb_visual_property_review.py`に順序の回帰テストを追加。元ソース/非公開JSON/MDのプライバシーを維持し、設定値・因果関係を自動決定しない。
+- コードSHA `af8e873a613b6b3075448db11f8f26c860dba2a4`：[Python 42296654049](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654049)、[Windows 42296653825](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653825)、[Blender 4.4.3/4.5.15/5.2.1 42296654171](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296654171)、[Windows Kit 42296653959](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653959)、[引き継ぎ 42296653876](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653876)、[Chromium 42296653807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42296653807) **全6系統成功**。
+- GLB-021は`partial`のまま。次は許可された合成検証で本当の因果関係の可能性を調べ、実ユーザーデータは事前許可のない実行や公開をしない。
+
+## 2026-11-07 GLB-021 第4段階：固定合成設定の因果・無関係対照テスト
+
+- CBDK独自生成の3部品モデルで、**ソケット開口径0.78→1.70**に戻したときの差分消失を確認するケースと、**ソケット0.78のままボール位置だけ変えてもソケット差分が残る**反証ケースを追加。
+- 数値は合成専用の明示的allowlist。ユーザーアドオンのAST静的設定候補が本当に形状へ影響するかの証明ではない。入力GLBはSHA-256が一致し、元コード変更なし。
+- テストコードSHA `3b553039968e982e973d10d3427bf0607bbad88d`：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028446)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028346)・[Blender 4.4.3/4.5.15/5.2.1](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028811)・[Windows Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028286)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028673)・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42298028338) **全6系統成功**。
+- GLB-021は`partial`のまま、NEXT-019は進行中。GLB-020 MVP凍結を維持し、GLB-022の一般的な自動反復は未実装。
+
+## 2026-11-07 GLB-021 第5段階：合成変更効果の履歴比較
+
+- CBDK合成試験`narrow`、`narrow_placebo`、`identical`について、匿名のボール/軸/ソケットの黄＋赤の観測面数を比較する**新しい履歴レジャー**`cbdk/glb_synthetic_trial_history.py`を追加。
+- **合成ソケットを既知の正常な1.70へ戻すと観測差分0、0.78のままボールだけ動かしてもソケットの差分は残る**ことを履歴形式に保存。ユーザーへの設定値推薦・実アドオンの因果保証はなし。
+- 履歴出力はCIのローカル`synthetic_trial_history.json`と`synthetic_trial_history.md`のみ。個別GLB座標・元ソース・私有ファイルパスは含めない。入力・出力安全性と既存ファイル不変性をPython単体・Blender実GLB比較で検証。
+- テスト対象コード SHA `ece5b0a6c6bc5ec03e1b8f54687bd4bdd4462a4f`：[Python 42299997255](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997255)、[Windows 42299997246](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997246)、[Blender4.4.3/4.5.15/5.2.1 42299997251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997251)、[Windows Kit 42299997311](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997311)、[引き継ぎ 42299997254](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997254)、[Chromium 42299997355](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42299997355) **全6系統成功**。
+- [詳細な受け入れ基準](GLB021_TRIAL_HISTORY.md)。GLB-021は引き続き一部実装。GLB-022の許可済み合成反復変更エンジンはまだ未実装、GLB-020 MVPの凍結も維持。
+
+## 2026-11-07 GLB-022 第1段階：Blender実再生成＋差分比較の2試行ループ
+
+- `scripts/blender_make_glb_joint_mvp_fixtures.py`に固定合成条件の`--single`書き出しを追加。既存フォルダ・モデルの上書きを拒否し、任意のアドオンコードや数値パラメータを受け付けない。
+- `scripts/run_glb022_synthetic_iteration.py`が許可済みスクリプトで基準GLBと候補GLBを**試行ごとに再生成**し、`cbdk/glb_diff_visualize.py`で実比較。`cbdk/glb_synthetic_iteration.py`の状態機械がソケットの観測誤差面数を厳密に減らし、他部品の観測悪化がない変更だけを採用。
+- 初期の狭窄モデル→無関係なボール移動（不採用）→合成モデルの既知正常寸法へ復帰（採用）の2試行に限定。サンプリングでの異常面が0になれば停止し、各試行・採否・理由・停止条件をローカル`synthetic_iteration_history.json`および日本語`.md`へ保存。ユーザーの実データやアドオンは使用しない。
+- 厳格な単体テストで誤採用、偽の因果断定、未許可試験、数値矛盾、上書きを拒否。合成GLBとジェネレーターのSHA-256不変も検証。
+- テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`：[Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)・[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)・[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)・[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)・[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)・[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+- GLB-022は**一部実装**。固定2試行の合成MVPが成立しただけで、任意パラメータ探索/実ユーザーアドオンでの動作は未保証。GLB-020レビューMVPとGLB-021レビュー機能の安全境界は維持。[詳しい仕様](GLB022_SYNTHETIC_ITERATION.md)。
+
+## 2026-11-07 GLB-022 第1段階 — 合成GLBの生成→比較→採否→自動停止
+
+- `cbdk/glb_synthetic_iteration.py`と`scripts/run_glb022_synthetic_iteration.py`を追加。元データを読み直すだけでなく、**CBDK合成の試験条件をBlenderで新しくGLB出力し、GLB-020で再計測して差分を判断**。
+- 初期：狭窄ソケット。試行1：無関係なボール位置移動（ソケット差分が残り棄却）。試行2：合成の既知正常状態へ復帰（観測差分0、他部品悪化0で採用・停止）。最大2試行の上限を設け、JSON/日本語Markdownに匿名の結果を保存。出力は`reports/ci`内の新規フォルダのみ。
+- 許可済みのリポジトリ自作生成スクリプトだけを実行。任意のユーザーアドオン、私有コード・GLBの無断実行/変更/公開はせず、合成GLBとジェネレーターのSHA256を比較。
+- テスト対象コード SHA `9f1bb66e826d6568e923eb3d21c4d28692f74d5d`： [Python 42302517951](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517951)、[Windows 42302518051](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302518051)、[Blender 4.4.3/4.5.15/5.2.1 42302517870](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517870)、[Windows Kit 42302517757](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517757)、[引き継ぎ 42302517807](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517807)、[Chromium 42302517853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42302517853) **全6系統success**。
+- **GLB-022は一部実装（合成モデル限定）**であり、自由な最適値探索・実アドオンの自動修正・完全な形状同一性は未実装。GLB-021も一部実装。詳細：[第1段階検証仕様](GLB022_ALLOWLISTED_ITERATION.md)。
+
+## 2026-11-07 GLB-022 第2段階：合成3候補の部品間退行防止
+
+- `cbdk/glb_synthetic_multi.py`を追加し、固定条件`narrow_placebo`→`shifted`→`identical`をCBDK自作GLBで実生成・比較。**ソケット改善なし**と**ソケット改善でもボール悪化**の双方を棄却、他部品の悪化がない既知正常モデルのみ採用・観測差分0で停止。
+- 既存の2候補`--protocol basic`は維持し、`--protocol cross_part`を追加。試行予算1/2/3、変造された採否履歴、不正な安全フラグと試験名、ローカル上書き防止をPythonで検証。
+- コードSHA `d8d233e801b4da33f5f79cf6983818cefdca918c`：[Python 42305594556](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594556)、[Windows 42305594566](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594566)、[Blender 4.4.3/4.5.15/5.2.1 42305594589](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594589)、[Windows Kit 42305594635](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594635)、[引き継ぎ 42305594684](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594684)、[Chromium 42305594551](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42305594551) **全6系統成功**。
+- GLB-022は`partial`のまま。**任意の私有アドオンの自動修正ではなく、CBDK合成3部品の固定3候補**だけを試した。細かな誤差の連続的最適化や形状の完全一致は未検証。[合成3候補の仕様](GLB022_MULTI_CANDIDATE.md)。
+
+## 2026-11-07 GLB-022 第3段階：中間改善を数値で採用
+
+- CBDK合成ソケットの中間開口直径1.24と、ボール移動を組み合わせた対照ケースを追加。GLB-020の全体双方向最大サンプル距離を利用し、**0.78→1.24で距離が減る（ただし差分は残る）状態を途中改善として採用**。
+- 同時に、ボール位置が悪化する候補は距離の改善とは関係なく棄却。最後はCBDK既知正常の1.70で観測距離0のため採用・停止。`basic`/`cross_part`の既存プロトコルも維持。
+- 最大3試行、予算1/2での未完成打切り、欠損レビュー/不正数値/安全フラグの拒否、ユーザー非公開データを出力しないことをPythonとBlender実GLBで検証。
+- テスト対象コードSHA `44e15f8f6664fe29e06810fd06d8d73dda70bec6`：[Python 42307811087](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811087)、[Windows 42307810687](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810687)、[Blender4.4.3/4.5.15/5.2.1 42307810797](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810797)、[Windows Kit 42307810828](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810828)、[Handoff 42307811040](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307811040)、[Chromium 42307810743](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42307810743) **全6系統成功**。
+- GLB-022は`partial`。全体サンプリング最大値は厳密な部品別誤差・完全幾何一致ではない。実ユーザーアドオンの原因/適切な設定値は依然未検証。[詳細](GLB022_PROGRESSIVE_SYNTHETIC.md)。
+
+## 2026-11-07 GLB-022 第4段階 — 数値候補の算術生成とBlender実比較
+
+- 合成ソケット開口の0.78〜1.70を算術4分割して**1.01/1.24/1.47/1.70**の数値候補を計算。候補を手書きで固定した試験IDへ変換するだけでなく、CBDK生成器が検証済みの小数値を受け付け、それぞれBlenderで新規GLB出力・再比較。
+- 双方向の全体サンプル最大距離が減り、他部品の分類面数が増えない候補だけ採用。途中で改善が止まれば棄却、予算1/2/3の打切りでは未完了を保存。合成既知正常の1.70では観測0で停止。
+- JSON/日本語Markdown履歴はローカル新規ファイル、候補値の安全範囲・未知入力・上書き禁止・SHA-256不変を確認。旧3プロトコルもCIに保持。
+- テスト対象コード SHA `23e9dec5d313468a70cc3bab7a5bb57fc090a8b3`：[Python 42309145079](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145079)、[Windows 42309145003](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145003)、[Blender4.4.3/4.5.15/5.2.1 42309145076](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145076)、[Windows kit 42309145019](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145019)、[引き継ぎ 42309145005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145005)、[Chromium 42309145006](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42309145006) **全6系統success**。
+- **GLB-022はpartialのまま**。これは自作合成モデルの固定格子探索であり、実アドオンの自由最適化や厳密な距離・完全幾何一致ではない。[第4段階仕様](GLB022_GENERATED_GRID.md)。
+
+## 2026-11-07 GLB-022 第5段階 — 実測フィードバックで次候補を変える合成探索
+
+- CBDK自作合成ソケットの安全範囲0.78〜1.70（0.01刻み）で、GLB-020の**双方向サンプリング最大距離が合成専用目標0.12以内か**を使って次の二分区間・開口径を更新。前回の固定格子と異なり、実測の分岐結果で試行順が変わる。
+- 実Blenderの3バージョンで **1.24→1.47→1.35→1.41**を生成・比較。1.47を目標内候補として記録、最小の合格値の確定はせず最大4回で停止。測定を変えると1.24→1.01と分岐することもPythonで検証。
+- 他部品悪化の拒否、未知値・不正入力・偽の改善履歴の拒否、入力ジェネレーター/GLB SHA-256不変、新規ローカルJSON/日本語MDのみ保存。既存のbasic/cross_part/progressive/generated_gridもCIで維持。
+- テスト対象コードSHA `37ee124aabb44df5ad9cb246342712bd9e0eb2ef`：[Python 42311608904](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608904)、[Windows 42311608916](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608916)、[Blender4.4.3/4.5.15/5.2.1 42311608910](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311608910)、[Windows Kit 42311609353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609353)、[引き継ぎ 42311609070](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609070)、[Chromium 42311609211](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42311609211) **全6系統success**。
+- GLB-022はpartial。距離は全体のサンプリング最大で厳密Hausdorffや部品別誤差ではなく、0.12も実物の製造公差ではない。[詳細](GLB022_ADAPTIVE_SYNTHETIC.md)。
+
+## 2026-11-07 開発引き継ぎ：証拠整合性と現在のロードマップ
+
+- 指定ブランチHEAD `7a021f5`から継続。正式v0.17.0、ドラフトPR #25、未マージ。最新コード/テスト`e254aa7`の6系統CI成功をAPIと実ジョブで確認（Python 42357800567、Windows 42357800581、Blender3版 42357800595、Kit 42357800603、Handoff 42357800626、Chromium 42357800564）。docs-only後続SHAの成功とは混同しない。
+- 開始時Python 3.12.14で701件成功。GLB-019の匿名部品一覧/弱い候補がSTATEに未反映だったため現状と全体計画を`DEVELOPMENT_PLAN.md`へ記録。
+- **実装:** 候補再計算時のJSON型一致、途中省略した一覧からの総面数範囲、skip時の完全一覧合計、上限超過がないskipと空シーン測定の拒否。新規6回帰テスト（関連27件成功）。既存の合成探索/GLB-020凍結を維持。
+- **実機:** ローカルBlender4.3.2で自作GLB4ケース（ユニーク、曖昧、33部品、33部品561面）を生成→実ランナーで再読込→台帳/候補/skip/入力SHA256不変を確認。対象3版の成功に代用しない。同じスクリプトを既存3版CIへ追加。
+- **状態:** GLB-019の今回の補強は対象CI完了までpartial/python。GLB-021/022は引き続きpartial、正式last_verified維持。人間の判断が必要なGUI操作/権利/正式公開の境界も計画書へ記録。
+- **Notion:** 既存プロジェクトと4タスクの読取成功。新規ページは作らない。GitHub保存後に既存要約/状態/検証/予定を同期するまでpending。私有ソース、GLB、ローカルレポート、個人情報は同期しない。
+
+### 引き継ぎ後の補強：対象CI実測成功
+
+- コードSHA `31bf3de18c357d796194dcac369c66e55b3973bf`： [Python 42359722780](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722780)（707件×3.11/3.12/3.13）、[Windows 42359722774](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722774)（3.11/3.13）、[Blender 42359722777](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722777)（4.4.3/4.5.15/5.2.1）、[Kit 42359722842](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722842)、[Handoff 42359722778](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722778)、[Chromium 42359722853](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42359722853)の**全6系統success**。
+- 全Blender版の追加`Verify anonymous inventory and weak hints through real GLB imports`工程成功。ユニーク/曖昧/33部品/561面skip、元GLB SHA256不変を実際に検証。GLB-019をimplemented/blender_ciへ戻し、NEXT-021をdoneへ。一般の部品同一性や完全形状保証は追加しない。
+- Notionの既存プロジェクト/4タスクは中間状態を同期済み。このGitHub記録後に最終CI成功を反映する。正式v0.17.0、PR #25ドラフト、未マージ・未公開を維持。
+
+### Notion最終同期完了
+
+GitHub実測記録`c7306ce`を正本として、既存CBDKプロジェクトとGLB-019/020/021/022の4タスクへ現在の要約・ステータス・CI・今後の予定を反映。最終更新はすべて警告なし成功。GLB-019完了、020/021/022作業中。ページ新規作成なし、私有コード/GLB/個人情報なし。同期先リンクと結果は`docs/NOTION_SYNC.md`、正本STATEのmaintenance_policyへ保存。常駐ジョブは設置していない。次はNEXT-019/020の合成反復の失敗/打切り診断と人手レビュー。コード検証SHAは31bf3deで固定し、この同期受領は文書のみ。
+
+## 2026-11-07 GLB-022第6段階：途中失敗と人手レビューを一括実装
+
+- 開始HEAD `110c7b2`、既存ロードマップNEXT-019/020に沿い、合成適応探索の失敗時に履歴が残らない問題を優先。範囲は自作合成モデル・最大4試行のまま。
+- `glb_synthetic_adaptive.py`へ未完了prefixの構築/検証を追加。従来の完了履歴APIは未完了を拒否する境界を維持。
+- `glb_synthetic_run_review.py`と既存ランナーへ、工程前の上書きしないチェックポイント、最終JSON/日本語MD、固定失敗分類、検証済み履歴保存、入力SHA256照合、読取専用CLIを追加。失敗候補は採用せず、目標内観測と実行完了を分離。例外自由文/私有パスを記録せず、自動再開もしない。
+- 新規20件の回帰テストを含む関連56件がPython3.12.14で成功。ローカルBlender4.3.2で予算1の実生成→比較→完了レビュー成功。合成GLB実生成・基準比較後に候補比較のタイムアウトを**模擬注入**し、失敗終了と基準履歴保存も成功（自然ハングの再現ではない）。
+- 対象3版CIへ通常4試行/14チェックポイント検査と明示的な模擬タイムアウト工程を追加。新CI未実施のため現時点で合格とは記録しない。詳細`GLB022_RUN_REVIEW.md`。
+- GLB-022全体partial、NEXT-022 in_progress。正式v0.17.0/PRドラフト/GLB-020凍結を維持。GitHubへ保存し実測後に既存Notionへ同期する。
+- 節目のローカル全体検証：Python3.12.14で**727件成功**。STATE validate / handoff write・check / diff checkも成功。次にこのコードの対象GitHub CIを1回実行して実測を確認する。
+
+### GLB-022第6段階のCI実測成功
+
+- コードSHA `5dc799ac6dd46ed27f249dfea694c67644d4ab22`： [Python 42361082109](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082109)（727件×3.11/3.12/3.13）、[Windows 42361081999](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361081999)（3.11/3.13）、[Blender 42361082117](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082117)（4.4.3/4.5.15/5.2.1）、[Kit 42361082094](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082094)、[Handoff 42361082165](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082165)、[Chromium 42361082252](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42361082252)の**全6系統success**。実装pushに対する全体CIは1回で完了し、再実行なし。
+- 全Blender版で従来の4試行/採否/停止履歴に加え、14チェックポイントと最終レビューを実検査。基準GLB生成・比較と候補生成を実Blenderで行い、候補比較のタイムアウトのみを明示的に模擬注入した工程も全版成功。自然ハング再現や実ユーザー検証ではない。
+- NEXT-022をdoneへ、GLB-022はpartial/blender_ci。新しいLIM-014に強制終了・書込み障害時の最終保存限界と手動確認を記録。次はNEXT-023の同条件複数合成実行の比較レビュー。任意コード実行・自動採用/再開・正式公開/マージなし。
+- この実測をGitHubへ保存後、既存NotionプロジェクトとGLB-022タスクへ同期する。後続文書コミットはコードCI対象SHAと区別。
+
+### 第6段階のNotion同期完了
+
+GitHub正本の実測記録`c575834`を既存CBDKプロジェクト/GLB-022タスクへ反映。現在要約・全体partial/作業中・NEXT-022完了・6CIリンク・LIM-014・次のNEXT-023を更新し、全応答警告なし成功。新規ページ・私有ソース/GLB/個別レポート・個人情報の同期なし。コード検証SHAは5dc799aで固定し、受領記録は文書のみ。
+
+## 2026-11-07 現行ロードマップ継続：NEXT-023 同条件複数実験比較
+
+- 開始HEAD87ceb5d、前段階コード5dc799aの全6CI成功を再確認。既存NEXT-023/NEXT-020を対象とし、新しいNEXT番号や無関係な構想は追加しない。
+- 新規`glb_synthetic_conditions.py`で固定プロトコル・ソース集約SHA・Blender版・基準/初期GLB SHA・初期観測を記録。`glb_synthetic_run_review.py`は旧schema1を維持し、新しい条件付き記録をschema2とする。ランナーは比較/検証ソース変更と候補測定版の不一致も拒否。
+- `glb_synthetic_run_compare.py`の読取専用CLIと日本語レビューを追加。失敗/未完了/入力改変/旧条件なし/条件・予算不一致を成功比較から除外し、距離と面数の反対変化を混在扱い。任意ラベル/パス/不正本文を出力しない。自動採用・実行・再開なし。
+- 新規15回帰テストを含む関連71件成功。ローカルBlender4.3.2で独立した予算1の2実験を実生成・比較し、条件一致/観測差なし、模擬タイムアウト実行除外を確認。開発途中の古いローカルJSON（未コミット形式）は厳格読取で拒否し、現行形式で再生成した。
+- 比較のみのウォームアップ後3回の中央値：2件2.416704ms/割当ピーク20,225bytes、16件17.300782ms/145,632bytes。16件は証拠を複製した負荷試験で16独立実験ではない。ディスク/Blenderは計測外。速度保証/最適化採用はしない。
+- CIへ独立4試行の再実行を1回追加し、通常実行と条件比較・失敗除外・時間/割当ピークを実測予定。対象CI未実施。GLB-020/021/022はpartial、NEXT-023 in_progress、正式v0.17.0/PRドラフトを維持。詳細`GLB023_RUN_COMPARISON.md`。
+- 節目の最終ローカル検証：Python3.12.14で**742件成功**。関連71件、新規15回帰を含む。STATE validate / handoff write・check / diff checkも成功。このまとまりの対象GitHub CIを1回実行する。
+
+### 初回CI失敗と修正（NEXT-023）
+
+- コードf4130ffのPython742件×3/Windows2/Kit/Handoff/Chromiumは成功。一方[Blender run42363769064](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42363769064)は4.4.3成功、4.5.15/5.2.1失敗。既存比較/固定反復までは通り、新しい適応探索の条件構築で停止。
+- 実ログの`bpy.app.version_string`は`4.5.15 LTS`/`5.2.1 LTS`。新規版名検査が数字3要素しか許可していなかった。LTS接尾辞だけを明示許可し、生の版名を条件として保持。2つのLTS版を含む正常ランナー回帰を追加。任意文字列を許可して回避しない。
+- 最終点検で親シンボリックリンクにより出力先がignored領域外へ解決される余地も発見。正規のrepo内reportsパスに限定し、Windows権限に依存しないパス解決回帰で拒否を確認。
+- GitHub CLIの失敗artifact取得はリダイレクト先403。GitHub連携では取得可能で、診断は実ジョブログのLTS版名と再現回帰に基づく。私有データは扱っていない。
+- 関連71件は成功。初回失敗を合格扱いせず、上記の実際の修正を含むコードで必要な最終CIを行う。
+
+### NEXT-023/NEXT-020の実測完了と既存NEXT-005の検討完了
+
+- 修正コード`2867ab31cf355486232f1f1b257315c9e73146a1`：[Python742件×3版42364086005](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364086005)、[Windows2版42364086014](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364086014)、[Blender3版42364085988](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085988)、[Kit42364085981](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085981)、[Handoff42364085980](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085980)、[Chromium42364085989](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42364085989)の全6系統success。
+- 全Blender版で独立した通常4試行2回の条件一致/観測差なしと、模擬タイムアウト失敗の除外を実検査。LTS版名を拒否した初回失敗を記録し、実修正後に合格。単純な再実行で合格扱いにしていない。
+- 比較の2件中央値2.152477〜2.914226ms、Python割当ピーク40,961〜40,981bytes。16件複製負荷は17.286411〜23.695476ms、215,491〜215,581bytes。ディスク/Blender除外、ホストPython3.11.18、速度保証なし。詳細GLB023_RUN_COMPARISON.md。
+- 既存NEXT-005の3版監査/メモリ/Undo検討をAUDIT_RUNTIME_REVIEW.mdへ記録して完了。追加最適化や上限緩和の根拠なし。背景Undoは全版unavailable、Redo未試行、GUI未検証。NEXT-002やGUI要件は完了へ変更しない。
+- 完了NEXT-023/020/005。作業台帳23件＝完了16/継続6/保留1。要件43件＝実装済26/一部13/未実装3/保留1。次は既存NEXT-019/009のGLB-021レビューと許可済み合成反復の対応。新規NEXT番号なし、正式v0.17.0/ドラフトPR/未マージを維持。
+- このGitHub正本保存後、既存Notionへ節目同期する。同期受領・文書コミットは上記コードCIの対象SHAと区別する。
+
+### 現行ロードマップ単位のNotion同期受領
+
+実測正本566bfbbを既存プロジェクト/GLB-022へ同期し、全3更新応答が警告なし成功。NEXT-023/020/005、CI6系統、時間/割当ピーク、GitHub作業台帳16完了/6継続/1保留と要件43件の状態、次の既存NEXT-019/009を反映。NEXT-005単独ページは既存タスク検索で見つからず、プロジェクト要約に分析文書をリンクして重複ページを作らなかった。私有データ・生成レポート・個人情報の同期なし。検証対象コードは2867ab3、この受領は文書のみ。
+
+## 2026-11-07 現行v0.18継続：NEXT-019 / NEXT-009の測定元一致レビュー
+
+- 開始HEADc4dcbca、現行タスクを優先。新しい次期NEXT番号や現行優先順位の追加はしない。
+- GLB-022の省略可能条件に初期GLB-020集計の正規化SHAを記録。旧schema1/2読取・成功履歴の互換性を維持。
+- `glb_visual_experiment_review.py`の読取専用CLIで、測定元一致を検査してから明示ソースをAST-onlyで読み、候補宣言/参照/構文経路と完了/未完了/失敗prefixを私有JSON/日本語MDに整理。人の役割＋完全一致名は確認用の合成操作リンクであり、実プロパティ効果/因果・推奨値ではない。
+- 新規10回帰成功、既存合成71件と可視候補群26件も成功。ローカルBlender4.3.2の実生成/比較を使い、完了/未完了/模擬タイムアウトの連携、異なる測定元拒否、元ソース/JSONのSHA不変、私有候補名のstdout非表示を確認。自然ハングや実ユーザー因果を検証したものではない。
+- `verify_glb021_experiment_link.py`を既存3版CIへ追加。自作ソースはASTのみ、私有シートはartifact対象外reports/latest。新対象CIは未実施、NEXT-019/009はまだ継続、GLB-021 partial。
+- 次期承認はdocs/futureの独立JSON/MDにAPPROVED_WAITING_FOR_V018_GATESとして保存。現行STATEの要件/NEXT/優先順位へ未来の項目は追加しない。自動化残作業と人間ブロッカーはV018_COMPLETION_GATES.md。移行開始の承認は取得済みだが、現行自動化未完了のため未有効。main/公開/未承認採用/私有データは別承認。
+- 節目のローカル全体テスト：Python3.12.14で752件成功。STATE validate / handoff write・check / diff check、独立した未来計画JSONの承認済み・未有効/版順も確認した。次にこの実装の対象GitHub CIを実行する。
+
+### 測定元一致の候補・実験連携：実測CI成功
+
+- コード`79fea17e70665392731780ed5a518982530b7323`：[Python752件×3版42366055143](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055143)、[Windows2版42366055138](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055138)、[Blender3版42366055131](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055131)、[Kit42366055135](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055135)、[Handoff42366055133](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055133)、[Chromium42366055162](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055162)全6系統success。実装push1回で完了、CI再実行なし。
+- 全Blender版の新しい連携工程が成功。初期集計SHA一致、完了/未完了/制御された模擬失敗の表示、別集計拒否、元ソース/JSON不変、私有候補のstdout非表示を検証。AST fixtureは未実行、実プロパティの因果は未証明。
+- NEXT-019完了。NEXT-009は自動化部分を拡充したが実データ実体/登録/効果未確認のため継続。GLB-021/022全体partial、正式v0.17.0・PRドラフト/未マージを維持。作業23件＝完了17/継続5/保留1、要件43件の状態区分は不変。
+- 次は既存NEXT-003の登録/依存/レシピ検査の残りを優先。人間ブロッカーはV018_COMPLETION_GATES.md。次期は承認済み・未有効、開始の承認を取り直さず条件達成後に進むが、現行自動化未完了のため有効化しない。未来の要件/NEXTを現行STATEへ追加していない。
+
+### 今回のNotion同期受領と再開地点
+
+GitHub実測正本421e23aを既存プロジェクト/GLB-021/NEXT-009へ反映し、全6更新応答が警告なし成功。NEXT-019完了、NEXT-009継続・実データ未確認、6CI、作業17完了/5継続/1保留、次の既存NEXT-003を同期。承認済み未来計画は別リンクで未有効として表示し、現行優先順位は変更しない。重複ページ・私有シート/ソース/GLBのアップロードなし。検証コード79fea17、受領記録は文書のみ。次回は登録/依存/レシピ検査の残りから開始する。
+
+## 2026-11-07: NEXT-003 登録整合性 / NEXT-002 制御Undo/Redo
+
+`python -m cbdk.registration_audit` は既存6レシピを一時ディレクトリへ実生成し、独立したレシピ期待値、信頼済みカタログ、実機smokeのKNOWN機能一覧、Blender CIの明示レシピループを照合する。生成ZIP作成前にも、同梱PythonをASTだけで解析し、相対importの閉包/静的helper export、明示OPERATOR_CLASS、CBDK operator ID/クラス名重複を拒否する。任意ソースをimport/実行しない。動的export/動的登録の一般的証明ではなく、固定自作プレビューの整合性検査である。新機能追加時は一覧・依存・実機テストを一緒に更新する。静的成功は承認/権利/実機成功ではない。
+
+Undo schema2は旧schema1読取互換を維持し、通常背景プローブと`explicit_ed_undo_push`制御条件を分離する。単一頂点1操作と複数頂点2連続操作について各段階をNative Undo/Redoし、座標・辺/面の接続順・全選択状態を完全比較する。ゼロoffsetのCANCELLEDで無変更も検査。毎回BMeshを再取得し、スナップショットでUndoを代用しない。手動pushの成功は通常の自動履歴、GUIショートカット、実ユーザープロジェクトの証拠にならない。
+
+今回ローカルPython765件成功、Blender4.3.2の明示履歴2ケースUndo/Redo成功・通常背景Undo不能。対象4.4.3/4.5.15/5.2.1とWindows CIはまだ未実行。最新の実測結果はSTATEの今回節目を参照する。
+
+### NEXT-003 / NEXT-002 最終CI判定（2026-11-07）
+
+実装コードc80f2a0a174a37074c283641ce288a378261e92dのBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium成功。テストだけUTF-8指定を修正したb5d32734d4a74e6acd7ff896baeb3aa3088e661aのPython767件×3版・Windows2版成功。両SHA間の変更はtests/test_registration_audit.pyだけで実装は同一。対象6系統の結果は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368307965)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368305584)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190461)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190510)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190490)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42368190614)。
+
+NEXT-003完了。NEXT-002は制御履歴2ケースの成功を確認したが通常背景Undo不能・GUI未検証で継続。初回Windowsのパス/文字コード失敗を修正し、テストだけの再実行はPython/Windowsへ限定。6レシピの生成ZIPは新AST検査の有無で同じSHA。負荷・既知制限・再開点は[検証記録](REGISTRATION_UNDO_VALIDATION.md)を参照。
+
+Notion節目同期も成功。正本73b5635を既存CBDKプロジェクトとPR/CI判断の2ページへ反映し、内容2/プロパティ1の全3応答が警告なし成功。新規ページ/私有データなし。同期受領記録だけの後続コミットを新しいコード実測とは扱わない。
+
+## NEXT-008/009 双方向focus・宣言曖昧さ・実験triage（2026-11-07）
+
+[仕様と使い方](GLB_DEBUG_TRIAGE.md)。生成側設定候補が空でも参照側観測を保持し、三角面数で正規化した調査順を表示。既存測定元一致の合成実験を再利用して候補の複数宣言・直前試行との差分を表示する。constructor別名の再代入/クラス内shadowingを安全側に除外。自作GLBの完了/未完了/模擬失敗でローカル接続成功。対象CIは今回未実行、全体NEXT-008/009は継続。GLB-020測定上限は維持し、実ユーザー因果・GUI・権利・現行UI等を未完了で残す。
+
+### 双方向focus / AST曖昧さtriageの実測判定
+
+コードb17fa4d5803a9d89eb104b318423ac27883c7dfbでPython787件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromiumの全6CI成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909052)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909091)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909099)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909006)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909079)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42374909009)。全Blender版で双方向socket focus、複数宣言未選択、完了/未完了/模擬失敗、測定元不一致拒否と原本SHA不変を確認。
+
+今回の自動化追加は検証済み。NEXT-008/009全体は実データの実体/登録/因果・真の部品対応が未確認で継続。新規完了タスクIDなし、23件18完了/4継続/1保留、43要件26実装済/13一部/3未実装/1保留を維持。次はUI-001の固定自作5機能に限定した宣言的見出し/ボタン/表示順の検証・生成。現行自動化未完了なので将来計画は承認済み・未有効。
+
+
+## 2026-11-07 — v0.18 UI-001 宣言的パネルの限定実装
+
+固定5自作機能の見出し・ボタン名・表示順・空セクション除外を宣言JSONで制御。未知operator・重複機能・危険キーを拒否し、既存の生成レシピを保持。コード`ea0a4bf`の全6CI成功（Python/Windows/Blender3版/Kit/Handoff/Chromium）。実Windows GUI/汎用レイアウト/正式配布は未検証。UI-001 partial、PR #25ドラフト、正式v0.17.0維持。
+
+
+## 2026-11-07 — UI-001 context guards and bounded nudge input
+
+固定自作5機能のBlenderパネルで、active meshとOBJECT/EDIT_MESHによる操作可能状態を表示し、既存の頂点移動operatorのXYZ引数をBlender RNA FloatVectorPropertyで編集可能にした。関連headless Panel.drawとパラメータ渡し・登録解除を検証。コード`597ed5c`に対するPython/Windows/Blender3版/Kit/Handoff/Chromium全6CI成功。Windowsの実GUI操作、任意UI構築、正式配布は未検証。UI-001 partial、v0.17.0正式版とPR #25ドラフト維持。
+
+
+## 2026-11-07 — EXT-001 extension-readiness preflight
+
+CBDK自作のlegacy/modular preview ZIPの整合性・内容のSHA256/パストラバーサル/重複/出自未承認を検査し、Extensions正式公開の未解決事項をJSONで表示する`extension-preflight`を追加。コード`1f31506`のPython/Windows/Blender4.4.3・4.5.15・5.2.1/Kit/Handoff/Chromium全6CI成功。実Extensions ZIP・Blenderの公式検証・ライセンス選択・再配布権限は未完了。EXT-001 partial、v0.18ドラフト/正式v0.17.0維持。
+
+## 2026-11-08 JST — EXT-001 / UI-001 / BUILD-001集中実装
+
+必須manifestの構造/未入力とライセンス・承認待ちを分離し、部品/同梱ファイル閉包を検証。
+公式extension validateはデータ専用合成3例だけで実行し、実部品のライセンスは未決定。
+宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Sceneプロパティ衝突を拒否し、
+登録途中失敗→後片付け→再登録を検査する。実レンダリング13枚の同方向比較/SHA目録も追加。
+ローカルPython818件成功、Blender4.3.2で合成公式validatorとカスタムUI/登録失敗復旧成功。
+対象3版/Windowsの今回CIは未実行。全体partial/実GUI・権利・正式Extension未完了を維持。
+
+## 2026-11-08 JST 実測更新
+
+機能実装8d28b69を含む統合HEAD 63bddb9dcd47ca985995f000efb06b14f056a2cfでPython820件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761850)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761797)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761748)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761811)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761787)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761776)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42385761778)。
+
+[検証範囲・同時更新/失敗履歴・未確認・再開点](EXT_UI_VALIDATION.md)。合成fixtureの公式検証は実部品の権利/ライセンス/公開承認や正式Extension検証ではない。EXT-001/UI-001/BUILD-001は全体partialを維持。
+
+2026-11-08 JST: c89a10f正本を既存Notion CBDKプロジェクトへ同期成功。内容更新1応答が警告なし成功、部分実装/未確認/次回と全7CIを反映。旧履歴保持・新規ページ/私有データなし。
+
+## 2026-11-08 JST — UI-001 / BUILD-001 判定理由と復旧の集中改善
+
+UIに操作不可理由を表示し、ゼロ値でもXYZを修正できるよう入力と実行の有効状態を分離。
+構造/offsetの判定を既存edit helperへ共通化し、UIはcached選択数のみ、executeのBMesh監査は維持。
+RNAが古いときの実選択再検査をPythonで確認。ローカル823テスト成功、Blender4.3.2で
+選択なし/ゼロ値/共有/shape key表示とStringProperty/FloatVectorProperty割当失敗の復旧に成功。
+対象3版/Windowsの今回CIは未実行。全体partialと実GUI/私有データ/権利/正式公開の未完了を維持。
+
+## 2026-11-08 JST UI共通ガード/プロパティ復旧の実測
+
+コードeac7453b3e052267c45a83fa7c47180882d02419でPython823件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411841)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411842)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411863)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412044)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412165)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388411889)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42388412036)。
+
+[検証範囲・負荷観測・未確認・再開点](UI_GUARD_VALIDATION.md)。全3版で理由表示と両property factory失敗からの復旧を確認。UIのcached選択数は助言、実行時監査を維持。全体partial、実GUI/権利/汎用UIは未確認のまま。
+
+2026-11-08 JST: 正本787eb91を既存Notion CBDKプロジェクトへ同期成功。内容更新1応答警告なし、旧節目保持・新規ページ/私有データなし。受領記録だけの後続コミットを新しいコードCIとは扱わない。
+
+## 2026-11-08 JST UI表示条件/設定計画
+
+[仕様と検証](UI_MODE_SETTINGS.md)。固定modeによる表示、型付き範囲縮小、配置矛盾/不正初期値拒否、addon-plan --with-uiによる非実行レビュー、生成ZIPの計画記録を追加。置換語入り表示名/ラベルの生成失敗を再現して単一置換へ修正。ローカル830件とBlender4.3.2追加例が成功、対象CIは今回未実行。全体partial、実GUI/権利/汎用UI/実Extensionは未確認。
+
+## 2026-11-08 JST UI表示条件/設定計画の実測
+
+コード4b990683696ef3e956d95ff85455ff47c5d26306でPython830件×3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1とKit/Handoff/Chromium/Skillの全7系統成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068711)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068633)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068744)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068795)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068769)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068754)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42390068858)。
+
+[検証範囲・不具合再現/修正・未確認・再開点](UI_MODE_SETTINGS.md)。旧出力/レシピを維持し、実GUI/権利/汎用UI等を閉じず全体partial。次の自動化はEXT-001の診断/公式validator合成結果照合を優先。
+
+2026-11-08 JST: 正本9cc05daを既存Notion CBDKプロジェクトへ同期成功。内容更新1応答警告なし、旧履歴保持・新規ページ/私有データなし。受領記録だけの後続コミットにコードCIを帰属させない。
+
+## 2026-11-08 JST EXT-001診断の集中改善
+
+[仕様/検証](EXTENSION_DIAGNOSTICS.md)。データ専用extension-manifest-reviewと項目別固定案内を追加。入力値/個人情報/元パス/未知キー名を出力せず、既存preview事前検査にも案内を共有。公式CLI検証を6合成例へ拡充し、終了値だけでなく拒否項目を照合。unknown/partial/mismatchは完全一致と区別する。ローカル839件/Blender4.3.2成功、今回対象CIは未実行。実Extension/権利/実GUI/ユーザーデータは未確認、全体partial維持。
+
+## 2026-11-08 JST EXT診断照合の実測
+
+実装ede29deb459232b3de4a64d32a8f73ec53103cb4でBlender4.4.3/4.5.15/5.2.1・Kit/Handoff/Chromium/Skill成功。データ専用パーサーと回帰入力だけの修正1e18232379924939dd7529ad09c967b65018838aでPython839件×3.11/3.12/3.13・Windows3.11/3.13成功。影響のないBlenderを再実行せず、異なる検証SHAを区別する。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391763231)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391766410)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587199)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587164)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587159)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587181)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42391587167)。
+
+[範囲・パーサー修正・未確認・再開点](EXTENSION_DIAGNOSTICS.md)。6合成例の項目一致と値を出さない非実行レビューを確認。実部品ライセンス/正式Extension/実GUI/実ユーザー因果は未確認で全体partial。
+
+2026-11-08 JST: 正本02702b8を既存Notion CBDKプロジェクトへ同期成功。内容更新1応答警告なし、旧節目保持・新規ページ/私有データなし。受領記録だけの後続コミットを新しいコードCIとは扱わない。
+
+## 2026-11-08 JST — B/C/DローリングR1〜R3の統合実績
+
+**開発統合のみ・正式v0.17.0維持。** Aが合体コード検証ドラフト[PR #38](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/38)（`e7c2f97ac7965faf1fe096f7a9d3eb811bceec46`）の5系統CI成功を確認し、R1(#26-28)・R2(#30-32)・R3(#34-36)の合成変更24ファイルを `feature/v0.18-shape-diagnostics` へsquash統合。統合済み開発コミット `12ddcfeef935a805f7316ffb3698c141328aac88`。旧ソースPR/統合実験PRはコードが重複するため**再マージ禁止**、履歴・会話記録は保持。
+
+変更点：
+- GLB: 境界辺数・境界レイアウト・局所的境界グラフ連結成分の保守的判定。自動部品ID決定や実GLBの完全形状一致は未保証。
+- UI-001/BUILD-001: 固定5機能/6レシピのモード別UI合成、空mesh/多重dataの助言readiness、登録解除再試行/foreign Scene property保持。実Windows GUI/ユーザーアドオンは未検証。
+- EXT-001: ZIPローカル/中央構造とprovenanceの整合、manifest/公式validatorログの未知/矛盾/重複をfail-closed。正式Extension ZIPや権利承認には進めていない。
+
+**統合後の開発HEAD `12ddcfeef935a805f7316ffb3698c141328aac88` の7CI実測**：Python 3.11/3.12/3.13 各897件 [run 42400673260](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673260)、Windows 3.11/3.13 [run 42400673258](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673258)、Blender 4.4.3/4.5.15/5.2.1 [run 42400673250](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673250)、Kit [run 42400673299](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673299)、Chromium [run 42400673262](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673262)、Skill [run 42400673266](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673266)、Handoff [run 42400673257](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42400673257)。**7系統すべて成功**。この記録は後続ドキュメント更新の新SHAを自動的に検証済みとするものではない。
+
+`STATE.json` の `last_verified` は正式v0.17.0リリース時の証拠を指すため、開発PR #38に自動で付け替えない。現行の実装到達点は依然 `UI-001` / `BUILD-001` / `EXT-001` 等 partial、NEXT-002の人間GUI、NEXT-007/008/009実GLB/因果、権利/正式Extensionsが未完了。v0.19以降はactive=falseのまま。
+
+次は[ローリングキュー](PARALLEL_ROLLING_QUEUE.md)のR4を、Aが整理済みの最新開発ブランチを基点にチーム別小PRで実装する。Codexの利用上限時にもB/C/Dは停止せず、重い実装だけ候補として残す。
+
+
+## 2026-11-08 JST — R4ローリング統合・R5着手ゲート
+
+- [Team B R4 PR #41](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/41) `e94febeb557be52474d5c17a08271d164cbef2d6`: 合成GLBの255/256/257境界辺・64部品/512面、リソース上限・保守的曖昧判定を検証。個別5系統CI成功。
+- [Team C R4 PR #42](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/42) `ae6ad0b77feafc5db052eb658538adf5ec50691d`: 固定5機能/6レシピの生成UIとoperator拒否の整合、部分的な安全側修正。合成Python試験は実Blender負例やWindows GUIの証拠ではない。個別5系統CI成功。
+- [Team D R4 PR #39](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/39) `f0fa73531ad3892040f5f01a64cb110fdb80e6b8`: 7種類のCBDK自作ZIP previewと公式validator形式の正常/異常合成fixture互換性。正式Extension配布/権利承認なし。個別5系統CI成功。
+- [Team A統合 PR #43](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/43): B/C/Dの11変更ファイル・重複0を統合候補 `667f2e4c9e4ad4b4e2b026c7fe1fd2464d2ca957` で5系統CI成功確認後、開発ブランチへsquash merge (`a9a0a76a963ab4ae41b68126f419546b80871e2b`)。
+- **統合後コミット7系統CIすべてsuccess**: [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131307) 3.11/3.12/3.13、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131264) 3.11/3.13、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131258) 4.4.3/4.5.15/5.2.1、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131308)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131276)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131296)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42403131270)。
+- [R5割当 PR #44](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/44) merged `af7a5f0436bce631cb7cddbd81b10d2d0c932619`。B=境界判定安定性、C=実Blender UI反復負例、D=validatorログ回帰。各チームは着手時点の最新版dev HEADから個別ドラフトPRを作成する。
+- **未完了**: 実ユーザーGLBの対応検証、実Windows GUI・Undoホットキー、未承認ソース/ライセンス、正式Extensions ZIP/公開。UI-001/BUILD-001/EXT-001/NEXT-008等はpartial継続。main・正式v0.17.0・リリース認可は変更しない。
+
+
+## 2026-11-08 JST — R5ローリング統合・R6割当
+
+- **R5ソース検証:** B [#47](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/47) head `0d388155bf5c10e6dc76b1c73b51dc7d04adfc80`、C [#48](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/48) head `c56b64178798796e5c1e8bbb9e4f57ccf09bb95e`、D [#46](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/46) head `a86ebdb74dfb099398dd96fe8a5c03de99465a25`。各5系統CI全成功、担当間の変更9ファイル重複0。
+- **変更:** GLBの順序・微小座標摂動と境界予算の決定性テスト、固定自作UIでのRNA/Sceneプロパティ所有権消失時の誤削除防止、Extensions validatorの版別・未知ログ・サニタイズ回帰。GLBとExtensionsの製品本体は観測された誤動作がないため変更なし。正式承認や自動GLB部品同一性証明はない。
+- **Aのネイティブ追加:** [統合PR #49](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/49)の共通Blender CIにCBDK自作 `modular_all` previewの登録/解除・異常context拒否・foreign Scene保護の新R5 smokeを組み込んだ。初回HEAD `b300e74356848ffbd9131c2c0d651991f7c10cbf` はBlender全3版で**失敗**（無効ボタンが非表示という誤ったテスト前提）。無効表示が正しいUI契約に合わせ、テストだけを変更。修正HEAD `106bf2504923346ac4cd25b51ebaaa87da9e7d7b` は[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405240225)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405240226)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405240271)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405240247)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405240230)の5系統成功。各Blender版で `CBDK_R5_UI_LIFECYCLE_PASS` 実行済み。
+- **R5開発統合:** PR #49を `feature/v0.18-shape-diagnostics` にsquash統合、コードSHA `a1c2f84715acce1f8cd33abaf003556708c13c07`。**統合後7系統全success**：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405529257) 3版、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405529241) 2版、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405529262) 3版、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405529203)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405529311)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405529324)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42405529212)。
+- **次ラウンド:** [R6キュー PR #51](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/51)をマージ、割当記録HEAD `d2414e1cfa7a053d347637c77ddd6011447b5945`。B=境界署名の安全な高速化実験、C=Blenderでの登録/所有権負例、D=ZIP・validator資源上限。各チームは最新開発HEADからR6専用ブランチを作成し、R5旧HEAD再利用なし。
+- **引き続き未検証:** 実ユーザーGLB精度・真の部品ID/穴の保証・Windows GUI/Undoホットキー、外部アドオンとの実併用、正式Extension ZIPと権利/ライセンス・公開。UI-001/BUILD-001/EXT-001等はpartialのまま。main・v0.17.0・v0.19有効化条件に変更なし。
+
+
+## 2026-11-08 JST — R6統合・R7ローリング正式割当
+
+- **R6専門チーム:** B [PR #54](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/54) SHA `0c2936874c9759242d262512685ec616705993f4`、C [PR #55](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/55) SHA `4624c83c1161c4a26761f92494a8ab96743bd47a`、D [PR #53](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/53) SHA `d6263f4dc8029930ddfe76d647e984059a5ee846`。各5系統CI完成成功、チーム間の変更12ファイル重複0。
+- **B:** GLBの同一無向境界線分署名（端点と順序を厳密比較）の上限付き高速経路。厳密一致以外は旧R2双方向距離scannerへfallback、R3連結成分チェックはどちらでも実行。特定合成の局所matcher中央値で約61〜64倍の速度改善を観測したが、GLB入出力や実資産の保証ではない。 `auto_apply=false` / 実部品同一性未証明を維持。
+- **C:** 登録中 `importlib.reload` によるScene/クラス所有権管理リセットを前処理で拒否。Blender実機3版で安全な登録解除・owner preservation、shared-mesh拒否、途中登録失敗復旧のR6マーカー実行。実Windows GUIクリック/Undoや外部アドオン併用の証拠ではない。
+- **D:** 合成ZIP16MiB/2MiB/64メンバー、公式validator出力200000文字境界、破損構造/未知ログをfail-closedで検証。正式Extensions ZIPの生成/インストール/権利承認なし、製品パーサー変更なし。
+- **A統合:** [PR #56](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/56) 結合HEAD `7400516a9ab8230eda60a0daea8141e0c03c2844` で[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410170293)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410170317)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410170354)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410170318)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410170290)の全5系統成功後、devへsquash merge SHA `e2f09e593d9c7bdff66695c7e8972eea98e160ca`。
+- **統合後7系統CIすべてsuccess:** [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463309) 3.11/3.12/3.13、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463276) 3.11/3.13、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463269) 4.4.3/4.5.15/5.2.1、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463349)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463353)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463251)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463244)。
+- **次の担当:** [R7キューPR #57](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/57) は `d491fe30cec57cf5ca4b8db307c715c5e7073053` で正式統合。B=GLB厳密署名・連結負例、C=実Blender登録途中失敗回復、D=Extensions manifest TOML 32KiB/64項目境界。着手時の最新dev HEADから各1専用draft PRへ。
+- **未完了:** 実ユーザーGLB、実Windows GUI/Undo、部品や自作ソースのライセンス・所有者承認、実Extension配布/署名/公開、任意アドオンの安全自動実行。EXT-001/UI-001/BUILD-001/GLB総合要件はpartial継続、formal release v0.17.0 とmainは変更しない。
+
+
+## 2026-11-08 JST — R7統合・R8正式割当
+
+- **R7ソース:** B [PR #61](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/61) `182ae87a47ddd127c3ef1a2afc3c1ce502880722`、C [PR #62](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/62) `eef6bcea675f3198a19d9aea973c7dbeecf4e814`、D [PR #60](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/60) `040036c785d47229f735342352a2881157bd36ed`。各5系統CI成功、11変更ファイルの担当間重複0。
+- **R7の不具合検出と修正:** Bはテスト-only HEAD `fff82a6d67e6b531d5f9da6244a3e91bc1f5522d` でR6 strict contour fastpathがゼロ長線分をR2と同じ扱いにできない負例を再現し、意図したCI失敗を確認。B所有 `cbdk/glb_part_match.py` に厳密に正長線分のみfastpathとするガードを追加。退化時はR2双方向距離にfallback、R3連結成分検証を独立維持。合成GLBの安全性証拠であり実ユーザーGLB/物理部品ID/穴位置保証ではない。
+- **C / UI:** 本物のBlender 4.4.3/4.5.15/5.2.1ヘッドレスで、登録途中のScene所有権・foreign descriptor保護・reload拒否・rollback・二回のenable/disableをR7専用4マーカーで確認。GUIや実第三者addon併用/手動Undoの実測ではない。
+- **D / Extensions:** 静的TOML 32KiB bytes、トップレベル64フィールド、重複/不正UTF-8/symlink/逸脱を合成fixtureでfail-closed検証。公式Extensions配布・作者本人確認・ライセンス承認ではない。EXT-001はpartial継続。
+- **A結合:** [PR #63](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/63) HEAD `52dea171587888be2c26045808bbaf24a76bee7c` の5系統全success：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415247)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415263)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415266)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415159)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415103)。開発ブランチへsquash mergeコミット `687b2acdc920253d69eda8c5e9c1c102d02aaef3`。
+- **R7統合後7系統全success:** [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646111) 3.11/3.12/3.13、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646149) 3.11/3.13、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646135) 4.4.3/4.5.15/5.2.1、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646129)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646222)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646126)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646165)。
+- **次ラウンド:** [R8正式キュー PR #64](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/64) マージ `91f89578ba038c6486e3a4150d8d0fd27e4744ad`。B=非厳密一致GLB R2の安全な高速化調査、C=Blender unregister失敗回復とoperator失敗時mesh不変、D=権利/公開/validatorを区別する静的証拠。新しい最新dev SHAから担当1件のドラフトPRを開始。
+- **未完了:** 実ユーザーGLBの形状真偽・部品同一性、Windows GUI/Undoショートカット、実外部addonの共存、正式Extensionとライセンス/再配布承認、private source自動実行、main/v0.19有効化。正式版 v0.17.0維持、STATEのlast_verifiedリリース証拠は変更しない。
+
+
+## 2026-11-08 JST — A専用ブラウザ開発ライブボードMVP（DASH-001）
+
+- **追加:** [PR #68](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/68) で `docs/dashboard/index.html` に依存なしの読み取り専用HTMLを追加。GitHub RESTのpublic STATE/PR/HEAD一致CIと公開ローリングキューを手動/5分間隔で読み、推定要件実装率、現在R8、ABCＤ4チーム状態、直近24時間のA統合数、直近統合間隔、次担当とPRを表示。Web Audioの音はユーザーがONにした後の新規完了イベントのみ、ラウンド/チームにつき最大1回（初回過去分は無音）。GitHub APIは匿名レート制限があり、閉じたブラウザで監視しない。
+- **検証:** Python3.11/3.12/3.13実ジョブの `tests/test_dashboard_static.py` でNodeオフライン純粋関数テストも実行成功。GitHub公開APIから実際に取得したR8のPR/Actions項目を使い、B/D各5CI成功・C待ち・A先行レビューと解析できることを確認。これはブラウザ画面/音の実機操作の証拠ではない。
+- **統合:** PR #68 exact HEAD `bd8a3e708ff3771b701ebf6022a7c27d1c5b11c3` でPython/Windows/Chromium/Handoffの4発火系統全成功、v0.18開発コードSHA `d656f62d2b70301ec34c667f89743d17e7168a1b` で**独立7系統success**：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42415931899)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42415931966)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42415932008)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42415932098)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42415931922)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42415931942)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42415931995)。
+- **未完了・NEXT-024:** Windows Edge/Chromeでの実画面・CORS/API更新・ユーザー操作の通知音、GitHub Pages公開設定、閉じたタブの監視は未検証/未実装。Pagesはユーザー確認後の別公開ゲート。 `main`、正式v0.17.0、私有ソース・GLB、権利/ライセンス/Extensionsの承認は変更なし。
+
+
+## 2026-11-08 JST — Dashboard v2操作性と完了通知の強化（DASH-001 継続）
+
+- A専用 [PR #71](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/71)（候補HEAD `98ec697252f04fa58bdfcc1614ea5587c5446d7a`、開発統合 `dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a`）にて、ABCＤの「BCD完了 2/3（B・D）」人数パラメータ、音声ON後のユーザー操作による「♫ 試聴」、GitHub Raw作業キュー取得失敗時のpublic Contents API fallbackを実装。5分自動＋手動更新、ラウンド・担当単位の重複通知防止は維持。
+- **コードCI（統合候補）:** [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42417792237)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42417792437)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42417792272)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42417792410) 4系統success。新しいPython/Nodeテストで完了数と通知状態の判定を確認。
+- **別途ブラウザ動作:** ユーザー向けポータブルHTMLをChromium上の**モックGitHub API**で表示し、R8 B/D完了→C完了（2/3→3/3）、初回無音、新規完了通知一回、再更新の重複なし、Raw失敗→Contents APIへのfallbackを検証。ただし本番GitHubのCORS/音声/Windows操作を実測したわけではない。
+- **未完了:** `DASH-001=partial` / `NEXT-024=in_progress` 維持。ユーザーWindows Edge/Chromeでの実GitHub API更新、通知音の可聴確認、バックグラウンド挙動、Pages公開可否/公開範囲の判断が必要。`main`と正式v0.17.0、私有ソース・GLB、公式Extensionsの権利は不変更。
+
+- **統合後再検証:** `dd8ae12b0d65ceccaba9c4e4d46786b688ba0d7a` でも[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42418153530)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42418153594)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42418153563)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42418153533)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42418153613)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42418153551)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42418153532)の7系統CI全success。独立したportable ChromiumモックはこのGitHubCIの実ブラウザ試験と混同しない。
+
+
+## 2026-11-08 JST — R8統合・R9ゲート付き先行設計
+
+- **R8ソース:** B [PR #66](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/66) HEAD `0c81b10cf1010b967b3a9b8dd8fd572dbf2b010c` (4 files)、C [PR #70](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/70) HEAD `07a742f124bda35d3474be45a461eef48df64d64` (6 files)、D [PR #67](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/67) HEAD `a8f1b28204f88169e0a581939b5114fc570a47c7` (3 files) の各5系統CIがすべてsuccess。担当13ファイルの重複0。開発ブランチは元 `7209749dd9b581d4524f877a3ca63bbb2cc38cd9` でdashboard v2を含む状態から作成。
+- **B GLB:** 非厳密一致のR2双方向距離判定にセグメントAABBを2倍許容幅で拡張した保守的候補除外を導入。除外しなかった候補は従来の距離計算を必ず実行し、R6 exact shortcut/R7ゼロ長条件とR3独立連結成分、256辺上限を保持。合成最大256辺局所matcherの中央値でPython3版2.15〜3.49倍というB自身の測定があるが、実GLB全体や一般ケースの速度/精度保証ではない。差分辞書を元unpruned R2と合成テストで比較。自動適用・部品同一性証明なし。
+- **C UI:** `native_r8_partial_unregister_foreign_retry`、`native_r8_partial_unregister_reload_fail_closed`、`native_r8_validation_cancel_input_unchanged`、`native_r8_guarded_exception_cancel_input_unchanged`、`native_r8_edit_mode_cleanup_after_cancellation` をBlender 4.4.3/4.5.15/5.2.1の実CIログで全確認。外部に見立てたScene property保護、登録解除失敗回復、キャンセル時のmesh/selection/mode不変性を自作テストで検証。実Windows GUI/Undoや実サードパーティAddonではない。
+- **D Extensions:** 合成のprovenance/公開根拠検証8ケース等。見かけ上正常なZIP・TOML/公式validatorログ・自己申告の権利/メンテナ情報は、実際の作者の同意・著作権/再配布許可・正式公開承認と独立。release-blockedを保ち、合成公式ログは実公式承認にならない。任意未知ソースを実行していない。
+- **A結合:** [PR #73](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/73) 正確なHEAD `f5fd6585488e7d69501caf2ed48c54ec81e0cc2a` で[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419473291)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419473354)、[Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419473288)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419473271)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419473294) 全5系統 success。v0.18 devへsquash SHA `ded947f85f46fb8cce0943314d6e1a9fb41717ef`。
+- **R9正式割当:** [PR #74](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/74) はR8 dev SHAの7CI全成功後、`4e40a16e71f0036c442e604c667036045172149a` として統合済み。B=near-coincident GLB R2比較、C=Scene属性削除失敗の回復、D=自己申告hash再計算と真正性切り分け。BCDは着手時点の最新devから各1ドラフトPR。
+- **保留:** 実GLB/部品同一性、Windows GUI/Undoと他社Addon実併用、元ソースの権利/署名/公式Extension配布は未承認。DASH-001 partial/NEXT-024 は実ユーザーWindows Edge・通知音の確認待ち。正式リリースv0.17.0・`main`を変更していない。
+
+- **R8統合後7系統（独立push SHA `ded947f85f46fb8cce0943314d6e1a9fb41717ef`）全成功:** [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734167)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734210)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734261)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734226)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734193)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734233)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734172)。R9の実装許可ゲート成立。
+
+
+## 2026-11-08 JST — A開発ライブボードv3 / GitHub時刻ベース開発速度
+
+- **実装:** [PR #79](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/79) HEAD `c52cc14fd74ab2a53245b6744b406960a7a8225a` をv0.18開発へsquash SHA `e60d48f1461d3c57edaa7916731d19c5ede6b75b` としてマージ。読み取り専用HTMLで、BCD各ラウンドの最初のPR作成→全員の正確HEADの5CI success最終updated_at、BCD最後のCI更新→A統合PR merged_at（未マージなら画面更新時点までの経過）、A統合PR created_at→merged_atの3指標を追加。欠損/不正SHA/不成功/古いworkflowで不足する場合は`―`表示。Actions updated_atはCI正確終了時刻でなく更新時刻の近似値。旧指標24h統合件数/直近3区間中央値は保持。
+- **検証:** Python3版workflowで `tests/test_dashboard_static.py` のNode機能テストが実行成功。厳密HEAD, 3CI期間計算, A待機経過, 未収集・不一致SHA、旧ワンショット通知を検査。モックのGitHub公開APIを使った別ポータブルHTMLをheadless Chromiumで確認し、R9 B/D完了→C完了、A統合、同一通知の再発なし、PC/390pxの表示崩れなし。実ユーザーWindows Edge, GitHub live APIのCORS/更新, 可聴通知とPages公開は未検証。
+- **PR候補CI成功:** [Python #42422092224](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422092224)、[Windows #42422092201](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422092201)、[Chromium #42422092185](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422092185)、[Handoff #42422092289](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422092289)。**v3開発コード `e60d48f1461d3c57edaa7916731d19c5ede6b75b` の独立した統合後CI7系統も全success：** [Python #42422198759](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422198759)、[Windows #42422198754](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422198754)、[Blender3版 #42422198841](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422198841)、[Chromium #42422198751](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422198751)、[Handoff #42422198765](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422198765)、[Kit #42422198764](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422198764)、[Skill #42422198785](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42422198785)。候補4系統とは別のSHAで検証。
+- **次:** `DASH-001=partial` / `NEXT-024=in_progress` 継続。ダウンロード失敗の再発防止として手元の検証済みHTML/ZIPを配布、GitHub上はsource-of-truth `docs/dashboard/index.html`。GitHub Pagesの公開範囲をユーザー承認なしに変更せず、`main`/正式v0.17.0/他チームPR/私有GLBに変更なし。
+
+## 2026-11-08 — CBDK R9専門チーム統合・R10正式割当準備
+
+- B [PR #78](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/78) `60fcda39`：密集128辺の合成AABBでR8候補除外が非利得となる場合を測定。元のunpruned R2との判定辞書同一性、上限・R3保守的ガードを維持。測定はmatcher局所であり、実ユーザーGLB全体速度は未検証。製品アルゴリズムを増やさずtest/docsのみ。
+- C [PR #77](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/77) `a525fa8e`：クラス正常解除後のScene RNA属性削除失敗、原tokenのledger維持、live reload拒否、foreign属性保全、retry回復をBlender3版の実headlessジョブで4つの`native_r9_*`マーカーにより検証。実Windows GUI/第三者アドオンは未実施。
+- D [PR #76](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/76) `b29de167`：ZIPのhelperを改変しhash一覧と部品source digestを再発行しても、自己整合だけで作者・同意・SPDX・再配布・公開許可を認めない合成負例を追加。正式Extensionはblockedを維持。
+- B3/C4/D3の10担当ファイルは重複0。各専門最終HEADでPython/Windows/Blender3版/Chromium/Handoffの5系統全success。
+- 司令塔Aの独立結合 [PR #81](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/81) HEAD `b5978eac7fde14387ca50e36569a1128fae9610d` も5系統CI成功（Blender3版それぞれでR9専用マーカーを実測）。v0.18開発ブランチへsquash SHA `914f1c8ab8cf8dfe104f46054bfd4c84fc101e61` としてマージ。
+- **結合後の別7系統CIすべてsuccess**： [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898180)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898189)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898177)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898202)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898215)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898188)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898183)。GitHubイベントは`pull_request`。PR前CIを代替にしていない。
+- R10のB適応AABB費用、C二重解除失敗、D別管理の既知ソース静的照合は [A PR #82](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/82) に正式割当と安全ゲートを記録。**#82が統合されるまではR10着手禁止**。過去R9個別ドラフトPRを二重マージしない。
+- 正式v0.17.0・main、実ユーザーGLB、実Windows GUI/Undo、第三者アドオン併用、作者/ライセンス・公式Extensions公開、GitHub Pagesは変更/承認しない。Dashboard実ブラウザと通知音はNEXT-024継続。
+
+## 2026-11-08 — CBDK R10統合・R11正式割当準備
+
+- B [PR #85](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/85) HEAD `a3c57d9b8450e18033741c87d9ba41625dd7ac2a`（5パス）：R8 padded AABBを最初64回の除外率に応じて適応的に継続/迂回。密集128線分の合成matcher中央値はR8固定比約1.42〜1.62倍、疎256はほぼ同等。全結果辞書と元R2距離述語/R3独立連結ガード、ゼロ長・予算・review_onlyを保持。性能測定はGitHub Linux上の合成局所で実GLB全体性能ではない。
+- C [PR #83](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/83) HEAD `9f3df76df7356acb3670d6c44a53325f7bda6eba`（4パス）：`unregister()`中のクラス解除とScene RNA削除の同時失敗、原token/ledger保全、foreign差替と複数retry、enable/disable回復。Blender4.4.3/4.5.15/5.2.1の実headless CIで`native_r10_*`5項目×各版を実測。UI5機能/6レシピ保持。Windows GUI/第三者実アドオン未検証。
+- D [PR #84](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/84) HEAD `262d646dc6de394755349fab6fdc864e3ae4a3b5`（3パス）：自作ZIP内部hashと別管理checkoutソースbyte列のallowlist付きテスト専用比較。自己再hashは静的整合でも参照元差分、合法更新で別スナップショットなら再一致する。真正性/作者同意/SPDX/ライセンス/公開承認は昇格せず、`blocked_for_extension_release`維持。
+- 3チームの担当変更12ファイル重複0、個別厳密HEADでPython3版/Windows2版/Blender3版/Chromium/Handoff各5系統全success。
+- A独立結合 [PR #86](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/86) 最終HEAD `6a12b7fa1926912f501c80b133d0d457cdc19999` でも5系統success：[Python #42425995892](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42425995892)、[Windows #42425995843](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42425995843)、[Blender3版 #42425995934](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42425995934)、[Chromium #42425995902](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42425995902)、[Handoff #42425995915](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42425995915)。
+- v0.18開発へsquash SHA `a3ae6da1771bd4aaefd06186a587ba94eaea5736` で結合。**別の7系統CIすべてsuccess**：[Python #42426258493](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258493)、[Windows #42426258509](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258509)、[Blender3版 #42426258621](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258621)、[Chromium #42426258600](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258600)、[Handoff #42426258438](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258438)、[Kit #42426258568](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258568)、[Skill #42426258440](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258440)。GitHubイベントは`pull_request`、旧個別CIではない。
+- R11設計/正式割当は[A PR #87](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/87)でB=冒頭64boxの順序偏り、C=pending ledgerとforeign差替/disable失敗、D=checkoutスナップショット・CRLF/パス保全に限定。**#87の最終CI・開発ブランチ統合まで新専門PR着手禁止**。R9/R10歴史的個別PRは二重マージしない。
+- main・正式v0.17.0・実ユーザーGLB・Windows GUI Ctrl+Z・第三者Addon実共存・権利/ライセンス・公式Extension/Pagesは未承認。NEXT-024は別途実機検証待ち。
+
+## 2026-11-08 JST — R11/R12統合・R13正式割当（#99統合後に有効）
+
+R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。
+
+統合後7系統（すべてab42913、pull_request）: [durable handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260441)、[Windows kit package](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260440)、[Agent Skill package](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260362)、[offline 3D browser interaction smoke](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260376)、[Python tests](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260317)、[Windows PowerShell launcher regression](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260329)、[Blender multi-version runtime smoke](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260358)
+
+R13の担当枝・所有パス・負例・受け入れ条件・共通開始プロンプトは[R13_ABCD_START.md](R13_ABCD_START.md)。B: GLB中間密度/seed/閾値の独立一致、C: module evictionと旧ledgerの回復、D: snapshot/inventoryとパスaliasのfail-closed。共通台帳/CI/NotionはA所有。各担当1追加draft PR、旧PR二重取り込み禁止。R13実装は本セッション対象外。
+
+## 2026-11-08 JST — ABCD通常開発R13統合完了・R14準備
+
+- R13専門結果: B [#100](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/100) `f3e83449bb41512771a25010a02002bddf37ec20`（GLB 64 seed/閾値順序の完全レポート一致、3新規テスト、性能の安定した一般的改善なし→本体変更なし）、C [#102](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/102) `233738e8294fd7658d378611ba55ab73f5c923f5`（enable失敗後のmodule eviction/旧ledger、5 nativeマーカー×Blender3版）、D [#103](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/103) `fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9`（固定snapshot inventory、読取レース、Windows symlink/junction/8.3/大小文字aliasのデータ専用負例）。各専門最終HEADの独立5系統CI成功。新規Pythonテストは B3+C8+D14=25件。
+- Aの統合 [#104](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/104) 最終HEAD `7d7933de1d5f59a074bd227457c98358c6e1c35b`：9パス重複なし、専門PRの対応Blobをそのまま結合、Python3版/Windows2版/Blender 4.4.3/4.5.15/5.2.1/Chromium/Handoffの[独立5系統CI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42439771303)全成功（Python/Windows各1101 tests、Linux skip 6、Blender native_r13 5 markers×3版）。専門PR個別は二重mergeせず残置。
+- v0.18開発ブランチに一度だけsquash merge、SHA `0a306a85d6f84ef434eb6b54f12cb4ce93251a6c`。**この統合SHAで独立した7系統CIすべてsuccess**：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440056474) / [Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440056467) / [Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440056476) / [Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440056478) / [Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440056463) / [Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440056537) / [Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440056471)。重複manual dispatchなし。
+- 変更は主にtests/docs。プレビュー `templates/modular_preview/__init__.py` は説明コメントのみ変更。Dの安全な読取はテスト用prototypeであり、任意ソースの製品用リーダーを実装したわけではない。既存44要件の実装状態・24タスクの完了状態は水増しせず維持。
+- 未検証: 実ユーザーGLBの厳密な部品/穴同一性、Windows GUI Undo、実際の第三者アドオン共存、任意障害時の自動復旧、著作権・作者同意・配布承認・正式Blender Extensions。正式v0.17.0とmainは不変。v0.19計画は未有効。
+- 次ラウンドR14は [正式割当](R14_ABCD_START.md) と [ローリングキュー](PARALLEL_ROLLING_QUEUE.md)。本ドキュメント同期PRの独立CI成功とdev統合を完了するまで、R14実装ブランチ/PRを先行作成しない。
+
+## 2026-11-11 JST — R14一回統合・長期ビジョン正式登録（A）
+
+- B #107 `a58e070c`／C #108 `f6300b28`／D #106 `f8aea0d3` は各最終HEADの5系統CI成功。変更11パス・重複0。Aの長期ビジョン正式文書#116の5パスを加えて結合[#117](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/117) HEAD `fba1607`（16パス）でPython/Windows/Blender3版/Chromium/Handoff/Kit 6CI全成功。Python3.12は1,129テスト実行、7 skip、失敗0。native UI R14新7項目・R13既存5項目をBlender3版実ログで検証。
+- 開発devへ一回だけsquash統合 `db25585342e19e629fc32e2cc94ceae5d2e3d7b4`。独立7系統全成功： [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905403010)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402793)・[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402730)（4.4.3/4.5.15/5.2.1）・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402841)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402989)・[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402745)・[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402775)。統合候補のCIと別の正確なHEADの測定。イベントはPR #25のhead更新に伴うpull_request。
+- B triageは匿名・review-only、異なる証拠が同一試行とは未保証。Cは限定した元module参照による明示cleanupでありWindows GUI/未知moduleの万能復旧ではない。Dは合成テスト用のプロトタイプで任意ソース読取や正式Extension/ライセンス許可ではない。
+- 長期目標「AI自律開発・3Dモデリング支援エンジン」を将来方針としてSPEC/future/AGENTS/DEC-075/生成HANDOFFへ反映。Geometry Lab#114/DIL#115の研究コードは未統合。正式v0.17.0、44 requirements、24 NEXT、last_verified、v0.19〜v0.22のactive=false維持。実ユーザーGLB・Windows GUI・第三者addon・権利・公開/mainは別ゲート。
+- 次は[R15正式割当](R15_ABCD_START.md)をA節目PRとしてレビューし、そのdev統合後の独立7CI成功を確認してから各R15担当の作業ブランチを許可。PR #109のキャッシュ改善は採否未決定。
+
+## 2026-11-11 JST — R15安全な一回統合（司令塔A）
+
+- B [#120](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/120) `70b27ab`（自己申告basisの不確実性を保守的に区別）、C [#121](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/121) `54832e7`（Blender実operatorとUI表示の一致）、D [#119](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/119) `cae75c5`（digest/ctime再現のテスト限定限界）について、各最終HEADのPython・Windows・Blender3版・Chromium・Handoffの5CI全成功。B4・C4・D3、合計11変更ファイル、重複0。旧専門PRは二重統合しない。
+- Aの結合候補 [PR #122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/122) `25180ce91453613e2524226df2c324654ad0818b` で5系統CI全成功。[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42914190227)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42914190104)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42914190167)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42914190253)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42914190272)。結合時Windows Python3.13で既存ダッシュボードのNode子プロセスが15秒超過、実ログとunittest artifactで特定。制限変更なしで**失敗した単一ジョブのみ再試行し成功**。原因/再現頻度は未確定。初回失敗も#122に記録。
+- devへ一回squash統合 `08ddb3e3a51e526ddfe857268f31b2de443c0fec`。**統合後に別途実行された独立7系統CI全成功**：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42915099059)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42915098806)、[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42915099109)（4.4.3/4.5.15/5.2.1）、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42915098872)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42915098940)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42915098954)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42915098964)。Blender3版実ログでUI R15の6項目を含む57チェックに成功。各ワークフローは独立した現HEADで確認。
+- **未検証・未承認:** Bの自己申告basis一致は真正の同一試行証明ではない。Dは合成実験であり任意ソースの改変検出/作者同意/公式Extensions配布を許可しない。Cのheadless Blenderは実Windows GUI/Undo・第三者addon併用の保証ではない。正式v0.17.0、44要件、24 NEXT、last_verified、main、v0.19〜v0.22 active=false、独立研究PR #114/#115を維持。改善PR #109は実速度効果未証明で保留。
+- 次は[R16正式割当](R16_ABCD_START.md)をA節目同期PRとしてCI検証・dev統合し、その後の**新dev SHA**の独立7CI確認を経てB/C/DのR16実装を許可。新しいCI、広いコード改善、実装済みタスクの再確認をむやみに増やさない。
+
