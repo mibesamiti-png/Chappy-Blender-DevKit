@@ -387,6 +387,42 @@ class GLBRegressionTests(unittest.TestCase):
                 self.assertEqual(result["surface_status"], "review_only")
 
 
+    def test_r14_anonymous_evidence_triage_never_approves_regression(self):
+        """A review-only triage cannot override a metadata-only GLB result.
+
+        Mocked local I/O here; real self-authored GLB exports are independently
+        exercised by the existing Blender multi-version CI workflow.
+        """
+        from cbdk.glb_evidence_triage import build_glb_evidence_triage
+        from cbdk.glb_compare import compare_scene_metadata
+        from test_glb_compare import obj, scene
+
+        reference = scene([obj("UNPUBLISHED_TEST_ASSET", [0, 0, 0],
+                               [2, 2, 1])])
+        candidate = scene([obj("UNPUBLISHED_TEST_ASSET", [.4, 0, 0],
+                               [2, 2, 1])])
+        comparison = compare_scene_metadata(reference, candidate)
+        triage = build_glb_evidence_triage(comparison=comparison)
+        self.assertEqual(triage["status"], "review_only")
+        self.assertFalse(any(triage["safety"].values()))
+        self.assertIn("metadata_differences", triage["review_topics"])
+        self.assertIn("sampled_surface_distance", triage["unobserved_channels"])
+        self.assertNotIn("UNPUBLISHED_TEST_ASSET", str(triage))
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with patch("cbdk.glb_regression.write_glb_inspection"), \
+                 patch("cbdk.glb_regression.render_glb_preview"), \
+                 patch("cbdk.glb_regression.write_scene_comparison",
+                       return_value=comparison):
+                result = run_glb_regression(
+                    root / "blender", root / "reference.glb",
+                    root / "candidate.glb", root / "out")
+        self.assertFalse(result["passed"])
+        self.assertIs(result["passed_is_metadata_only"], True)
+        self.assertIs(result["surface_does_not_auto_approve"], True)
+        self.assertEqual(result["surface_status"], "not_requested")
+
+
     def test_optional_surface_stage_can_report_skipped_without_false_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
