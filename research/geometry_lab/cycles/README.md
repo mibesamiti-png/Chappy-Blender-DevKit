@@ -21,3 +21,5 @@ R5: r5/RESEARCH.md、RESULTS.md、STATUS.json。既知R4の10ケースを開発�
 
 
 R6: r6/RESEARCH.md、RESULTS.md、STATUS.json。Blender GUI相当のnative operator cuts=0/3と3補間方式を公式4.4.3で実測・CGAL検証。新規人工holdout5形状でR5 5/5、最良単一native3-cuts 3/5。研究ゲート達成、非平面・実作品・UI未検証。採用はA司令塔審査まで保留。次サイクルを自動的に始めない。
+
+R7: r7/RESEARCH.md、RESULTS.md、STATUS.json。軽度非平面Z境界に対し独立アルゴリズムとBlender4.4.3標準を10人工形状で比較。新規holdout R7 5/6 vs native3 4/6、スリム形状でR7も品質不合格。CGAL交差0、境界保持。実モデル/一般姿勢/UV未検証、正式承認なし。R8自動開始しない。

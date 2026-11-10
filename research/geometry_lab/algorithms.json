@@ -191,6 +191,34 @@
       ],
       "status": "research_r6_beat_best_native_three_cuts_on_synthetic_holdout_not_approved",
       "approved": false
+    },
+    {
+      "id": "boundary-warped-loft-r7",
+      "version": "0.7.0",
+      "api": "cbdk_geometry.warped_loft.warped_radial_loft",
+      "purpose": "非平面Z変動境界の頂点・元境界辺を固定し、XY放射対応で3D中間輪郭を生成する研究用API",
+      "preconditions": [
+        "各リング3..48点",
+        "finite XYZ; XY star-shaped",
+        "XY角度で単調な辺順",
+        "全下側Z<全上側Z（正のgap）"
+      ],
+      "input": "two ordered Nx3/Mx3 arrays",
+      "output": "detached Mesh / cuts / method / added_vertices / approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10
+      },
+      "success": "R7 holdout: 5/6; Blender 4.4.3 3 LINEAR 4/6, no-cut 4/6; CGAL交差0、境界保存",
+      "failure": "slender_offset q=0.06183 fail, other orientation/cross sections not supported",
+      "validation": "tests/test_r7_warped.py; cycles/r7/evaluate.py; geometry-lab r7 CI",
+      "performance": "cycles/r7/RESULTS.md",
+      "references": [
+        "cycles/r7/RESEARCH.md",
+        "cycles/r7/STATUS.json"
+      ],
+      "status": "research_only_nonplanar_synthetic_advantage_not_approved",
+      "approved": false
     }
   ]
 }

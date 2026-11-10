@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R6
+# CBDK Geometry Research Lab — R7
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -116,3 +116,12 @@ python -m cycles.r5.run --output runs/my-r5-result.json
 公式Blender 4.4.3で`bpy.ops.mesh.bridge_edge_loops` の0-cuts PATH、3-cuts LINEAR/PATH/SURFACEと、凍結R5 radial loftを同一人工meshで比較。20形状×5方式=100出力、3反復とCGAL検証。新5ケースは**R5 5/5、native best 3/5**（LINEAR）、旧15ケースはR5 13/15、native best 11/15。速度値はAPI経路が異なるため直接比較しない。低ポリゴンのR5不合格・標準成功もある。非平面・実作品・第三者データ未検証。
 
 研究専用CIがBlender正規アーカイブをSHA256照合して実際のnative operatorを実行。R6完了、研究ゲート達成。ただしA司令塔承認までCBDKへ実装せず、`approved=false`。
+
+
+## R7: 非平面境界への限定拡張
+
+[事前合格条件](cycles/r7/RESEARCH.md) / [R7比較実測・失敗](cycles/r7/RESULTS.md) / [最新状態](cycles/r7/STATUS.json)。
+
+`cbdk_geometry.warped_loft.warped_radial_loft` を研究用に追加。XY投影がstar-shapedで、上下Z包絡が分離した軽度非平面ループだけをサポート。元境界頂点/辺を保持するが、一般的な3D接合やUV・法線保存を保証しない。
+
+公式Blender4.4.3で10人工形状×3方式=30生成＋CGAL独立評価、新規6ケースで研究R7 5/6、標準3-cuts Linear 4/6、標準no-cuts 4/6。細長い横ずれケースでは全方式不合格、R7 min quality=0.06183で標準より悪い。研究ゲート達成、製品未承認（`approved=false`）。AレビューまでCBDK本体へ反映しない。R8は自動開始しない。
