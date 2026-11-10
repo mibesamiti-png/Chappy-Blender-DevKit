@@ -360,3 +360,55 @@ jobs:
             research/geometry_lab/runs/ci-r11-eval.json
           if-no-files-found: warn
           retention-days: 14
+
+  r12-boundary-chart-dev-smoke:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install separate CGAL oracle
+        run: python -m pip install -r requirements-oracle.txt
+      - name: Acquire publisher-checksum-verified Blender 4.4.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://download.blender.org/release/Blender4.4"
+          curl --fail --location --retry 3 --max-time 300 "$base/blender-4.4.3.sha256" -o "$RUNNER_TEMP/blender.sha256"
+          curl --fail --location --retry 3 --max-time 400 "$base/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          python - "$RUNNER_TEMP/blender.sha256" "$RUNNER_TEMP/blender.tar.xz" <<'PY'
+          import hashlib,pathlib,re,sys
+          lines=[s for s in pathlib.Path(sys.argv[1]).read_text().splitlines()
+                 if 'blender-4.4.3-linux-x64.tar.xz' in s]
+          if len(lines)!=1: raise SystemExit('official checksum entry count invalid')
+          checksum=re.findall(r'\b[0-9a-fA-F]{64}\b',lines[0])
+          if len(checksum)!=1: raise SystemExit('official checksum format invalid')
+          actual=hashlib.sha256(pathlib.Path(sys.argv[2]).read_bytes()).hexdigest()
+          if actual.lower()!=checksum[0].lower():raise SystemExit('official Blender SHA256 mismatch')
+          print('R12 VERIFIED BLENDER',actual)
+          PY
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Generate frozen R12 R7 and native3 cases with Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r12/blender_run.py -- --output runs/ci-r12-raw.json --development-only
+      - name: Independently validate R12 and preregistered quality gate
+        run: timeout 360 python -m cycles.r12.evaluate --input runs/ci-r12-raw.json --output runs/ci-r12-eval.json --development-only
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-r12-${{ github.sha }}
+          path: |
+            research/geometry_lab/runs/ci-r12-raw.json
+            research/geometry_lab/runs/ci-r12-eval.json
+          if-no-files-found: warn
+          retention-days: 14
