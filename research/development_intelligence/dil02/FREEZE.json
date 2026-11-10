@@ -1,0 +1,19 @@
+{
+  "stage": "before_first_holdout_execution",
+  "timestamp_label": "2026-11-11 JST",
+  "budget": {
+    "development_cases": 12,
+    "holdout_cases": 12,
+    "holdout_executions": 1,
+    "unit_tests": 12,
+    "max_runtime_seconds": 60,
+    "post_holdout_tuning": 0
+  },
+  "sha256": {
+    "decision_gate.py": "ff375cdf0ce44f0f1a7b81a26d2b3dfc5340cc532f0dc19ee6aa126dfbd98fc7",
+    "benchmark.py": "fe372edd8546e0efe5b90619cc793c29e3e6120dd4665eec9612e2039356d1d2",
+    "test_decision_gate.py": "cc31fb99d2ce49e7906b4450df587f2a71f753c654abc0dc57b55f640917ab88",
+    "fixtures/development.json": "c19664c663243ae4cb0d01c5617feef1dc4470cdcc31a4f9580463f9b46e34b0",
+    "fixtures/holdout.json": "7bf3c6d13ac83734a780a19fb6d50bcf8b7755a34ced05e1a3600c6042a4d138"
+  }
+}
