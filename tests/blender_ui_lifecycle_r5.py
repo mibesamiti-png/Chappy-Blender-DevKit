@@ -1547,6 +1547,198 @@ def run(path):
             checks.append("native_r14_pending_scene_second_generation")
             checks.append("native_r14_foreign_scene_identity_recovered")
             checks.append("native_r14_reenable_after_all_generations")
+
+            # R15: compare actual Panel.draw enabled state against the ACTUAL
+            # bpy.ops return status under the same live Blender context.
+            # Only these five CBDK-authored operators and fixed local meshes.
+            module = addon_utils.enable(
+                PACKAGE, default_set=False, persistent=False)
+            assert module is not None
+            enabled = True
+            assert set(module._FEATURE_IDS) == set(IDS)
+            r15_mesh = bpy.data.meshes.new("CBDK_R15_parity_triangle")
+            r15_mesh.from_pydata(
+                [(0.0, 0.0, 0.0), (1.0, 0.0, 0.0),
+                 (0.0, 1.0, 0.0)], [], [(0, 1, 2)])
+            r15_mesh.update()
+            r15_obj = bpy.data.objects.new(
+                "CBDK_R15_parity_object", r15_mesh)
+            bpy.context.scene.collection.objects.link(r15_obj)
+            empty_mesh = bpy.data.meshes.new("CBDK_R15_empty_mesh")
+            empty_obj = bpy.data.objects.new(
+                "CBDK_R15_empty_object", empty_mesh)
+            bpy.context.scene.collection.objects.link(empty_obj)
+            r15_ops = {
+                "object_selection": bpy.ops.cbdk.modular_selected_meshes,
+                "mesh_bounds": bpy.ops.cbdk.modular_mesh_bounds,
+                "modifier_summary": bpy.ops.cbdk.modular_modifier_summary,
+                "edit_selection": bpy.ops.cbdk.modular_edit_selection,
+                "vertex_nudge": bpy.ops.cbdk.modular_vertex_nudge,
+            }
+            assert set(r15_ops) == set(IDS)
+            object_allowed = frozenset(
+                ("object_selection", "mesh_bounds", "modifier_summary"))
+            edit_allowed = frozenset(("edit_selection", "vertex_nudge"))
+
+            def r15_assert_ui_matches_execute(allowed):
+                # The recorder propagates parent row.enabled, while the
+                # operations execute through real bpy.ops (not mock calls).
+                ui, events = panel_events(module)
+                assert set(ui) == set(IDS.values()), ui
+                for feature_id, operator_call in r15_ops.items():
+                    ready = feature_id in allowed
+                    assert ui[IDS[feature_id]] is ready, (
+                        feature_id, ready, ui)
+                    previous_result = (
+                        bpy.context.scene.cbdk_modular_result)
+                    outcome = operator_call()
+                    expected = {"FINISHED"} if ready else {"CANCELLED"}
+                    assert outcome == expected, (
+                        feature_id, bpy.context.mode, ready, outcome)
+                    if not ready:
+                        assert (bpy.context.scene.cbdk_modular_result
+                                == previous_result), feature_id
+                return events
+
+            try:
+                assert bpy.context.mode == "OBJECT"
+                bpy.ops.object.select_all(action="DESELECT")
+                r15_obj.select_set(True)
+                bpy.context.view_layer.objects.active = r15_obj
+                bpy.context.scene.cbdk_modular_nudge_offset = (
+                    0.0, 0.0, 0.1)
+                original_geometry = tuple(
+                    tuple(v.co) for v in r15_mesh.vertices)
+                r15_assert_ui_matches_execute(object_allowed)
+                assert tuple(tuple(v.co) for v in r15_mesh.vertices) == (
+                    original_geometry)
+                checks.append("native_r15_object_ui_execute_status_parity")
+
+                # Empty mesh: bounds is disabled/canceled, while the object
+                # selection and modifier readers legitimately finish.
+                bpy.ops.object.select_all(action="DESELECT")
+                empty_obj.select_set(True)
+                bpy.context.view_layer.objects.active = empty_obj
+                assert len(empty_mesh.vertices) == 0
+                r15_assert_ui_matches_execute(
+                    frozenset(("object_selection", "modifier_summary")))
+                # No active object: every feature must be unavailable and
+                # a direct operator invocation must cancel without edits.
+                bpy.ops.object.select_all(action="DESELECT")
+                bpy.context.view_layer.objects.active = None
+                r15_assert_ui_matches_execute(frozenset())
+                checks.append("native_r15_empty_missing_mesh_cancel_parity")
+
+                bpy.context.view_layer.objects.active = r15_obj
+                r15_obj.select_set(True)
+                bpy.ops.object.mode_set(mode="EDIT")
+                assert bpy.context.mode == "EDIT_MESH"
+                bpy.ops.mesh.select_all(action="DESELECT")
+                zero_events = r15_assert_ui_matches_execute(
+                    frozenset(("edit_selection",)))
+                assert ("prop", "cbdk_modular_nudge_offset", True) in (
+                    zero_events)
+                assert all(not v.select for v in
+                           bmesh.from_edit_mesh(r15_mesh).verts)
+                checks.append("native_r15_edit_zero_selection_cancel_parity")
+
+                # Select exactly one vertex through live Edit BMesh.
+                bm = bmesh.from_edit_mesh(r15_mesh)
+                bm.verts.ensure_lookup_table()
+                bm.verts[0].select_set(True)
+                bm.select_flush_mode()
+                bmesh.update_edit_mesh(r15_mesh)
+                assert sum(bool(v.select) for v in
+                           bmesh.from_edit_mesh(r15_mesh).verts) == 1
+                before_nudge = tuple(
+                    tuple(v.co) for v in
+                    bmesh.from_edit_mesh(r15_mesh).verts)
+                selected_events = r15_assert_ui_matches_execute(edit_allowed)
+                assert ("prop", "cbdk_modular_nudge_offset", True) in (
+                    selected_events)
+                after_nudge = tuple(
+                    tuple(v.co) for v in
+                    bmesh.from_edit_mesh(r15_mesh).verts)
+                for i in range(len(before_nudge)):
+                    expected_z = before_nudge[i][2] + (
+                        0.1 if i == 0 else 0.0)
+                    assert abs(after_nudge[i][2] - expected_z) < 1e-5, (
+                        i, before_nudge, after_nudge)
+                    assert all(
+                        abs(after_nudge[i][axis] -
+                            before_nudge[i][axis]) < 1e-5
+                        for i in range(len(before_nudge))
+                        for axis in (0, 1))
+                checks.append("native_r15_edit_selected_operator_result_parity")
+
+                # A fresh OBJECT/EDIT/OBJECT transition must reevaluate
+                # availability, not reuse a previous Panel.draw snapshot.
+                bpy.ops.object.mode_set(mode="OBJECT")
+                assert bpy.context.mode == "OBJECT"
+                r15_assert_ui_matches_execute(object_allowed)
+                bpy.ops.object.mode_set(mode="EDIT")
+                bpy.ops.mesh.select_all(action="DESELECT")
+                r15_assert_ui_matches_execute(
+                    frozenset(("edit_selection",)))
+                bpy.ops.object.mode_set(mode="OBJECT")
+                r15_assert_ui_matches_execute(object_allowed)
+                checks.append("native_r15_mode_switch_rechecks_operator_parity")
+            finally:
+                if bpy.context.mode == "EDIT_MESH":
+                    bpy.ops.object.mode_set(mode="OBJECT")
+                bpy.context.view_layer.objects.active = obj
+                r15_obj.select_set(False)
+                empty_obj.select_set(False)
+                bpy.data.objects.remove(empty_obj, do_unlink=True)
+                bpy.data.objects.remove(r15_obj, do_unlink=True)
+                if empty_mesh.users == 0:
+                    bpy.data.meshes.remove(empty_mesh)
+                if r15_mesh.users == 0:
+                    bpy.data.meshes.remove(r15_mesh)
+
+            addon_utils.disable(PACKAGE, default_set=False)
+            enabled = False
+            assert_detached(module)
+            # A foreign Scene descriptor must block registration even after
+            # disable. Only our authored stand-in may be removed on cleanup.
+            bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
+                name="CBDK R15 synthetic foreign", default="not owned")
+            foreign_r15 = bpy.types.Scene.__dict__[PROPERTIES[0]]
+            try:
+                try:
+                    module.register()
+                except RuntimeError as exc:
+                    assert "Scene properties conflict" in str(exc), str(exc)
+                else:
+                    raise AssertionError(
+                        "R15 foreign Scene property was claimed")
+                assert not module._REGISTERED
+                assert not module._OWNED_PROPERTIES
+                assert not module._OWNED_PROPERTY_TOKENS
+                assert bpy.types.Scene.__dict__[PROPERTIES[0]] is (
+                    foreign_r15)
+            finally:
+                if bpy.types.Scene.__dict__.get(PROPERTIES[0]) is foreign_r15:
+                    delattr(bpy.types.Scene, PROPERTIES[0])
+            assert_detached(module)
+
+            module = addon_utils.enable(
+                PACKAGE, default_set=False, persistent=False)
+            assert module is not None
+            enabled = True
+            bpy.context.view_layer.objects.active = obj
+            obj.select_set(True)
+            assert bpy.context.mode == "OBJECT"
+            r15_ui, _ = panel_events(module)
+            assert set(r15_ui) == set(IDS.values())
+            assert all(r15_ui[IDS[name]] for name in object_allowed)
+            assert not any(r15_ui[IDS[name]] for name in edit_allowed)
+            assert bpy.ops.cbdk.modular_selected_meshes() == {"FINISHED"}
+            assert bpy.ops.cbdk.modular_edit_selection() == {"CANCELLED"}
+            addon_utils.disable(PACKAGE, default_set=False)
+            enabled = False
+            assert_detached(module)
+            checks.append("native_r15_foreign_scene_reenable_preserves_parity")
         finally:
             if enabled:
                 try:
