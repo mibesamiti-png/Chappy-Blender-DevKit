@@ -25,3 +25,5 @@ R6: r6/RESEARCH.md、RESULTS.md、STATUS.json。Blender GUI相当のnative opera
 R7: r7/RESEARCH.md、RESULTS.md、STATUS.json。軽度非平面Z境界に対し独立アルゴリズムとBlender4.4.3標準を10人工形状で比較。新規holdout R7 5/6 vs native3 4/6、スリム形状でR7も品質不合格。CGAL交差0、境界保持。実モデル/一般姿勢/UV未検証、正式承認なし。R8自動開始しない。
 
 R8: r8/RESEARCH.md、RESULTS.md、STATUS.json。R7固定内部密度を上下の頂点数に沿って段階変更し、R7既知10件で10/10、fresh人工holdout6件で5/6（R7とBlender3-cut各3/6）。CGAL交差0、入力境界保持。失敗スレンダーケースを隠さず記録。処理時間・形状RMSがやや悪化、製品未承認、R9を自動開始しない。
+
+R9: r9/RESEARCH.md、RESULTS.md、STATUS.json。元の入力境界頂点/面数不変で内部対角線を条件付きで反転。Blender4.4.3・CGAL独立66ケース検証。既知16/16、新holdout5/6（R8 4/6、Blender3cut 2/6）、自己交差0。未知reverse_narrow 0.08078で不合格、R8より処理時間約12.5倍。研究のみ成功、製品未承認、R10自動開始なし。

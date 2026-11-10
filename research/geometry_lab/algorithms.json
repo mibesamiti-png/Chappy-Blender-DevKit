@@ -247,6 +247,34 @@
       ],
       "status": "research_r8_density_taper_promising_not_production_approved",
       "approved": false
+    },
+    {
+      "id": "boundary-conservative-flips-r9",
+      "version": "0.9.0",
+      "api": "cbdk_geometry.flip_loft.conservative_flip_loft",
+      "purpose": "境界頂点・面数を変えず、内部三角形の対角線のみ法線・品質条件付きで最大3パス反転して細長さを緩和する研究候補",
+      "preconditions": [
+        "既存R8が扱う3..48頂点のordered XY-star-shaped/Z-separated境界",
+        "finite coordinate arrays",
+        "3 fixed intermediate rings"
+      ],
+      "input": "two ordered nonplanar Nx3 and Mx3 loops",
+      "output": "detached Mesh with identical R8 coordinates and triangle count, flips/passes, approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10,
+        "max_flip_passes": 3
+      },
+      "success": "R8既知reverse q 0.07860→0.12718、既知16/16、新holdout5/6（R8 4/6、native3 2/6）、CGAL交差0",
+      "failure": "r9_reverse_narrow minq 0.08078 fail; 90.9ms median vs R8 7.26ms; real UV/normal impact unverified",
+      "validation": "tests/test_r9_flip.py; cycles/r9/evaluate.py; Blender4.4.3 native compare plus independent CGAL",
+      "performance": "cycles/r9/RESULTS.md",
+      "references": [
+        "cycles/r9/RESEARCH.md",
+        "cycles/r9/STATUS.json"
+      ],
+      "status": "research_success_quality_specialized_costly_not_approved",
+      "approved": false
     }
   ]
 }

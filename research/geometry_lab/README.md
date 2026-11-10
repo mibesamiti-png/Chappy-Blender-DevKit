@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R8
+# CBDK Geometry Research Lab — R9
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -134,3 +134,12 @@ python -m cycles.r5.run --output runs/my-r5-result.json
 従来R7が内部中間輪郭で均一な頂点数`max(n,m,12)`を使っていたのに対して、R8 `cbdk_geometry.tapered_loft.tapered_radial_loft` は中間の頂点数を上下に合わせて変化。入力境界の頂点・エッジは変えず、非平面ながらXY star-shapedでZが分離した輪郭のみに対応。CGALで正式に評価した人工R7既知10ケースでR8 10/10（旧R7 9/10）、新6ケースでR8 **5/6**、R7 **3/6**、Blender標準3-cuts **3/6**。新6ケースのすべてで最小三角形品質が改善。唯一の失敗`r8_slender_opposite`は最小品質0.0786で不合格。
 
 平均面数はR8 189 < R7 248 < Blender3-cut 331（新6ケース）、一方でR8の処理時間・解析形状RMSは旧R7より悪化。実モデル/UV/任意方向境界・人手作業は未検証。製品採用承認ではなく`approved=false`、PR Draft維持。R9は自動開始しない。
+
+
+## R9: 元境界・面数を変えず局所の三角形品質を改善
+
+[実験事前条件](cycles/r9/RESEARCH.md) / [R9全結果・失敗・速度](cycles/r9/RESULTS.md) / [最新状態](cycles/r9/STATUS.json)。
+
+R8の `tapered_radial_loft` を凍結したまま、研究専用 `cbdk_geometry.flip_loft.conservative_flip_loft` を追加。上下の境界頂点・全頂点座標・面数を変えず、内部対角線を条件付きで最大3パス反転する。CGAL独立検証を必須とする（局所の法線検査だけでは交差ゼロを保証しない）。
+
+旧R7/R8既知16件でR9 **16/16**（R8 15/16）。未使用人工holdout6件でR9 **5/6**、R8 **4/6**、Blender標準3-cuts **2/6**。既知逆スレンダー品質0.0786→0.1272で全条件合格。ただし未知reverse_narrow品質0.08078はまだ不合格。R9 median約90.9msはR8約7.26msと高コスト。製品採用を意味せず `approved=false`。Aレビュー待ち・R10自動開始なし。
