@@ -1,0 +1,22 @@
+{
+  "cycle": "R5",
+  "phase": "preregistered",
+  "theme": "boundary_preserving_radial_loft",
+  "parent_cycle": "R4",
+  "candidate": "radial_loft_3cuts",
+  "development_r4_cases": 10,
+  "fresh_holdout_cases": 5,
+  "holdout_tested": false,
+  "blender_native_fresh_holdout": false,
+  "gate": {
+    "r4_seen_min_pass": 5,
+    "fresh_holdout_min_pass": 4,
+    "cgal_hits": 0,
+    "triangle_quality_min": 0.1,
+    "analytic_rms_max": 0.08,
+    "analytic_max_distance": 0.2
+  },
+  "approved": false,
+  "freeze_rule": "No algorithm tuning after first new holdout execution",
+  "end_rule": "Stop after one preregistered cycle; review without auto merging"
+}
