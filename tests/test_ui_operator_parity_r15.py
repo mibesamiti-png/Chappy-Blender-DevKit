@@ -29,6 +29,10 @@ class R15AdvisoryModeMatrix(unittest.TestCase):
     def setUp(self):
         PreviewReadinessTests.setUp(self)
 
+    # Reuse the trusted recorder, without inheriting and re-running every
+    # older PreviewReadinessTests unittest through discovery.
+    draw = PreviewReadinessTests.draw
+
     def visible_flags(self, context):
         return {name: enabled for kind, name, enabled in self.draw(context)
                 if kind == "operator"}
