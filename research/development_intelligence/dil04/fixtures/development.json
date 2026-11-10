@@ -1,0 +1,144 @@
+[
+  {
+    "id": "d01",
+    "project": "model",
+    "topics": [
+      "privacy"
+    ],
+    "query": "3D制作で公開可否のルールを見たい",
+    "max_docs": 3,
+    "gold_ids": [
+      "model-privacy-r2"
+    ]
+  },
+  {
+    "id": "d02",
+    "project": "viewer",
+    "topics": [
+      "ci"
+    ],
+    "query": "画面テストのCIを確認",
+    "max_docs": 3,
+    "gold_ids": [
+      "viewer-ci-r2"
+    ]
+  },
+  {
+    "id": "d03",
+    "project": "build",
+    "topics": [
+      "handoff",
+      "ci"
+    ],
+    "query": "担当交代と検証",
+    "max_docs": 3,
+    "gold_ids": [
+      "build-handoff-r2",
+      "build-ci-r2"
+    ]
+  },
+  {
+    "id": "d04",
+    "project": "player",
+    "topics": [],
+    "query": "私有ファイル",
+    "max_docs": 3,
+    "gold_ids": [
+      "player-privacy-r2"
+    ]
+  },
+  {
+    "id": "d05",
+    "project": "stamp",
+    "topics": [
+      "geometry"
+    ],
+    "query": "転写の品質条件",
+    "max_docs": 3,
+    "gold_ids": [
+      "stamp-geometry-r2"
+    ]
+  },
+  {
+    "id": "d06",
+    "project": "shape",
+    "topics": [
+      "handoff"
+    ],
+    "query": "再開時の引き継ぎ",
+    "max_docs": 3,
+    "gold_ids": [
+      "shape-handoff-r2"
+    ]
+  },
+  {
+    "id": "d07",
+    "project": "joint",
+    "topics": [],
+    "query": "自己交差",
+    "max_docs": 3,
+    "gold_ids": [
+      "joint-geometry-r2"
+    ]
+  },
+  {
+    "id": "d08",
+    "project": "laser",
+    "topics": [
+      "privacy",
+      "ci"
+    ],
+    "query": "CIと外部共有",
+    "max_docs": 3,
+    "gold_ids": [
+      "laser-privacy-r2",
+      "laser-ci-r2"
+    ]
+  },
+  {
+    "id": "d09",
+    "project": "model",
+    "topics": [],
+    "query": "中断再開",
+    "max_docs": 3,
+    "gold_ids": [
+      "model-handoff-r2"
+    ]
+  },
+  {
+    "id": "d10",
+    "project": "viewer",
+    "topics": [
+      "geometry",
+      "privacy"
+    ],
+    "query": "形状と非公開",
+    "max_docs": 3,
+    "gold_ids": [
+      "viewer-geometry-r2",
+      "viewer-privacy-r2"
+    ]
+  },
+  {
+    "id": "d11",
+    "project": "stamp",
+    "topics": [],
+    "query": "CI結果",
+    "max_docs": 3,
+    "gold_ids": [
+      "stamp-ci-r2"
+    ]
+  },
+  {
+    "id": "d12",
+    "project": "build",
+    "topics": [
+      "privacy"
+    ],
+    "query": "秘匿情報取り扱い",
+    "max_docs": 3,
+    "gold_ids": [
+      "build-privacy-r2"
+    ]
+  }
+]

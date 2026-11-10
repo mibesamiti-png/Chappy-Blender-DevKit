@@ -1,0 +1,2198 @@
+{
+  "experiment": "DIL-04",
+  "synthetic_only": true,
+  "environment": {
+    "python": "3.13.5",
+    "sqlite": "3.46.1",
+    "platform": "Linux"
+  },
+  "frozen_sha256": {
+    "retrieval.py": "3c692218539c4e901473edab1e16e099451ab6cd4205c78d23c070614eec1e8a",
+    "benchmark.py": "ad35338b6bc5c903e3a0482e384b1e5e8f188b2d8119ca8c63c42486521b31dc",
+    "test_retrieval.py": "bc99e0b02ca529ffd33cf39c5bf65514803dfa214cbb091476c191eb59baf535",
+    "generate_fixtures.py": "2b847329d0cf1eaf95af2c21655bbdd1307e7b4ba6a4f55655e528943a4bb279",
+    "corpus.json": "2cc96fee8df670e4204e9094334def8bed2e5d2426f880484f6215f340d5ada6",
+    "fixtures/development.json": "6ad9934a3da43bdbbe0234aba0b61c840b8f0ee4e69cdcf81148298c6745a522",
+    "fixtures/holdout.json": "892fe1a9639a85ea22e65a69eaa97ca9ee21ee5138232468b64cbc3c6e278a5e",
+    "METHOD.md": "bba1f0c0ad3e3b6bf4a2b7726cbb1de2a0c637d3b42a44bb614cad21e7067c1e"
+  },
+  "splits": {
+    "development": {
+      "all_context": {
+        "cases": 12,
+        "exact_cases": 0,
+        "required_found": 15,
+        "required_total": 15,
+        "foreign_project_documents": 420,
+        "retired_or_unapproved_documents": 96,
+        "total_input_bytes": 199788,
+        "median_bytes_per_case": 16649.0,
+        "details": [
+          {
+            "id": "d01",
+            "gold_ids": [
+              "model-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d02",
+            "gold_ids": [
+              "viewer-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d03",
+            "gold_ids": [
+              "build-handoff-r2",
+              "build-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d04",
+            "gold_ids": [
+              "player-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d05",
+            "gold_ids": [
+              "stamp-geometry-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d06",
+            "gold_ids": [
+              "shape-handoff-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d07",
+            "gold_ids": [
+              "joint-geometry-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d08",
+            "gold_ids": [
+              "laser-privacy-r2",
+              "laser-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d09",
+            "gold_ids": [
+              "model-handoff-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d10",
+            "gold_ids": [
+              "viewer-geometry-r2",
+              "viewer-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d11",
+            "gold_ids": [
+              "stamp-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "d12",
+            "gold_ids": [
+              "build-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          }
+        ]
+      },
+      "metadata_only": {
+        "cases": 12,
+        "exact_cases": 8,
+        "required_found": 11,
+        "required_total": 15,
+        "foreign_project_documents": 0,
+        "retired_or_unapproved_documents": 0,
+        "total_input_bytes": 5117,
+        "median_bytes_per_case": 462.5,
+        "details": [
+          {
+            "id": "d01",
+            "gold_ids": [
+              "model-privacy-r2"
+            ],
+            "returned_ids": [
+              "model-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 464
+          },
+          {
+            "id": "d02",
+            "gold_ids": [
+              "viewer-ci-r2"
+            ],
+            "returned_ids": [
+              "viewer-ci-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 460
+          },
+          {
+            "id": "d03",
+            "gold_ids": [
+              "build-handoff-r2",
+              "build-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 928
+          },
+          {
+            "id": "d04",
+            "gold_ids": [
+              "player-privacy-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d05",
+            "gold_ids": [
+              "stamp-geometry-r2"
+            ],
+            "returned_ids": [
+              "stamp-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "d06",
+            "gold_ids": [
+              "shape-handoff-r2"
+            ],
+            "returned_ids": [
+              "shape-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 471
+          },
+          {
+            "id": "d07",
+            "gold_ids": [
+              "joint-geometry-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d08",
+            "gold_ids": [
+              "laser-privacy-r2",
+              "laser-ci-r2"
+            ],
+            "returned_ids": [
+              "laser-ci-r2",
+              "laser-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 924
+          },
+          {
+            "id": "d09",
+            "gold_ids": [
+              "model-handoff-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d10",
+            "gold_ids": [
+              "viewer-geometry-r2",
+              "viewer-privacy-r2"
+            ],
+            "returned_ids": [
+              "viewer-geometry-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 937
+          },
+          {
+            "id": "d11",
+            "gold_ids": [
+              "stamp-ci-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d12",
+            "gold_ids": [
+              "build-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 464
+          }
+        ]
+      },
+      "fts5_trigram": {
+        "cases": 12,
+        "exact_cases": 4,
+        "required_found": 4,
+        "required_total": 15,
+        "foreign_project_documents": 0,
+        "retired_or_unapproved_documents": 0,
+        "total_input_bytes": 1875,
+        "median_bytes_per_case": 2.0,
+        "details": [
+          {
+            "id": "d01",
+            "gold_ids": [
+              "model-privacy-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d02",
+            "gold_ids": [
+              "viewer-ci-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d03",
+            "gold_ids": [
+              "build-handoff-r2",
+              "build-ci-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d04",
+            "gold_ids": [
+              "player-privacy-r2"
+            ],
+            "returned_ids": [
+              "player-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 472
+          },
+          {
+            "id": "d05",
+            "gold_ids": [
+              "stamp-geometry-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d06",
+            "gold_ids": [
+              "shape-handoff-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d07",
+            "gold_ids": [
+              "joint-geometry-r2"
+            ],
+            "returned_ids": [
+              "joint-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "d08",
+            "gold_ids": [
+              "laser-privacy-r2",
+              "laser-ci-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d09",
+            "gold_ids": [
+              "model-handoff-r2"
+            ],
+            "returned_ids": [
+              "model-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 474
+          },
+          {
+            "id": "d10",
+            "gold_ids": [
+              "viewer-geometry-r2",
+              "viewer-privacy-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "d11",
+            "gold_ids": [
+              "stamp-ci-r2"
+            ],
+            "returned_ids": [
+              "stamp-ci-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 452
+          },
+          {
+            "id": "d12",
+            "gold_ids": [
+              "build-privacy-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          }
+        ]
+      },
+      "hybrid": {
+        "cases": 12,
+        "exact_cases": 12,
+        "required_found": 15,
+        "required_total": 15,
+        "foreign_project_documents": 0,
+        "retired_or_unapproved_documents": 0,
+        "total_input_bytes": 6968,
+        "median_bytes_per_case": 467.5,
+        "details": [
+          {
+            "id": "d01",
+            "gold_ids": [
+              "model-privacy-r2"
+            ],
+            "returned_ids": [
+              "model-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 464
+          },
+          {
+            "id": "d02",
+            "gold_ids": [
+              "viewer-ci-r2"
+            ],
+            "returned_ids": [
+              "viewer-ci-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 460
+          },
+          {
+            "id": "d03",
+            "gold_ids": [
+              "build-handoff-r2",
+              "build-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 928
+          },
+          {
+            "id": "d04",
+            "gold_ids": [
+              "player-privacy-r2"
+            ],
+            "returned_ids": [
+              "player-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 472
+          },
+          {
+            "id": "d05",
+            "gold_ids": [
+              "stamp-geometry-r2"
+            ],
+            "returned_ids": [
+              "stamp-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "d06",
+            "gold_ids": [
+              "shape-handoff-r2"
+            ],
+            "returned_ids": [
+              "shape-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 471
+          },
+          {
+            "id": "d07",
+            "gold_ids": [
+              "joint-geometry-r2"
+            ],
+            "returned_ids": [
+              "joint-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "d08",
+            "gold_ids": [
+              "laser-privacy-r2",
+              "laser-ci-r2"
+            ],
+            "returned_ids": [
+              "laser-ci-r2",
+              "laser-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 924
+          },
+          {
+            "id": "d09",
+            "gold_ids": [
+              "model-handoff-r2"
+            ],
+            "returned_ids": [
+              "model-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 474
+          },
+          {
+            "id": "d10",
+            "gold_ids": [
+              "viewer-geometry-r2",
+              "viewer-privacy-r2"
+            ],
+            "returned_ids": [
+              "viewer-geometry-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 937
+          },
+          {
+            "id": "d11",
+            "gold_ids": [
+              "stamp-ci-r2"
+            ],
+            "returned_ids": [
+              "stamp-ci-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 452
+          },
+          {
+            "id": "d12",
+            "gold_ids": [
+              "build-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 464
+          }
+        ]
+      }
+    },
+    "holdout": {
+      "all_context": {
+        "cases": 12,
+        "exact_cases": 0,
+        "required_found": 15,
+        "required_total": 15,
+        "foreign_project_documents": 420,
+        "retired_or_unapproved_documents": 96,
+        "total_input_bytes": 199788,
+        "median_bytes_per_case": 16649.0,
+        "details": [
+          {
+            "id": "h01",
+            "gold_ids": [
+              "laser-geometry-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h02",
+            "gold_ids": [
+              "player-handoff-r2",
+              "player-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h03",
+            "gold_ids": [
+              "shape-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h04",
+            "gold_ids": [
+              "joint-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h05",
+            "gold_ids": [
+              "build-handoff-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h06",
+            "gold_ids": [
+              "model-geometry-r2",
+              "model-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h07",
+            "gold_ids": [
+              "stamp-geometry-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h08",
+            "gold_ids": [
+              "viewer-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h09",
+            "gold_ids": [
+              "laser-handoff-r2",
+              "laser-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h10",
+            "gold_ids": [
+              "player-ci-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h11",
+            "gold_ids": [
+              "shape-geometry-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          },
+          {
+            "id": "h12",
+            "gold_ids": [
+              "joint-privacy-r2"
+            ],
+            "returned_ids": [
+              "build-ci-r2",
+              "build-geometry-r2",
+              "build-handoff-r1",
+              "build-handoff-r2",
+              "build-privacy-r2",
+              "joint-ci-r2",
+              "joint-geometry-r2",
+              "joint-handoff-r1",
+              "joint-handoff-r2",
+              "joint-privacy-r2",
+              "laser-ci-r2",
+              "laser-geometry-r2",
+              "laser-handoff-r1",
+              "laser-handoff-r2",
+              "laser-privacy-r2",
+              "model-ci-r2",
+              "model-geometry-r2",
+              "model-handoff-r1",
+              "model-handoff-r2",
+              "model-privacy-r2",
+              "player-ci-r2",
+              "player-geometry-r2",
+              "player-handoff-r1",
+              "player-handoff-r2",
+              "player-privacy-r2",
+              "shape-ci-r2",
+              "shape-geometry-r2",
+              "shape-handoff-r1",
+              "shape-handoff-r2",
+              "shape-privacy-r2",
+              "stamp-ci-r2",
+              "stamp-geometry-r2",
+              "stamp-handoff-r1",
+              "stamp-handoff-r2",
+              "stamp-privacy-r2",
+              "viewer-ci-r2",
+              "viewer-geometry-r2",
+              "viewer-handoff-r1",
+              "viewer-handoff-r2",
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": false,
+            "bytes": 16649
+          }
+        ]
+      },
+      "metadata_only": {
+        "cases": 12,
+        "exact_cases": 6,
+        "required_found": 9,
+        "required_total": 15,
+        "foreign_project_documents": 0,
+        "retired_or_unapproved_documents": 0,
+        "total_input_bytes": 4199,
+        "median_bytes_per_case": 227.0,
+        "details": [
+          {
+            "id": "h01",
+            "gold_ids": [
+              "laser-geometry-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h02",
+            "gold_ids": [
+              "player-handoff-r2",
+              "player-privacy-r2"
+            ],
+            "returned_ids": [
+              "player-handoff-r2",
+              "player-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 953
+          },
+          {
+            "id": "h03",
+            "gold_ids": [
+              "shape-privacy-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h04",
+            "gold_ids": [
+              "joint-ci-r2"
+            ],
+            "returned_ids": [
+              "joint-ci-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 452
+          },
+          {
+            "id": "h05",
+            "gold_ids": [
+              "build-handoff-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h06",
+            "gold_ids": [
+              "model-geometry-r2",
+              "model-ci-r2"
+            ],
+            "returned_ids": [
+              "model-ci-r2",
+              "model-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 918
+          },
+          {
+            "id": "h07",
+            "gold_ids": [
+              "stamp-geometry-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h08",
+            "gold_ids": [
+              "viewer-privacy-r2"
+            ],
+            "returned_ids": [
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 469
+          },
+          {
+            "id": "h09",
+            "gold_ids": [
+              "laser-handoff-r2",
+              "laser-ci-r2"
+            ],
+            "returned_ids": [
+              "laser-ci-r2",
+              "laser-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 934
+          },
+          {
+            "id": "h10",
+            "gold_ids": [
+              "player-ci-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h11",
+            "gold_ids": [
+              "shape-geometry-r2"
+            ],
+            "returned_ids": [
+              "shape-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "h12",
+            "gold_ids": [
+              "joint-privacy-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          }
+        ]
+      },
+      "fts5_trigram": {
+        "cases": 12,
+        "exact_cases": 6,
+        "required_found": 6,
+        "required_total": 15,
+        "foreign_project_documents": 0,
+        "retired_or_unapproved_documents": 0,
+        "total_input_bytes": 2799,
+        "median_bytes_per_case": 231.5,
+        "details": [
+          {
+            "id": "h01",
+            "gold_ids": [
+              "laser-geometry-r2"
+            ],
+            "returned_ids": [
+              "laser-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 467
+          },
+          {
+            "id": "h02",
+            "gold_ids": [
+              "player-handoff-r2",
+              "player-privacy-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h03",
+            "gold_ids": [
+              "shape-privacy-r2"
+            ],
+            "returned_ids": [
+              "shape-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "h04",
+            "gold_ids": [
+              "joint-ci-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h05",
+            "gold_ids": [
+              "build-handoff-r2"
+            ],
+            "returned_ids": [
+              "build-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 474
+          },
+          {
+            "id": "h06",
+            "gold_ids": [
+              "model-geometry-r2",
+              "model-ci-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h07",
+            "gold_ids": [
+              "stamp-geometry-r2"
+            ],
+            "returned_ids": [
+              "stamp-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "h08",
+            "gold_ids": [
+              "viewer-privacy-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h09",
+            "gold_ids": [
+              "laser-handoff-r2",
+              "laser-ci-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h10",
+            "gold_ids": [
+              "player-ci-r2"
+            ],
+            "returned_ids": [
+              "player-ci-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 463
+          },
+          {
+            "id": "h11",
+            "gold_ids": [
+              "shape-geometry-r2"
+            ],
+            "returned_ids": [],
+            "all_required_found": false,
+            "exact": false,
+            "bytes": 2
+          },
+          {
+            "id": "h12",
+            "gold_ids": [
+              "joint-privacy-r2"
+            ],
+            "returned_ids": [
+              "joint-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          }
+        ]
+      },
+      "hybrid": {
+        "cases": 12,
+        "exact_cases": 12,
+        "required_found": 15,
+        "required_total": 15,
+        "foreign_project_documents": 0,
+        "retired_or_unapproved_documents": 0,
+        "total_input_bytes": 6974,
+        "median_bytes_per_case": 465.0,
+        "details": [
+          {
+            "id": "h01",
+            "gold_ids": [
+              "laser-geometry-r2"
+            ],
+            "returned_ids": [
+              "laser-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 467
+          },
+          {
+            "id": "h02",
+            "gold_ids": [
+              "player-handoff-r2",
+              "player-privacy-r2"
+            ],
+            "returned_ids": [
+              "player-handoff-r2",
+              "player-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 953
+          },
+          {
+            "id": "h03",
+            "gold_ids": [
+              "shape-privacy-r2"
+            ],
+            "returned_ids": [
+              "shape-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "h04",
+            "gold_ids": [
+              "joint-ci-r2"
+            ],
+            "returned_ids": [
+              "joint-ci-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 452
+          },
+          {
+            "id": "h05",
+            "gold_ids": [
+              "build-handoff-r2"
+            ],
+            "returned_ids": [
+              "build-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 474
+          },
+          {
+            "id": "h06",
+            "gold_ids": [
+              "model-geometry-r2",
+              "model-ci-r2"
+            ],
+            "returned_ids": [
+              "model-ci-r2",
+              "model-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 918
+          },
+          {
+            "id": "h07",
+            "gold_ids": [
+              "stamp-geometry-r2"
+            ],
+            "returned_ids": [
+              "stamp-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "h08",
+            "gold_ids": [
+              "viewer-privacy-r2"
+            ],
+            "returned_ids": [
+              "viewer-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 469
+          },
+          {
+            "id": "h09",
+            "gold_ids": [
+              "laser-handoff-r2",
+              "laser-ci-r2"
+            ],
+            "returned_ids": [
+              "laser-ci-r2",
+              "laser-handoff-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 934
+          },
+          {
+            "id": "h10",
+            "gold_ids": [
+              "player-ci-r2"
+            ],
+            "returned_ids": [
+              "player-ci-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 463
+          },
+          {
+            "id": "h11",
+            "gold_ids": [
+              "shape-geometry-r2"
+            ],
+            "returned_ids": [
+              "shape-geometry-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          },
+          {
+            "id": "h12",
+            "gold_ids": [
+              "joint-privacy-r2"
+            ],
+            "returned_ids": [
+              "joint-privacy-r2"
+            ],
+            "all_required_found": true,
+            "exact": true,
+            "bytes": 461
+          }
+        ]
+      }
+    }
+  },
+  "benchmark_wall_seconds": 0.019126395000057528
+}
