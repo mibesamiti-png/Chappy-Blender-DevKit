@@ -163,6 +163,7 @@ def execute(case,arm):
         source_unchanged=before==after
         max_gap=0.0
         pairs=0
+        boundary_pair_uv_samples=[]
         for face_i,(u,v) in enumerate(ordered_edges):
             source_face=bm.faces[face_i]
             edge=tuple(sorted((u,v)))
@@ -171,6 +172,7 @@ def execute(case,arm):
                 lhs=_face_uv(source_face,original_verts[key],uv_attr)
                 rhs=_face_uv(new_face,original_verts[key],uv_attr)
                 max_gap=max(max_gap,float(np.max(np.abs(lhs-rhs))))
+                boundary_pair_uv_samples.append([lhs.tolist(),rhs.tolist()])
                 pairs+=1
         corner_uvs=[]
         area_max_delta=0.
@@ -226,6 +228,7 @@ def execute(case,arm):
                     source_xyz_preserved=bool(source_xyz_preserved),
                     bridge_material_2=all(n==2 for n in new_mat_indices),
                     source_boundary_uv_pair_count=pairs,
+                    boundary_pair_uv_samples=boundary_pair_uv_samples,
                     source_boundary_max_uv_error=max_gap,
                     internal_seam_edges=int(actual_seam_edges),
                     internal_edges=int(total_internal),
