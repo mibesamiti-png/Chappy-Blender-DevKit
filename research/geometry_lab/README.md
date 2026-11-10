@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R5
+# CBDK Geometry Research Lab — R6
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -107,3 +107,12 @@ python -m cycles.r5.run --output runs/my-r5-result.json
 ```
 
 専用CIでR1〜R4の既存回帰とR5を別々に実行し、R5出力JSONのhash・測定値をartifactに保存。実作品・私有モデルは読まない。
+
+
+## R6 — Blender標準のcuts/interpolationとR5の公平比較
+
+[研究事前設計](cycles/r6/RESEARCH.md) / [R6の全結果・失敗](cycles/r6/RESULTS.md) / [状態](cycles/r6/STATUS.json)。
+
+公式Blender 4.4.3で\`bpy.ops.mesh.bridge_edge_loops\` の0-cuts PATH、3-cuts LINEAR/PATH/SURFACEと、凍結R5 radial loftを同一人工meshで比較。20形状×5方式=100出力、3反復とCGAL検証。新5ケースは**R5 5/5、native best 3/5**（LINEAR）、旧15ケースはR5 13/15、native best 11/15。速度値はAPI経路が異なるため直接比較しない。低ポリゴンのR5不合格・標準成功もある。非平面・実作品・第三者データ未検証。
+
+研究専用CIがBlender正規アーカイブをSHA256照合して実際のnative operatorを実行。R6完了、研究ゲート達成。ただしA司令塔承認までCBDKへ実装せず、\`approved=false\`。

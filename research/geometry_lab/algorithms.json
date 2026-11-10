@@ -182,13 +182,14 @@
       },
       "success": "R4既知5/6・新holdout4/5、CGALで交差0、合格にはR4同一形状誤差と品質基準を使用",
       "failure": "ValueError/TimeoutError、低poly RMS不合格、横ずれ楕円の最小三角品質0.0634",
-      "validation": "tests/test_r5.py; cycles/r5/run.py",
-      "performance": "cycles/r5/RESULTS.md",
+      "validation": "tests/test_r5.py; cycles/r5/run.py; cycles/r6/evaluate.py (native bpy 4.4.3 and CGAL)",
+      "performance": "cycles/r5/RESULTS.md; cycles/r6/RESULTS.md",
       "references": [
         "cycles/r5/RESEARCH.md",
-        "cycles/r5/STATUS.json"
+        "cycles/r5/STATUS.json",
+        "cycles/r6/RESEARCH.md"
       ],
-      "status": "review_only_research_gate_met_not_approved",
+      "status": "research_r6_beat_best_native_three_cuts_on_synthetic_holdout_not_approved",
       "approved": false
     }
   ]

@@ -18,3 +18,6 @@ R3: r3/STATUS.json。R2と同じ厳密判定の高速化、球以外のshape追�
 R4: r4/STATUS.json。境界ループ接続3方式と標準Blenderを比較。標準置換不採用。2版で一致、6未使用ケースの失敗を形状保存研究へ引き継ぐ。
 
 R5: r5/RESEARCH.md、RESULTS.md、STATUS.json。既知R4の10ケースを開発用に移し、新規5ケースのholdoutでradial 4/5・phase 3/5。研究ゲート達成だがBlender GUI標準未比較で本体未承認。以後このholdoutでモデル調整しない。
+
+
+R6: r6/RESEARCH.md、RESULTS.md、STATUS.json。Blender GUI相当のnative operator cuts=0/3と3補間方式を公式4.4.3で実測・CGAL検証。新規人工holdout5形状でR5 5/5、最良単一native3-cuts 3/5。研究ゲート達成、非平面・実作品・UI未検証。採用はA司令塔審査まで保留。次サイクルを自動的に始めない。
