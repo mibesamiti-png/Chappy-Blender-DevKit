@@ -34,8 +34,9 @@ class R15AdvisoryModeMatrix(unittest.TestCase):
     draw = PreviewReadinessTests.draw
 
     def visible_flags(self, context):
-        return {name: enabled for kind, name, enabled in self.draw(context)
-                if kind == "operator"}
+        # Only operator records have three items; labels have two.
+        return {item[1]: item[2] for item in self.draw(context)
+                if item[0] == "operator"}
 
     def test_object_mesh_empty_and_missing_context_advice(self):
         context = mesh_context()
