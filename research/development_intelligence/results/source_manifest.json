@@ -1,0 +1,27 @@
+{
+  "base_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+  "inspected_base_files": {
+    "AGENTS.md": "1e6ee5dbd73c2cde246dc19e9f7955b8da3c75b66bbe5b2456d44bc3c88320e7",
+    "docs/PROJECT_SPEC.md": "ae2f5000d5cdb88187523a7034fb79ade37655ba08abda782420cd96d1ec1759",
+    "docs/project/STATE.json": "f3c0bc44e4b66b2e1818bda172f0bf493d490bdbf83cfdf389f091a9d2095281",
+    "docs/PROJECT_HANDOFF.md": "8ce20357987ead697c044ed91317cc816dc7c7a8612403d806909f88801e4b4f",
+    "docs/PARALLEL_DEVELOPMENT.md": "6beb1befdd6e84501e8519ab476e658b07232f5952d0a64531dcb918e7c70cab",
+    "docs/PARALLEL_ROLLING_QUEUE.md": "4d1485b7f4e1b63fcb6941ce079745976658adfe0077f7630c8c1bf89ae79c23",
+    "docs/R14_ABCD_START.md": "4eb25142b081ccda393ef6a455d6f7c5332aed196246969474a35b4d35c08d64",
+    "docs/ASTRA_COORDINATOR_R11_R12_BENCHMARK.md": "e27e3f9ec4fc2e20da820c39632252b9058541268c4a8a854619e57118869031",
+    "docs/future/CBDK-FUTURE-019-022.md": "7549f76a1a89c18522ae2633e4f725d69798a9f500eeebc88281fc7bb8bcb51f",
+    "docs/future/CBDK-FUTURE-019-022.json": "2408d2e82b71c537a43262baa8dad1bea71412582a2b9d59d8ddfba519f23ce2",
+    "docs/dashboard/index.html": "67d7190c09b0cae564b44ec4f0cd5c27dac70c502f9fcfe5b7a34f881b843984",
+    "docs/dashboard/README.md": "8d8bc2bc730e3bed9b497fa9454acba1b075c54bd773050da33490eddd18f60c",
+    "scripts/project_handoff.py": "4a241cab8e17af0aae333a3e3afa611e892acb579af64828a4930cfc888aaa8b",
+    "docs/GLB022_RUN_REVIEW.md": "ac8dc6c45d39e1a72cc6b903c3855ae18949476ec75a75f5fec329f3fa9c5ce3",
+    "pyproject.toml": "470d0a2d3da1358da6a7ad89b5c5a3172d240fc7d5e7c5f3ed648b56f65b3635"
+  },
+  "research_python": {
+    "verify_sql.py": "b40399eecf9a1ec0c602382898d3d46bf986296f30d9e6593df58c616c892273",
+    "probe_dashboard.py": "7634682947e03290a8a3f2c5fcdaaf3c9909584d51d91a45c719fcedf89c1513",
+    "benchmark.py": "4f4b827d19602018cd5c4ff2678f1cc7b673a2ab5af97c90dadb9b48b2801fc8",
+    "prototype/status_view.py": "5545ee7ed8b42792979c46428fd22b145bc9251509992ba11b71d407c7296242",
+    "tests/test_status_view.py": "e6e384d4205cd4b32a520691d4f3153991b26542a22db3875640333c672eb839"
+  }
+}
