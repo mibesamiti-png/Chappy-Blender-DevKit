@@ -325,3 +325,15 @@ R13 B[#100](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/100) / 
 - **D P1 / EXT-001:** source rootのreparse確認とopenとの間のTOCTOU等を安全な合成fixtureで負例化し、配布不可の理由を機密値なしコードで提示する改善候補。実機安全を示せなければ本体挙動は変えない。コード候補 `cbdk/extension_*`、D専用tests/docs。
 
 AのみSTATE/Handoff/PROGRESS/共通CI/Notionを管理。各専門最終HEADの独立5系統CI→A結合の独立5系統CI→dev統合の独立7系統CI→節目文書の別CIを厳格に区別する。
+
+## 2026-11-11 JST — R14受入完了、R15先読みキュー（実装は節目ゲート後）
+
+A統合PR [#117](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/117)でB#107/C#108/D#106の専門11パスと長期ビジョン5パスを一度だけ統合。dev `db25585342e19e629fc32e2cc94ceae5d2e3d7b4` で独立7系統CIすべて成功。詳細は[正式R15割当](R15_ABCD_START.md)。
+
+- Bは複数GLBレビュー証拠の同試行整合性、未知/衝突の安全な拒否。
+- Cは既存自作5機能・6レシピのUI表示可否と実operatorの一致、実不具合がなければ無理に実装を増やさない。
+- Dは合成同inode書換え検出の限界・不確実性。Windows任意ファイル読取安全の証明とは分ける。
+- Aは速度改善 #109 のキャッシュ効果実測と既存NEXTの未検証管理を継続。
+
+**実装停止ゲート:** 本節とR15割当を含むAの節目同期PRが開発devに統合され、その**新dev HEADに対する独立7系統CI全成功**をAが確認するまで各R15作業は設計のみ。研究PR #114/#115は独立、v0.19は未有効。Codexは必須でない。
+

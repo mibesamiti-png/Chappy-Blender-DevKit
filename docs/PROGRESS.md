@@ -1363,3 +1363,12 @@ R13の担当枝・所有パス・負例・受け入れ条件・共通開始プ�
 - 変更は主にtests/docs。プレビュー `templates/modular_preview/__init__.py` は説明コメントのみ変更。Dの安全な読取はテスト用prototypeであり、任意ソースの製品用リーダーを実装したわけではない。既存44要件の実装状態・24タスクの完了状態は水増しせず維持。
 - 未検証: 実ユーザーGLBの厳密な部品/穴同一性、Windows GUI Undo、実際の第三者アドオン共存、任意障害時の自動復旧、著作権・作者同意・配布承認・正式Blender Extensions。正式v0.17.0とmainは不変。v0.19計画は未有効。
 - 次ラウンドR14は [正式割当](R14_ABCD_START.md) と [ローリングキュー](PARALLEL_ROLLING_QUEUE.md)。本ドキュメント同期PRの独立CI成功とdev統合を完了するまで、R14実装ブランチ/PRを先行作成しない。
+
+## 2026-11-11 JST — R14一回統合・長期ビジョン正式登録（A）
+
+- B #107 `a58e070c`／C #108 `f6300b28`／D #106 `f8aea0d3` は各最終HEADの5系統CI成功。変更11パス・重複0。Aの長期ビジョン正式文書#116の5パスを加えて結合[#117](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/117) HEAD `fba1607`（16パス）でPython/Windows/Blender3版/Chromium/Handoff/Kit 6CI全成功。Python3.12は1,129テスト実行、7 skip、失敗0。native UI R14新7項目・R13既存5項目をBlender3版実ログで検証。
+- 開発devへ一回だけsquash統合 `db25585342e19e629fc32e2cc94ceae5d2e3d7b4`。独立7系統全成功： [Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905403010)・[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402793)・[Blender](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402730)（4.4.3/4.5.15/5.2.1）・[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402841)・[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402989)・[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402745)・[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905402775)。統合候補のCIと別の正確なHEADの測定。イベントはPR #25のhead更新に伴うpull_request。
+- B triageは匿名・review-only、異なる証拠が同一試行とは未保証。Cは限定した元module参照による明示cleanupでありWindows GUI/未知moduleの万能復旧ではない。Dは合成テスト用のプロトタイプで任意ソース読取や正式Extension/ライセンス許可ではない。
+- 長期目標「AI自律開発・3Dモデリング支援エンジン」を将来方針としてSPEC/future/AGENTS/DEC-075/生成HANDOFFへ反映。Geometry Lab#114/DIL#115の研究コードは未統合。正式v0.17.0、44 requirements、24 NEXT、last_verified、v0.19〜v0.22のactive=false維持。実ユーザーGLB・Windows GUI・第三者addon・権利・公開/mainは別ゲート。
+- 次は[R15正式割当](R15_ABCD_START.md)をA節目PRとしてレビューし、そのdev統合後の独立7CI成功を確認してから各R15担当の作業ブランチを許可。PR #109のキャッシュ改善は採否未決定。
+
