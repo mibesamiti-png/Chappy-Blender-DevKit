@@ -68,9 +68,11 @@ def _one_pass(vertices, faces):
         if newq-oldq > 1e-4:
             proposals.append((oldq, -(newq-oldq), i,j,new_a,new_b))
     used = set()
+    inserted_diagonals = set()
     flipped = 0
     for oldq,neg_gain,i,j,new_a,new_b in sorted(proposals,key=lambda x:(x[0],x[1],x[2],x[3])):
-        if i in used or j in used:
+        diagonal = tuple(sorted((int(new_a[0]),int(new_a[1]))))
+        if i in used or j in used or diagonal in inserted_diagonals:
             continue
         # A previous disjoint candidate may have changed an adjacent edge;
         # never reuse a face, and recheck the old score deterministically.
@@ -82,6 +84,7 @@ def _one_pass(vertices, faces):
         faces[j] = new_b
         used.add(i)
         used.add(j)
+        inserted_diagonals.add(diagonal)
         flipped += 1
     return flipped
 
