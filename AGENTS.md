@@ -4,6 +4,12 @@
 
 並行開発時は [docs/PARALLEL_DEVELOPMENT.md](docs/PARALLEL_DEVELOPMENT.md) を先に読む。AだけがSTATE/引き継ぎ/共通CI/Notionを更新し、B（GLB）、C（UI生成）、D（Extensions品質）は各専用ブランチ・ドラフトPRで作業する。Codexは任意の追加戦力で、上限・利用不能でも開発はB/C/Dと既存GitHub Actionsで継続する。個別CI成功は統合CI成功ではない。mainマージ・正式リリース・未承認採用・私有データ実行は別承認。
 
+## 役割切替パイロット（Issue #125 — A承認までは無効）
+
+B/C/Dの各チャットは、ユーザーの「続けて」等で作業を再開する際、通常のAGENTS/正式割当と併せて [GitHub Issue #125](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/issues/125) の現在の本文を再取得する。手順は [パイロット仕様](docs/ROLE_DISPATCH_PILOT.md)。`pilot_inactive` の間は**何も切り替えない**。
+
+Aが明示的に `state=active` にした場合に限り、最新の正式ラウンド・dev HEAD・本人の担当PRと必須CIを独立照合し、`normal` ならB/C/D、`integration_support` ならB→E（差分確認）、C→G（下書き）、D→F（CI証拠監査）を**読取専用の補助役**として扱う。読み取り不能・古いラウンド・不正なJSON・権限/CI未確認の場合は安全側に停止し、正式な割当を超える新規作業を行わない。このIssueは**新規作業・マージ・CI省略・A管理文書編集の許可ではない**。チャットはGitHub更新だけでは自動起動しない。
+
 ## 長期ビジョンの扱い（将来方針・未実装）
 
 CBDKの最終目標は「AI自律開発・3Dモデリング支援エンジン」。詳細は [正式長期ビジョン](docs/future/CBDK-LONG-TERM-VISION.md) を参照。現行v0.18と承認済み・非有効のv0.19〜v0.22を置き換えず、通常ABCD開発は継続。Geometry Lab #114とDevelopment Intelligence Lab #115は独立した研究PRで、正式な採用・権限・実装済みを意味しない。自律/共同制作モードの表示やCI成功、heartbeat、保存候補は操作権・復元成功・公開許可を証明しない。将来の操作権切替では旧writer遮断とrevision照合、人間の変更保護が必須。高度AIなしで可能な作業を通常ChatGPT/Codex/GitHub Actions/ローカルツールへ配分する場合も、既存の権限・品質・私有データゲートを省略しない。
