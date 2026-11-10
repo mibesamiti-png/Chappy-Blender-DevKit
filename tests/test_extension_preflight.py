@@ -214,6 +214,27 @@ class ExtensionPreflightTests(unittest.TestCase):
         self.assertFalse(known["source_authenticity_verified"])
         self.assertFalse(known["release_authorized"])
 
+    def test_r14_handle_probes_do_not_elevate_release_authority(self):
+        """R14 CI-watched smoke: stable reason-only status never approves source."""
+        import test_extension_reference_race_round14 as r14
+        self.assertEqual(len(r14.REASON_CODES), 6)
+        for reason in r14.REASON_CODES:
+            report = r14._review_only(reason)
+            self.assertEqual(report["reason_code"], reason)
+            self.assertFalse(report["source_authenticity_verified"])
+            self.assertFalse(report["owner_consent_verified"])
+            self.assertFalse(report["license_compatibility_verified"])
+            self.assertFalse(report["redistribution_authorized"])
+            self.assertFalse(report["release_authorized"])
+            self.assertFalse(report["python_code_executed"])
+            self.assertEqual(report["content_opens"], 0)
+            self.assertEqual(report["bytes_read"], 0)
+        self.build("mesh_inspector")
+        observed = inspect_preview_archive(self.zip)
+        self.assertEqual(observed["status"], "blocked_for_extension_release")
+        self.assertFalse(observed["source_authenticity_verified"])
+        self.assertFalse(observed.get("release_authorized", False))
+
     def test_all_feature_preview_is_verified_but_not_extension_approved(self):
         self.build()
         result = inspect_preview_archive(self.zip)

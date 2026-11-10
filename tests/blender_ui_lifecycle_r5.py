@@ -1299,6 +1299,254 @@ def run(path):
             checks.append("native_r13_old_reference_recovers_live_classes")
             checks.append("native_r13_foreign_scene_survives_recovery")
             checks.append("native_r13_reenable_after_eviction_2")
+
+            # R14: create three stale generations, each retaining a DIFFERENT
+            # real Blender operator class. The newly imported package has
+            # empty ledgers even though older bpy registrations still exist.
+            # Register class slots [0..4] are CBDK-authored, never external.
+            assert_detached(module)
+            assert sys.modules.get(PACKAGE) is module
+            assert len(module._CLASSES) >= 5
+            stale_generations = []
+            for fail_index, keep_index in ((4, 3), (3, 2), (2, 1)):
+                current_module = module
+                assert not current_module._REGISTERED
+                assert not current_module._OWNED_PROPERTIES
+                assert not current_module._OWNED_PROPERTY_TOKENS
+                class_to_fail = current_module._CLASSES[fail_index]
+                class_to_keep = current_module._CLASSES[keep_index]
+                orig_register = bpy.utils.register_class
+                orig_unregister = bpy.utils.unregister_class
+                failed_register = [0]
+                failed_rollback = [0]
+                enable_errors = []
+
+                def r14_reject_selected_registration(cls):
+                    if cls is class_to_fail and failed_register[0] == 0:
+                        failed_register[0] += 1
+                        raise RuntimeError(
+                            "CBDK R14 selected enable registration failure")
+                    return orig_register(cls)
+
+                def r14_keep_selected_class(cls):
+                    if cls is class_to_keep and failed_rollback[0] == 0:
+                        failed_rollback[0] += 1
+                        raise RuntimeError(
+                            "CBDK R14 selected rollback class failure")
+                    return orig_unregister(cls)
+
+                bpy.utils.register_class = r14_reject_selected_registration
+                bpy.utils.unregister_class = r14_keep_selected_class
+                try:
+                    result = addon_utils.enable(
+                        PACKAGE, default_set=False, persistent=False,
+                        handle_error=lambda exc: enable_errors.append(
+                            type(exc).__name__))
+                    assert result is None
+                finally:
+                    bpy.utils.register_class = orig_register
+                    bpy.utils.unregister_class = orig_unregister
+
+                assert enable_errors == ["RuntimeError"], enable_errors
+                assert failed_register == [1]
+                assert failed_rollback == [1]
+                assert PACKAGE not in sys.modules
+                assert current_module.__addon_enabled__ is False
+                assert current_module._REGISTERED == [class_to_keep]
+                assert not current_module._OWNED_PROPERTIES
+                assert not current_module._OWNED_PROPERTY_TOKENS
+                assert getattr(bpy.types, class_to_keep.__name__, None) is (
+                    class_to_keep)
+                assert all(name not in bpy.types.Scene.__dict__
+                           for name in PROPERTIES)
+                stale_generations.append((current_module, class_to_keep))
+                assert len({id(owner) for owner, _ in stale_generations}) == (
+                    len(stale_generations))
+                assert len({id(cls) for _, cls in stale_generations}) == (
+                    len(stale_generations))
+                assert all(
+                    owner._REGISTERED == [kept] and
+                    getattr(bpy.types, kept.__name__, None) is kept
+                    for owner, kept in stale_generations)
+
+                # Deliberately import *without* cleaning earlier generations.
+                # The new module's empty ledgers are an UNKNOWN global state,
+                # not evidence of successful cleanup of older generations.
+                module = importlib.import_module(PACKAGE)
+                assert module is not current_module
+                assert sys.modules.get(PACKAGE) is module
+                assert not module._REGISTERED
+                assert not module._OWNED_PROPERTIES
+                assert not module._OWNED_PROPERTY_TOKENS
+                assert all(
+                    getattr(bpy.types, kept.__name__, None) is kept
+                    for _, kept in stale_generations)
+
+            assert len(stale_generations) == 3
+            # The first available clean-generation unregister does NOT
+            # release any of the three stale modules' classes.
+            module.unregister()
+            assert all(
+                owner._REGISTERED == [kept] and
+                getattr(bpy.types, kept.__name__, None) is kept
+                for owner, kept in stale_generations)
+
+            bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
+                name="CBDK R14 synthetic foreign", default="foreign")
+            foreign = bpy.types.Scene.__dict__[PROPERTIES[0]]
+            try:
+                # Refusal is distinct from UNKNOWN and SUCCESS. The fresh
+                # module must not register over a synthetic foreign property.
+                try:
+                    module.register()
+                except RuntimeError as exc:
+                    assert "Scene properties conflict" in str(exc), str(exc)
+                else:
+                    raise AssertionError(
+                        "R14 new import accepted synthetic foreign Scene")
+                assert bpy.types.Scene.__dict__[PROPERTIES[0]] is foreign
+                assert not module._REGISTERED
+                assert not module._OWNED_PROPERTIES
+
+                # Explicit recovery of ALL saved originals, not a new import.
+                # After each step, remaining native classes must still be live.
+                for index, (owner, kept) in enumerate(stale_generations):
+                    owner.unregister()
+                    assert not owner._REGISTERED
+                    assert not owner._OWNED_PROPERTIES
+                    assert not owner._OWNED_PROPERTY_TOKENS
+                    assert not hasattr(bpy.types, kept.__name__)
+                    for later_owner, later_class in stale_generations[index + 1:]:
+                        assert later_owner._REGISTERED == [later_class]
+                        assert getattr(
+                            bpy.types, later_class.__name__, None) is (
+                            later_class)
+                    assert bpy.types.Scene.__dict__[PROPERTIES[0]] is foreign
+                # SUCCESS requires native class absence plus all old ledgers
+                # empty. A disabled addon flag or a fresh list isn't enough.
+                assert all(
+                    not owner._REGISTERED and
+                    not owner._OWNED_PROPERTIES and
+                    not owner._OWNED_PROPERTY_TOKENS and
+                    not hasattr(bpy.types, kept.__name__)
+                    for owner, kept in stale_generations)
+                assert bpy.types.Scene.__dict__[PROPERTIES[0]] is foreign
+            finally:
+                if bpy.types.Scene.__dict__.get(PROPERTIES[0]) is foreign:
+                    delattr(bpy.types.Scene, PROPERTIES[0])
+            assert_detached(module)
+            module = addon_utils.enable(
+                PACKAGE, default_set=False, persistent=False)
+            assert module is not None
+            enabled = True
+            assert len(module._REGISTERED) == len(module._CLASSES)
+            assert set(module._FEATURE_IDS) == set(IDS)
+            addon_utils.disable(PACKAGE, default_set=False)
+            enabled = False
+            assert_detached(module)
+            checks.append("native_r14_three_generation_class_identity")
+            checks.append("native_r14_fresh_empty_ledger_is_unknown")
+            checks.append("native_r14_foreign_collision_refused")
+            checks.append("native_r14_all_old_references_explicitly_recovered")
+
+            # A separate two-generation case keeps a genuine owned Scene
+            # token while addon_utils evicts the failed original. This cannot
+            # be solved by importing a second module and trusting empty lists.
+            scene_owner = module
+            orig_register = bpy.utils.register_class
+            result_token = [None]
+            scene_failures = [0]
+            scene_errors = []
+            assert "delattr" not in scene_owner.__dict__
+
+            def r14_fail_second_register(cls):
+                if cls is scene_owner._CLASSES[1]:
+                    raise RuntimeError("CBDK R14 Scene-generation enable fault")
+                return orig_register(cls)
+
+            def r14_fail_owned_scene_delete(owner, name):
+                if (owner is bpy.types.Scene and name == PROPERTIES[0]
+                        and scene_failures[0] == 0):
+                    scene_failures[0] += 1
+                    result_token[0] = bpy.types.Scene.__dict__.get(name)
+                    raise RuntimeError("CBDK R14 pending Scene token fault")
+                return delattr(owner, name)
+
+            bpy.utils.register_class = r14_fail_second_register
+            scene_owner.__dict__["delattr"] = r14_fail_owned_scene_delete
+            try:
+                result = addon_utils.enable(
+                    PACKAGE, default_set=False, persistent=False,
+                    handle_error=lambda exc: scene_errors.append(
+                        type(exc).__name__))
+                assert result is None
+            finally:
+                bpy.utils.register_class = orig_register
+                scene_owner.__dict__.pop("delattr", None)
+
+            assert scene_errors == ["RuntimeError"]
+            assert scene_failures == [1]
+            assert PACKAGE not in sys.modules
+            assert not scene_owner._REGISTERED
+            assert scene_owner._OWNED_PROPERTIES == [PROPERTIES[0]]
+            assert scene_owner._OWNED_PROPERTY_TOKENS[PROPERTIES[0]] is (
+                result_token[0])
+            assert bpy.types.Scene.__dict__.get(PROPERTIES[0]) is (
+                result_token[0])
+            module = importlib.import_module(PACKAGE)
+            assert module is not scene_owner
+            assert not module._OWNED_PROPERTY_TOKENS
+            assert not module._OWNED_PROPERTIES
+            assert not module._REGISTERED
+            try:
+                module.register()
+            except RuntimeError as exc:
+                assert "Scene properties conflict" in str(exc)
+            else:
+                raise AssertionError("R14 fresh module stole pending Scene")
+            module.unregister()
+            assert scene_owner._OWNED_PROPERTY_TOKENS[PROPERTIES[0]] is (
+                result_token[0])
+
+            # Replace exactly the original declaration with an authored
+            # foreign stand-in; identity, not same-name labels, controls
+            # whether a previous owner may delete the replacement.
+            bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
+                name="CBDK R14 replacement", default="not the old owner")
+            foreign_scene = bpy.types.Scene.__dict__[PROPERTIES[0]]
+            assert foreign_scene is not result_token[0]
+            try:
+                scene_owner.unregister()
+                assert not scene_owner._REGISTERED
+                assert not scene_owner._OWNED_PROPERTIES
+                assert not scene_owner._OWNED_PROPERTY_TOKENS
+                assert bpy.types.Scene.__dict__[PROPERTIES[0]] is (
+                    foreign_scene)
+                try:
+                    module.register()
+                except RuntimeError as exc:
+                    assert "Scene properties conflict" in str(exc)
+                else:
+                    raise AssertionError(
+                        "R14 new import stole retained foreign Scene")
+                assert bpy.types.Scene.__dict__[PROPERTIES[0]] is (
+                    foreign_scene)
+            finally:
+                if (bpy.types.Scene.__dict__.get(PROPERTIES[0])
+                        is foreign_scene):
+                    delattr(bpy.types.Scene, PROPERTIES[0])
+            assert_detached(scene_owner)
+            assert_detached(module)
+            module = addon_utils.enable(
+                PACKAGE, default_set=False, persistent=False)
+            assert module is not None
+            enabled = True
+            addon_utils.disable(PACKAGE, default_set=False)
+            enabled = False
+            assert_detached(module)
+            checks.append("native_r14_pending_scene_second_generation")
+            checks.append("native_r14_foreign_scene_identity_recovered")
+            checks.append("native_r14_reenable_after_all_generations")
         finally:
             if enabled:
                 try:
