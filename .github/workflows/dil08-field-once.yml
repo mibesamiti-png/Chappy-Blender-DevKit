@@ -1,0 +1,55 @@
+name: DIL-08 isolated pinned SQLite field experiment
+on:
+  push:
+    branches: [research/dil08-field-once-20261111]
+permissions:
+  contents: read
+jobs:
+  sqlite-field:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch pinned source commit
+        run: |
+          git fetch --no-tags origin feature/v0.18-shape-diagnostics
+          git cat-file -t 2b8220210c2475239a43354d544b5a6f176fba80
+      - name: SQLite availability and frozen unit tests
+        run: |
+          python - <<'PY'
+          import sqlite3
+          con=sqlite3.connect(':memory:')
+          con.execute("CREATE VIRTUAL TABLE f USING fts5(content, tokenize='trigram')")
+          print("SQLite",sqlite3.sqlite_version,"FTS5 trigram available")
+          PY
+          python -m unittest discover -s research/development_intelligence/dil08 -p 'test_*.py' -v
+      - name: First actual full-source SQLite score
+        run: |
+          python research/development_intelligence/dil08/evaluate.py --repo . --output /tmp/dil08-first-full-sqlite.json
+      - name: Evidence and per-case diagnostics
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/dil08-first-full-sqlite.json',encoding='utf-8'))
+          print('EXPERIMENT',r['experiment'],'SOURCE',r['source_commit'],'ENV',r['runtime'])
+          print('GATES',json.dumps(r['gates'],sort_keys=True))
+          print('COVERAGE',json.dumps(r['coverage'],sort_keys=True))
+          print('RATIO',r['operations_ratio'])
+          for section in ('operations','development_seen'):
+            print('SECTION',section)
+            for name,a in r[section].items():
+              print('ARM',name,json.dumps({k:v for k,v in a.items() if k!='cases'},sort_keys=True))
+              for c in a['cases']:
+                print('CASE',section,name,c['id'],'missing',c['missing'],'selected',c['selected'],'status',c['status'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dil08-first-full-sqlite-field-result
+          path: /tmp/dil08-first-full-sqlite.json
+          if-no-files-found: ignore
+          retention-days: 30
