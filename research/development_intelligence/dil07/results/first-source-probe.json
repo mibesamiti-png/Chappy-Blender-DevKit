@@ -1,0 +1,838 @@
+{
+  "study": "DIL-07",
+  "record_type": "first_source_content_probe_not_python_sqlite_field_run",
+  "result": "transfer_failed_not_ready",
+  "source_commit": "2b8220210c2475239a43354d544b5a6f176fba80",
+  "fixed_manifest_source_hashes": true,
+  "all_predeclared_anchors_present": true,
+  "source_method": "GitHub connector pinned source bodies; metadata/term-presence probe compatible with DIL04 regex/trigram phrase sets at max_docs=12; not a local real-corpus SQLite execution",
+  "cases": 15,
+  "tagged_cases": 9,
+  "observed": {
+    "all_context": {
+      "exact_docsets": 0,
+      "cases": 15,
+      "required_found": 16,
+      "required_total": 16,
+      "historical_returns": 15,
+      "input_bytes": 3956580,
+      "details": [
+        {
+          "question": "Q01",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q02",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q03",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q04",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q05",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q06",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q07",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q08",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q09",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q10",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q11",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q12",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q13",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q14",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q15",
+          "selected": [
+            "agents",
+            "extension",
+            "future",
+            "glb",
+            "parallel",
+            "r15",
+            "r16",
+            "release",
+            "roles",
+            "state",
+            "ui",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 263772,
+          "historical": 1,
+          "status": "needs_authoritative_source"
+        }
+      ]
+    },
+    "metadata_only": {
+      "exact_docsets": 9,
+      "cases": 15,
+      "required_found": 10,
+      "required_total": 16,
+      "historical_returns": 0,
+      "input_bytes": 251747,
+      "details": [
+        {
+          "question": "Q01",
+          "selected": [
+            "r16"
+          ],
+          "missing": [],
+          "bytes": 5832,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q02",
+          "selected": [],
+          "missing": [
+            "r16"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q03",
+          "selected": [],
+          "missing": [
+            "r16"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q04",
+          "selected": [
+            "roles"
+          ],
+          "missing": [],
+          "bytes": 5507,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q05",
+          "selected": [],
+          "missing": [
+            "roles"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q06",
+          "selected": [
+            "agents"
+          ],
+          "missing": [],
+          "bytes": 64530,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q07",
+          "selected": [
+            "parallel"
+          ],
+          "missing": [],
+          "bytes": 15845,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q08",
+          "selected": [],
+          "missing": [
+            "future"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q09",
+          "selected": [
+            "release"
+          ],
+          "missing": [],
+          "bytes": 8457,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q10",
+          "selected": [
+            "extension"
+          ],
+          "missing": [],
+          "bytes": 7938,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q11",
+          "selected": [],
+          "missing": [
+            "ui"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q12",
+          "selected": [
+            "glb"
+          ],
+          "missing": [],
+          "bytes": 8761,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q13",
+          "selected": [
+            "state"
+          ],
+          "missing": [],
+          "bytes": 117927,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q14",
+          "selected": [],
+          "missing": [
+            "vision"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q15",
+          "selected": [
+            "future",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 16944,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        }
+      ]
+    },
+    "fts5_trigram_proxy": {
+      "exact_docsets": 0,
+      "cases": 15,
+      "required_found": 1,
+      "required_total": 16,
+      "historical_returns": 0,
+      "input_bytes": 195500,
+      "details": [
+        {
+          "question": "Q01",
+          "selected": [],
+          "missing": [
+            "r16"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q02",
+          "selected": [],
+          "missing": [
+            "r16"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q03",
+          "selected": [],
+          "missing": [
+            "r16"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q04",
+          "selected": [],
+          "missing": [
+            "roles"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q05",
+          "selected": [],
+          "missing": [
+            "roles"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q06",
+          "selected": [],
+          "missing": [
+            "agents"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q07",
+          "selected": [],
+          "missing": [
+            "parallel"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q08",
+          "selected": [],
+          "missing": [
+            "future"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q09",
+          "selected": [],
+          "missing": [
+            "release"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q10",
+          "selected": [],
+          "missing": [
+            "extension"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q11",
+          "selected": [
+            "agents",
+            "r16",
+            "state",
+            "ui"
+          ],
+          "missing": [],
+          "bytes": 195486,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q12",
+          "selected": [],
+          "missing": [
+            "glb"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q13",
+          "selected": [],
+          "missing": [
+            "state"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q14",
+          "selected": [],
+          "missing": [
+            "vision"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q15",
+          "selected": [],
+          "missing": [
+            "future",
+            "vision"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        }
+      ]
+    },
+    "hybrid_proxy": {
+      "exact_docsets": 9,
+      "cases": 15,
+      "required_found": 11,
+      "required_total": 16,
+      "historical_returns": 0,
+      "input_bytes": 447232,
+      "details": [
+        {
+          "question": "Q01",
+          "selected": [
+            "r16"
+          ],
+          "missing": [],
+          "bytes": 5832,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q02",
+          "selected": [],
+          "missing": [
+            "r16"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q03",
+          "selected": [],
+          "missing": [
+            "r16"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q04",
+          "selected": [
+            "roles"
+          ],
+          "missing": [],
+          "bytes": 5507,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q05",
+          "selected": [],
+          "missing": [
+            "roles"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q06",
+          "selected": [
+            "agents"
+          ],
+          "missing": [],
+          "bytes": 64530,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q07",
+          "selected": [
+            "parallel"
+          ],
+          "missing": [],
+          "bytes": 15845,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q08",
+          "selected": [],
+          "missing": [
+            "future"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q09",
+          "selected": [
+            "release"
+          ],
+          "missing": [],
+          "bytes": 8457,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q10",
+          "selected": [
+            "extension"
+          ],
+          "missing": [],
+          "bytes": 7938,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q11",
+          "selected": [
+            "agents",
+            "r16",
+            "state",
+            "ui"
+          ],
+          "missing": [],
+          "bytes": 195486,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q12",
+          "selected": [
+            "glb"
+          ],
+          "missing": [],
+          "bytes": 8761,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q13",
+          "selected": [
+            "state"
+          ],
+          "missing": [],
+          "bytes": 117927,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        },
+        {
+          "question": "Q14",
+          "selected": [],
+          "missing": [
+            "vision"
+          ],
+          "bytes": 1,
+          "historical": 0,
+          "status": "needs_authoritative_source"
+        },
+        {
+          "question": "Q15",
+          "selected": [
+            "future",
+            "vision"
+          ],
+          "missing": [],
+          "bytes": 16944,
+          "historical": 0,
+          "status": "evidence_candidate_only"
+        }
+      ]
+    }
+  },
+  "hybrid_vs_full_byte_ratio": 0.11303499486930632,
+  "strong_gate_met": false,
+  "product_adoption": false,
+  "can_authorize_merge": false,
+  "can_skip_ci": false,
+  "limits": [
+    "Same author wrote question/gold labels",
+    "Unmodified DIL04 SQLite on full public corpus not executed locally",
+    "Literal-match proxy is not a verified substitute for SQLite FTS trigram tokenizer and bm25 ranking",
+    "No LLM answer, real user questions, AI tokens, costs, actual workflow speed or efficacy tested"
+  ]
+}
