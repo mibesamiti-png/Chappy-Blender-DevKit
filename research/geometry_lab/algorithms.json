@@ -363,6 +363,36 @@
       ],
       "status": "research_R12_boundary_match_relocated_seams_not_product_approved",
       "approved": false
+    },
+    {
+      "id": "blender-uv-seam-graph-optimization-r13",
+      "version": "0.13.0",
+      "api": "cbdk_geometry.seam_opt.optimize_uv_charts",
+      "purpose": "元UV境界拘束を保持し、追加面内部UVシームの辺数と3D長さを同時に増やさず削減する研究用グラフ最適化",
+      "preconditions": [
+        "frozen R12 source loop UV chart translations",
+        "XY star-shaped Z-separated R10 geometry",
+        "triangle face adjacency graph <=600 faces",
+        "fixed seam chart labels at original source boundary"
+      ],
+      "input": "3D strip vertices, triangle faces, original boundary chart offsets and R12 per-face UV labels",
+      "output": "new per-face UV chart translations + seam count/length/Pareto metadata, approved=false",
+      "parameters": {
+        "two_chart": "pure Python constrained Dinic mincut",
+        "multi_chart": "bounded ICM 40 sweeps",
+        "seconds": 10,
+        "max_faces": 600
+      },
+      "success": "R13 fresh split 5/5 both seam count+length >=10% lower, 506->309 edges, length148.053->91.019; joined/strip CGAL all 24 zero",
+      "failure": "multi chart modest 12% count/13.7% length; still visible interior seams; real UV painting/shading/UV packing untested",
+      "validation": "tests/test_r13_seams.py; cycles/r13/blender_run.py; cycles/r13/evaluate.py; official Blender4.4.3 and independent CGAL",
+      "performance": "cycles/r13/RESULTS.md",
+      "references": [
+        "cycles/r13/RESEARCH.md",
+        "cycles/r13/STATUS.json"
+      ],
+      "status": "research_R13_seam_count_length_gate_passed_not_product_approved",
+      "approved": false
     }
   ]
 }
