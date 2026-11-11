@@ -28,6 +28,9 @@ def validate_catalog(catalog, manifest):
         if doc_id in seen or doc_id not in manifest_by_id:
             raise ValueError("duplicate or unknown document")
         seen.add(doc_id)
+        original = manifest_by_id[doc_id]
+        if x.get("path") != original.get("path") or x.get("blob_sha") != original.get("blob_sha"):
+            raise ValueError("catalog source path/blob differs from pinned manifest")
         if x["lifecycle"] == "historical" and manifest_by_id[doc_id]["current"]:
             raise ValueError("catalog historical status contradicts manifest")
         if x["lifecycle"] == ACTIVE and not manifest_by_id[doc_id]["current"]:

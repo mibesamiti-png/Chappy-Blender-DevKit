@@ -14,9 +14,10 @@ def fixture():
         "documents": [
            {"id": i, "topic": topics[i],
             "lifecycle": "historical" if i=="r15" else ("future_inactive" if i in ("future","vision") else "current_at_pinned_commit"),
-            "authority": "historical" if i=="r15" else ("official_assignment" if i=="r16" else "operational_reference")}
+            "authority": "historical" if i=="r15" else ("official_assignment" if i=="r16" else "operational_reference"),
+            "path": i + ".md", "blob_sha": "b"*40}
            for i in DOC_IDS]}
-    manifest = {"source_commit": "a"*40, "documents": [{"id": i, "current": i!="r15"} for i in DOC_IDS]}
+    manifest = {"source_commit": "a"*40, "documents": [{"id": i, "current": i!="r15", "path": i + ".md", "blob_sha": "b"*40} for i in DOC_IDS]}
     src = {i: {"text": f"source {i}"} for i in DOC_IDS}
     return catalog, manifest, src
 
@@ -27,6 +28,9 @@ class TestSelector(unittest.TestCase):
     def run_case(self, **kw):
         return select(kw, self.docs, self.by_id)
     def test_catalog_valid(self): self.assertEqual(len(self.by_id),12)
+    def test_catalog_mismatched_blob(self):
+        c=copy.deepcopy(self.cat);c["documents"][0]["blob_sha"]="c"*40
+        with self.assertRaises(ValueError):validate_catalog(c,self.manifest)
     def test_catalog_wrong_commit(self):
         c=copy.deepcopy(self.cat);c["source_commit"]="b"*40
         with self.assertRaises(ValueError):validate_catalog(c,self.manifest)
