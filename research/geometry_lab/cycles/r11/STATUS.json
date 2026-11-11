@@ -1,0 +1,61 @@
+{
+  "cycle": "R11",
+  "status": "complete_scoped_attribute_audit_passed_not_product_approved",
+  "parent_head": "a6980ecde5fbac6ad8c77ce6e4e64b5f044cb2ae",
+  "theme": "Blender4.4.3_EditMode_assembled_mesh_UV_material_normal_audit",
+  "candidate": "cycles.r11.blender_run.execute temporary BMesh adapter",
+  "approved": false,
+  "synthetic_only": true,
+  "source_data": "researcher-created collars built from R10 geometry, no user models",
+  "blender": "4.4.3",
+  "official_blender_archive_sha256": "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946",
+  "cgal": "6.0.1.post202410241521",
+  "method": "Blender EDIT mode BMesh, temporary collar+R10 triangulated strip",
+  "development_geometry_cases": 4,
+  "development_uv_conditions": 8,
+  "fresh_geometry_cases": 6,
+  "fresh_uv_conditions": 6,
+  "arms": 2,
+  "generated_and_CGAL_evaluated": 28,
+  "attribute_adapter_results": {
+    "development_pass": 8,
+    "fresh_pass": 6
+  },
+  "negative_control_detected": {
+    "development": 8,
+    "fresh": 6
+  },
+  "continuous_uv_conditions": {
+    "development": 4,
+    "fresh": 3,
+    "uv_gap_max": 0
+  },
+  "split_uv_conditions": {
+    "development": 4,
+    "fresh": 3,
+    "uv_gap_observed": 0.2500000596046448,
+    "continuity_pass": false,
+    "mismatch_detected": true
+  },
+  "all_original_source_faces_UV_material_exactly_unchanged": true,
+  "all_temporary_scene_restored": true,
+  "all_candidate_assembled_mesh_CGAL_pairs": 0,
+  "all_arms_assembled_mesh_CGAL_pairs": 0,
+  "standalone_R10_geometry_passes": 14,
+  "fresh_normal_discontinuity_max_degrees": 56.354,
+  "seen_normal_discontinuity_max_degrees": 66.93,
+  "attribute_audit_gate_met": true,
+  "whole_mesh_cgal_gate_met": true,
+  "uv_split_islands_automatically_reconciled": false,
+  "normals_smoothness_guaranteed": false,
+  "source_sha256": {
+    "cycles/r11/fixtures.py": "59e5b214bcfc5fecc34e29ef4361ebad240560cae0e0ec806d9df9d4bb5a4986",
+    "cycles/r11/blender_run.py": "3caf884511e5fbf4c7b3a04ecb90fe80204204a0b5d8b748cd62d305687b1797",
+    "cycles/r11/evaluate.py": "7838662142ec520ee75afbf43dbf3c2a2e92a4f098f6d42c185d63ea75bdd36c"
+  },
+  "source_tuned_after_first_new_holdout": false,
+  "preholdout_dev_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42922049754",
+  "full_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42922222985",
+  "decision": "Scoped controlled temporary edit-mode attribute-preservation audit passed, original UV/material intact. UV island stitching and normal smoothing not solved; no production integration.",
+  "next": "No auto R12. Independently validate real imported assets and develop UV island-aware mapping only under a separate preregistered cycle."
+}

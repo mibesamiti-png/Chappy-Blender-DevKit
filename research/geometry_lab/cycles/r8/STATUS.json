@@ -1,0 +1,84 @@
+{
+  "cycle": "R8",
+  "status": "complete_preregistered_research_gate_passed_not_integrated",
+  "parent_head": "fe7f2c341b8215c7c6c7283f573580342a959c1e",
+  "candidate": "cbdk_geometry.tapered_loft.tapered_radial_loft",
+  "approved": false,
+  "synthetic_only": true,
+  "blender": "4.4.3",
+  "official_blender_sha256": "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946",
+  "cgal": "6.0.1.post202410241521",
+  "cases_seen": 10,
+  "cases_fresh_holdout": 6,
+  "method_count": 3,
+  "configurations_generated_evaluated": 48,
+  "repeats": 3,
+  "warmup": 1,
+  "thresholds": {
+    "min_triangle_quality": 0.1,
+    "rms": 0.12,
+    "max_distance": 0.28,
+    "old_slender_recovery": true,
+    "prior_success_regressions_allowed": 0,
+    "holdout_min_pass": 4,
+    "holdout_pass_at_least_r7": true,
+    "fresh_quality_delta_min": 0.015,
+    "fresh_quality_cases_min": 2,
+    "independent_cgal_hits": 0
+  },
+  "results": {
+    "old_slender": {
+      "old_r7_q": 0.0618314,
+      "new_r8_q": 0.12952,
+      "rescued": true
+    },
+    "seen_passes": {
+      "tapered_r8": 10,
+      "warped_r7": 9,
+      "native_3_linear": 8
+    },
+    "holdout_passes": {
+      "tapered_r8": 5,
+      "warped_r7": 3,
+      "native_3_linear": 3
+    },
+    "fresh_quality_improved_cases_ge_0015": 6,
+    "new_candidate_cgal_hits": 0,
+    "all_48_cgal_hits": 0,
+    "all_original_boundaries_preserved": true,
+    "all_topology_checks_passed": true,
+    "unavailable": 0,
+    "failure": {
+      "case": "r8_slender_opposite",
+      "r8_min_quality": 0.078598,
+      "r7_min_quality": 0.052124,
+      "native_min_quality": 0.039209
+    },
+    "holdout_mean_triangle_count": {
+      "tapered_r8": 189.3,
+      "warped_r7": 248.3,
+      "native_3_linear": 331.3
+    },
+    "holdout_median_generation_ms": {
+      "tapered_r8": 3.246,
+      "warped_r7": 1.851,
+      "native_3_linear": 1.652
+    },
+    "holdout_mean_analytic_rms": {
+      "tapered_r8": 0.02319,
+      "warped_r7": 0.02112,
+      "native_3_linear": 0.05493
+    }
+  },
+  "source_sha256": {
+    "cbdk_geometry/tapered_loft.py": "5734f3dfa5100360c596a1e9b80dd4d821d3af945707200ba20ba4fa86d6c8ab",
+    "cycles/r8/fixtures.py": "9f7717cb6b3ab3d3f573386381f4eacb316da1be707d088b9e9a16e4445c8b68",
+    "cycles/r8/blender_run.py": "5e7af0591b321e3a23d337a4ec1c88dca9897b3a41327e6a7eb4a65e328ae59c",
+    "cycles/r8/evaluate.py": "c0640d152d383669180f694d46571a720c241bcf1486eec0221de8972e17e4e2"
+  },
+  "ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42909533739",
+  "research_gate_passed": true,
+  "changed_after_first_holdout": 0,
+  "decision": "Research candidate retained with quality gain and time/analytic error tradeoffs. CBDK integration requires A review.",
+  "next": "No auto R9. Consider separate reverse-slender/real-mesh study."
+}

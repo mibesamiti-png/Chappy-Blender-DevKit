@@ -1,0 +1,1113 @@
+{
+  "synthetic_only": true,
+  "blender": "4.4.3",
+  "cgal": "6.0.1.post202410241521",
+  "source_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "blender_failure_probe.py": "4d48704a2fc5ca579fc74dd979e53f4db8418f4d5bb478990d38b608ad885ca3",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/accelerated.py": "3541dcf7805ecdb1378ea714960516691c5a254f632f890ce29a4e122113ce39",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/bridge.py": "2ed8600dc667a15ce2c554174bfa549c05476d55130d118bfb6a50a41312422d",
+    "cbdk_geometry/exact.py": "16a1f366883809889a2e0b6c34f22fd5b46a9f034f15c53bc82a3b55097e889d",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "cycles/r2/benchmark.py": "caa8a31bdb1f7b2eba671ee229b22ac1e903fc79b18d090198704f01efde2a04",
+    "cycles/r2/export_blender.py": "957c079ab28daafcdc137fe2764c51a52870f1b194e4dba1f67bf01e5c7df2ee",
+    "cycles/r2/fixtures.py": "c57fa2b561225cb9d5469dff1098b160e0b4d85d6a96ec06d1c975edde93be70",
+    "cycles/r2/oracle.py": "11eca15f6b24254c9b14020e62e2b14e5198294809aed21eaf5a2a0e8bc13ee6",
+    "cycles/r2/recheck_blender.py": "8891f812120f737cb20fac46d96f40781fa410c1f58a32f6c5b84afa2da2dbb9",
+    "cycles/r3/benchmark.py": "070aea558a6474affe6b29b570eff0a1f9d3c1cd847a030e0449040c09346c6a",
+    "cycles/r3/export_joins.py": "748a22b9a8b26262c97ee8e963bf1bc665b226f833cd95926ebe5bdd2854c774",
+    "cycles/r3/fixtures.py": "322695c092617323888edb34bd4203cd339e57f517600695ca5ffab3d00dc3bb",
+    "cycles/r3/reevaluate.py": "33f2f4057ffd3670651b70924fa484e765828593fd4126caa7a52bb84d3ec7b6",
+    "cycles/r4/blender_run.py": "1d4d568dc36a18c0fe1be7c2e6cd723cb8f73f79b7c9cf7f183f3453137087b1",
+    "cycles/r4/evaluate.py": "338db13d6d6ab49cc274b83768bdfcb5f87a3fb58ace7b3c68d121deacb1cfc8",
+    "cycles/r4/fixtures.py": "0bccee5f4b24144492c29dd9c0fec10fdb08416004fd1e26c6dabdcab70d729a",
+    "cycles/r4/python_run.py": "94a0f0a17987a8871d86605492f687fe3a498c3b20f5679dbde204e8285880e8",
+    "dense_benchmark.py": "92bfae6bc201233ca826bc4b6f42aaf77433f5f3f28e9777bffdd221cdb38fc0",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_accelerated.py": "012a42f21b37605924192c0350153cfc73b550e8c33f7d2e50eab0c99c8b4199",
+    "tests/test_bridge.py": "f993e61538655262e5197b7c9355fa5603d7aeb12d10b05d5c2d02aa816dbba3",
+    "tests/test_bridge_oracle.py": "ebb55757ce500ff931edcc64f3901ef93231abb3190c1414b478289a9922b501",
+    "tests/test_cgal_oracle.py": "a3cd6e48fd16c1846d078829c3e2a970c1e07c70cddf9e8ede6cf1d0a54131a3",
+    "tests/test_exact.py": "3a5c07bacd0f836302160bd8982751a13abb3f3486034972f8dffdf6de455c8e",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5",
+    "tests/test_motion.py": "e13366c5409f46fb684c070ec1f771b776c1fd87b3b44067113ef529a1fab510"
+  },
+  "generator_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "blender_failure_probe.py": "4d48704a2fc5ca579fc74dd979e53f4db8418f4d5bb478990d38b608ad885ca3",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/accelerated.py": "3541dcf7805ecdb1378ea714960516691c5a254f632f890ce29a4e122113ce39",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/bridge.py": "2ed8600dc667a15ce2c554174bfa549c05476d55130d118bfb6a50a41312422d",
+    "cbdk_geometry/exact.py": "16a1f366883809889a2e0b6c34f22fd5b46a9f034f15c53bc82a3b55097e889d",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "cycles/r2/benchmark.py": "caa8a31bdb1f7b2eba671ee229b22ac1e903fc79b18d090198704f01efde2a04",
+    "cycles/r2/export_blender.py": "957c079ab28daafcdc137fe2764c51a52870f1b194e4dba1f67bf01e5c7df2ee",
+    "cycles/r2/fixtures.py": "c57fa2b561225cb9d5469dff1098b160e0b4d85d6a96ec06d1c975edde93be70",
+    "cycles/r2/oracle.py": "11eca15f6b24254c9b14020e62e2b14e5198294809aed21eaf5a2a0e8bc13ee6",
+    "cycles/r2/recheck_blender.py": "8891f812120f737cb20fac46d96f40781fa410c1f58a32f6c5b84afa2da2dbb9",
+    "cycles/r3/benchmark.py": "070aea558a6474affe6b29b570eff0a1f9d3c1cd847a030e0449040c09346c6a",
+    "cycles/r3/export_joins.py": "748a22b9a8b26262c97ee8e963bf1bc665b226f833cd95926ebe5bdd2854c774",
+    "cycles/r3/fixtures.py": "322695c092617323888edb34bd4203cd339e57f517600695ca5ffab3d00dc3bb",
+    "cycles/r3/reevaluate.py": "33f2f4057ffd3670651b70924fa484e765828593fd4126caa7a52bb84d3ec7b6",
+    "cycles/r4/blender_run.py": "1d4d568dc36a18c0fe1be7c2e6cd723cb8f73f79b7c9cf7f183f3453137087b1",
+    "cycles/r4/evaluate.py": "338db13d6d6ab49cc274b83768bdfcb5f87a3fb58ace7b3c68d121deacb1cfc8",
+    "cycles/r4/fixtures.py": "0bccee5f4b24144492c29dd9c0fec10fdb08416004fd1e26c6dabdcab70d729a",
+    "dense_benchmark.py": "92bfae6bc201233ca826bc4b6f42aaf77433f5f3f28e9777bffdd221cdb38fc0",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_accelerated.py": "012a42f21b37605924192c0350153cfc73b550e8c33f7d2e50eab0c99c8b4199",
+    "tests/test_bridge.py": "f993e61538655262e5197b7c9355fa5603d7aeb12d10b05d5c2d02aa816dbba3",
+    "tests/test_cgal_oracle.py": "a3cd6e48fd16c1846d078829c3e2a970c1e07c70cddf9e8ede6cf1d0a54131a3",
+    "tests/test_exact.py": "3a5c07bacd0f836302160bd8982751a13abb3f3486034972f8dffdf6de455c8e",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5",
+    "tests/test_motion.py": "e13366c5409f46fb684c070ec1f771b776c1fd87b3b44067113ef529a1fab510"
+  },
+  "fixture_sha256": "0bccee5f4b24144492c29dd9c0fec10fdb08416004fd1e26c6dabdcab70d729a",
+  "cases": [
+    {
+      "name": "cylinder",
+      "split": "development",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.003502915998979006,
+        0.0006459710020862985,
+        0.0010399700004199985
+      ],
+      "median_seconds": 0.0010399700004199985,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 24,
+        "boundary_edges": 24,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.3209437147134026,
+        "min_triangle_quality": 0.3881507341608595
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.5058368658113875,
+      "sampled_loft_max": 0.5058374515131199
+    },
+    {
+      "name": "cylinder",
+      "split": "development",
+      "method": "phase",
+      "status": "passed",
+      "samples_seconds": [
+        0.006372436000674497,
+        0.006213835000380641,
+        0.015129871997487498
+      ],
+      "median_seconds": 0.006372436000674497,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 24,
+        "boundary_edges": 24,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 2.016292138325587,
+        "min_triangle_quality": 0.7245672183810703
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.026765897424690824,
+      "sampled_loft_max": 0.026786006453094865
+    },
+    {
+      "name": "cylinder",
+      "split": "development",
+      "method": "dp",
+      "status": "passed",
+      "samples_seconds": [
+        0.033040059002814814,
+        0.029155886000808096,
+        0.029572729999927105
+      ],
+      "median_seconds": 0.029572729999927105,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 24,
+        "boundary_edges": 24,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 2.016292138325587,
+        "min_triangle_quality": 0.7245672183810703
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.026765897424690824,
+      "sampled_loft_max": 0.026786006453094865
+    },
+    {
+      "name": "cylinder",
+      "split": "development",
+      "method": "blender_native",
+      "status": "passed",
+      "samples_seconds": [
+        0.0010312740014342126,
+        0.0004830409998248797,
+        0.0010044219998235349
+      ],
+      "median_seconds": 0.0010044219998235349,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 24,
+        "boundary_edges": 24,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 2.016292138325587,
+        "min_triangle_quality": 0.7245672183810703
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.026765897424690824,
+      "sampled_loft_max": 0.026786006453094865
+    },
+    {
+      "name": "unequal_ellipse",
+      "split": "development",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.00173147000168683,
+        0.0009207760012941435,
+        0.0010234379988105502
+      ],
+      "median_seconds": 0.0010234379988105502,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 32,
+        "boundary_edges": 32,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.4025782190782783,
+        "min_triangle_quality": 0.09646747113545427
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.3199862087274512,
+      "sampled_loft_max": 0.4795269286882822
+    },
+    {
+      "name": "unequal_ellipse",
+      "split": "development",
+      "method": "phase",
+      "status": "passed",
+      "samples_seconds": [
+        0.010172347003390314,
+        0.011916397997993045,
+        0.020255657997040544
+      ],
+      "median_seconds": 0.011916397997993045,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 32,
+        "boundary_edges": 32,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.6702911472939304,
+        "min_triangle_quality": 0.25608559996227104
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.0172742169268788,
+      "sampled_loft_max": 0.03179939931677425
+    },
+    {
+      "name": "unequal_ellipse",
+      "split": "development",
+      "method": "dp",
+      "status": "passed",
+      "samples_seconds": [
+        0.05082384200068191,
+        0.03235537000000477,
+        0.0480407520008157
+      ],
+      "median_seconds": 0.0480407520008157,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 32,
+        "boundary_edges": 32,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.6641115389714018,
+        "min_triangle_quality": 0.25920394176153927
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.02071570079133586,
+      "sampled_loft_max": 0.049083488093600705
+    },
+    {
+      "name": "unequal_ellipse",
+      "split": "development",
+      "method": "blender_native",
+      "status": "passed",
+      "samples_seconds": [
+        0.0019023179993382655,
+        0.0021895089994359296,
+        0.0031070309996721335
+      ],
+      "median_seconds": 0.0021895089994359296,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 32,
+        "boundary_edges": 32,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.6734442453249638,
+        "min_triangle_quality": 0.25608559996227104
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.017329921992644687,
+      "sampled_loft_max": 0.037662737321787716
+    },
+    {
+      "name": "reversed",
+      "split": "development",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.004124703002162278,
+        0.0040393069975834806,
+        0.0005688870005542412
+      ],
+      "median_seconds": 0.0040393069975834806,
+      "intersection_pairs": 29,
+      "quality": {
+        "triangles": 32,
+        "boundary_edges": 32,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.8441533059891196e-08,
+        "min_triangle_quality": 0.29711027560628084
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.380105885492222,
+      "sampled_loft_max": 0.6741010808268861
+    },
+    {
+      "name": "reversed",
+      "split": "development",
+      "method": "phase",
+      "status": "passed",
+      "samples_seconds": [
+        0.026399938000395196,
+        0.021473988999787252,
+        0.033624686002440285
+      ],
+      "median_seconds": 0.026399938000395196,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 32,
+        "boundary_edges": 32,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 2.0526766425474547,
+        "min_triangle_quality": 0.5980033965224307
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.014585964802048473,
+      "sampled_loft_max": 0.014597270326740007
+    },
+    {
+      "name": "reversed",
+      "split": "development",
+      "method": "dp",
+      "status": "passed",
+      "samples_seconds": [
+        0.03747437299898593,
+        0.0326297669998894,
+        0.042541268001514254
+      ],
+      "median_seconds": 0.03747437299898593,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 32,
+        "boundary_edges": 32,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 2.0526766425474547,
+        "min_triangle_quality": 0.5980033965224307
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.014585964802048473,
+      "sampled_loft_max": 0.014597270326740007
+    },
+    {
+      "name": "reversed",
+      "split": "development",
+      "method": "blender_native",
+      "status": "passed",
+      "samples_seconds": [
+        0.0014684279994980898,
+        0.0011137859983136877,
+        0.0011267570007476024
+      ],
+      "median_seconds": 0.0011267570007476024,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 32,
+        "boundary_edges": 32,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 2.0526766425474547,
+        "min_triangle_quality": 0.5980033965224307
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.014585964802048473,
+      "sampled_loft_max": 0.014597270326740007
+    },
+    {
+      "name": "taper",
+      "split": "development",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.002362518000154523,
+        0.0023348130016529467,
+        0.0015788680029800162
+      ],
+      "median_seconds": 0.0023348130016529467,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 40,
+        "boundary_edges": 40,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.22154306571462148,
+        "min_triangle_quality": 0.10582142715063256
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.3704816952044475,
+      "sampled_loft_max": 0.4514377155791821
+    },
+    {
+      "name": "taper",
+      "split": "development",
+      "method": "phase",
+      "status": "passed",
+      "samples_seconds": [
+        0.046073415000137175,
+        0.02613990399913746,
+        0.03175199299948872
+      ],
+      "median_seconds": 0.03175199299948872,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 40,
+        "boundary_edges": 40,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.1657394714008753,
+        "min_triangle_quality": 0.1838099322516396
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.009323195709558862,
+      "sampled_loft_max": 0.014150465901458017
+    },
+    {
+      "name": "taper",
+      "split": "development",
+      "method": "dp",
+      "status": "passed",
+      "samples_seconds": [
+        0.1124322840005334,
+        0.1291498809987388,
+        0.13295969899991178
+      ],
+      "median_seconds": 0.1291498809987388,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 40,
+        "boundary_edges": 40,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.1358755343350273,
+        "min_triangle_quality": 0.19601060990501265
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.01904388303639349,
+      "sampled_loft_max": 0.033547249997341655
+    },
+    {
+      "name": "taper",
+      "split": "development",
+      "method": "blender_native",
+      "status": "passed",
+      "samples_seconds": [
+        0.0011176500011060853,
+        0.0007940229988889769,
+        0.0007387590012513101
+      ],
+      "median_seconds": 0.0007940229988889769,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 40,
+        "boundary_edges": 40,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.1513064936170898,
+        "min_triangle_quality": 0.19601060990501265
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.013823776859580337,
+      "sampled_loft_max": 0.024035234514256973
+    },
+    {
+      "name": "holdout_lobed",
+      "split": "holdout",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.001247342999704415,
+        0.001425176000338979,
+        0.0014026329990883823
+      ],
+      "median_seconds": 0.0014026329990883823,
+      "intersection_pairs": 43,
+      "quality": {
+        "triangles": 36,
+        "boundary_edges": 36,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.0367680371649048,
+        "min_triangle_quality": 0.16999560535768096
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.30603555621670425,
+      "sampled_loft_max": 0.6021023969511378
+    },
+    {
+      "name": "holdout_lobed",
+      "split": "holdout",
+      "method": "phase",
+      "status": "passed",
+      "samples_seconds": [
+        0.025030361000972334,
+        0.023042539000016404,
+        0.023757858001772547
+      ],
+      "median_seconds": 0.023757858001772547,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 36,
+        "boundary_edges": 36,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.6527390014966914,
+        "min_triangle_quality": 0.29811944059245443
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.020388306078759678,
+      "sampled_loft_max": 0.04129279040292751
+    },
+    {
+      "name": "holdout_lobed",
+      "split": "holdout",
+      "method": "dp",
+      "status": "passed",
+      "samples_seconds": [
+        0.07701386099870433,
+        0.08408506400155602,
+        0.07765817200197489
+      ],
+      "median_seconds": 0.07765817200197489,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 36,
+        "boundary_edges": 36,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.6446322329825216,
+        "min_triangle_quality": 0.32460934943545605
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.02234803617726717,
+      "sampled_loft_max": 0.055498182315769626
+    },
+    {
+      "name": "holdout_lobed",
+      "split": "holdout",
+      "method": "blender_native",
+      "status": "passed",
+      "samples_seconds": [
+        0.0017332040006294847,
+        0.0006704080005874857,
+        0.0008162839985743631
+      ],
+      "median_seconds": 0.0008162839985743631,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 36,
+        "boundary_edges": 36,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.6446322329825218,
+        "min_triangle_quality": 0.32460934943545605
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.02234803617726717,
+      "sampled_loft_max": 0.055498182315769626
+    },
+    {
+      "name": "holdout_superellipse",
+      "split": "holdout",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.0016879860013432335,
+        0.0014169959977152757,
+        0.0013001789993722923
+      ],
+      "median_seconds": 0.0014169959977152757,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 48,
+        "boundary_edges": 48,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.1714009108118509,
+        "min_triangle_quality": 0.0638448526174491
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.4071653810663136,
+      "sampled_loft_max": 0.6015093093372462
+    },
+    {
+      "name": "holdout_superellipse",
+      "split": "holdout",
+      "method": "phase",
+      "status": "passed",
+      "samples_seconds": [
+        0.05030737799825147,
+        0.04701317600120092,
+        0.03847494699948584
+      ],
+      "median_seconds": 0.04701317600120092,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 48,
+        "boundary_edges": 48,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.534225477784841,
+        "min_triangle_quality": 0.16071427850060477
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.006674997005075065,
+      "sampled_loft_max": 0.013474406314740743
+    },
+    {
+      "name": "holdout_superellipse",
+      "split": "holdout",
+      "method": "dp",
+      "status": "passed",
+      "samples_seconds": [
+        0.11569229099768563,
+        0.0977618379984051,
+        0.14043964099982986
+      ],
+      "median_seconds": 0.11569229099768563,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 48,
+        "boundary_edges": 48,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.5225807211787685,
+        "min_triangle_quality": 0.16683102449304937
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.013069609071720256,
+      "sampled_loft_max": 0.0329753494576816
+    },
+    {
+      "name": "holdout_superellipse",
+      "split": "holdout",
+      "method": "blender_native",
+      "status": "passed",
+      "samples_seconds": [
+        0.0009077210015675519,
+        0.0008160149991454091,
+        0.0007574230003228877
+      ],
+      "median_seconds": 0.0008160149991454091,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 48,
+        "boundary_edges": 48,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.5246145837598937,
+        "min_triangle_quality": 0.16683102449304937
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.011680716429950054,
+      "sampled_loft_max": 0.02805948702163723
+    },
+    {
+      "name": "holdout_offset",
+      "split": "holdout",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.0007783389992255252,
+        0.0007163159971241839,
+        0.0010544779979682062
+      ],
+      "median_seconds": 0.0007783389992255252,
+      "intersection_pairs": 45,
+      "quality": {
+        "triangles": 48,
+        "boundary_edges": 48,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.1146748372705705,
+        "min_triangle_quality": 0.03725362251099504
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.2322103431495382,
+      "sampled_loft_max": 0.48633971934254644
+    },
+    {
+      "name": "holdout_offset",
+      "split": "holdout",
+      "method": "phase",
+      "status": "failed",
+      "samples_seconds": [
+        0.04601898199689458,
+        0.024810021997836884,
+        0.027593425998929888
+      ],
+      "median_seconds": 0.027593425998929888,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 48,
+        "boundary_edges": 48,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.3849871882815563,
+        "min_triangle_quality": 0.07467366570650008
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.00815563646948138,
+      "sampled_loft_max": 0.0180378112160797
+    },
+    {
+      "name": "holdout_offset",
+      "split": "holdout",
+      "method": "dp",
+      "status": "failed",
+      "samples_seconds": [
+        0.13178002899803687,
+        0.09491070700096316,
+        0.09905685400008224
+      ],
+      "median_seconds": 0.09905685400008224,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 48,
+        "boundary_edges": 48,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.188733501394484,
+        "min_triangle_quality": 0.1365892085572047
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.06510731833082124,
+      "sampled_loft_max": 0.20978597750061242
+    },
+    {
+      "name": "holdout_offset",
+      "split": "holdout",
+      "method": "blender_native",
+      "status": "passed",
+      "samples_seconds": [
+        0.0011526859998411965,
+        0.0009293900002376176,
+        0.0009052189998328686
+      ],
+      "median_seconds": 0.0009293900002376176,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 48,
+        "boundary_edges": 48,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.2233254103024662,
+        "min_triangle_quality": 0.10038164843013724
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.05337170057680812,
+      "sampled_loft_max": 0.12805281903557322
+    },
+    {
+      "name": "holdout_lowpoly",
+      "split": "holdout",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.0008127800028887577,
+        0.0007948820020828862,
+        0.0007297709998965729
+      ],
+      "median_seconds": 0.0007948820020828862,
+      "intersection_pairs": 16,
+      "quality": {
+        "triangles": 14,
+        "boundary_edges": 14,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.04281674631087625,
+        "min_triangle_quality": 0.3637699179220871
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.5383704659197133,
+      "sampled_loft_max": 0.6914603440776289
+    },
+    {
+      "name": "holdout_lowpoly",
+      "split": "holdout",
+      "method": "phase",
+      "status": "failed",
+      "samples_seconds": [
+        0.004895498001133092,
+        0.004460324998944998,
+        0.005278704997181194
+      ],
+      "median_seconds": 0.004895498001133092,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 14,
+        "boundary_edges": 14,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.233139418232627,
+        "min_triangle_quality": 0.4406378572036308
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.09204901428461092,
+      "sampled_loft_max": 0.15249782810854348
+    },
+    {
+      "name": "holdout_lowpoly",
+      "split": "holdout",
+      "method": "dp",
+      "status": "failed",
+      "samples_seconds": [
+        0.005694807001418667,
+        0.011184398001205409,
+        0.008002285001566634
+      ],
+      "median_seconds": 0.008002285001566634,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 14,
+        "boundary_edges": 14,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.259223786945345,
+        "min_triangle_quality": 0.5646309453107878
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.08489337440549563,
+      "sampled_loft_max": 0.1336666977439378
+    },
+    {
+      "name": "holdout_lowpoly",
+      "split": "holdout",
+      "method": "blender_native",
+      "status": "failed",
+      "samples_seconds": [
+        0.0004966590022377204,
+        0.0005641979987558443,
+        0.0004834510000364389
+      ],
+      "median_seconds": 0.0004966590022377204,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 14,
+        "boundary_edges": 14,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.259223786945345,
+        "min_triangle_quality": 0.5646309453107878
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.08489337440549563,
+      "sampled_loft_max": 0.1336666977439378
+    },
+    {
+      "name": "holdout_slender",
+      "split": "holdout",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.0011061309996875934,
+        0.0008000669986358844,
+        0.0012496780000219587
+      ],
+      "median_seconds": 0.0011061309996875934,
+      "intersection_pairs": 37,
+      "quality": {
+        "triangles": 44,
+        "boundary_edges": 44,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.7692552386591279,
+        "min_triangle_quality": 0.055169576267632504
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.11867495246350017,
+      "sampled_loft_max": 0.24039553888627843
+    },
+    {
+      "name": "holdout_slender",
+      "split": "holdout",
+      "method": "phase",
+      "status": "failed",
+      "samples_seconds": [
+        0.010974279000947718,
+        0.008381091996852774,
+        0.008042214998567943
+      ],
+      "median_seconds": 0.008381091996852774,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 44,
+        "boundary_edges": 44,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.0713547389042157,
+        "min_triangle_quality": 0.0727078277483714
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.005762086843280727,
+      "sampled_loft_max": 0.01214927093332458
+    },
+    {
+      "name": "holdout_slender",
+      "split": "holdout",
+      "method": "dp",
+      "status": "passed",
+      "samples_seconds": [
+        0.03795731400168734,
+        0.027896583000256214,
+        0.035910227001295425
+      ],
+      "median_seconds": 0.035910227001295425,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 44,
+        "boundary_edges": 44,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.0097577189562108,
+        "min_triangle_quality": 0.11561789886570369
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.0265137336331607,
+      "sampled_loft_max": 0.0710492478346052
+    },
+    {
+      "name": "holdout_slender",
+      "split": "holdout",
+      "method": "blender_native",
+      "status": "passed",
+      "samples_seconds": [
+        0.000696711998898536,
+        0.0005498699974850751,
+        0.0005295240007399116
+      ],
+      "median_seconds": 0.0005498699974850751,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 44,
+        "boundary_edges": 44,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.0308545018951125,
+        "min_triangle_quality": 0.11561789886570369
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.01775888944933186,
+      "sampled_loft_max": 0.04482662231544509
+    },
+    {
+      "name": "holdout_far_offset",
+      "split": "holdout",
+      "method": "index",
+      "status": "failed",
+      "samples_seconds": [
+        0.001072437000402715,
+        0.0005272529997455422,
+        0.0006785860023228452
+      ],
+      "median_seconds": 0.0006785860023228452,
+      "intersection_pairs": 53,
+      "quality": {
+        "triangles": 40,
+        "boundary_edges": 40,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.1204182158534393,
+        "min_triangle_quality": 0.05867365137868522
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.481653870685616,
+      "sampled_loft_max": 0.6395529551083355
+    },
+    {
+      "name": "holdout_far_offset",
+      "split": "holdout",
+      "method": "phase",
+      "status": "failed",
+      "samples_seconds": [
+        0.0232734769997478,
+        0.018825480998202693,
+        0.014890059999743244
+      ],
+      "median_seconds": 0.018825480998202693,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 40,
+        "boundary_edges": 40,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.8626884652871805,
+        "min_triangle_quality": 0.07166858816348373
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.01740429727635281,
+      "sampled_loft_max": 0.03981134621447575
+    },
+    {
+      "name": "holdout_far_offset",
+      "split": "holdout",
+      "method": "dp",
+      "status": "failed",
+      "samples_seconds": [
+        0.0501997620012844,
+        0.06288314099947456,
+        0.06606006600122782
+      ],
+      "median_seconds": 0.06288314099947456,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 40,
+        "boundary_edges": 40,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 0.9480033334992344,
+        "min_triangle_quality": 0.1407606697109727
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.30360676400601,
+      "sampled_loft_max": 0.616810629041892
+    },
+    {
+      "name": "holdout_far_offset",
+      "split": "holdout",
+      "method": "blender_native",
+      "status": "failed",
+      "samples_seconds": [
+        0.0012664230016525835,
+        0.0008789730018179398,
+        0.0008110730013868306
+      ],
+      "median_seconds": 0.0008789730018179398,
+      "intersection_pairs": 0,
+      "quality": {
+        "triangles": 40,
+        "boundary_edges": 40,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 1.2216082200951115,
+        "min_triangle_quality": 0.1322719936912016
+      },
+      "euler": 0,
+      "boundary_preserved": true,
+      "sampled_loft_rms": 0.2005064522983605,
+      "sampled_loft_max": 0.5503137703192935
+    }
+  ],
+  "totals": {
+    "development": {
+      "index": {
+        "passed": 0,
+        "total": 4
+      },
+      "phase": {
+        "passed": 4,
+        "total": 4
+      },
+      "dp": {
+        "passed": 4,
+        "total": 4
+      },
+      "blender_native": {
+        "passed": 4,
+        "total": 4
+      }
+    },
+    "holdout": {
+      "index": {
+        "passed": 0,
+        "total": 6
+      },
+      "phase": {
+        "passed": 2,
+        "total": 6
+      },
+      "dp": {
+        "passed": 3,
+        "total": 6
+      },
+      "blender_native": {
+        "passed": 4,
+        "total": 6
+      }
+    }
+  },
+  "input_sha256": "1bdfaad5724e015a694053c585feb0b85c8cb6bea075e0b15868521beb62c5e2"
+}

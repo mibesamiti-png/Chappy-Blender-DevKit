@@ -1,0 +1,23 @@
+# R13 preregistration — reduce explicit UV seam counts AND 3D seam length
+
+## Prior evidence, not independent success
+R12 reached near-zero source-to-bridge boundary UV mismatch, but its face-dual multi-source BFS left between 13% and 41.4% of internal edges as explicit UV seams in 8 synthetic holdouts. For R13 these 8 and the earlier R11 cases are **seen development data**. Exploration on archived R12 synthetic outputs with NetworkX reference minimum cuts (not the R13 shipped implementation) indicated 30-53% seam-length reduction on two-chart cases and ~10% on a four-chart case. No new R13 holdout was used to select the algorithm.
+
+## One frozen research candidate
+- Keep R12 source-boundary constraints, Blender BMesh setup, R10 geometry, and all pre-existing face/UV/material data unchanged. Only **new bridge face-corner UV translations** may change.
+- Identify distinct 2D chart offsets (rounded to 5 decimals) and all triangles pinned to original boundary chart conditions.
+- For **two distinct charts**: calculate three exact s-t minimum-cut solutions on the internal face-adjacency graph, with edge costs: (a) one per seam edge, (b) 3D edge length, (c) half count plus half length normalized by median internal edge length. Implement the cut in **pure Python Dinic** with no Blender-pip dependency. All fixed boundary chart labels have hard infinite capacities. The cost is the sum over chart-discontinuous internal edges; there is no seam penalty on the source-to-bridge edge because those UVs must match.
+- For **three or more** charts: perform deterministic coordinate-descent / ICM with a maximum of 40 sweeps for those same three objectives, with boundary-adjacent face labels hard-fixed; candidate labels come only from neighboring faces. This heuristic is not a provably optimal multi-label cut.
+- Include the unchanged R12 nearest-face BFS assignment as a fourth candidate. **Pareto reject** any solution with *more* internal seam edges or *greater* total 3D seam length than R12 (within 1e-8 length epsilon). Among non-worsening candidates choose shortest seam length then fewest seam edges, with original as tie-break. This comparison is predeclared and does not inspect held-out source or case names.
+- If a single source-bridge triangle receives conflicting boundary UV offsets or nonfinite input, fail explicitly. Retain per-triangle signed UV area and 3D coordinates exactly. Do NOT claim automatic texture quality, UV packing, global seamlessness, optimal multi-label cuts, or general arbitrary UV transforms.
+
+## Freeze split + independent evaluation
+- Four previous R11/R12 geometry-mode combinations are *seen* development for a small Blender smoke.
+- **Eight unseen R13 shapes** authored independently of R12 holdouts (three continuous, three alternating split, one grouped block, one four-label/multi) frozen in `cycles/r13/fixtures.py` before first full run. Only synthetic shapes, no private user meshes.
+- Two Blender 4.4.3 Edit Mode BMesh arms per shape: unchanged R12 nearest-chart baseline versus R13 seam optimization. **12 shape/mode conditions ×2 =24 complete assembled meshes**. All 24 independent Python3.12+CGAL strip and joined mesh validations required. Each joined source face XYZ/material/per-corner UV unchanged; exact same new mesh vertex/face arrays and material index 2; Blender scene restored.
+- For **all 8 fresh holdouts**: independent boundary UV max gap <=1e-5, triangle UV signed area change <=1e-5 vs cylindrical base, original source untouched, no CGAL intersections, original R10 geometry quality passed, and **no increase in seam count or 3D seam length vs R12 baseline**.
+- For 3 fresh continuous cases: 0 seams. For five fresh noncontinuous cases: >=1 seam remains and **at least four of the five** show both **>=10% fewer seam edges** and **>=10% shorter 3D seam length** than frozen R12. On all five cases optimized internal seam fraction <=0.6. Record absolute seam lengths, counts and ratios. Any failed condition is research gate failure; do not tune algorithm or fixture after first holdout, do not discard failures.
+- Time (detached Python optimization alone) is recorded when possible, **not** a pass gate (this is quality-layout study, not production speed). Cap 600 triangles and 10 seconds per candidate / 40 sweeps; exclude higher input as unsupported, never silently truncate.
+
+## Governance
+Research-only `approved=false`, Draft PR #114 unmerged, no A approval requested, no changes to R1–R12 code or fixtures, ABCD, DIL PR #115, main, STATE/HANDOFF or private meshes. Only `research/geometry_lab/**` and dedicated Geometry Lab workflow may change. R14 not auto-started.

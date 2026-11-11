@@ -1,0 +1,91 @@
+{
+  "cycle": "R9",
+  "status": "complete_research_gate_passed_not_integrated",
+  "parent_head": "392e836bbc75b21d3da6f77ea844a7bf87f2718c",
+  "candidate": "cbdk_geometry.flip_loft.conservative_flip_loft",
+  "approved": false,
+  "synthetic_only": true,
+  "blender": "4.4.3",
+  "official_blender_archive_sha256": "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946",
+  "cgal": "6.0.1.post202410241521",
+  "cases_development": 16,
+  "cases_fresh_holdout": 6,
+  "method_count": 3,
+  "configurations_generated_and_independently_evaluated": 66,
+  "warmup_per_case": 1,
+  "timed_repeats_per_case": 3,
+  "constraints": {
+    "face_only": true,
+    "vertex_coordinate_change_allowed": false,
+    "triangle_count_change_allowed": false,
+    "max_flip_passes": 3,
+    "min_triangle_quality": 0.1,
+    "analytic_3d_rms_max": 0.12,
+    "analytic_3d_max_distance": 0.28,
+    "min_holdout_pass": 4,
+    "holdout_no_worse_than_r8": true,
+    "fresh_quality_delta_ge_002_min_cases": 2,
+    "CGAL_self_intersection_pairs": 0,
+    "previous_r8_passes_must_preserve": true
+  },
+  "results": {
+    "old_reverse_slender": {
+      "name": "r8_slender_opposite",
+      "q_r8": 0.07859811946,
+      "q_r9": 0.1271786715,
+      "full_gate_rescued": true
+    },
+    "development_passes": {
+      "flipped_r9": 16,
+      "tapered_r8": 15,
+      "native_3_linear": 11
+    },
+    "new_holdout_passes": {
+      "flipped_r9": 5,
+      "tapered_r8": 4,
+      "native_3_linear": 2
+    },
+    "new_holdout_improvement_ge_002": 4,
+    "new_holdout_failure": {
+      "name": "r9_reverse_narrow",
+      "q_r9": 0.080778,
+      "q_r8": 0.04822,
+      "q_native": 0.023815
+    },
+    "all_66_CGAL_intersections": 0,
+    "oracle_unavailable": 0,
+    "exact_r8_vertex_arrays_and_triangle_counts": true,
+    "all_research_boundary_and_topology_checks_passed": true,
+    "holdout_median_generation_ms": {
+      "r9": 90.92735,
+      "r8": 7.25815,
+      "native": 2.82284
+    },
+    "holdout_mean_min_quality": {
+      "r9": 0.309882,
+      "r8": 0.261639,
+      "native": 0.1195
+    },
+    "holdout_mean_triangles": {
+      "r9": 195.5,
+      "r8": 195.5,
+      "native": 341.8333
+    },
+    "holdout_mean_rms": {
+      "r9": 0.0212245,
+      "r8": 0.0213382,
+      "native": 0.045557
+    }
+  },
+  "source_sha256": {
+    "cbdk_geometry/flip_loft.py": "1321fa5ee5ca6935f6cce29b39c3b5bca363649f152558e9a14b75a29f3d2aa1",
+    "cycles/r9/fixtures.py": "a3f837bf5e4b28e4eb7d1617173f17acf576d1778a374852a9f5f7996bd1ec65",
+    "cycles/r9/blender_run.py": "f7e30e756a93214e797d3aafb0645872205111499908eba3f3e13d0d708e43b1",
+    "cycles/r9/evaluate.py": "0f0bc1e77afbd3fc9812dbf848807a0828092d9d32f8855067dca3c2d86b20bf"
+  },
+  "research_gate_met": true,
+  "source_edits_after_holdout": 0,
+  "ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42911818095",
+  "decision": "Research candidate kept; do not integrate until A review because high runtime and no production-model evidence.",
+  "next": "No automatic R10. Research real mesh integration/UV/normal or independent topology quality, new fixed holdout."
+}

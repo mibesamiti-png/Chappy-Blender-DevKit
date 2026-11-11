@@ -1,0 +1,398 @@
+{
+  "schema_version": 1,
+  "selection_policy": "metadata_only_no_auto_execute_or_approve",
+  "algorithms": [
+    {
+      "id": "exact-static",
+      "version": "0.2.0",
+      "api": "cbdk_geometry.exact.detect_exact",
+      "purpose": "共有境界以外の静的交差・接触の検出",
+      "preconditions": [
+        "非退化三角形",
+        "binary64 coordinates",
+        "2048面以内"
+      ],
+      "input": "Mesh",
+      "output": "status / pairs / scanned / narrow_tests / certified=false",
+      "parameters": {
+        "pair_budget": 200000,
+        "seconds": 30
+      },
+      "success": "measuredかつ独立検証済みfixtureで参照一致",
+      "failure": "上限ではpairs=null、退化はValueError",
+      "validation": "tests/test_exact.py; tests/test_cgal_oracle.py; cycles/r2/benchmark.py",
+      "performance": "cycles/r2/RESULTS.md",
+      "references": [
+        "cycles/r2/RESEARCH.md"
+      ],
+      "status": "review_only",
+      "approved": false
+    },
+    {
+      "id": "sat-static",
+      "version": "0.1.0",
+      "api": "cbdk_geometry.detect",
+      "purpose": "旧近似検出baseline",
+      "preconditions": [
+        "隣接insetで見逃しあり"
+      ],
+      "input": "Mesh",
+      "output": "status / pairs",
+      "parameters": {
+        "method": "sweep",
+        "tolerance": 1e-9
+      },
+      "success": "限定旧fixture一致",
+      "failure": "微小接触のFP/FNをR2で確認",
+      "validation": "tests/test_geometry.py",
+      "performance": "RESULTS.md",
+      "references": [
+        "RESEARCH.md"
+      ],
+      "status": "baseline_known_errors",
+      "approved": false
+    },
+    {
+      "id": "motion-box",
+      "version": "0.1.0",
+      "api": "cbdk_geometry.guarded_step",
+      "purpose": "線形移動の保守的な衝突回避",
+      "preconditions": [
+        "独立triangle soup",
+        "512面以内",
+        "接続mesh不可"
+      ],
+      "input": "Mesh + displacement",
+      "output": "status / alpha / Mesh",
+      "parameters": {
+        "max_halvings": 20
+      },
+      "success": "swept boxesが非交差",
+      "failure": "共有頂点/予算/初期接触を拒否、反転は保証しない",
+      "validation": "tests/test_motion.py",
+      "performance": "RESULTS.md",
+      "references": [
+        "RESEARCH.md"
+      ],
+      "status": "experimental",
+      "approved": false
+    },
+    {
+      "id": "blender-join",
+      "version": "0.1.0",
+      "api": "cbdk_geometry.blender_backend.join",
+      "purpose": "曲面の体積union",
+      "preconditions": [
+        "Blender依存",
+        "閉じた一貫方向mesh"
+      ],
+      "input": "Mesh a,b",
+      "output": "detached Mesh",
+      "parameters": {
+        "method": [
+          "exact",
+          "voxel"
+        ],
+        "voxel_size": 0.15
+      },
+      "success": "接合後の独立評価が必要",
+      "failure": "退化/微小接触/細部消失",
+      "validation": "blender_benchmark.py; cycles/r2/recheck_blender.py",
+      "performance": "RESULTS.md; cycles/r2/RESULTS.md",
+      "references": [
+        "RESEARCH.md"
+      ],
+      "status": "experimental",
+      "approved": false
+    },
+    {
+      "id": "exact-cached-topology",
+      "version": "0.3.0",
+      "api": "cbdk_geometry.accelerated.detect_accelerated",
+      "purpose": "R2と同じ静的交差契約を保ち、面キャッシュ・厳密共有境界の早期判定で高速化",
+      "preconditions": [
+        "非退化三角形",
+        "binary64 coordinates",
+        "2048面以内"
+      ],
+      "input": "Mesh",
+      "output": "status / pairs / scanned / narrow_tests / certified=false",
+      "parameters": {
+        "pair_budget": 200000,
+        "seconds": 30,
+        "shortcuts": true
+      },
+      "success": "measuredかつ独立検証済みfixtureで参照一致",
+      "failure": "上限ではpairs=null、退化はValueError",
+      "validation": "tests/test_accelerated.py; cycles/r3/benchmark.py",
+      "performance": "cycles/r3/RESULTS.md",
+      "references": [
+        "cycles/r3/RESEARCH.md"
+      ],
+      "status": "review_only",
+      "approved": false
+    },
+    {
+      "id": "boundary-loop-bridge",
+      "version": "0.4.0",
+      "api": "cbdk_geometry.bridge.bridge_loops",
+      "purpose": "順序付き境界間の三角形帯生成",
+      "preconditions": [
+        "各ループ3..48頂点",
+        "有限座標abs<=1e8",
+        "重複頂点なし",
+        "一般の非平面形状は未検証"
+      ],
+      "input": "Nx3 / Mx3 ordered coordinate arrays",
+      "output": "mesh/objective/shift/reverse/trials/approved=false",
+      "parameters": {
+        "method": [
+          "index",
+          "phase",
+          "dp"
+        ],
+        "seconds": 10
+      },
+      "success": "生成後の独立交差・境界・形状誤差・品質評価が必要",
+      "failure": "ValueError/TimeoutError、生成成功でも形状誤差で不合格あり",
+      "validation": "tests/test_bridge*.py; cycles/r4/evaluate.py",
+      "performance": "cycles/r4/RESULTS.md",
+      "references": [
+        "cycles/r4/RESEARCH.md"
+      ],
+      "status": "experimental_not_preferred_over_blender",
+      "approved": false
+    },
+    {
+      "id": "boundary-radial-loft-r5",
+      "version": "0.5.0",
+      "api": "cbdk_geometry.radial_loft.radial_loft",
+      "purpose": "平面star-shaped境界の頂点・元境界エッジを固定し、放射対応の3中間輪郭で接続する研究候補",
+      "preconditions": [
+        "各ループ3..48頂点",
+        "XYにほぼ平行な単純star-shaped境界",
+        "正のZ分離",
+        "放射順の頂点配列"
+      ],
+      "input": "Nx3/Mx3 ordered coordinate arrays",
+      "output": "mesh / cuts / added_vertices / approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10
+      },
+      "success": "R4既知5/6・新holdout4/5、CGALで交差0、合格にはR4同一形状誤差と品質基準を使用",
+      "failure": "ValueError/TimeoutError、低poly RMS不合格、横ずれ楕円の最小三角品質0.0634",
+      "validation": "tests/test_r5.py; cycles/r5/run.py; cycles/r6/evaluate.py (native bpy 4.4.3 and CGAL)",
+      "performance": "cycles/r5/RESULTS.md; cycles/r6/RESULTS.md",
+      "references": [
+        "cycles/r5/RESEARCH.md",
+        "cycles/r5/STATUS.json",
+        "cycles/r6/RESEARCH.md"
+      ],
+      "status": "research_r6_beat_best_native_three_cuts_on_synthetic_holdout_not_approved",
+      "approved": false
+    },
+    {
+      "id": "boundary-warped-loft-r7",
+      "version": "0.7.0",
+      "api": "cbdk_geometry.warped_loft.warped_radial_loft",
+      "purpose": "非平面Z変動境界の頂点・元境界辺を固定し、XY放射対応で3D中間輪郭を生成する研究用API",
+      "preconditions": [
+        "各リング3..48点",
+        "finite XYZ; XY star-shaped",
+        "XY角度で単調な辺順",
+        "全下側Z<全上側Z（正のgap）"
+      ],
+      "input": "two ordered Nx3/Mx3 arrays",
+      "output": "detached Mesh / cuts / method / added_vertices / approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10
+      },
+      "success": "R7 holdout: 5/6; Blender 4.4.3 3 LINEAR 4/6, no-cut 4/6; CGAL交差0、境界保存",
+      "failure": "slender_offset q=0.06183 fail, other orientation/cross sections not supported",
+      "validation": "tests/test_r7_warped.py; cycles/r7/evaluate.py; geometry-lab r7 CI",
+      "performance": "cycles/r7/RESULTS.md",
+      "references": [
+        "cycles/r7/RESEARCH.md",
+        "cycles/r7/STATUS.json"
+      ],
+      "status": "research_only_nonplanar_synthetic_advantage_not_approved",
+      "approved": false
+    },
+    {
+      "id": "boundary-density-taper-r8",
+      "version": "0.8.0",
+      "api": "cbdk_geometry.tapered_loft.tapered_radial_loft",
+      "purpose": "上下の境界頂点数に合わせて3本の中間リング密度を段階変化させ、元の境界を動かさず細長い三角形を緩和する研究用方式",
+      "preconditions": [
+        "star-shaped XY projection",
+        "ordered 3..48 XYZ points per ring",
+        "upper Z envelope > lower Z envelope",
+        "finite unduplicated coordinates"
+      ],
+      "input": "two ordered nonplanar XYZ rings",
+      "output": "detached Mesh, cuts=3, internal_counts, added_vertices, approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10
+      },
+      "success": "R8 old R7 slender quality 0.0618->0.1295, original R7 9 successes retained; R8 new holdout 5/6 vs R7 3/6, CGAL 0",
+      "failure": "r8_slender_opposite remains quality fail at 0.078598; R8 slower and slightly higher analytic mean RMS vs R7",
+      "validation": "tests/test_r8_tapered.py; cycles/r8/evaluate.py; independent CGAL official Blender4.4.3 job",
+      "performance": "cycles/r8/RESULTS.md",
+      "references": [
+        "cycles/r8/RESEARCH.md",
+        "cycles/r8/STATUS.json"
+      ],
+      "status": "research_r8_density_taper_promising_not_production_approved",
+      "approved": false
+    },
+    {
+      "id": "boundary-conservative-flips-r9",
+      "version": "0.9.0",
+      "api": "cbdk_geometry.flip_loft.conservative_flip_loft",
+      "purpose": "境界頂点・面数を変えず、内部三角形の対角線のみ法線・品質条件付きで最大3パス反転して細長さを緩和する研究候補",
+      "preconditions": [
+        "既存R8が扱う3..48頂点のordered XY-star-shaped/Z-separated境界",
+        "finite coordinate arrays",
+        "3 fixed intermediate rings"
+      ],
+      "input": "two ordered nonplanar Nx3 and Mx3 loops",
+      "output": "detached Mesh with identical R8 coordinates and triangle count, flips/passes, approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10,
+        "max_flip_passes": 3
+      },
+      "success": "R8既知reverse q 0.07860→0.12718、既知16/16、新holdout5/6（R8 4/6、native3 2/6）、CGAL交差0",
+      "failure": "r9_reverse_narrow minq 0.08078 fail; 90.9ms median vs R8 7.26ms; real UV/normal impact unverified",
+      "validation": "tests/test_r9_flip.py; cycles/r9/evaluate.py; Blender4.4.3 native compare plus independent CGAL",
+      "performance": "cycles/r9/RESULTS.md",
+      "references": [
+        "cycles/r9/RESEARCH.md",
+        "cycles/r9/STATUS.json"
+      ],
+      "status": "research_success_quality_specialized_costly_not_approved",
+      "approved": false
+    },
+    {
+      "id": "boundary-quality-dispatch-r10",
+      "version": "0.10.0",
+      "api": "cbdk_geometry.quality_router.conditional_flip_loft",
+      "purpose": "R8の品質が0.1以上なら補正を省略し、未満の場合だけR9内部エッジ反転を実行する研究用品質・速度ルーター",
+      "preconditions": [
+        "R8用のordered XY star-shaped nonplanar XYZ ring",
+        "fully disjoint Z envelopes",
+        "each loop 3..48 finite XYZ points"
+      ],
+      "input": "two ordered XYZ rings",
+      "output": "detached Mesh / path fast|repair / initial_min_quality / final_min_quality / flips / approved=false",
+      "parameters": {
+        "cuts": 3,
+        "seconds": 10,
+        "trigger_quality": 0.1,
+        "max_flip_passes": 3
+      },
+      "success": "R10 fresh 8/8 vs R8 6/8, always R9 8/8; fast 6/8, new R8 failures rescued 2; 120 CGAL checks 0 intersections",
+      "failure": "R9 known reverse_narrow still fails; R10 intentionally skips possible extra quality on already-acceptable R8; R10 mean 34.6ms versus R8 6.86ms",
+      "validation": "tests/test_r10_dispatch.py; cycles/r10/evaluate.py; official Blender 4.4.3 CGAL CI",
+      "performance": "cycles/r10/RESULTS.md",
+      "references": [
+        "cycles/r10/RESEARCH.md",
+        "cycles/r10/STATUS.json"
+      ],
+      "status": "research_r10_quality_and_speed_gate_passed_not_product_approved",
+      "approved": false
+    },
+    {
+      "id": "blender-attribute-roundtrip-r11",
+      "version": "0.11.0",
+      "api": "cycles.r11.blender_run.execute",
+      "purpose": "Blender編集モードで研究用R10接続メッシュを既存の合成カラー面に追加し、元面/UV/マテリアルの完全保持と新面UV/材質の付与、UV島不一致・法線角度を診断する",
+      "preconditions": [
+        "Blender 4.4.3",
+        "frozen R10 ordered XY-star-shaped and Z-separated rings",
+        "two temporary researcher-authored open collar surfaces",
+        "single basic UV layer"
+      ],
+      "input": "synthetic fixture plus arm and continuous/split UV mode",
+      "output": "raw temp Blender edit-mode result and independent CGAL/attribute evaluation, approved=false",
+      "parameters": {
+        "bridge_material_index": 2,
+        "uv_mode": [
+          "continuous",
+          "split"
+        ],
+        "negative_control": true
+      },
+      "success": "R11 controlled candidate14/14 attribute audits, 14/14 bad-attribute controls detected, whole joined CGAL 0, scene restored",
+      "failure": "split UV island gap .25 remains; fresh case max normal dihedral 56.35°, artist models/custom normals/UV layers/Undo unverified",
+      "validation": "cycles/r11/blender_run.py; cycles/r11/evaluate.py; official Blender 4.4.3 and independent CGAL CI",
+      "performance": "cycles/r11/RESULTS.md",
+      "references": [
+        "cycles/r11/RESEARCH.md",
+        "cycles/r11/STATUS.json"
+      ],
+      "status": "research_R11_attribute_audit_passed_not_uv_island_or_shading_solution",
+      "approved": false
+    },
+    {
+      "id": "blender-boundary-uv-charts-r12",
+      "version": "0.12.0",
+      "api": "cbdk_geometry.uv_charts.label_chart_offsets",
+      "purpose": "元Blender境界UVコーナーを保持しつつ、新面ごとのUVチャートを分岐させて境界誤差を内部シームとして再配置する研究用処理",
+      "preconditions": [
+        "source boundary edge UV differs from cylindrical base by consistent 2D translation",
+        "R10 synthetic XY-star-shaped Z-separated strip",
+        "Blender BMesh original source loop UV accessible"
+      ],
+      "input": "XYZ triangle strip and per-boundary-edge (du,dv) offsets read from source BMesh UV",
+      "output": "triangle chart offsets and seam counts/fraction/length, approved=false",
+      "parameters": {
+        "tolerance": 0.00001,
+        "method": "deterministic multi-source BFS"
+      },
+      "success": "new 8/8 and seen4/4 research checks; max new boundary gap <=6e-8; joined CGAL0 across24 arms",
+      "failure": "up to126 new interior seam edges / 41.4%; not texture seamless; source affine transforms/UV normal smoothing unsupported",
+      "validation": "tests/test_r12_charts.py; cycles/r12/blender_run.py; cycles/r12/evaluate.py",
+      "performance": "cycles/r12/RESULTS.md",
+      "references": [
+        "cycles/r12/RESEARCH.md",
+        "cycles/r12/STATUS.json"
+      ],
+      "status": "research_R12_boundary_match_relocated_seams_not_product_approved",
+      "approved": false
+    },
+    {
+      "id": "blender-uv-seam-graph-optimization-r13",
+      "version": "0.13.0",
+      "api": "cbdk_geometry.seam_opt.optimize_uv_charts",
+      "purpose": "元UV境界拘束を保持し、追加面内部UVシームの辺数と3D長さを同時に増やさず削減する研究用グラフ最適化",
+      "preconditions": [
+        "frozen R12 source loop UV chart translations",
+        "XY star-shaped Z-separated R10 geometry",
+        "triangle face adjacency graph <=600 faces",
+        "fixed seam chart labels at original source boundary"
+      ],
+      "input": "3D strip vertices, triangle faces, original boundary chart offsets and R12 per-face UV labels",
+      "output": "new per-face UV chart translations + seam count/length/Pareto metadata, approved=false",
+      "parameters": {
+        "two_chart": "pure Python constrained Dinic mincut",
+        "multi_chart": "bounded ICM 40 sweeps",
+        "seconds": 10,
+        "max_faces": 600
+      },
+      "success": "R13 fresh split 5/5 both seam count+length >=10% lower, 506->309 edges, length148.053->91.019; joined/strip CGAL all 24 zero",
+      "failure": "multi chart modest 12% count/13.7% length; still visible interior seams; real UV painting/shading/UV packing untested",
+      "validation": "tests/test_r13_seams.py; cycles/r13/blender_run.py; cycles/r13/evaluate.py; official Blender4.4.3 and independent CGAL",
+      "performance": "cycles/r13/RESULTS.md",
+      "references": [
+        "cycles/r13/RESEARCH.md",
+        "cycles/r13/STATUS.json"
+      ],
+      "status": "research_R13_seam_count_length_gate_passed_not_product_approved",
+      "approved": false
+    }
+  ]
+}

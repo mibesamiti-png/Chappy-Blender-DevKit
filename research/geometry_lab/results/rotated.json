@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "synthetic_only": true,
+  "blender": "4.3.2",
+  "source_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5"
+  },
+  "cases": [
+    {
+      "method": "exact",
+      "status": "failed",
+      "quality": {
+        "triangles": 1078,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 6.897390100665589,
+        "min_triangle_quality": 2.6617486233312447e-07
+      },
+      "volume_relative_error": 0.024499974174165284,
+      "intersection_pairs": 3,
+      "samples_ms": [
+        347.9663530000039,
+        459.3517410000345,
+        415.24536000002854
+      ],
+      "median_ms": 415.24536000002854,
+      "repeats": 3
+    },
+    {
+      "method": "voxel",
+      "status": "passed",
+      "quality": {
+        "triangles": 2432,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 6.771683149440272,
+        "min_triangle_quality": 0.13237204540917089
+      },
+      "volume_relative_error": 0.0422787473589603,
+      "intersection_pairs": 0,
+      "samples_ms": [
+        70.29251800003067,
+        84.07937600003379,
+        46.99122699997815
+      ],
+      "median_ms": 70.29251800003067,
+      "repeats": 3
+    }
+  ]
+}

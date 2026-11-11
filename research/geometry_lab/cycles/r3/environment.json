@@ -1,0 +1,10 @@
+{
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "system": "Linux",
+  "architecture": "x86_64",
+  "blender": "4.3.2",
+  "native_memory_measured": false,
+  "python_peak_memory_measured": false,
+  "host_is_dedicated": false
+}
