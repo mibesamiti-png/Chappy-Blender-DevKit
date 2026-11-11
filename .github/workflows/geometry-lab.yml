@@ -413,7 +413,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  r13-seam-layout-dev-smoke:
+  r13-seam-layout-frozen-holdout:
     if: startsWith(github.head_ref, 'research/geometry-lab-')
     runs-on: ubuntu-latest
     timeout-minutes: 14
@@ -452,9 +452,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r13/blender_run.py -- --output runs/ci-r13-raw.json --development-only
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r13/blender_run.py -- --output runs/ci-r13-raw.json
       - name: Independently validate R13 and preregistered quality gate
-        run: timeout 360 python -m cycles.r13.evaluate --input runs/ci-r13-raw.json --output runs/ci-r13-eval.json --development-only
+        run: timeout 360 python -m cycles.r13.evaluate --input runs/ci-r13-raw.json --output runs/ci-r13-eval.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
