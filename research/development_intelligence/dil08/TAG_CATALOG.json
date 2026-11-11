@@ -1,0 +1,159 @@
+{
+  "schema": "dil08-tag-catalog-v1",
+  "source_commit": "2b8220210c2475239a43354d544b5a6f176fba80",
+  "policy": "Review-only manually mapped metadata. Tags are NOT a permission system.",
+  "documents": [
+    {
+      "id": "agents",
+      "topic": [
+        "policy",
+        "privacy",
+        "workflow"
+      ],
+      "authority": "policy",
+      "lifecycle": "current_at_pinned_commit",
+      "dependencies": []
+    },
+    {
+      "id": "parallel",
+      "topic": [
+        "workflow",
+        "ci",
+        "roles"
+      ],
+      "authority": "operational_reference",
+      "lifecycle": "current_at_pinned_commit",
+      "dependencies": [
+        "agents"
+      ]
+    },
+    {
+      "id": "r16",
+      "topic": [
+        "round",
+        "assignment",
+        "ci",
+        "next"
+      ],
+      "authority": "official_assignment",
+      "lifecycle": "current_at_pinned_commit",
+      "version_scope": "R16",
+      "dependencies": [
+        "agents",
+        "state"
+      ]
+    },
+    {
+      "id": "r15",
+      "topic": [
+        "round",
+        "assignment",
+        "history"
+      ],
+      "authority": "historical",
+      "lifecycle": "historical",
+      "version_scope": "R15",
+      "dependencies": []
+    },
+    {
+      "id": "roles",
+      "topic": [
+        "roles",
+        "workflow",
+        "dispatch"
+      ],
+      "authority": "operational_reference",
+      "lifecycle": "current_at_pinned_commit",
+      "dependencies": [
+        "agents",
+        "r16"
+      ]
+    },
+    {
+      "id": "release",
+      "topic": [
+        "release",
+        "ci",
+        "validation"
+      ],
+      "authority": "operational_reference",
+      "lifecycle": "current_at_pinned_commit",
+      "dependencies": [
+        "state"
+      ]
+    },
+    {
+      "id": "future",
+      "topic": [
+        "future",
+        "release",
+        "roadmap"
+      ],
+      "authority": "future_design",
+      "lifecycle": "future_inactive",
+      "dependencies": [
+        "state"
+      ]
+    },
+    {
+      "id": "vision",
+      "topic": [
+        "vision",
+        "future",
+        "autonomy"
+      ],
+      "authority": "future_design",
+      "lifecycle": "future_inactive",
+      "dependencies": []
+    },
+    {
+      "id": "extension",
+      "topic": [
+        "extension",
+        "license",
+        "safety"
+      ],
+      "authority": "operational_reference",
+      "lifecycle": "current_at_pinned_commit",
+      "dependencies": [
+        "agents"
+      ]
+    },
+    {
+      "id": "ui",
+      "topic": [
+        "ui",
+        "operator",
+        "blender"
+      ],
+      "authority": "operational_reference",
+      "lifecycle": "current_at_pinned_commit",
+      "dependencies": []
+    },
+    {
+      "id": "glb",
+      "topic": [
+        "glb",
+        "authenticity",
+        "evidence"
+      ],
+      "authority": "operational_reference",
+      "lifecycle": "current_at_pinned_commit",
+      "dependencies": []
+    },
+    {
+      "id": "state",
+      "topic": [
+        "state",
+        "requirements",
+        "decisions",
+        "current"
+      ],
+      "authority": "state",
+      "lifecycle": "current_at_pinned_commit",
+      "dependencies": [
+        "agents"
+      ]
+    }
+  ]
+}
