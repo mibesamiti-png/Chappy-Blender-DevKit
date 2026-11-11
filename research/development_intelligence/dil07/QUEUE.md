@@ -1,0 +1,7 @@
+# DIL follow-up queue after first DIL-07 source probe
+
+1. **Unfinished DIL-07 reproduction**: Run exact original SQLite FTS5 on the 12 SHA-pinned documents using the pre-registered `evaluate.py`, not the text-match proxy. Compare per-query result sets to the source-probe, preserving discrepancies and failure results. Requires access to a local clone containing the pinned commit, not new A tasks. No tuning on these 15 queries.
+2. **Freshly preregistered DIL-08 if justified**: introduce authority-first retrieval by **current round/release/role**, validate exact source SHA, and separately evaluate coverage on new independent blind human questions; include `unknown/needs authoritative source` when context is incomplete. Compare against original and full context; no automatic executive rights or CI relaxation.
+3. **Real token/cost/latency study**: only if token instrumentation and suitable execution budgets are actually available; never call byte reduction token reduction. Field telemetry on human/A review effort remains opt-in and requires permission.
+
+Current DIL-07 strong transfer gate **failed in the source-content probe**: 11/16 required hits, 5 misses, 9/15 exact doc sets and 0 historical returned in selective arm, 88.70% fewer bytes than this deliberately broad baseline. This is a negative research result, not an operational deployment. Keep PR #115 Draft; do not burden A or change ABCD/Geometry Lab, main, official STATE/HANDOFF, public CI or private assets.

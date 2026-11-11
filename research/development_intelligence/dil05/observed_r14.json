@@ -1,0 +1,95 @@
+{
+  "metadata_only": true,
+  "source": "public GitHub PR/workflow snapshot, not a field productivity experiment",
+  "time_note": "latest workflow updated_at from five success workflows; not actual human review times",
+  "teams": {
+    "B": {
+      "pr": 107,
+      "head": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+      "at": "2026-11-08T03:37:40Z",
+      "paths": [
+        "cbdk/glb_evidence_triage.py",
+        "docs/GLB_EVIDENCE_TRIAGE_R14.md",
+        "tests/test_glb_evidence_triage_r14.py",
+        "tests/test_glb_regression.py"
+      ],
+      "workflow_urls": [
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283082",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283092",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283094",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283121",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283072"
+      ]
+    },
+    "C": {
+      "pr": 108,
+      "head": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+      "at": "2026-11-08T03:36:08Z",
+      "paths": [
+        "docs/UI_ROLLING_R14.md",
+        "templates/modular_preview/__init__.py",
+        "tests/blender_ui_lifecycle_r5.py",
+        "tests/test_ui_lifecycle_r14.py"
+      ],
+      "workflow_urls": [
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198765",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198705",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198800",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198728",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443199069"
+      ]
+    },
+    "D": {
+      "pr": 106,
+      "head": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+      "at": "2026-11-08T03:36:55Z",
+      "paths": [
+        "docs/EXTENSION_R14_HANDLE_BOUNDARIES.md",
+        "tests/test_extension_preflight.py",
+        "tests/test_extension_reference_race_round14.py"
+      ],
+      "workflow_urls": [
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201714",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201739",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201866",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201782",
+        "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201744"
+      ]
+    }
+  },
+  "shadow_case": {
+    "id": "observed_r14_proxy",
+    "dev_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+    "events": [
+      {
+        "time": 0,
+        "team": "C",
+        "head": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332"
+      },
+      {
+        "time": 47,
+        "team": "D",
+        "head": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332"
+      },
+      {
+        "time": 92,
+        "team": "B",
+        "head": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332"
+      }
+    ],
+    "final_heads": {
+      "B": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+      "C": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+      "D": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f"
+    }
+  }
+}

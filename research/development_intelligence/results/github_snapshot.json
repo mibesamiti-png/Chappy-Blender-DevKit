@@ -1,0 +1,316 @@
+{
+  "observed_on": "2026-11-11 Asia/Tokyo",
+  "base_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+  "main_sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+  "scope": "public PR metadata and exact-head workflow conclusions; no fresh full matrix log certification",
+  "pull_requests": [
+    {
+      "pr": 25,
+      "head": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+      "branch": "feature/v0.18-shape-diagnostics",
+      "base": "main",
+      "draft": true,
+      "state": "open",
+      "ci": [
+        {
+          "id": 42440811627,
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811627"
+        },
+        {
+          "id": 42440811589,
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811589"
+        },
+        {
+          "id": 42440811599,
+          "name": "CBDK Windows kit package",
+          "head_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811599"
+        },
+        {
+          "id": 42440811655,
+          "name": "CBDK durable handoff",
+          "head_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811655"
+        },
+        {
+          "id": 42440811510,
+          "name": "CBDK Agent Skill package",
+          "head_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811510"
+        },
+        {
+          "id": 42440811533,
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811533"
+        },
+        {
+          "id": 42440811503,
+          "name": "CBDK Python tests",
+          "head_sha": "8665a3c136ae81efbd28a820e7de50ef6ee59332",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42440811503"
+        }
+      ]
+    },
+    {
+      "pr": 106,
+      "head": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+      "branch": "work/v018-extension-quality-r14",
+      "base": "feature/v0.18-shape-diagnostics",
+      "draft": true,
+      "state": "open",
+      "ci": [
+        {
+          "id": 42443201714,
+          "name": "CBDK durable handoff",
+          "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201714"
+        },
+        {
+          "id": 42443201739,
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201739"
+        },
+        {
+          "id": 42443201866,
+          "name": "CBDK Python tests",
+          "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201866"
+        },
+        {
+          "id": 42443201782,
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201782"
+        },
+        {
+          "id": 42443201744,
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201744"
+        }
+      ]
+    },
+    {
+      "pr": 107,
+      "head": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+      "branch": "work/v018-glb-analysis-r14",
+      "base": "feature/v0.18-shape-diagnostics",
+      "draft": true,
+      "state": "open",
+      "ci": [
+        {
+          "id": 42443283082,
+          "name": "CBDK durable handoff",
+          "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283082"
+        },
+        {
+          "id": 42443283092,
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283092"
+        },
+        {
+          "id": 42443283094,
+          "name": "CBDK Python tests",
+          "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283094"
+        },
+        {
+          "id": 42443283121,
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283121"
+        },
+        {
+          "id": 42443283072,
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283072"
+        }
+      ]
+    },
+    {
+      "pr": 108,
+      "head": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+      "branch": "work/v018-ui-builder-r14",
+      "base": "feature/v0.18-shape-diagnostics",
+      "draft": true,
+      "state": "open",
+      "ci": [
+        {
+          "id": 42443198765,
+          "name": "CBDK durable handoff",
+          "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198765"
+        },
+        {
+          "id": 42443198705,
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198705"
+        },
+        {
+          "id": 42443198800,
+          "name": "CBDK Python tests",
+          "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198800"
+        },
+        {
+          "id": 42443198728,
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198728"
+        },
+        {
+          "id": 42443199069,
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443199069"
+        }
+      ]
+    },
+    {
+      "pr": 109,
+      "head": "5dc20802ddc8f8f7e1ec6df2ed8d05d9ab4362c4",
+      "branch": "work/v018-development-velocity-v2-r14",
+      "base": "feature/v0.18-shape-diagnostics",
+      "draft": true,
+      "state": "open",
+      "ci": [
+        {
+          "id": 42466221602,
+          "name": "CBDK durable handoff",
+          "head_sha": "5dc20802ddc8f8f7e1ec6df2ed8d05d9ab4362c4",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42466221602"
+        },
+        {
+          "id": 42466221589,
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "5dc20802ddc8f8f7e1ec6df2ed8d05d9ab4362c4",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42466221589"
+        },
+        {
+          "id": 42466221591,
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "5dc20802ddc8f8f7e1ec6df2ed8d05d9ab4362c4",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42466221591"
+        },
+        {
+          "id": 42466221575,
+          "name": "CBDK Python tests",
+          "head_sha": "5dc20802ddc8f8f7e1ec6df2ed8d05d9ab4362c4",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42466221575"
+        },
+        {
+          "id": 42466221571,
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "5dc20802ddc8f8f7e1ec6df2ed8d05d9ab4362c4",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42466221571"
+        }
+      ]
+    },
+    {
+      "pr": 114,
+      "head": "b21da701abbf6db3f6f150d49c36781fc802ee30",
+      "branch": "research/geometry-lab-20261110",
+      "base": "feature/v0.18-shape-diagnostics",
+      "draft": true,
+      "state": "open",
+      "ci": [
+        {
+          "id": 42877870840,
+          "name": "CBDK durable handoff",
+          "head_sha": "b21da701abbf6db3f6f150d49c36781fc802ee30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42877870840"
+        },
+        {
+          "id": 42877871398,
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "b21da701abbf6db3f6f150d49c36781fc802ee30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42877871398"
+        },
+        {
+          "id": 42877870841,
+          "name": "Geometry Lab independent research validation",
+          "head_sha": "b21da701abbf6db3f6f150d49c36781fc802ee30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42877870841"
+        },
+        {
+          "id": 42877871357,
+          "name": "CBDK Python tests",
+          "head_sha": "b21da701abbf6db3f6f150d49c36781fc802ee30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42877871357"
+        }
+      ]
+    }
+  ]
+}

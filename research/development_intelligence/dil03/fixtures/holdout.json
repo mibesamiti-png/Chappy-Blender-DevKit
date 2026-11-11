@@ -1,0 +1,471 @@
+[
+  {
+    "id": "h01",
+    "description": "failed write then retry",
+    "events": [
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "payload": "bad",
+        "failpoint": "before_checkpoint"
+      },
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "payload": "good"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "interrupted",
+        "applied"
+      ],
+      "state": {
+        "writer": "A",
+        "epoch": 1,
+        "revision": 1,
+        "payload": "good"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h02",
+    "description": "failed handoff then retry",
+    "events": [
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "B",
+        "failpoint": "before_checkpoint"
+      },
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "B"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "interrupted",
+        "applied"
+      ],
+      "state": {
+        "writer": "B",
+        "epoch": 2,
+        "revision": 0,
+        "payload": "seed"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h03",
+    "description": "handoff after write protects prior result",
+    "events": [
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "payload": "one"
+      },
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 1,
+        "next_writer": "B"
+      },
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 1,
+        "payload": "old"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "applied",
+        "applied",
+        "rejected"
+      ],
+      "state": {
+        "writer": "B",
+        "epoch": 2,
+        "revision": 1,
+        "payload": "one"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h04",
+    "description": "new owner failure and retry",
+    "events": [
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "B"
+      },
+      {
+        "op": "write",
+        "actor": "B",
+        "epoch": 2,
+        "revision": 0,
+        "payload": "bad",
+        "failpoint": "before_checkpoint"
+      },
+      {
+        "op": "write",
+        "actor": "B",
+        "epoch": 2,
+        "revision": 0,
+        "payload": "good"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "applied",
+        "interrupted",
+        "applied"
+      ],
+      "state": {
+        "writer": "B",
+        "epoch": 2,
+        "revision": 1,
+        "payload": "good"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h05",
+    "description": "wrong epoch with current revision",
+    "events": [
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "payload": "one"
+      },
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 2,
+        "revision": 1,
+        "payload": "stale"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "applied",
+        "rejected"
+      ],
+      "state": {
+        "writer": "A",
+        "epoch": 1,
+        "revision": 1,
+        "payload": "one"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h06",
+    "description": "old B writer after B->H",
+    "events": [
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "B"
+      },
+      {
+        "op": "handoff",
+        "actor": "B",
+        "epoch": 2,
+        "revision": 0,
+        "next_writer": "H"
+      },
+      {
+        "op": "write",
+        "actor": "B",
+        "epoch": 2,
+        "revision": 0,
+        "payload": "stale"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "applied",
+        "applied",
+        "rejected"
+      ],
+      "state": {
+        "writer": "H",
+        "epoch": 3,
+        "revision": 0,
+        "payload": "seed"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h07",
+    "description": "old A writer transfer after A->B->A",
+    "events": [
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "B"
+      },
+      {
+        "op": "handoff",
+        "actor": "B",
+        "epoch": 2,
+        "revision": 0,
+        "next_writer": "A"
+      },
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "C"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "applied",
+        "applied",
+        "rejected"
+      ],
+      "state": {
+        "writer": "A",
+        "epoch": 3,
+        "revision": 0,
+        "payload": "seed"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h08",
+    "description": "human change then stale AI rewrite",
+    "events": [
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "H"
+      },
+      {
+        "op": "write",
+        "actor": "H",
+        "epoch": 2,
+        "revision": 0,
+        "payload": "human"
+      },
+      {
+        "op": "handoff",
+        "actor": "H",
+        "epoch": 2,
+        "revision": 1,
+        "next_writer": "A"
+      },
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 1,
+        "payload": "robot"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "applied",
+        "applied",
+        "applied",
+        "rejected"
+      ],
+      "state": {
+        "writer": "A",
+        "epoch": 3,
+        "revision": 1,
+        "payload": "human"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h09",
+    "description": "failed handoff does not revoke current owner",
+    "events": [
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "B",
+        "failpoint": "before_checkpoint"
+      },
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "payload": "continue"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "interrupted",
+        "applied"
+      ],
+      "state": {
+        "writer": "A",
+        "epoch": 1,
+        "revision": 1,
+        "payload": "continue"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h10",
+    "description": "failed write does not change transfer revision",
+    "events": [
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "payload": "broken",
+        "failpoint": "before_checkpoint"
+      },
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "next_writer": "B"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "interrupted",
+        "applied"
+      ],
+      "state": {
+        "writer": "B",
+        "epoch": 2,
+        "revision": 0,
+        "payload": "seed"
+      },
+      "recovery": "valid"
+    }
+  },
+  {
+    "id": "h11",
+    "description": "checkpoint tamper after legitimate edit",
+    "events": [
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "payload": "one"
+      },
+      {
+        "op": "corrupt_checkpoint"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "applied",
+        "applied"
+      ],
+      "state": {
+        "writer": "A",
+        "epoch": 1,
+        "revision": 1,
+        "payload": "one"
+      },
+      "recovery": "invalid"
+    }
+  },
+  {
+    "id": "h12",
+    "description": "full ABA with interleaved edits",
+    "events": [
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 0,
+        "payload": "one"
+      },
+      {
+        "op": "handoff",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 1,
+        "next_writer": "B"
+      },
+      {
+        "op": "write",
+        "actor": "B",
+        "epoch": 2,
+        "revision": 1,
+        "payload": "two"
+      },
+      {
+        "op": "handoff",
+        "actor": "B",
+        "epoch": 2,
+        "revision": 2,
+        "next_writer": "A"
+      },
+      {
+        "op": "write",
+        "actor": "A",
+        "epoch": 1,
+        "revision": 2,
+        "payload": "old"
+      }
+    ],
+    "gold": {
+      "statuses": [
+        "applied",
+        "applied",
+        "applied",
+        "applied",
+        "rejected"
+      ],
+      "state": {
+        "writer": "A",
+        "epoch": 3,
+        "revision": 2,
+        "payload": "two"
+      },
+      "recovery": "valid"
+    }
+  }
+]

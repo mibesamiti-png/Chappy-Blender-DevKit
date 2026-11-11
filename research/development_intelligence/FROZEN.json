@@ -1,0 +1,16 @@
+{
+  "stage": "before_first_holdout_execution",
+  "budget": {
+    "cases": 24,
+    "timing_trials": 7,
+    "iterations_per_trial": 100,
+    "max_process_seconds": 60,
+    "post_holdout_tuning": 0
+  },
+  "sha256": {
+    "prototype/status_view.py": "5545ee7ed8b42792979c46428fd22b145bc9251509992ba11b71d407c7296242",
+    "fixtures/development.json": "483a966ef8668099423e1ccc7eb2ab130a4c1b11cd1e3a90f9c6cb1a875da861",
+    "fixtures/holdout.json": "85437b29de364ce9ea49f7f5f4aa47a671cdea793a29c615990f598709e6b5f5",
+    "benchmark.py": "4f4b827d19602018cd5c4ff2678f1cc7b673a2ab5af97c90dadb9b48b2801fc8"
+  }
+}

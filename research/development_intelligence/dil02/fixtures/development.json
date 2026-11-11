@@ -1,0 +1,422 @@
+[
+  {
+    "id": "d01",
+    "task": "Blender小型パネルを作る提案への影響",
+    "goal_revision": "r2",
+    "accepted_revision": null,
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "idea",
+    "hint": "large",
+    "budget": 10,
+    "options": [
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "large",
+        "effort": 7,
+        "complexity": 7,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 10
+      }
+    ],
+    "gold": {
+      "action": "choose",
+      "option": "small"
+    }
+  },
+  {
+    "id": "d02",
+    "task": "検証が通った後の次候補選択",
+    "goal_revision": "r2",
+    "accepted_revision": null,
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "continue",
+    "hint": null,
+    "budget": 10,
+    "options": [
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "mid",
+        "effort": 4,
+        "complexity": 3,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 8
+      },
+      {
+        "id": "large",
+        "effort": 7,
+        "complexity": 7,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 10
+      }
+    ],
+    "gold": {
+      "action": "choose",
+      "option": "small"
+    }
+  },
+  {
+    "id": "d03",
+    "task": "明確に高機能方式を選ぶ指示",
+    "goal_revision": "r2",
+    "accepted_revision": null,
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "adopt",
+    "hint": "large",
+    "budget": 10,
+    "options": [
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "large",
+        "effort": 7,
+        "complexity": 7,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 10
+      }
+    ],
+    "gold": {
+      "action": "choose",
+      "option": "large"
+    }
+  },
+  {
+    "id": "d04",
+    "task": "明示方式が予算超過",
+    "goal_revision": "r2",
+    "accepted_revision": null,
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "adopt",
+    "hint": "large",
+    "budget": 3,
+    "options": [
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "large",
+        "effort": 7,
+        "complexity": 7,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 10
+      }
+    ],
+    "gold": {
+      "action": "escalate",
+      "option": null
+    }
+  },
+  {
+    "id": "d05",
+    "task": "合格した作業への追加最適化提案",
+    "goal_revision": "r2",
+    "accepted_revision": "r2",
+    "checks_passed": true,
+    "evidence_fresh": true,
+    "mode": "idea",
+    "hint": "large",
+    "budget": 10,
+    "options": [
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "large",
+        "effort": 7,
+        "complexity": 7,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 10
+      }
+    ],
+    "gold": {
+      "action": "stop",
+      "option": null
+    }
+  },
+  {
+    "id": "d06",
+    "task": "合格記録の鮮度欠落",
+    "goal_revision": "r2",
+    "accepted_revision": "r2",
+    "checks_passed": true,
+    "evidence_fresh": false,
+    "mode": "continue",
+    "hint": null,
+    "budget": 10,
+    "options": [
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "large",
+        "effort": 7,
+        "complexity": 7,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 10
+      }
+    ],
+    "gold": {
+      "action": "verify",
+      "option": null
+    }
+  },
+  {
+    "id": "d07",
+    "task": "過去合格の検査が落ちる",
+    "goal_revision": "r2",
+    "accepted_revision": "r2",
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "continue",
+    "hint": null,
+    "budget": 10,
+    "options": [
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "mid",
+        "effort": 4,
+        "complexity": 3,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 8
+      }
+    ],
+    "gold": {
+      "action": "choose",
+      "option": "small"
+    }
+  },
+  {
+    "id": "d08",
+    "task": "新しい要件改訂",
+    "goal_revision": "r2",
+    "accepted_revision": "r1",
+    "checks_passed": true,
+    "evidence_fresh": true,
+    "mode": "continue",
+    "hint": null,
+    "budget": 10,
+    "options": [
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "mid",
+        "effort": 4,
+        "complexity": 3,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 8
+      }
+    ],
+    "gold": {
+      "action": "choose",
+      "option": "small"
+    }
+  },
+  {
+    "id": "d09",
+    "task": "最安案が要件未達",
+    "goal_revision": "r2",
+    "accepted_revision": null,
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "continue",
+    "hint": null,
+    "budget": 10,
+    "options": [
+      {
+        "id": "broken",
+        "effort": 1,
+        "complexity": 1,
+        "fits_goal": false,
+        "gates_passed": true,
+        "quality": 10
+      },
+      {
+        "id": "mid",
+        "effort": 4,
+        "complexity": 3,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 8
+      },
+      {
+        "id": "large",
+        "effort": 7,
+        "complexity": 7,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 10
+      }
+    ],
+    "gold": {
+      "action": "choose",
+      "option": "mid"
+    }
+  },
+  {
+    "id": "d10",
+    "task": "権限チェックなしの案が安い",
+    "goal_revision": "r2",
+    "accepted_revision": null,
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "continue",
+    "hint": null,
+    "budget": 10,
+    "options": [
+      {
+        "id": "risky",
+        "effort": 1,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": false,
+        "quality": 9
+      },
+      {
+        "id": "mid",
+        "effort": 4,
+        "complexity": 3,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 8
+      }
+    ],
+    "gold": {
+      "action": "choose",
+      "option": "mid"
+    }
+  },
+  {
+    "id": "d11",
+    "task": "全案が予算外",
+    "goal_revision": "r2",
+    "accepted_revision": null,
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "continue",
+    "hint": null,
+    "budget": 1,
+    "options": [
+      {
+        "id": "mid",
+        "effort": 4,
+        "complexity": 3,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 8
+      },
+      {
+        "id": "large",
+        "effort": 7,
+        "complexity": 7,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 10
+      }
+    ],
+    "gold": {
+      "action": "escalate",
+      "option": null
+    }
+  },
+  {
+    "id": "d12",
+    "task": "同コストなら単純な案",
+    "goal_revision": "r2",
+    "accepted_revision": null,
+    "checks_passed": false,
+    "evidence_fresh": true,
+    "mode": "continue",
+    "hint": null,
+    "budget": 10,
+    "options": [
+      {
+        "id": "tied",
+        "effort": 2,
+        "complexity": 3,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 9
+      },
+      {
+        "id": "small",
+        "effort": 2,
+        "complexity": 1,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 5
+      },
+      {
+        "id": "mid",
+        "effort": 4,
+        "complexity": 3,
+        "fits_goal": true,
+        "gates_passed": true,
+        "quality": 8
+      }
+    ],
+    "gold": {
+      "action": "choose",
+      "option": "small"
+    }
+  }
+]

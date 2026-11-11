@@ -1,0 +1,140 @@
+[
+  {
+    "id": "h01",
+    "project": "laser",
+    "topics": [],
+    "query": "自己交差",
+    "max_docs": 3,
+    "gold_ids": [
+      "laser-geometry-r2"
+    ]
+  },
+  {
+    "id": "h02",
+    "project": "player",
+    "topics": [
+      "handoff",
+      "privacy"
+    ],
+    "query": "再開と権利",
+    "max_docs": 3,
+    "gold_ids": [
+      "player-handoff-r2",
+      "player-privacy-r2"
+    ]
+  },
+  {
+    "id": "h03",
+    "project": "shape",
+    "topics": [],
+    "query": "私有ファイル",
+    "max_docs": 3,
+    "gold_ids": [
+      "shape-privacy-r2"
+    ]
+  },
+  {
+    "id": "h04",
+    "project": "joint",
+    "topics": [
+      "ci"
+    ],
+    "query": "自動テストの合否",
+    "max_docs": 3,
+    "gold_ids": [
+      "joint-ci-r2"
+    ]
+  },
+  {
+    "id": "h05",
+    "project": "build",
+    "topics": [],
+    "query": "中断再開",
+    "max_docs": 3,
+    "gold_ids": [
+      "build-handoff-r2"
+    ]
+  },
+  {
+    "id": "h06",
+    "project": "model",
+    "topics": [
+      "geometry",
+      "ci"
+    ],
+    "query": "モデル品質とテスト",
+    "max_docs": 3,
+    "gold_ids": [
+      "model-geometry-r2",
+      "model-ci-r2"
+    ]
+  },
+  {
+    "id": "h07",
+    "project": "stamp",
+    "topics": [],
+    "query": "自己交差",
+    "max_docs": 3,
+    "gold_ids": [
+      "stamp-geometry-r2"
+    ]
+  },
+  {
+    "id": "h08",
+    "project": "viewer",
+    "topics": [
+      "privacy"
+    ],
+    "query": "公開先の制約",
+    "max_docs": 3,
+    "gold_ids": [
+      "viewer-privacy-r2"
+    ]
+  },
+  {
+    "id": "h09",
+    "project": "laser",
+    "topics": [
+      "handoff",
+      "ci"
+    ],
+    "query": "稼働状態と検査",
+    "max_docs": 3,
+    "gold_ids": [
+      "laser-handoff-r2",
+      "laser-ci-r2"
+    ]
+  },
+  {
+    "id": "h10",
+    "project": "player",
+    "topics": [],
+    "query": "CI結果",
+    "max_docs": 3,
+    "gold_ids": [
+      "player-ci-r2"
+    ]
+  },
+  {
+    "id": "h11",
+    "project": "shape",
+    "topics": [
+      "geometry"
+    ],
+    "query": "形状計測",
+    "max_docs": 3,
+    "gold_ids": [
+      "shape-geometry-r2"
+    ]
+  },
+  {
+    "id": "h12",
+    "project": "joint",
+    "topics": [],
+    "query": "私有ファイル",
+    "max_docs": 3,
+    "gold_ids": [
+      "joint-privacy-r2"
+    ]
+  }
+]
