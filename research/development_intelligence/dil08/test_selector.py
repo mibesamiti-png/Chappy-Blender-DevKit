@@ -76,6 +76,16 @@ class TestSelector(unittest.TestCase):
     def test_action_never_uses_r15(self):
         r=self.run_case(intent="modify",official_round="R16",topic_hints=["round"])
         self.assertNotIn("r15",r["selected"])
+    def test_b_may_collect_modification_evidence_but_not_execute(self):
+        r=self.run_case(intent="modify",team="B",official_round="R16")
+        self.assertEqual(r["status"],"blocked_pending_permission_and_review")
+        self.assertTrue(set(("agents","r16","state","parallel")).issubset(r["selected"]))
+        self.assertFalse(r["may_execute"])
+    def test_modify_missing_parallel_fails_closed(self):
+        del self.docs["parallel"]
+        self.assertEqual(self.run_case(intent="modify",team="B",official_round="R16")["status"],"blocked_missing_authority")
+    def test_release_restricted_to_a(self):
+        self.assertEqual(self.run_case(intent="release",team="B",official_round="R16")["status"],"blocked_invalid_request")
     def test_malformed_input(self):
         self.assertEqual(self.run_case(intent="read_only_qa",topic_hints=10)["status"],"blocked_invalid_request")
     def test_invalid_intent(self):

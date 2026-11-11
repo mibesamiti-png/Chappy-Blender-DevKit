@@ -72,7 +72,9 @@ def select(case, source_docs, catalog_by_id):
                 if case.get("team") not in ("B", "C", "D"):
                     return out
                 required.append("roles")
-            elif case.get("team") not in ("A", None):
+            elif intent == "modify" and case.get("team") not in ("A", "B", "C", "D", None):
+                return out
+            elif intent in ("integrate", "release") and case.get("team") not in ("A", None):
                 return out
             ids.extend(x for x in required if x not in ids)
             out["status"] = ACTION_RESULTS[intent]
