@@ -1,0 +1,19 @@
+{
+  "repository": "mibesamiti-png/Chappy-Blender-DevKit",
+  "source_commit": "2b8220210c2475239a43354d544b5a6f176fba80",
+  "notes": "Only public repository files at this immutable commit; committed to dev is not a licensing/product approval. Historical R15 intentionally included as an obsolete *current assignment* negative.",
+  "documents": [
+    {"id":"agents", "path":"AGENTS.md", "blob_sha":"b36e5bb815bf3a1a6af3642bbb1cdca3ce5fb02e", "topic":"policy", "current":true},
+    {"id":"parallel", "path":"docs/PARALLEL_DEVELOPMENT.md", "blob_sha":"6f7a8b1bd7d1aaa6024c245afe063e31dd095505", "topic":"workflow", "current":true},
+    {"id":"r16", "path":"docs/R16_ABCD_START.md", "blob_sha":"fd6a107ad87bac61ef9ca6a4c1192462ac16a286", "topic":"round", "current":true},
+    {"id":"r15", "path":"docs/R15_ABCD_START.md", "blob_sha":"4350b84a6e1220dd5021865784f3111b0a6c996a", "topic":"round", "current":false},
+    {"id":"roles", "path":"docs/ROLE_DISPATCH_PILOT.md", "blob_sha":"af117138014e7f4dc9c1f932d5d7cd8cc144c2b0", "topic":"roles", "current":true},
+    {"id":"release", "path":"docs/V018_COMPLETION_GATES.md", "blob_sha":"ab1305a3f4504143bc75404042e8a8333a4baf44", "topic":"release", "current":true},
+    {"id":"future", "path":"docs/future/CBDK-FUTURE-019-022.md", "blob_sha":"b6dd9a31b55fb53f63a83c052a8283705ef722a3", "topic":"future", "current":true},
+    {"id":"vision", "path":"docs/future/CBDK-LONG-TERM-VISION.md", "blob_sha":"37eec5c0307559815d4272f03a08106d4e5f6e7e", "topic":"vision", "current":true},
+    {"id":"extension", "path":"docs/EXTENSION_PREFLIGHT.md", "blob_sha":"b3bf2a419971d5a4992264f343f1a18d13d5317b", "topic":"extension", "current":true},
+    {"id":"ui", "path":"docs/UI_OPERATOR_PARITY_R15.md", "blob_sha":"eecb0cc35a6f532c127b6d24f6ca6a17b0cf7cd4", "topic":"ui", "current":true},
+    {"id":"glb", "path":"docs/GLB_EVIDENCE_BASIS_R15.md", "blob_sha":"dae5efe6bdd38cae0b38060cfec95826aceba387", "topic":"glb", "current":true},
+    {"id":"state", "path":"docs/project/STATE.json", "blob_sha":"29c804ac5c7f9cd531c0fbd6661612dbbc956519", "topic":"state", "current":true}
+  ]
+}

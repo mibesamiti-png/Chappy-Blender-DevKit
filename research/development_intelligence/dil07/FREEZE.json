@@ -1,0 +1,14 @@
+{
+  "study": "DIL-07",
+  "sha256": {
+    "METHOD.md": "1c82ccec4a1bbb6bea42990be527ee4f248951446e5e944c5a1ac9c4e9a14fa2",
+    "manifest.json": "8cf7997a936288155dc61be34a9e155b0482190a8e0a908c2db0f9ad04f8a489",
+    "cases.json": "078bc2eb4144104162ecb3376d906a9d8dc0d7d87b1ef4b4ceba67929376b55a",
+    "snapshot.py": "938833cca3f10ea2f993fed52c86da0ea928522d955d0e9f14d146f17d2e4aef",
+    "evaluate.py": "20c58ba11ed8db7f87d7630144002f9f81a84d0142235e13584ce5e580da81c1",
+    "test_field.py": "5f66b1b5adc2bcc83401c24327fcc772662e80d4283c7c4516c2e3722f7e673d"
+  },
+  "parent_dil04_git_blob": "6d2ab052ff3ba40a16fb99288e82a0a646624c58",
+  "first_full_evaluation": "not_started",
+  "source_commit": "2b8220210c2475239a43354d544b5a6f176fba80"
+}
