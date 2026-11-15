@@ -1,0 +1,962 @@
+{
+  "schema_version": 1,
+  "repo": "mibesamiti-png/Chappy-Blender-DevKit",
+  "recorded_at": "2026-11-10T22:30:27Z",
+  "source": "GitHub REST public pull and job API, cited per PR/run",
+  "rounds": [
+    {
+      "round": "R13",
+      "teams": [
+        {
+          "role": "B",
+          "pr": 100,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/100",
+          "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+          "pr_created_at": "2026-11-08T01:55:25Z",
+          "workflows": [
+            {
+              "family": "Python",
+              "run_id": 42436315594,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42436315594",
+              "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T01:55:29Z",
+              "run_updated_at": "2026-11-08T01:56:12Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:56:12Z"
+                },
+                {
+                  "name": "unittest (3.12)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:56:08Z"
+                },
+                {
+                  "name": "unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:56:12Z"
+                }
+              ]
+            },
+            {
+              "family": "Windows",
+              "run_id": 42436315598,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42436315598",
+              "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T01:55:29Z",
+              "run_updated_at": "2026-11-08T01:56:52Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "powershell-unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:56:52Z"
+                },
+                {
+                  "name": "powershell-unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:56:37Z"
+                }
+              ]
+            },
+            {
+              "family": "Blender",
+              "run_id": 42436330263,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42436330263",
+              "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T01:55:42Z",
+              "run_updated_at": "2026-11-08T01:58:47Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "blender-parts (4.4.3)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:57:20Z"
+                },
+                {
+                  "name": "blender-parts (4.5.15)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:57:40Z"
+                },
+                {
+                  "name": "blender-parts (5.2.1)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:58:46Z"
+                }
+              ]
+            },
+            {
+              "family": "Browser",
+              "run_id": 42436315596,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42436315596",
+              "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T01:55:29Z",
+              "run_updated_at": "2026-11-08T01:56:09Z",
+              "job_total": 1,
+              "jobs": [
+                {
+                  "name": "chromium-offline-viewer",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:56:08Z"
+                }
+              ]
+            },
+            {
+              "family": "Handoff",
+              "run_id": 42436315639,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42436315639",
+              "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T01:55:29Z",
+              "run_updated_at": "2026-11-08T01:55:39Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "Verify project state and publish actual test observation",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:55:38Z"
+                },
+                {
+                  "name": "Sync latest durable handoff to GitHub main",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+                  "completed_at": "2026-11-08T01:55:38Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "C",
+          "pr": 102,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/102",
+          "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+          "pr_created_at": "2026-11-08T02:22:32Z",
+          "workflows": [
+            {
+              "family": "Python",
+              "run_id": 42438274491,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42438274491",
+              "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:22:36Z",
+              "run_updated_at": "2026-11-08T02:23:38Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:23:22Z"
+                },
+                {
+                  "name": "unittest (3.12)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:23:38Z"
+                },
+                {
+                  "name": "unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:23:25Z"
+                }
+              ]
+            },
+            {
+              "family": "Windows",
+              "run_id": 42438274540,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42438274540",
+              "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:22:36Z",
+              "run_updated_at": "2026-11-08T02:23:56Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "powershell-unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:23:55Z"
+                },
+                {
+                  "name": "powershell-unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:23:56Z"
+                }
+              ]
+            },
+            {
+              "family": "Blender",
+              "run_id": 42438274474,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42438274474",
+              "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:22:36Z",
+              "run_updated_at": "2026-11-08T02:25:11Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "blender-parts (4.4.3)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:24:23Z"
+                },
+                {
+                  "name": "blender-parts (4.5.15)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:24:53Z"
+                },
+                {
+                  "name": "blender-parts (5.2.1)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:25:10Z"
+                }
+              ]
+            },
+            {
+              "family": "Browser",
+              "run_id": 42438274464,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42438274464",
+              "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:22:36Z",
+              "run_updated_at": "2026-11-08T02:23:09Z",
+              "job_total": 1,
+              "jobs": [
+                {
+                  "name": "chromium-offline-viewer",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:23:08Z"
+                }
+              ]
+            },
+            {
+              "family": "Handoff",
+              "run_id": 42438274453,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42438274453",
+              "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:22:36Z",
+              "run_updated_at": "2026-11-08T02:22:47Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "Verify project state and publish actual test observation",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:22:46Z"
+                },
+                {
+                  "name": "Sync latest durable handoff to GitHub main",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+                  "completed_at": "2026-11-08T02:22:46Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "D",
+          "pr": 103,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/103",
+          "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+          "pr_created_at": "2026-11-08T02:24:06Z",
+          "workflows": [
+            {
+              "family": "Python",
+              "run_id": 42439001914,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42439001914",
+              "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:32:48Z",
+              "run_updated_at": "2026-11-08T02:34:06Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:33:41Z"
+                },
+                {
+                  "name": "unittest (3.12)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:34:05Z"
+                },
+                {
+                  "name": "unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:33:57Z"
+                }
+              ]
+            },
+            {
+              "family": "Windows",
+              "run_id": 42439001942,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42439001942",
+              "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:32:48Z",
+              "run_updated_at": "2026-11-08T02:34:20Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "powershell-unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:34:19Z"
+                },
+                {
+                  "name": "powershell-unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:34:16Z"
+                }
+              ]
+            },
+            {
+              "family": "Blender",
+              "run_id": 42439001915,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42439001915",
+              "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:32:48Z",
+              "run_updated_at": "2026-11-08T02:35:37Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "blender-parts (4.4.3)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:35:27Z"
+                },
+                {
+                  "name": "blender-parts (4.5.15)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:35:14Z"
+                },
+                {
+                  "name": "blender-parts (5.2.1)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:35:37Z"
+                }
+              ]
+            },
+            {
+              "family": "Browser",
+              "run_id": 42439001920,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42439001920",
+              "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:32:48Z",
+              "run_updated_at": "2026-11-08T02:33:22Z",
+              "job_total": 1,
+              "jobs": [
+                {
+                  "name": "chromium-offline-viewer",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:33:22Z"
+                }
+              ]
+            },
+            {
+              "family": "Handoff",
+              "run_id": 42439001916,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42439001916",
+              "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T02:32:48Z",
+              "run_updated_at": "2026-11-08T02:32:58Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "Verify project state and publish actual test observation",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:32:57Z"
+                },
+                {
+                  "name": "Sync latest durable handoff to GitHub main",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+                  "completed_at": "2026-11-08T02:32:57Z"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "integration_pr": {
+        "number": 104,
+        "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/104",
+        "created_at": "2026-11-08T02:44:01Z"
+      }
+    },
+    {
+      "round": "R14",
+      "teams": [
+        {
+          "role": "B",
+          "pr": 107,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/107",
+          "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+          "pr_created_at": "2026-11-08T03:32:29Z",
+          "workflows": [
+            {
+              "family": "Python",
+              "run_id": 42443283094,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283094",
+              "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:34:24Z",
+              "run_updated_at": "2026-11-08T03:35:31Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:35:16Z"
+                },
+                {
+                  "name": "unittest (3.12)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:35:30Z"
+                },
+                {
+                  "name": "unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:35:15Z"
+                }
+              ]
+            },
+            {
+              "family": "Windows",
+              "run_id": 42443283121,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283121",
+              "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:34:24Z",
+              "run_updated_at": "2026-11-08T03:35:43Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "powershell-unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:35:37Z"
+                },
+                {
+                  "name": "powershell-unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:35:42Z"
+                }
+              ]
+            },
+            {
+              "family": "Blender",
+              "run_id": 42443283072,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283072",
+              "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:34:24Z",
+              "run_updated_at": "2026-11-08T03:37:40Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "blender-parts (4.4.3)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:37:14Z"
+                },
+                {
+                  "name": "blender-parts (4.5.15)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:37:40Z"
+                },
+                {
+                  "name": "blender-parts (5.2.1)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:37:35Z"
+                }
+              ]
+            },
+            {
+              "family": "Browser",
+              "run_id": 42443283092,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283092",
+              "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:34:24Z",
+              "run_updated_at": "2026-11-08T03:35:01Z",
+              "job_total": 1,
+              "jobs": [
+                {
+                  "name": "chromium-offline-viewer",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:35:00Z"
+                }
+              ]
+            },
+            {
+              "family": "Handoff",
+              "run_id": 42443283082,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443283082",
+              "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:34:24Z",
+              "run_updated_at": "2026-11-08T03:34:37Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "Verify project state and publish actual test observation",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:34:36Z"
+                },
+                {
+                  "name": "Sync latest durable handoff to GitHub main",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+                  "completed_at": "2026-11-08T03:34:36Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "C",
+          "pr": 108,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/108",
+          "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+          "pr_created_at": "2026-11-08T03:33:11Z",
+          "workflows": [
+            {
+              "family": "Python",
+              "run_id": 42443198800,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198800",
+              "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:14Z",
+              "run_updated_at": "2026-11-08T03:34:07Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:34:07Z"
+                },
+                {
+                  "name": "unittest (3.12)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:34:05Z"
+                },
+                {
+                  "name": "unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:34:05Z"
+                }
+              ]
+            },
+            {
+              "family": "Windows",
+              "run_id": 42443198728,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198728",
+              "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:14Z",
+              "run_updated_at": "2026-11-08T03:34:31Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "powershell-unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:34:23Z"
+                },
+                {
+                  "name": "powershell-unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:34:31Z"
+                }
+              ]
+            },
+            {
+              "family": "Blender",
+              "run_id": 42443199069,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443199069",
+              "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:14Z",
+              "run_updated_at": "2026-11-08T03:36:08Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "blender-parts (4.4.3)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:35:50Z"
+                },
+                {
+                  "name": "blender-parts (4.5.15)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:35:08Z"
+                },
+                {
+                  "name": "blender-parts (5.2.1)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:36:07Z"
+                }
+              ]
+            },
+            {
+              "family": "Browser",
+              "run_id": 42443198705,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198705",
+              "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:14Z",
+              "run_updated_at": "2026-11-08T03:33:54Z",
+              "job_total": 1,
+              "jobs": [
+                {
+                  "name": "chromium-offline-viewer",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:33:54Z"
+                }
+              ]
+            },
+            {
+              "family": "Handoff",
+              "run_id": 42443198765,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443198765",
+              "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:14Z",
+              "run_updated_at": "2026-11-08T03:33:25Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "Verify project state and publish actual test observation",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:33:24Z"
+                },
+                {
+                  "name": "Sync latest durable handoff to GitHub main",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+                  "completed_at": "2026-11-08T03:33:24Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "D",
+          "pr": 106,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/106",
+          "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+          "pr_created_at": "2026-11-08T03:32:12Z",
+          "workflows": [
+            {
+              "family": "Python",
+              "run_id": 42443201866,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201866",
+              "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:17Z",
+              "run_updated_at": "2026-11-08T03:34:33Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:34:14Z"
+                },
+                {
+                  "name": "unittest (3.12)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:34:32Z"
+                },
+                {
+                  "name": "unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:34:20Z"
+                }
+              ]
+            },
+            {
+              "family": "Windows",
+              "run_id": 42443201782,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201782",
+              "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:17Z",
+              "run_updated_at": "2026-11-08T03:34:51Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "powershell-unittest (3.11)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:34:50Z"
+                },
+                {
+                  "name": "powershell-unittest (3.13)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:34:45Z"
+                }
+              ]
+            },
+            {
+              "family": "Blender",
+              "run_id": 42443201744,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201744",
+              "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:17Z",
+              "run_updated_at": "2026-11-08T03:36:55Z",
+              "job_total": 3,
+              "jobs": [
+                {
+                  "name": "blender-parts (4.4.3)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:35:34Z"
+                },
+                {
+                  "name": "blender-parts (4.5.15)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:35:24Z"
+                },
+                {
+                  "name": "blender-parts (5.2.1)",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:36:54Z"
+                }
+              ]
+            },
+            {
+              "family": "Browser",
+              "run_id": 42443201739,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201739",
+              "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:17Z",
+              "run_updated_at": "2026-11-08T03:33:54Z",
+              "job_total": 1,
+              "jobs": [
+                {
+                  "name": "chromium-offline-viewer",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:33:54Z"
+                }
+              ]
+            },
+            {
+              "family": "Handoff",
+              "run_id": 42443201714,
+              "run_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42443201714",
+              "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+              "status": "completed",
+              "conclusion": "success",
+              "run_created_at": "2026-11-08T03:33:17Z",
+              "run_updated_at": "2026-11-08T03:33:33Z",
+              "job_total": 2,
+              "jobs": [
+                {
+                  "name": "Verify project state and publish actual test observation",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:33:32Z"
+                },
+                {
+                  "name": "Sync latest durable handoff to GitHub main",
+                  "status": "completed",
+                  "conclusion": "skipped",
+                  "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+                  "completed_at": "2026-11-08T03:33:32Z"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "integration_pr": {
+        "number": 117,
+        "url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/117",
+        "created_at": "2026-11-10T21:24:36Z"
+      }
+    },
+    {
+      "round": "R15",
+      "teams": [
+        {
+          "role": "B",
+          "pr": 120,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/120",
+          "head_sha": "70b27ab40b9c129d780fd26fdd177c9e67368b65",
+          "workflows": []
+        },
+        {
+          "role": "C",
+          "pr": 121,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/121",
+          "head_sha": "54832e779c5cd26a10e392120bcb7bb2f514b874",
+          "workflows": []
+        },
+        {
+          "role": "D",
+          "pr": 119,
+          "pr_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/119",
+          "head_sha": "cae75c51c9004d8bbaecdce432761da3d981c31d",
+          "workflows": []
+        }
+      ],
+      "integration_pr": null,
+      "note": "R15 observed at 2026-11-10 22:22 UTC. No completed integrated stage; this cycle did not collect its CI. Censored, not failed or waiting."
+    }
+  ]
+}

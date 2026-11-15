@@ -1,0 +1,24 @@
+{
+  "stage": "before_first_holdout_evaluation",
+  "date_local": "2026-11-11 JST",
+  "experiment": "DIL-04",
+  "budget": {
+    "documents": 40,
+    "development_cases": 12,
+    "holdout_cases": 12,
+    "unit_tests": 14,
+    "holdout_runs": 1,
+    "benchmark_max_seconds": 60,
+    "post_holdout_tuning": 0
+  },
+  "sha256": {
+    "retrieval.py": "3c692218539c4e901473edab1e16e099451ab6cd4205c78d23c070614eec1e8a",
+    "benchmark.py": "ad35338b6bc5c903e3a0482e384b1e5e8f188b2d8119ca8c63c42486521b31dc",
+    "test_retrieval.py": "bc99e0b02ca529ffd33cf39c5bf65514803dfa214cbb091476c191eb59baf535",
+    "generate_fixtures.py": "2b847329d0cf1eaf95af2c21655bbdd1307e7b4ba6a4f55655e528943a4bb279",
+    "corpus.json": "2cc96fee8df670e4204e9094334def8bed2e5d2426f880484f6215f340d5ada6",
+    "fixtures/development.json": "6ad9934a3da43bdbbe0234aba0b61c840b8f0ee4e69cdcf81148298c6745a522",
+    "fixtures/holdout.json": "892fe1a9639a85ea22e65a69eaa97ca9ee21ee5138232468b64cbc3c6e278a5e",
+    "METHOD.md": "bba1f0c0ad3e3b6bf4a2b7726cbb1de2a0c637d3b42a44bb614cad21e7067c1e"
+  }
+}

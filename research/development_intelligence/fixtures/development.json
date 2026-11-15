@@ -1,0 +1,278 @@
+[
+  {
+    "id": "recent",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "running",
+      "updated_at": 990,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": true
+  },
+  {
+    "id": "stale",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "running",
+      "updated_at": 600,
+      "heartbeat_at": 590,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "no_heartbeat",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "running",
+      "updated_at": 990,
+      "heartbeat_at": null,
+      "heartbeat_attempt": null,
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "dead_executor",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "running",
+      "updated_at": 990,
+      "heartbeat_at": 950,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "new_revision",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev2",
+      "status": "running",
+      "updated_at": 990,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "other_attempt",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "running",
+      "updated_at": 990,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt1",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "pause_pending",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "pause_requested",
+      "updated_at": 990,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "paused",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "paused",
+      "updated_at": 990,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "future_clock",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "running",
+      "updated_at": 1001,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "failed",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "failed",
+      "updated_at": 990,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 1,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "completed",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "completed",
+      "updated_at": 990,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": 4,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  },
+  {
+    "id": "bool_counts",
+    "record": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3",
+      "status": "running",
+      "updated_at": 990,
+      "heartbeat_at": 985,
+      "heartbeat_attempt": "attempt2",
+      "verified_steps": true,
+      "total_steps": 4
+    },
+    "expected": {
+      "work_id": "work1",
+      "target_id": "target1",
+      "attempt_id": "attempt2",
+      "revision": "rev3"
+    },
+    "now": 1000,
+    "gold_recently_observed": false
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "stage": "before_first_holdout_execution",
+  "cycle": "DIL-05",
+  "cases": {
+    "development": 12,
+    "holdout": 12
+  },
+  "policies": 3,
+  "test_methods": 15,
+  "holdout_executions": 1,
+  "post_holdout_tuning": 0,
+  "max_benchmark_seconds": 60,
+  "sha256": {
+    "planner.py": "14031075a8743182bc6a1eff0b0a3328de3db0767fa12a50bdfbc263542e412a",
+    "benchmark.py": "b04eb66106f3ec0f44062c215883bf983ad232a0693b494ada23526bc6d8d304",
+    "test_planner.py": "fb97759a0f5aeeb7385e13d766d99fdacb8bd668172d784ea7e4172181180499",
+    "build_fixtures.py": "0e89093d2dea861c9849dd86fe7abfef6b54d788b4e14f9018292652c28d9593",
+    "fixtures/development.json": "20e98c69cf0ca861af72cd2b378a092d3e3b128832b62d1e5aff7786fcb3725d",
+    "fixtures/holdout.json": "304cf081a9e96d9b499443c9d96b0b8d1bdafdcd5f9bdb634e60a5e9e7e5f290",
+    "observed_r14.json": "9ea0dafa9a92e7b2c296ec44aa292c9e6c57e5f359c202c9dc09da2681086b9a",
+    "METHOD.md": "beec3c299b2685863b1eb72acc6aa90945f176a555560a46bb9cb190ae7d7b9a"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "dil08-freeze-v1",
+  "study": "DIL-08",
+  "frozen_at_jst": "2026-11-11",
+  "source_commit": "2b8220210c2475239a43354d544b5a6f176fba80",
+  "status": "source_and_evaluator_frozen_before_first_scored_field_run",
+  "sha256": {
+    "dil04/retrieval.py": "3c692218539c4e901473edab1e16e099451ab6cd4205c78d23c070614eec1e8a",
+    "dil07/cases.json": "078bc2eb4144104162ecb3376d906a9d8dc0d7d87b1ef4b4ceba67929376b55a",
+    "dil07/manifest.json": "8cf7997a936288155dc61be34a9e155b0482190a8e0a908c2db0f9ad04f8a489",
+    "dil08/evaluate.py": "2001adf6919d3b958b4fdc64aa805c1867aa66f9fec3a34c30a1a47e80e86d70",
+    "dil08/METHOD.md": "10d35370e98cfc53121c0433683d4a2935a016e98a17ba20deff7a874d869db2",
+    "dil08/SCENARIOS.json": "67e9d80e8a143c3d76d644cfc57fe607d1b12884a39ba4c1cf91a4dc5c33c564",
+    "dil08/selector.py": "85b9a1f1a4aeccca7c693d88f15c7e8d71c56b379b58e341cbaae76bfd2020c2",
+    "dil08/TAG_CATALOG.json": "4c3eb59e6cf458804d421169815d85d9f738bf00924e3087614418ca6f188877",
+    "dil08/test_evaluate.py": "c6a4002b836f049a4cdc3c967fa5f1209995b1a1741e0ef2ecd22b76e51e7575",
+    "dil08/test_selector.py": "8f38a517b80a1b8606cb036a254666b435bda702d5b24a4392097efacee6b60e"
+  },
+  "git_blob_sha1": {
+    "dil04/retrieval.py": "6d2ab052ff3ba40a16fb99288e82a0a646624c58",
+    "dil07/cases.json": "6dec057661d6c56f3020148daf8d33eaf51c3fd8",
+    "dil07/manifest.json": "44005bc8eaa186bdda995023163142f3e66ce7d0",
+    "dil08/evaluate.py": "f1e6ae452f926da39a0f460365f1653989886493",
+    "dil08/METHOD.md": "de20911d3536d54961bcb4e339bfbc3dce520f60",
+    "dil08/SCENARIOS.json": "255baab2ce41689168025a99153b11e6c76263eb",
+    "dil08/selector.py": "acb09b9f0b18074e77da6e133c75f36898d3d2a9",
+    "dil08/TAG_CATALOG.json": "3fb75df7e060448fec331c4cbdeb462b5c121c8e",
+    "dil08/test_evaluate.py": "bf7e71c38c3527ab3d095380296b2404cdb30dc6",
+    "dil08/test_selector.py": "ffaddba198869f277af5fd5d682ca5dfd64e3df0"
+  },
+  "notes": "Research-only: 12 authored scenarios. Changing tests after first score requires new DIL-09 study. No source tag confers permission or deployment approval."
+}

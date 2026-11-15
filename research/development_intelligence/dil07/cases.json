@@ -1,0 +1,17 @@
+[
+  {"id":"Q01","query":"R16の実装開始ゲートを確認して","topics":["round"],"gold_ids":["r16"],"anchors":{"r16":"R16実装ブランチ/PR作成は禁止"}},
+  {"id":"Q02","query":"R16をもう始めていい？","topics":[],"gold_ids":["r16"],"anchors":{"r16":"独立7系統CI"}},
+  {"id":"Q03","query":"R15の指示を使ってR16の実装を開始できる？","topics":[],"gold_ids":["r16"],"anchors":{"r16":"R16実装ブランチ/PR作成は禁止"}},
+  {"id":"Q04","query":"Issue125で役割を切り替える条件","topics":["roles"],"gold_ids":["roles"],"anchors":{"roles":"Issue #125"}},
+  {"id":"Q05","query":"続けてーだけで役割は変わる？","topics":[],"gold_ids":["roles"],"anchors":{"roles":"Issue #125"}},
+  {"id":"Q06","query":"私有アドオンをGitHubに置いてよい？","topics":["policy"],"gold_ids":["agents"],"anchors":{"agents":"私有データ実行"}},
+  {"id":"Q07","query":"Codex利用制限中の並行開発は？","topics":["workflow"],"gold_ids":["parallel"],"anchors":{"parallel":"Codex"}},
+  {"id":"Q08","query":"v0.19を今すぐ使えるようにしていい？","topics":[],"gold_ids":["future"],"anchors":{"future":"active=false"}},
+  {"id":"Q09","query":"v0.18正式完了には実機で何が残る？","topics":["release"],"gold_ids":["release"],"anchors":{"release":"実Windows GUI"}},
+  {"id":"Q10","query":"Extensionの静的チェックは配布許可になる？","topics":["extension"],"gold_ids":["extension"],"anchors":{"extension":"権利/ライセンス/公開承認"}},
+  {"id":"Q11","query":"Panel.drawで有効ならoperatorも必ず成功する？","topics":[],"gold_ids":["ui"],"anchors":{"ui":"Panel.draw"}},
+  {"id":"Q12","query":"GLBの自己申告ハッシュから真正性が言える？","topics":["glb"],"gold_ids":["glb"],"anchors":{"glb":"authenticity assertions are false"}},
+  {"id":"Q13","query":"現在の正式STATEの決定DEC-077は？","topics":["state"],"gold_ids":["state"],"anchors":{"state":"DEC-077"}},
+  {"id":"Q14","query":"AI自律開発エンジンは完成してる？","topics":[],"gold_ids":["vision"],"anchors":{"vision":"製品機能としては未実装"}},
+  {"id":"Q15","query":"v0.19以降の設計と自律化ビジョン","topics":["future","vision"],"gold_ids":["future","vision"],"anchors":{"future":"active=false","vision":"製品機能としては未実装"}}
+]
