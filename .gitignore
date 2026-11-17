@@ -12,3 +12,8 @@ reports/initial_scan/
 build/
 dist/
 reports/ci/
+
+# Local-only work/reference meshes and all derived evidence.
+# Never commit actual, employer-owned, or source-derived geometry by default.
+test_meshes_private/
+reports/private_mesh_intake/
