@@ -40,11 +40,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base="https://download.blender.org/release/Blender${BLENDER_VERSION%.*}"
           archive="blender-${BLENDER_VERSION}-linux-x64.tar.xz"
-          curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30             "${base}/blender-${BLENDER_VERSION}.sha256" -o blender.sha256
-          curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30             "${base}/${archive}" -o "${archive}"
-          grep -F "${archive}" blender.sha256 | sha256sum --check --status
+          verified=false
+          for host in https://mirror.blender.org/release https://ftp.blender.org/release https://download.blender.org/release; do
+            base="${host}/Blender${BLENDER_VERSION%.*}"
+            if curl --fail --location --silent --show-error --retry 2 --connect-timeout 25               "${base}/blender-${BLENDER_VERSION}.sha256" -o blender.sha256 &&
+               curl --fail --location --silent --show-error --retry 2 --connect-timeout 25               "${base}/${archive}" -o "${archive}" &&
+               grep -F "${archive}" blender.sha256 | sha256sum --check --status; then
+              verified=true
+              break
+            fi
+          done
+          test "${verified}" = true
           tar -xJf "${archive}"
           echo "BLENDER_PATH=$PWD/blender-${BLENDER_VERSION}-linux-x64/blender" >> "$GITHUB_ENV"
       - name: Compile standalone add-on and smoke code
