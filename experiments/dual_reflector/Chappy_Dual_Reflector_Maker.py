@@ -4,7 +4,7 @@
 bl_info = {
     "name": "Chappy Dual Reflector Maker",
     "author": "OpenAI / Chappy",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "blender": (4, 3, 0),
     "location": "View3D > Sidebar > Chappy > Dual Reflector",
     "description": "Parametric hand-voice two-reflector megaphone: ellipsoid/paraboloid, ray preview, STL exports",
@@ -330,20 +330,34 @@ def _material(name, color):
     return mat
 
 
-def _remove_collection(name):
-    c=bpy.data.collections.get(name)
+def _assert_replaceable_collection(name):
+    """Never delete user content solely because a collection shares our name."""
+    c = bpy.data.collections.get(name)
     if c is None:
         return
-    for obj in list(c.all_objects):
-        bpy.data.objects.remove(obj,do_unlink=True)
-    # all_objects include nested; nested collections must be unlinked separately
-    for sub in list(c.children):
-        bpy.data.collections.remove(sub)
+    if len(c.children):
+        raise RuntimeError('同名コレクション内に手動の子コレクションがあります: ' + name)
+    if any(not (obj.get('chappy_generated') or obj.get('chappy_ray_preview'))
+           for obj in c.objects):
+        raise RuntimeError('同名コレクション内に手動のオブジェクトがあります: ' + name)
+    # Supports collections created by v1.0.0, which marked each object but not the collection.
+    if not c.get('chappy_dual_generated') and len(c.objects) == 0:
+        raise RuntimeError('同名の未管理コレクションがあります: ' + name)
+
+
+def _remove_collection(name):
+    _assert_replaceable_collection(name)
+    c = bpy.data.collections.get(name)
+    if c is None:
+        return
+    for obj in list(c.objects):
+        bpy.data.objects.remove(obj, do_unlink=True)
     bpy.data.collections.remove(c)
 
 
 def _new_collection(name):
-    c=bpy.data.collections.new(name)
+    c = bpy.data.collections.new(name)
+    c['chappy_dual_generated'] = True
     bpy.context.scene.collection.children.link(c)
     return c
 
@@ -409,6 +423,9 @@ def _create_rays(p,g,c):
 def _generate(p):
     g=_geom(p)
     sides=int(p.resolution)
+    # Check both collections before removing either, avoiding partial destruction.
+    _assert_replaceable_collection(MAIN_COLLECTION)
+    _assert_replaceable_collection(REFERENCE_COLLECTION)
     _remove_collection(MAIN_COLLECTION)
     _remove_collection(REFERENCE_COLLECTION)
     c=_new_collection(MAIN_COLLECTION)
