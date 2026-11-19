@@ -22,6 +22,10 @@ destination = pathlib.Path(bpy.utils.user_resource("SCRIPTS", path="addons", cre
 destination.mkdir(parents=True, exist_ok=True)
 target = destination / (module + ".py")
 shutil.copy2(source, target)
+# A factory-startup background Blender process does not automatically register
+# newly created user script folders with Python import machinery.
+sys.path.insert(0, str(destination))
+importlib.invalidate_caches()
 addon_utils.modules_refresh()
 assert module not in bpy.context.preferences.addons
 result = bpy.ops.preferences.addon_enable(module=module)
