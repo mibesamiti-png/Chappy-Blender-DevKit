@@ -96,6 +96,21 @@ try:
                 assert count > 0 and len(raw) == 84 + 50 * count, file.name
             result["stl_count"] = len(exports)
 
+            # A manually linked object must never be destroyed on regeneration.
+            user_object = bpy.data.objects.new("CBDK_User_Object_Not_To_Delete", None)
+            root.objects.link(user_object)
+            root_ptr = root.objects.get("01_Mouth_Horn").as_pointer()
+            try:
+                bpy.ops.chappy.build_dual_reflector()
+                raise AssertionError("must reject a collection containing user objects")
+            except RuntimeError as exc:
+                assert "手動のオブジェクト" in str(exc), str(exc)
+            assert bpy.data.objects.get(user_object.name) is user_object
+            assert root.objects.get("01_Mouth_Horn").as_pointer() == root_ptr
+            root.objects.unlink(user_object)
+            bpy.data.objects.remove(user_object)
+            result["user_object_protected"] = True
+
     p.show_reference, p.show_rays = False, False
     assert bpy.ops.chappy.build_dual_reflector() == {"FINISHED"}
     assert bpy.data.collections.get(addon.REFERENCE_COLLECTION) is None
