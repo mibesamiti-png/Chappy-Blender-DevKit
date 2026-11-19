@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: MIT
 # Chappy Dual Reflector Maker — manual voice acoustic reflector prototype
-# One-file Blender addon for Blender 4.3+ (intended for 4.4/5.x)
+# One-file Blender addon compatible with Blender 4.2 LTS and later
 bl_info = {
     "name": "Chappy Dual Reflector Maker",
     "author": "OpenAI / Chappy",
-    "version": (1, 0, 1),
-    "blender": (4, 3, 0),
+    "version": (1, 0, 2),
+    "blender": (4, 2, 0),
     "location": "View3D > Sidebar > Chappy > Dual Reflector",
     "description": "Parametric hand-voice two-reflector megaphone: ellipsoid/paraboloid, ray preview, STL exports",
     "category": "Add Mesh",
