@@ -1,0 +1,86 @@
+name: CBDK Dual Reflector isolated Blender smoke
+
+on:
+  pull_request:
+    paths:
+      - 'experiments/dual_reflector/**'
+      - 'scripts/blender_dual_reflector_smoke.py'
+      - 'scripts/blender_dual_reflector_native_enable_smoke.py'
+      - '.github/workflows/dual-reflector-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  dual-reflector:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        blender-version: ['4.2.4', '4.4.3', '4.5.15', '5.2.1']
+    timeout-minutes: 25
+    env:
+      BLENDER_VERSION: ${{ matrix.blender-version }}
+      LIBGL_ALWAYS_SOFTWARE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install headless display runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libegl1 libgl1
+      - name: Install verified official Blender build
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="blender-${BLENDER_VERSION}-linux-x64.tar.xz"
+          verified=false
+          for host in https://mirror.blender.org/release https://ftp.blender.org/release https://download.blender.org/release; do
+            base="${host}/Blender${BLENDER_VERSION%.*}"
+            if curl --fail --location --silent --show-error --retry 2 --connect-timeout 25               "${base}/blender-${BLENDER_VERSION}.sha256" -o blender.sha256 &&
+               curl --fail --location --silent --show-error --retry 2 --connect-timeout 25               "${base}/${archive}" -o "${archive}" &&
+               grep -F "${archive}" blender.sha256 | sha256sum --check --status; then
+              verified=true
+              break
+            fi
+          done
+          test "${verified}" = true
+          tar -xJf "${archive}"
+          echo "BLENDER_PATH=$PWD/blender-${BLENDER_VERSION}-linux-x64/blender" >> "$GITHUB_ENV"
+      - name: Compile standalone add-on and smoke code
+        run: |
+          python -m py_compile experiments/dual_reflector/Chappy_Dual_Reflector_Maker.py             scripts/blender_dual_reflector_smoke.py scripts/blender_dual_reflector_native_enable_smoke.py
+      - name: Test native Preferences add-on enable
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci/dual_reflector
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_dual_reflector_native_enable_smoke.py \
+            -- experiments/dual_reflector/Chappy_Dual_Reflector_Maker.py \
+            2>&1 | tee reports/ci/dual_reflector/native_enable.log
+          grep -F 'CBDK_DUAL_REFLECTOR_NATIVE_ENABLE_PASS ' reports/ci/dual_reflector/native_enable.log
+      - name: Run add-on inside Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci/dual_reflector
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7             --python scripts/blender_dual_reflector_smoke.py             -- experiments/dual_reflector/Chappy_Dual_Reflector_Maker.py             2>&1 | tee reports/ci/dual_reflector/runtime.log
+          grep -F 'CBDK_DUAL_REFLECTOR_PASS ' reports/ci/dual_reflector/runtime.log
+          echo "Dual Reflector registration, geometry, STL, negative case & unregister passed." >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dual-reflector-${{ matrix.blender-version }}-${{ github.run_id }}
+          path: reports/ci/dual_reflector/
+          retention-days: 14
+          if-no-files-found: warn
