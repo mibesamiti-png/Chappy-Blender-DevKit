@@ -70,7 +70,13 @@ try:
             keep = root.objects.get("01_Mouth_Horn")
             pointer = keep.as_pointer()
             p.diameter, p.mouth_d = 60.0, 65.0
-            assert bpy.ops.chappy.build_dual_reflector() == {"CANCELLED"}
+            # Blender may raise RuntimeError for an operator that reports ERROR,
+            # even if the operator explicitly returned CANCELLED.
+            try:
+                reject_status = bpy.ops.chappy.build_dual_reflector()
+                assert reject_status == {"CANCELLED"}, reject_status
+            except RuntimeError as exc:
+                assert "外径を大きく" in str(exc), str(exc)
             root_after = bpy.data.collections.get(addon.MAIN_COLLECTION)
             assert root_after.objects.get("01_Mouth_Horn").as_pointer() == pointer, "invalid input mutated scene"
             p.diameter, p.mouth_d = 100.0, 32.0
