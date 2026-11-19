@@ -5,6 +5,7 @@ on:
     paths:
       - 'experiments/dual_reflector/**'
       - 'scripts/blender_dual_reflector_smoke.py'
+      - 'scripts/blender_dual_reflector_native_enable_smoke.py'
       - '.github/workflows/dual-reflector-smoke.yml'
   workflow_dispatch:
 
@@ -21,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        blender-version: ['4.4.3', '4.5.15', '5.2.1']
+        blender-version: ['4.2.4', '4.4.3', '4.5.15', '5.2.1']
     timeout-minutes: 25
     env:
       BLENDER_VERSION: ${{ matrix.blender-version }}
@@ -56,7 +57,17 @@ jobs:
           echo "BLENDER_PATH=$PWD/blender-${BLENDER_VERSION}-linux-x64/blender" >> "$GITHUB_ENV"
       - name: Compile standalone add-on and smoke code
         run: |
-          python -m py_compile experiments/dual_reflector/Chappy_Dual_Reflector_Maker.py             scripts/blender_dual_reflector_smoke.py
+          python -m py_compile experiments/dual_reflector/Chappy_Dual_Reflector_Maker.py             scripts/blender_dual_reflector_smoke.py scripts/blender_dual_reflector_native_enable_smoke.py
+      - name: Test native Preferences add-on enable
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ci/dual_reflector
+          "$BLENDER_PATH" --background --factory-startup --python-exit-code 7 \
+            --python scripts/blender_dual_reflector_native_enable_smoke.py \
+            -- experiments/dual_reflector/Chappy_Dual_Reflector_Maker.py \
+            2>&1 | tee reports/ci/dual_reflector/native_enable.log
+          grep -F 'CBDK_DUAL_REFLECTOR_NATIVE_ENABLE_PASS ' reports/ci/dual_reflector/native_enable.log
       - name: Run add-on inside Blender
         shell: bash
         run: |
