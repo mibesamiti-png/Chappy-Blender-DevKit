@@ -369,3 +369,8 @@ A統合[#130](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/130)�
 ## 2026-11-25 JST — R19完成直結の限定割当候補
 
 #143節目同期dev `2696a9b8e171a218b67865ba5caf47f1786164bf` 独立7CI全成功（Blender45549944774の3版成功）。[R19正式割当候補](R19_ABCD_START.md)：Cは既存6機能で型付き入力の共通化、Dは固定自作生成物の隔離Extension実行経路、Aは同一生成物の縦断統合検証。B待機。割当文書統合・独立7CI・Issue #125更新まで着手禁止。R20自動発行なし。次期active=false/正式版/状態数維持。
+
+
+## 2026-11-25 JST — R19限定受入、現行生成基盤の区切り候補
+
+#147 dev `538e0b58a9d4c05fce49de617a7d84342e5290cd` 独立7CI成功。C/D担当完了・同一ZIP縦断成功、旧専門PRを再統合しない。B/C/Dは新規PR/CI不要。Aが[完成ゲート](V018_COMPLETION_GATES.md)に既存将来計画との対応を記録。節目同期の独立7CI後にv0.18自動化完了条件を最終判断。R20自動発行なし、次期active=false、main/正式版/研究変更なし。

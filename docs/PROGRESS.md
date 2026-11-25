@@ -1409,3 +1409,21 @@ C#140 be0f777、D#141 bbda166各5CI、A#142 79acfdc 5CI成功。C17+D4パス重�
 ## 2026-11-25 JST — R19完成直結の限定割当候補
 
 #143節目同期dev `2696a9b8e171a218b67865ba5caf47f1786164bf` 独立7CI全成功（Blender45549944774の3版成功）。[R19正式割当候補](R19_ABCD_START.md)：Cは既存6機能で型付き入力の共通化、Dは固定自作生成物の隔離Extension実行経路、Aは同一生成物の縦断統合検証。B待機。割当文書統合・独立7CI・Issue #125更新まで着手禁止。R20自動発行なし。次期active=false/正式版/状態数維持。
+
+
+## 2026-11-25 JST — R19限定受入、v0.18基盤の区切り候補
+
+C#145 18de007 / D#146 355daa2 各5CI、A#147 393ee4e 5CI（再試行0）。12+6パス重複0。C初回は旧合成fixture/文字列期待値に失敗しテスト修正、D Windows初回1失敗は同HEAD再実行成功（原因未確定）。dev `538e0b58a9d4c05fce49de617a7d84342e5290cd` 独立7CI成功：Python45557832731、Windows45557832812、Blender45557833046、Chromium45557832787、Handoff45557832733、Kit45557832758、Skill45557832820。3版各69 lifecycle、両R19 UI、R18合成ZIP/build、実ZIP validate/runtime、同一ZIP typed vertical（default2→1, range1..4, 独立表示期待値とcleanup）、HIT/SHA実測。実Extension local repoへの手動stage、公式installerなし。一般変換・正式権利・GUI・実GLB未達。#25同HEAD draft。R19限定受入、B/C/D停止、R20自動発行なし。44要件26実装/16一部/1未実装/1保留、24 NEXT 18完了/5継続/1保留を維持。[完成ゲート](V018_COMPLETION_GATES.md)で残条件と既存将来計画の対応を明示、次期active=false・正式v0.17.0維持、節目同期後に移行最終判断。
+
+
+## 2026-11-25 JST — #148節目同期の文書修正
+
+初回6754a666でHandoff45558459135/Python45558459332/Windows45558459409が共通の requirement note 600文字上限超過（UI-001 701、EXT-001 719）で失敗。Blender45558459441/Kit45558459327/Chromium45558459214は成功。本体や上限を変更せず、2備考のみ要約し圧縮前全文を本節に保存。要件/NEXT状態・承認・CIゲートは不変。修正後CIは未確認。
+
+### UI-001 — 圧縮前の備考履歴（保存）
+
+既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17: 既存5機能のレシピ別inline UIと2種のnative描画/操作/解除を236b9a3で3版確認。任意operator/汎用UI/GUIは未完了。 R18 #142/36d40904: mesh_centerをglobal/inline UIの両方で3版実測、67 lifecycleチェック各版成功。コード所有のmode/operator/input契約を追加。汎用型付きUI・任意operator・実Windows GUIは未完了。 R19 #147/538e0b58: code-owned float_vector/intの共通検証/計画/RNA/描画/操作/解除、旧計画互換、新規precisionは選択時のみ。3版各69 lifecycle、両R19 marker、Extension内で2→1桁の実結果確認。任意UI/型・実GUIは未完了。
+
+### EXT-001 — 圧縮前の備考履歴（保存）
+
+必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。 R17: max/permissionsのoptional構造と公式7例（4一致/1不一致/1未分類/1範囲外）を236b9a3の3版で確認。正式ZIP・残optional・権利未完了。 R18 #142/36d40904: 明示合成metadata→TOML→非インストール固定2member ZIP、公式build/validate双方を3版実測。Aが6機能の実preview検査を接続。実機能をExtensionへ変換・登録する経路、実権利・正式配布は未完了。 R19 #147/538e0b58: 固定CI専用レシピの実生成物をroot ZIP化し公式validate、隔離offline local repoに手動stageしてbl_extでenable/2 operator/disable/cleanup、型付き設定も同一ZIPで確認。公式installerは未実行、一般変換/出力入口なし、実権利/正式配布未承認。全体partial維持。

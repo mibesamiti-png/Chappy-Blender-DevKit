@@ -88,3 +88,21 @@ EXT-001に値なしTOMLレビュー/共有案内/公式6例の項目照合を追
 | NEXT-004 | 保留 | 明示指示まで維持 |
 
 次の判断はAが既存仕様の必要最小限の縦断経路（動作する自作preview→Extension形式→公式validate→隔離Blenderで登録・実行・解除）とUI設定契約を確認すること。権利のないコードや実ソースを勝手に変換・公開しない。追加の研究/負例/ラウンドを自動発行せず、既存の未達を一括で扱う。現行自動化完了=false、ブロッカー整理=true、独立7CI確認=true、ドラフト/別承認方針=true。次期active=false。44要件/24 NEXT/正式版/last_verified不変。
+
+
+## 2026-11-25 JST — R19限定受入・v0.18基盤完成候補
+
+#147統合dev `538e0b58a9d4c05fce49de617a7d84342e5290cd` 独立7CI成功。[Blender実測](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45557833046) jobs139014085712/139014085377/139014085639、各69 lifecycle、R19両入力UI、R18合成ZIP/build、R19実生成ZIP validate/runtime/typed vertical、HIT/SHA。PR #25同HEAD draft・main未統合。
+
+R18時点で未達だった二つの限定自動化は実証完了。コード所有の2型入力の共有経路、固定CI用の2機能レシピの実生成→Extension ZIP→公式validate→隔離bl_ext手動stage/enable→RNA default2・range1..4→実中心表示→precision1へ変更→disable/cleanup。R19同一ZIPでの接続成功であり、一般のユーザー向け変換コマンド/公式installer/任意UI/権利承認ではない。
+
+| 残る範囲 | 判断・既存計画との対応 |
+|---|---|
+| UI-001/BUILD-001/PLAN-002/REG-001〜003 | 固定自作のレシピ/2型/登録計画・検査基盤は成立。任意の新規部品、追加型、汎用レシピ・登録生成・利用者向けExtension出力は未実装。既存F020-01〜03（v0.20）の実用化範囲に対応。要件partial維持 |
+| EXT-001 | 固定実行可能CI ZIPは合格。一般レシピ変換・公式installer・他metadataは未実装/未検証。F020-03/F022-03に対応、権利/採用/配布は別owner承認。partial維持 |
+| GLB-010/020/021/022・NEXT-007/008/009 | 合成MVPと限定triageは成立。大規模/部品対応/穴/内部形状はF019-01〜03、汎用因果/反復はF021-01〜03。許可済み実GLB・実ソースのローカル検証は残る。partial/NEXT継続 |
+| ISO-001/EDIT-002/PERF-001 | 条件付き静的検査、復元、上限拒否の実装を維持。任意ソース依存/全トポロジー・原子性/巨大メッシュ保証は未達、将来の安全な部品組立・修正・計算予算の範囲で必要性を実測。完了にしない |
+| GUI-001/UNDO-001/DASH-001・NEXT-002/024 | 実Windows GUI、Undo、live GitHub通信、可聴音は実環境待ち。F022-01/02のGUI/統合範囲と区別し、NEXT継続。Pages公開は別承認 |
+| INST-001/NEXT-004 | 既存保留。直接GitHubインストールを開始しない |
+
+完成判断候補：v0.18の限定的な自動化基盤（既存の安全なプレビュー、分析MVP、登録支援、型付きUI、固定Extension実行）についてはR19で区切れるとAは判断。残るコード未実装は明示して既存次期計画との対応を記録し、人間待ちだけと偽らない。一般変換/任意UI等を現行でさらに作るかは既存F020/F022との重複を基に判断し、R20を自動発行しない。本節目同期PRのCIと統合後独立7CI確認前に移行ゲートを変更しない。現行JSON active=false、v018_automatable_work_completed=falseのまま。最終移行判断は節目確認後の別手順、正式版/main/権利/私有データ/last_verified/状態数は不変。
