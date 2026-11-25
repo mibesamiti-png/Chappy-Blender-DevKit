@@ -6,6 +6,7 @@ script. Ordinary unittest never imports bpy or executes generated code.
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -140,7 +141,7 @@ class RecipeLayoutR17Tests(unittest.TestCase):
 
     def test_native_fixture_has_only_fixed_trusted_imports(self):
         tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
-        allowed = {"ast", "json", "pathlib", "tempfile", "unittest", "zipfile",
+        allowed = {"ast", "hashlib", "json", "pathlib", "tempfile", "unittest", "zipfile",
                    "__future__", "cbdk.addon_builder", "cbdk.modular_builder",
                    "importlib", "sys", "types", "bmesh", "bpy"}
         for node in ast.walk(tree):
@@ -451,16 +452,26 @@ def run_native():
                 sys.path.remove(directory)
     # R23: two separately registered panels, with independent placements and
     # real read/edit operator results. Use the same trusted generated ZIP lane.
-    for variant in ("grouped", "mixed"):
+    for case in ("grouped", "mixed", "dependency"):
+        dependency = case == "dependency"
+        variant = "grouped" if dependency else case
         purge_detached_preview()
         bpy.ops.wm.read_factory_settings(use_empty=True)
-        recipe = make_r23_recipe(variant)
+        recipe = make_r24_recipe() if dependency else make_r23_recipe(variant)
         version = ".".join(map(str, bpy.app.version))
-        plan = plan_modular_recipe(recipe, root=ROOT, target_blender=version, include_ui=True)["ui_layout"]
-        with tempfile.TemporaryDirectory(prefix="cbdk-r23-") as directory:
+        with tempfile.TemporaryDirectory(prefix="cbdk-r24-" if dependency else "cbdk-r23-") as directory:
             root = Path(directory)
+            source_hash = r24_source_hashes() if dependency else None
+            build_root = prepare_r24_root(root / "fixture") if dependency else ROOT
+            full_plan = plan_modular_recipe(recipe, root=build_root, target_blender=version, include_ui=True)
+            plan = full_plan["ui_layout"]
+            if dependency:
+                assert full_plan["requested_features"] == ["vertex_nudge"]
+                assert tuple(full_plan["ordered_features"]) == R24_ORDER
+                assert full_plan["dependency_features_added"] == ["edit_selection", "mesh_bounds", "mesh_center"]
+                assert tuple(full_plan["part_ids"]) == R24_PARTS
             target = root / "preview.zip"
-            build_modular(recipe, target, root=ROOT, preview_unapproved=True, target_blender=version)
+            build_modular(recipe, target, root=build_root, preview_unapproved=True, target_blender=version)
             with ZipFile(target) as archive:
                 assert all(n.startswith(PACKAGE_ID + "/") and
                            not any(p in ("", ".", "..") for p in n.split("/"))
@@ -483,6 +494,9 @@ def run_native():
                 assert tuple(cls.bl_label for cls in module._PANEL_CLASSES) == labels
                 assert tuple(cls.bl_order for cls in module._PANEL_CLASSES) == (0, 1)
                 assert len(module._CLASSES) == 6
+                if dependency:
+                    assert tuple(module._FEATURE_IDS) == R24_ORDER
+                    assert tuple(cls.bl_idname for cls in module._CLASSES) == R24_REGISTRATION
 
                 # A real foreign panel with the reserved slot ID must survive.
                 class VIEW3D_PT_cbdk_modular_secondary(bpy.types.Panel):
@@ -527,8 +541,53 @@ def run_native():
                 assert all(not hasattr(bpy.types, panel_id) for panel_id in panel_ids)
                 assert all(not hasattr(bpy.types.Scene, name) for name in module._PROPERTY_NAMES)
 
+                trace = []
+                def observed_register(cls):
+                    bpy.utils.register_class(cls)
+                    trace.append(("register", cls.bl_idname))
+
+                def observed_unregister(cls):
+                    bpy.utils.unregister_class(cls)
+                    trace.append(("unregister", cls.bl_idname))
+
+                if dependency:
+                    # The second branch of the diamond fails after the shared
+                    # dependency and first branch attached. Record only actual
+                    # successful Blender register/unregister calls.
+                    def dependency_refusal(cls):
+                        if cls.bl_idname == "cbdk.modular_mesh_center":
+                            raise RuntimeError("controlled R24 dependency refusal")
+                        observed_register(cls)
+                    module.bpy = SimpleNamespace(types=bpy.types, props=bpy.props,
+                        utils=SimpleNamespace(register_class=dependency_refusal,
+                                              unregister_class=observed_unregister))
+                    try:
+                        try:
+                            module.register()
+                        except RuntimeError as exc:
+                            assert "controlled R24 dependency refusal" in str(exc)
+                        else:
+                            raise AssertionError("Controlled dependency failure not raised")
+                    finally:
+                        module.bpy = bpy
+                    assert trace == [
+                        ("register", "cbdk.modular_mesh_bounds"),
+                        ("register", "cbdk.modular_edit_selection"),
+                        ("unregister", "cbdk.modular_edit_selection"),
+                        ("unregister", "cbdk.modular_mesh_bounds")]
+                    assert not module._REGISTERED and not module._OWNED_PROPERTIES and not module._OWNED_PROPERTY_TOKENS
+                    assert all(not hasattr(bpy.types.Scene, name) for name in module._PROPERTY_NAMES)
+                    assert all(not cls.is_registered for cls in module._CLASSES)
+                    trace.clear()
+                    module.bpy = SimpleNamespace(types=bpy.types, props=bpy.props,
+                        utils=SimpleNamespace(register_class=observed_register,
+                                              unregister_class=observed_unregister))
                 module.register()
                 registered = True
+                if dependency:
+                    assert trace == [("register", ident) for ident in R24_REGISTRATION]
+                    assert tuple(cls.bl_idname for cls in module._REGISTERED) == R24_REGISTRATION
+                    assert all(cls.is_registered for cls in module._CLASSES)
                 assert len(module._REGISTERED) == 6
                 assert not hasattr(bpy.types, "VIEW3D_PT_cbdk_modular_preview")
                 assert all(getattr(bpy.types, cls.bl_idname) is cls for cls in module._PANEL_CLASSES)
@@ -625,12 +684,21 @@ def run_native():
                 assert not module._REGISTERED and not module._OWNED_PROPERTIES and not module._OWNED_PROPERTY_TOKENS
                 assert all(not hasattr(bpy.types, panel_id) for panel_id in panel_ids)
                 assert all(not hasattr(bpy.types.Scene, name) for name in module._PROPERTY_NAMES)
-                markers.append("native_r23_panels_" + variant + "_plan_draw_execute_cleanup")
+                if dependency:
+                    assert trace == ([("register", ident) for ident in R24_REGISTRATION] +
+                                     [("unregister", ident) for ident in reversed(R24_REGISTRATION)])
+                    assert all(not cls.is_registered for cls in module._CLASSES)
+                    assert r24_source_hashes() == source_hash
+                    markers.append("native_r24_dependency_closure_register_reverse_rollback")
+                else:
+                    markers.append("native_r23_panels_" + variant + "_plan_draw_execute_cleanup")
             finally:
                 if bpy.context.mode == "EDIT_MESH":
                     bpy.ops.object.mode_set(mode="OBJECT")
                 if registered:
                     module.unregister()
+                if module is not None:
+                    module.bpy = bpy
                 purge_detached_preview()
                 sys.path.remove(directory)
     return markers
@@ -670,6 +738,69 @@ def make_r23_recipe(variant):
         raise ValueError("Unknown R23 fixture")
     recipe["ui_layout"] = {"schema_version": 2, "kind": "cbdk_authored_preview_ui_layout",
                            "preview_only": True, "panels": panels}
+    return recipe
+
+
+# Independent, fixed test-only expectations. Never derive from the planner.
+R24_ORDER = ("mesh_bounds", "edit_selection", "mesh_center", "vertex_nudge")
+R24_PARTS = ("BLCTX-001", "BLGEO-001", "BME-001", "BME-002", "BME-003")
+R24_REGISTRATION = ("cbdk.modular_mesh_bounds", "cbdk.modular_edit_selection",
+                    "cbdk.modular_mesh_center", "cbdk.modular_vertex_nudge",
+                    "VIEW3D_PT_cbdk_modular_primary", "VIEW3D_PT_cbdk_modular_secondary")
+R24_EDGES = {"vertex_nudge": ["edit_selection", "mesh_center"],
+             "edit_selection": ["mesh_bounds"], "mesh_center": ["mesh_bounds"]}
+R24_COPY = (
+    "catalog/addon_features.json", "catalog/authored_parts.json", "catalog/ui_layouts.json",
+    "templates/modular_preview/__init__.py",
+    "templates/modular_preview/features/mesh_bounds.py",
+    "templates/modular_preview/features/mesh_center.py",
+    "templates/modular_preview/features/edit_selection.py",
+    "templates/modular_preview/features/vertex_nudge.py",
+    "templates/modular_preview/features/object_selection.py",
+    "templates/modular_preview/features/modifier_summary.py",
+    "parts/blender/context.py", "parts/blender/measure.py", "parts/blender/edit_mesh.py",
+    "parts/blender/edit_transform.py", "parts/blender/edit_audit.py", "parts/blender/modifiers.py",
+)
+R24_MEMBERS = frozenset({
+    "__init__.py", "README.txt", "CBDK_BUILD_INFO.json", "features/__init__.py",
+    "features/mesh_bounds.py", "features/edit_selection.py", "features/mesh_center.py",
+    "features/vertex_nudge.py", "helpers/__init__.py", "helpers/context.py",
+    "helpers/measure.py", "helpers/edit_mesh.py", "helpers/edit_transform.py",
+    "helpers/edit_audit.py",
+})
+
+
+def r24_source_hashes():
+    return {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in R24_COPY}
+
+
+def prepare_r24_root(destination):
+    """Test-only fixed checkout subset; caller supplies a fresh temporary directory.
+
+    Source paths are literal repository-owned files, never user input. No
+    production catalog is changed and no public execution entry is added.
+    """
+    destination = Path(destination)
+    destination.mkdir()
+    for path in R24_COPY:
+        source = ROOT / path
+        assert source.resolve() == source.absolute() and source.is_file()
+        output = destination / path
+        output.parent.mkdir(parents=True, exist_ok=True)
+        with output.open("xb") as stream:
+            stream.write(source.read_bytes())
+    catalog = destination / "catalog/addon_features.json"
+    doc = json.loads(catalog.read_text(encoding="utf-8"))
+    assert all(not item["requires_features"] for item in doc["features"])
+    for item in doc["features"]:
+        item["requires_features"] = list(R24_EDGES.get(item["id"], []))
+    catalog.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+    return destination
+
+
+def make_r24_recipe():
+    recipe = make_r23_recipe("grouped")
+    recipe["features"] = ["vertex_nudge"]
     return recipe
 
 
@@ -793,6 +924,103 @@ class MultiPanelR23Tests(unittest.TestCase):
                     plan_modular_recipe(recipe, root=ROOT)
                 with self.assertRaises(ValueError):
                     build_modular(recipe, output, root=ROOT, preview_unapproved=True)
+                self.assertFalse(output.exists())
+
+
+class DependencyClosureR24Tests(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory(prefix="cbdk-r24-static-")
+        self.addCleanup(directory.cleanup)
+        self.folder = Path(directory.name)
+        original = r24_source_hashes()
+        self.addCleanup(lambda: self.assertEqual(r24_source_hashes(), original))
+        self.root = prepare_r24_root(self.folder / "fixture")
+        self.recipe = make_r24_recipe()
+
+    def test_diamond_plan_package_and_explicit_equivalence(self):
+        explicit = make_r23_recipe("grouped")
+        for version in ("4.4.3", "4.5.15", "5.2.1"):
+            plan = plan_modular_recipe(self.recipe, root=self.root, target_blender=version, include_ui=True)
+            all_plan = plan_modular_recipe(explicit, root=self.root, target_blender=version, include_ui=True)
+            self.assertEqual(plan["requested_features"], ["vertex_nudge"])
+            self.assertEqual(plan["dependency_features_added"], ["edit_selection", "mesh_bounds", "mesh_center"])
+            self.assertEqual(tuple(plan["ordered_features"]), R24_ORDER)
+            self.assertEqual(tuple(plan["part_ids"]), R24_PARTS)
+            self.assertEqual(plan["part_sources"], ["parts/blender/context.py", "parts/blender/edit_audit.py",
+                "parts/blender/edit_mesh.py", "parts/blender/edit_transform.py", "parts/blender/measure.py"])
+            self.assertEqual(plan["ordered_features"], all_plan["ordered_features"])
+            self.assertEqual(plan["part_ids"], all_plan["part_ids"])
+            self.assertEqual(plan["ui_layout"], all_plan["ui_layout"])
+            self.assertEqual(all_plan["dependency_features_added"], [])
+            self.assertFalse(plan["approved"])
+        target = self.folder / "implicit.zip"
+        repeat = self.folder / "repeat.zip"
+        full = self.folder / "explicit.zip"
+        for recipe, output in ((self.recipe, target), (self.recipe, repeat), (explicit, full)):
+            build_modular(recipe, output, root=self.root, preview_unapproved=True, target_blender="4.4.3")
+        self.assertEqual(target.read_bytes(), repeat.read_bytes())
+        prefix = PACKAGE_ID + "/"
+        with ZipFile(target) as archive, ZipFile(full) as other:
+            self.assertEqual(set(archive.namelist()), {prefix + path for path in R24_MEMBERS})
+            self.assertEqual(len(archive.namelist()), len(R24_MEMBERS))
+            self.assertEqual(archive.namelist(), other.namelist())
+            metadata = json.loads(archive.read(prefix + "CBDK_BUILD_INFO.json"))
+            all_metadata = json.loads(other.read(prefix + "CBDK_BUILD_INFO.json"))
+            self.assertEqual(metadata["requested_features"], ["vertex_nudge"])
+            self.assertEqual(all_metadata["requested_features"], sorted(R24_ORDER))
+            self.assertEqual(tuple(metadata["features"]), R24_ORDER)
+            self.assertEqual(tuple(metadata["part_ids"]), R24_PARTS)
+            self.assertEqual([p["part_id"] for p in metadata["parts"]], list(R24_PARTS))
+            self.assertEqual(len(metadata["files_sha256"]), len(R24_MEMBERS) - 1)
+            for path in R24_MEMBERS - {"CBDK_BUILD_INFO.json"}:
+                blob = archive.read(prefix + path)
+                self.assertEqual(blob, other.read(prefix + path))
+                self.assertEqual(hashlib.sha256(blob).hexdigest(), metadata["files_sha256"][path])
+            all_metadata["requested_features"] = metadata["requested_features"]
+            self.assertEqual(metadata, all_metadata)
+            self.assertFalse(metadata["approved"])
+            self.assertFalse(metadata["redistribution_cleared"])
+            tree = ast.parse(archive.read(prefix + "__init__.py"))
+            literals = {n.targets[0].id: n.value for n in tree.body
+                        if isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name)}
+            self.assertEqual(ast.literal_eval(literals["_FEATURE_IDS"]), R24_ORDER)
+            self.assertEqual(tuple(ast.literal_eval(literals["_FEATURE_CONTRACT"])), R24_ORDER)
+            self.assertEqual(ast.literal_eval(literals["_UI_SECTIONS"]), plan["ui_layout"]["sections"])
+            self.assertEqual(ast.literal_eval(literals["_UI_OPTIONS"]), plan["ui_layout"]["options"])
+            self.assertEqual(metadata["ui_options"], json.loads(json.dumps(plan["ui_layout"]["options"])))
+
+    def test_dependency_errors_refuse_before_output(self):
+        catalog = self.root / "catalog/addon_features.json"
+        original = catalog.read_text(encoding="utf-8")
+        for case in ("missing", "cycle", "unknown", "minimum", "maximum", "intersection", "missing_source"):
+            doc = json.loads(original)
+            by_id = {item["id"]: item for item in doc["features"]}
+            target = "4.4.3"
+            if case == "missing":
+                doc["features"].remove(by_id["mesh_bounds"])
+            elif case == "cycle":
+                by_id["mesh_bounds"]["requires_features"] = ["vertex_nudge"]
+            elif case == "unknown":
+                by_id["mesh_center"]["requires_features"] = ["unknown"]
+            elif case == "minimum":
+                by_id["mesh_bounds"]["min_blender"] = "4.5.0"
+            elif case == "maximum":
+                by_id["mesh_bounds"]["max_blender"] = "4.4.3"
+                target = "5.2.1"
+            elif case == "intersection":
+                by_id["mesh_bounds"]["max_blender"] = "4.4.3"
+                by_id["mesh_center"]["min_blender"] = "4.5.0"
+            elif case == "missing_source":
+                (self.root / "templates/modular_preview/features/mesh_bounds.py").unlink()
+            catalog.write_text(json.dumps(doc), encoding="utf-8")
+            output = self.folder / (case + ".zip")
+            with self.subTest(case=case):
+                if case != "missing_source":
+                    with self.assertRaises(ValueError):
+                        plan_modular_recipe(self.recipe, root=self.root, target_blender=target)
+                with self.assertRaises(ValueError):
+                    build_modular(self.recipe, output, root=self.root, preview_unapproved=True,
+                                  target_blender=target)
                 self.assertFalse(output.exists())
 
 
