@@ -149,7 +149,7 @@
         "status": "scoped_implementation_accepted_partial",
         "verified_dev_sha": "7b16aed6dbdf422cbea069adb4b240b8de4dc2c1",
         "blender_run": 45698148477,
-        "scope": "Explicit local CLI and trusted recipe root ZIP read/edit/grouped; same four-feature two-panel ZIP official validate, isolated offline manual local repo bl_ext enable/draw/read/edit/disable/cleanup, SHA unchanged, all 3 versions. Official installer, GUI/Undo, arbitrary code, license/distribution and broader cases remain unverified. R24 adds same validated Extension ZIP with test-only dependency closure and real ordered registration/reverse/rollback, conservative fixed manifest compatibility refusal. Undo and other remaining limits unchanged."
+        "scope": "Explicit local CLI and trusted recipe root ZIP read/edit/grouped; same four-feature two-panel ZIP official validate, isolated offline manual local repo bl_ext enable/draw/read/edit/disable/cleanup, SHA unchanged, all 3 versions. Official installer, GUI/Undo, arbitrary code, license/distribution and broader cases remain unverified. R24 adds same validated Extension ZIP with test-only dependency closure and real ordered registration/reverse/rollback, conservative fixed manifest compatibility refusal. Undo and other remaining limits unchanged. R25 allocation candidate: reuse existing controlled Undo probe and extension diagnostics for same fixed grouped artifact stage evidence, explicit missing/failed/not_run and GUI/manual boundaries. No implementation before allocation merge, independent seven CI and dispatch; status remains partial."
       }
     }
   },
