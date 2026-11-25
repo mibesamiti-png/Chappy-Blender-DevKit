@@ -387,3 +387,64 @@ jobs:
           path: ti35-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase35 first-run evidence: run 45573477949, 117/144 structurally valid,
+      # 19/144 joint pass, 27 folded projections, three best use (.58,.5,0,3).
+      # Phase36 preregistered research gate: at least five of six new analytic
+      # fixtures pass the unchanged joint gate with the frozen collar settings.
+      # Same analytic family, not a blind third-party or real-asset holdout.
+      - name: Phase36 frozen collar holdout and direct-first selection
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti36.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          # Freeze all Phase35 generation and evaluation functions. No per-case tuning.
+          exec((root/'ti35.py').read_text().split('\nrows=[];raw=[];selected=[]',1)[0])
+          HOLDOUT=[(.18,.18,.045,0),(.22,.10,.13,-.025),(.11,.23,.14,.04),(.20,.16,.23,.06),(.25,.14,.06,-.055),(.14,.14,.17,-.07)]
+          rows=[];meshes=[]
+          for k,c in enumerate(HOLDOUT):
+              ref=min(assess(*coons(shift,c),c)['p95_worst'] for shift in range(4))
+              g=guide(c)
+              try:
+                  results=[]
+                  for arm,offset,simple in [('direct',o,s) for o in range(8) for s in (False,True)]+[('collar',0,False)]:
+                      row=dict(case=k,arm=arm,offset=offset,simple=simple)
+                      try:
+                          if arm=='direct':
+                              v,f,_=fill(c,4,offset,simple);smooth=6
+                          else:
+                              v,f=collar(c,.58,.5,0);smooth=3
+                          V,F,extra=patch(v,f,g,smooth,1,c)
+                          a=assess(V,F,c)
+                          req((a['vertices'],a['quads'])==((25,16) if arm=='direct' else (41,32)),'budget mismatch')
+                          row.update(**a,**extra,status='valid',shape_pass=a['p95_worst']<=1.10*ref)
+                          row['joint_pass']=row['shape_pass'] and a['gate_angle15']
+                          meshes.append(dict(case=k,arm=arm,offset=offset,simple=simple,vertices=V,faces=F))
+                      except Exception as e:row.update(status='rejected',reason=str(e))
+                      results.append(row)
+                  direct=[x for x in results if x['arm']=='direct' and x['status']=='valid']
+                  passing=[x for x in direct if x['joint_pass']]
+                  candidate=results[-1]
+                  chosen=min(passing,key=lambda x:x['p95_worst']) if passing else candidate if candidate.get('joint_pass',False) else None
+                  rows.append(dict(case=k,params=c,coons_reference=ref,direct_valid=len(direct),direct_pass=len(passing),direct_best_p95=min((x['p95_worst'] for x in direct),default=None),direct_best_angle=max((x['min_angle'] for x in direct),default=None),collar=candidate,selected_arm=chosen['arm'] if chosen else 'none',trials=results))
+              finally:remove(g)
+          d=Path('ti36-results');d.mkdir(exist_ok=True)
+          out=dict(blender=bpy.app.version_string,approved=False,holdout_count=len(HOLDOUT),collar_pass=sum(x['collar'].get('joint_pass',False) for x in rows),router_pass=sum(x['selected_arm']!='none' for x in rows),rows=rows)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'raw.json').write_text(json.dumps(meshes))
+          compact=[{k:v for k,v in x.items() if k!='trials'} for x in rows]
+          print('TI36_SUMMARY',json.dumps(dict(cases=compact,collar_pass=out['collar_pass'],router_pass=out['router_pass'],gate=out['collar_pass']>=5)),flush=True)
+          # Distinguish execution completeness from the research improvement gate.
+          assert len(rows)==6 and all(x['direct_valid']==16 and x['collar']['status']=='valid' for x in rows),'incomplete holdout'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti36.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti36-frozen-holdout-${{ github.sha }}
+          path: ti36-results/
+          if-no-files-found: warn
+          retention-days: 14
