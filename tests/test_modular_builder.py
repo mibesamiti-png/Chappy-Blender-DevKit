@@ -172,7 +172,21 @@ class ModularBuilderTests(unittest.TestCase):
         self.assertIn('_EDIT_MODE_FEATURES', names)
         self.assertIn('cbdk_modular_nudge_offset', source)
         self.assertIn('button_row.enabled', source)
-        self.assertIn('button.offset', source)
+        # The operator argument is now selected by a literal code-owned
+        # descriptor, not a hard-coded attribute in every generated Panel.
+        assignments = {n.targets[0].id: n.value for n in tree.body
+                       if isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name)}
+        contract = ast.literal_eval(assignments["_FEATURE_CONTRACT"])
+        spec = contract["vertex_nudge"]["input_spec"]
+        self.assertEqual(spec["rna"], "cbdk_modular_nudge_offset")
+        self.assertEqual(spec["operator_arg"], "offset")
+        self.assertEqual(spec["type"], "float_vector")
+        self.assertIn('if spec["operator_arg"] is not None:', source)
+        self.assertIn('setattr(button, spec["operator_arg"], getattr(context.scene, spec["rna"]))', source)
+        self.assertIn('action.enabled = reason is None', source)
+        options = ast.literal_eval(assignments["_UI_OPTIONS"])
+        self.assertEqual([entry["rna"] for entry in options["typed_inputs"]],
+                         ["cbdk_modular_nudge_offset"])
 
     def test_feature_order_does_not_affect_zip(self):
         self.build()
