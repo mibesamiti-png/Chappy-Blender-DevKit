@@ -1,0 +1,1482 @@
+[
+  {
+    "id": "green",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "summary_ready",
+      "reason": "family_summaries_green_not_execution_authority",
+      "details": 0,
+      "role": "B"
+    }
+  },
+  {
+    "id": "red",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "failure",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "ci_not_all_verified",
+      "details": 1
+    }
+  },
+  {
+    "id": "running",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "in_progress",
+          "conclusion": null,
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "ci_not_all_verified",
+      "details": 0
+    }
+  },
+  {
+    "id": "cancelled",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "ci_not_all_verified",
+      "details": 0
+    }
+  },
+  {
+    "id": "missing",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "ci_not_all_verified",
+      "details": 0
+    }
+  },
+  {
+    "id": "stale",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "ci_not_all_verified",
+      "details": 0
+    }
+  },
+  {
+    "id": "wrong_event",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "ci_not_all_verified",
+      "details": 0
+    }
+  },
+  {
+    "id": "duplicate",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        },
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 99
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "ci_not_all_verified",
+      "details": 0
+    }
+  },
+  {
+    "id": "head_moved",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "head_missing_or_changed",
+      "details": 0
+    }
+  },
+  {
+    "id": "wrong_round",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R15",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "dispatch_unverified",
+      "details": 0
+    }
+  },
+  {
+    "id": "revision_rollback",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 2,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "dispatch_unverified",
+      "details": 0
+    }
+  },
+  {
+    "id": "role_conflict",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "E",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "dispatch_conflict",
+      "details": 0
+    }
+  },
+  {
+    "id": "unknown_ci_contract",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "blocked",
+      "reason": "ci_contract_unknown",
+      "details": 0
+    }
+  },
+  {
+    "id": "dynamic_round",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R17",
+      "officialAssignment": "docs/R17_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R17",
+        "official_assignment": "docs/R17_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "normal",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "summary_ready",
+      "reason": "family_summaries_green_not_execution_authority",
+      "details": 0,
+      "role": "B"
+    }
+  },
+  {
+    "id": "support_hint",
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "state": "active",
+        "round": "R16",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "revision": 1,
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "phase": "integration_support",
+        "team_roles": {
+          "B": "E",
+          "C": "G",
+          "D": "F"
+        }
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 1
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 2
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 3
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 4
+        },
+        {
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 5
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 6
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "push",
+          "status": "completed",
+          "conclusion": "success",
+          "id": 7
+        }
+      ]
+    },
+    "expect": {
+      "state": "summary_ready",
+      "reason": "family_summaries_green_not_execution_authority",
+      "details": 0,
+      "role": "E"
+    }
+  }
+]
