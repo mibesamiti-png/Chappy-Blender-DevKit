@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.19 R21 F019-02限定受入: #156 dev b45549ca8e502d6e9ba22365f4dfd28e791a4d41 独立7CI成功。明示expanded_2048_partsで各2048面/64部品の匿名候補・局所表面差・有限予算を3版実測。F019-03、大規模viewer・実データは残る。専門チーム待機、正式v0.17.0/main/last_verified不変。
+- 最新の節目: v0.19 R22 F019-03測定限定受入: #160 dev a816d5ec0f08456c469af134b4b7dc1b69987258 独立7CI成功（Blender attempt2）。3版16合成ケース固定8/10・適応9/10、誤警告0/5、情報欠落1。限定3目標受入、一般精度・実データ・viewer・物理診断は未完。B/C/D待機、正式v0.17.0/main/last_verified不変。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
@@ -211,6 +211,7 @@
 - `DEC-082` R19でv0.18の限定自動化基盤を区切り、承認済み独立計画v0.19へ移行する。#148修正候補012758c 6CI成功、dev d4aa43016ad85159584a0d88b33e7cbb58368b97 独立7CI成功（Python45560603306、Windows45560603301、Blender45560603365、Chromium45560603489、Handoff45560603287、Kit45560603398、Skill45560603308）。3版69 lifecycle・R19同一ZIP縦断・HIT/SHA、#25同HEAD draft。汎用化・大規模形状・因果・GUIは既承認F019〜022の範囲。現行44要件/24 NEXTの状態・正式v0.17.0/last_verified/main/別承認は不変。future JSON有効化候補、専門作業は移行PR統合後のCIと正式割当待ち。R20自動発行なし。
 - `DEC-083` F019-01の限定拡張をR20で受入、既定512面を維持し明示2048面比較のみ有効にする。#151 B 5CI、#152統合候補910ada89 5CI、dev 7e8bd21994a3b12dc1282fedc3ceceb4230e6860 独立7CI（Python45566806276、Windows45566806261、Blender45566806341、Chromium45566806269、Handoff45566806324、Kit45566806376、Skill45566806258）。3版69 lifecycle/R19/R20 CLI実測。2048面中央値3.904/4.057/4.303秒、密集4M eval停止。#125 rev9 paused。F019-02/03残、任意大規模・実データ・GL採用・公開未承認。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
 - `DEC-084` F019-02をR21で限定受入し、匿名部品候補の局所表面証拠を明示profileに限定する。#155 B 96b3bf3 5CI、#156 A 946de66 5CI、dev b45549ca8e502d6e9ba22365f4dfd28e791a4d41 独立7CI（Python45577551917、Windows45577551636、Blender45577551663、Chromium45577551853、Handoff45577551821、Kit45577551711、Skill45577551854）。実3版2048面/64部品、64候補、旧誤suggestion 1→0、競合曖昧、65部品skip/exit2、SHA不変。親中央値5.615/5.812/7.349秒。全体+局所上限263744 samples/16M node/8M eval、130 BVH、精密128 pairs、境界予約2M。未測定/曖昧を保持、近小/遠大対照未独立実証、移動/split/merge Pythonのみ、native局所予算枯渇・任意identity・実データ・viewer拡張・GL採用未確認。F019-03残、R22自動発行なし。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
+- `DEC-085` F019-03をR22で測定限定受入し、v0.19限定3目標の区切りを記録する。#159 B dfe61bee 5CI、#160 A d11839ec 5CI、dev a816d5ec0f08456c469af134b4b7dc1b69987258 独立7CI（Python45636769946、Windows45636769714、Blender45636769495 attempt2、Chromium45636769899、Handoff45636769741、Kit45636769989、Skill45636769864）。3版16ケース固定8/10・適応9/10、誤警告0/5、情報欠落1。小穴見逃し、境界ヒントは物理証明でない。旧profile・入力SHA維持。初回4.4.3 artifact確定失敗は同一HEAD失敗job再試行成功。測定のみ、製品変更・GL採用なし。限定3目標受入、実データ/一般精度/物理診断/native memory/viewer未確認。#125 rev13 paused、R23/v0.20自動開始なし、正式版/44要件/24 NEXT/last_verified維持。
 
 ## 更新・プライバシールール
 

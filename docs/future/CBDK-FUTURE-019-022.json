@@ -126,8 +126,10 @@
         "scope": "Explicit expanded_2048_parts schema3, synthetic 2048 triangles / 64 parts per scene; spatial candidate guards, bounded local surface evidence demotes only, ambiguous/unmeasured retained; 64 reverse-order suggestions, one false suggestion demoted, 65 cap exit2, SHA unchanged, 3 Blender versions. Legacy schemas/viewer unchanged. General identity, native memory/local exhaustion, near-small/far-large separate contrast, arbitrary user models and larger viewer remain unverified; motion/split/merge Python controls only."
       },
       "F019-03": {
-        "status": "not_started_in_v019",
-        "scope": "Detailed geometry diagnostics and GL candidate evaluation pending; no research adoption."
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "a816d5ec0f08456c469af134b4b7dc1b69987258",
+        "blender_run": 45636769495,
+        "scope": "Measurement-only: 16 authored synthetic cases, all three Blender versions; fixed 8/10 and adaptive 9/10 known positive sampled surface differences, both 0/5 false warnings, 1 information absent. Narrow opening missed; physical thickness/contact/void topology, native memory, held-out/general models and user data unverified. No production or GL adoption, existing profiles unchanged. Artifact finalize retry on same HEAD succeeded."
       }
     }
   }
