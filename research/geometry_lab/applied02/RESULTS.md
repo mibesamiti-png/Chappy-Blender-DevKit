@@ -7,3 +7,8 @@ Inspected actual three-quarter open and folded-right renders. Recognizable eyewe
 ## One bounded follow-up: sampled contact diagnostic
 
 Keep original successful gate and model unchanged. Reuse R2 CGAL triangle predicate on actual evaluated open mesh arrays, with rigid transformations around the validated pivots. Sample each individual fold, both fold together, and each sequential fold order on 0..85 degree grid in 5 degree steps. Report nonexempt surface contacts per pose and object pair, no retrospective pass criterion. Same-side rigid assembly pairs and explicitly adjacent hinge sleeve/temple to fixed pin/endpiece pairs excluded; this exclusion is not proof of mechanical fit. Static-static contacts excluded. Surface intersection count does not prove penetration, containment or continuous clearance. Record results even if collisions occur. No private input, no DIL work or product approval. Stop after this diagnostic and classify remaining limitations.
+
+
+## Diagnostic acquisition failure and region revision
+
+Run 45532851996 job 138932184536 failed before contact diagnostic: publisher checksum download returned HTTP 403. No contact result was obtained. Decouple frozen original contact analysis from the Blender binary by retrieving the exact prior successful artifact (run 45532258463, name geometry-lab-applied02-1c52c26146674ac35d4edee7b716ded68566ee1c). Revision B uses a single closed exterior temple with material regions and explicit straight/bend segments, native bevel. Its plan is frozen in [REGION_PLAN.md](REGION_PLAN.md). Use cache of pinned official archive, verifying its SHA256 every use; a cold cache can still fail on publisher HTTP403. No successful new run yet. Original generator unchanged.
