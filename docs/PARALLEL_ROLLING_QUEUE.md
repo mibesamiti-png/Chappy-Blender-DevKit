@@ -424,3 +424,9 @@ R19既存基盤の6機能/7部品、2型入力、単一panel内の宣言section�
 R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI成功（Python45698148532、Windows45698148921、Blender45698148477、Chromium45698148381、Handoff45698148674、Kit45698148611、Skill45698148654）。C #164/D #163/A #165各5CIと合わせ22/22、再試行0。3版で同一CLI生成ZIP公式validate・隔離bl_ext登録・2panel/4機能/2型のdraw/操作/解除・SHA不変、artifact保存。F020-01限定受入、F020-03限定実装受入（全体partial）、F020-02残。#125 rev15 paused、B/C/D待機。実GUI/Undo/公式installer/任意コード/権利・正式配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
 
 C #164 `8b872c61040faadc404baa538745c1be0fba95ed`、D #163 `b1b15306b304013cee41ec86a5c5a94906e7c8ff`、A #165候補 `52066fa0db30172a5f7e674140539a2a3860174e`。統合12ファイル、専門PRは包含済みのため個別mergeせずclosed。native jobs 139500883727/139500884434/139500883166、artifact 15061868289/15060608920/15060479125。R19・C grouped/mixed・D read/edit markerも維持。詳細 [R23 A](R23_A_GENERATION_VERTICAL.md)。F020-02は既存依存/登録経路と未達差分を次に判断、R24未発行。Notion同期は節目文書統合・独立CI後、未実施。
+
+## 2026-11-26 JST — R24 / F020-02 C/D限定割当候補
+
+R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI（Python45700815698、Windows45700815565、Blender45700815591、Chromium45700815541、Handoff45700815542、Kit45700815896、Skill45700815567）成功、3版R23 marker、Notion既存ページ追記成功。F020-02既存6機能のrequires_featuresは全空。既存plannerの推移/循環Python検査は再利用し、R24 Cはテスト専用の非空依存閉包・登録/逆順解除/rollbackの実機縦断、Dはroot ZIPの依存閉包とmanifest互換範囲の独立照合/過大表示拒否。A同一物縦断。正式割当統合・独立7CI・#125更新前は着手禁止。B待機、GL/DIL独立、44要件/24 NEXT/正式版/main/last_verified維持。
+
+既存plannerは非空依存のPython試験を持つが実カタログ6機能は全空。製品に意味のない依存を追加せず、テスト専用の固定合成グラフで共有閉包・順序・拒否・復旧を測る。DのR23固定manifest min4.4.0/maxなしは将来狭い閉包条件に対して過大表示しないことを検証し、再現した最小不具合のみ修正。両者の固定グラフはAが統合。同時インストール、外部root/metadata/Python、権利/配布、実GUI/Undoは対象外。[R24割当候補](R24_ABCD_START.md)。R25自動開始なし。

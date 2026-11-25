@@ -140,8 +140,8 @@
         "scope": "Explicit bounded schema2 two-panel UI; grouped/mixed four-feature fixtures with two typed inputs, placement, RNA, native operators, refusal, registration rollback and cleanup on Blender 4.4.3/4.5.15/5.2.1. Existing schema1 panel preserved; arbitrary UI/types and real GUI not verified."
       },
       "F020-02": {
-        "status": "not_started_in_v020",
-        "scope": "Remaining dependency/registration composition to evaluate separately after R23 milestone sync; reuse six code-owned features, seven parts and existing six legacy recipes; no new assignment yet."
+        "status": "assignment_candidate",
+        "scope": "R24 C fixed test-only nonempty feature dependency graph, generated legacy ZIP closure and native registration/rollback; D trusted local Extension closure and conservative manifest compatibility; A same-artifact integration. Existing six actual features retain production graph, no adoption/new features. Requires allocation merge, independent seven CI and dispatch."
       },
       "F020-03": {
         "status": "scoped_implementation_accepted_partial",
@@ -192,6 +192,19 @@
       139500883166
     ],
     "dispatch": "revision 15 paused; next assignment not issued",
-    "notion": "pending milestone sync after verified docs integration"
+    "notion": "success 2026-11-26 JST existing page 410948b7-4937-8144-9462-ca76e9567e75, insert at start; no new page/private data",
+    "milestone_sync": {
+      "pr": 166,
+      "verified_dev_sha": "74458b072db5bf55090d3a85e275d40114a445a5",
+      "workflow_runs": {
+        "python": 45700815698,
+        "windows": 45700815565,
+        "blender": 45700815591,
+        "chromium": 45700815541,
+        "handoff": 45700815542,
+        "kit": 45700815896,
+        "skill": 45700815567
+      }
+    }
   }
 }

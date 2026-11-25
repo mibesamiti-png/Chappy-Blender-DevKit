@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.20 R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI、F020-01限定受入・F020-03限定実装受入（partial）、F020-02残。B/C/D待機、節目同期中。正式v0.17.0/main/last_verified不変。"
+    "milestone": "v0.20 R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI/Notion同期成功。F020-02 R24 C/D限定割当候補。実装は正式ゲート後、正式v0.17.0/main/last_verified維持。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -1094,6 +1094,11 @@
       "id": "DEC-087",
       "decision": "R23の限定複数パネル生成と同一Extension縦断を受入、F020-02の残範囲を次に判断する",
       "note": "R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI成功（Python45698148532、Windows45698148921、Blender45698148477、Chromium45698148381、Handoff45698148674、Kit45698148611、Skill45698148654）。C #164/D #163/A #165各5CIと合わせ22/22、再試行0。3版で同一CLI生成ZIP公式validate・隔離bl_ext登録・2panel/4機能/2型のdraw/操作/解除・SHA不変、artifact保存。F020-01限定受入、F020-03限定実装受入（全体partial）、F020-02残。#125 rev15 paused、B/C/D待機。実GUI/Undo/公式installer/任意コード/権利・正式配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。"
+    },
+    {
+      "id": "DEC-088",
+      "decision": "F020-02の非空依存グラフ実機検証とExtension互換範囲をR24限定割当候補にする",
+      "note": "R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI（Python45700815698、Windows45700815565、Blender45700815591、Chromium45700815541、Handoff45700815542、Kit45700815896、Skill45700815567）成功、3版R23 marker、Notion既存ページ追記成功。F020-02既存6機能のrequires_featuresは全空。既存plannerの推移/循環Python検査は再利用し、R24 Cはテスト専用の非空依存閉包・登録/逆順解除/rollbackの実機縦断、Dはroot ZIPの依存閉包とmanifest互換範囲の独立照合/過大表示拒否。A同一物縦断。正式割当統合・独立7CI・#125更新前は着手禁止。B待機、GL/DIL独立、44要件/24 NEXT/正式版/main/last_verified維持。"
     }
   ],
   "last_verified": {
