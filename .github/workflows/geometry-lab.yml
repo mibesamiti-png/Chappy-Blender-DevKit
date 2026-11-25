@@ -548,3 +548,27 @@ jobs:
           path: research/geometry_lab/runs/r15-audit/*.json
           if-no-files-found: error
           retention-days: 14
+
+  r16-cut-chart-development:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-oracle.txt shapely==2.1.2
+      - run: python -m cycles.r16.run --output runs/ci-r16.json --development-only
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-r16-${{ github.sha }}
+          path: research/geometry_lab/runs/ci-r16.json
+          if-no-files-found: error
+          retention-days: 14
