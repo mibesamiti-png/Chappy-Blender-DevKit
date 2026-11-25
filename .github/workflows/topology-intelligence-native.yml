@@ -566,6 +566,8 @@ jobs:
       # Phase37 verified run 45575543890 / job 139072452920:
       # 10/10 route agreement, 3 direct, 6 collar, 1 reject; 71 vs 170 hypothetical calls.
       # Actual Phase38 comparison uses direct-first in BOTH arms, not mandatory collar.
+      # First run 45576327369 failed strict array-order equality: 7/14; 120 vs 232 calls.
+      # Compare geometry with bijective vertex mapping and oriented cyclic face identity.
       - name: Phase38 execute real prefilter and measure direct-first comparison
         shell: bash
         env:
@@ -621,10 +623,43 @@ jobs:
                   row,m=generate('collar',0,False)
                   if row.get('joint_pass',False):best,mesh=row,m
               return dict(bound=bound,skip=skip,attempts=attempts,selected=best,elapsed_seconds=time.perf_counter()-start),mesh
+          def compare_mesh(ma,mb):
+              A=np.asarray(ma[0],float);B0=np.asarray(mb[0],float)
+              if A.shape!=B0.shape:return dict(ok=False,reason='vertex count')
+              distances=np.max(np.abs(A[:,None,:]-B0[None,:,:]),axis=2)
+              mapping=distances.argmin(axis=1)
+              delta=float(np.max(distances[np.arange(len(A)),mapping]))
+              unique=len(set(mapping.tolist()))==len(A)
+              def canonical(f):
+                  f=tuple(int(i) for i in f)
+                  return min(f[i:]+f[:i] for i in range(len(f)))
+              # Ignore list order and cyclic start only; do not ignore winding or changed connectivity.
+              mapped=Counter(canonical([mapping[i] for i in f]) for f in ma[1])
+              target_faces=Counter(canonical(f) for f in mb[1])
+              exact_order=ma[1]==mb[1] and np.allclose(A,B0,rtol=0,atol=1e-7)
+              return dict(ok=unique and delta<=1e-7 and mapped==target_faces,
+                          max_coordinate_delta=delta,bijection=unique,oriented_faces_match=mapped==target_faces,
+                          exact_order=bool(exact_order))
           def same_result(a,b,ma,mb):
               x,y=a['selected'],b['selected']
-              if x is None or y is None:return x is None and y is None and ma is None and mb is None
-              return (x['arm'],x['offset'],x['simple'])==(y['arm'],y['offset'],y['simple']) and abs(x['p95_worst']-y['p95_worst'])<1e-7 and abs(x['min_angle']-y['min_angle'])<1e-4 and ma[1]==mb[1] and np.allclose(ma[0],mb[0],rtol=0,atol=1e-7)
+              if x is None or y is None:
+                  ok=x is None and y is None and ma is None and mb is None
+                  return dict(ok=ok,reason='both rejected' if ok else 'selection mismatch')
+              d=compare_mesh(ma,mb)
+              setting=(x['arm'],x['offset'],x['simple'])==(y['arm'],y['offset'],y['simple'])
+              p95=abs(x['p95_worst']-y['p95_worst']);ang=abs(x['min_angle']-y['min_angle'])
+              d.update(settings_match=setting,p95_delta=p95,angle_delta=ang)
+              d['ok']=bool(d['ok'] and setting and p95<1e-7 and ang<1e-4)
+              return d
+          # Controls: same oriented mesh with reordered indices and face order passes;
+          # moved vertex, changed face, and reversed winding must fail.
+          a=([[0,0,0],[1,0,0],[1,1,0],[0,1,0]],[[0,1,2,3]])
+          b=([a[0][i] for i in (2,0,3,1)],[[0,2,1,3]])
+          assert compare_mesh(a,b)['ok'],'permuted control failed'
+          assert not compare_mesh(a,(b[0],[[3,1,2,0]]))['ok'],'winding control failed'
+          assert not compare_mesh(a,(b[0],[[0,1,2,3]]))['ok'],'connectivity control failed'
+          m=[list(v) for v in b[0]];m[0][2]=.001
+          assert not compare_mesh(a,(m,b[1]))['ok'],'coordinate control failed'
           rows=[];selected=[]
           for i,(name,c,blend) in enumerate(fixtures):
               set_domain(blend)
@@ -640,10 +675,10 @@ jobs:
                       fast,fm=run_route(c,g,min(refs),True);slow,sm=run_route(c,g,min(refs),False)
                   else:
                       slow,sm=run_route(c,g,min(refs),False);fast,fm=run_route(c,g,min(refs),True)
-                  same=same_result(fast,slow,fm,sm)
+                  equivalence=same_result(fast,slow,fm,sm);same=equivalence['ok']
                   if fm is not None:selected.append(dict(case=name,vertices=fm[0],faces=fm[1]))
                   violations=[t for x in (fast,slow) for t in x['attempts'] if any(e in t.get('reason','') for e in ('angle bound contradicted','corner premise','not a four-corner grid'))]
-                  rows.append(dict(case=name,params=c,blend=blend,reference=min(refs),same=same,premise_violations=len(violations),fast=fast,slow=slow))
+                  rows.append(dict(case=name,params=c,blend=blend,reference=min(refs),same=same,equivalence=equivalence,premise_violations=len(violations),fast=fast,slow=slow))
               finally:remove(g)
           d=Path('ti38-results');d.mkdir(exist_ok=True)
           gate=all(x['same'] and x['premise_violations']==0 for x in rows) and any(x['fast']['skip'] for x in rows) and any(x['fast']['selected'] and x['fast']['selected']['arm']=='direct' for x in rows)
@@ -654,7 +689,7 @@ jobs:
           compact=[]
           for x in rows:
               a=x['fast'];b=x['slow'];v=a['selected']
-              compact.append(dict(case=x['case'],same=x['same'],skip=a['skip'],bound=a['bound'],fast_calls=len(a['attempts']),slow_calls=len(b['attempts']),fast_seconds=a['elapsed_seconds'],slow_seconds=b['elapsed_seconds'],selected=v['arm'] if v else 'none',min_angle=v['min_angle'] if v else None,p95=v['p95_worst'] if v else None,premise_violations=x['premise_violations']))
+              compact.append(dict(case=x['case'],same=x['same'],equivalence=x['equivalence'],skip=a['skip'],bound=a['bound'],fast_calls=len(a['attempts']),slow_calls=len(b['attempts']),fast_seconds=a['elapsed_seconds'],slow_seconds=b['elapsed_seconds'],selected=v['arm'] if v else 'none',min_angle=v['min_angle'] if v else None,p95=v['p95_worst'] if v else None,premise_violations=x['premise_violations']))
           print('TI38_SUMMARY',json.dumps(dict(gate=gate,counts=counts,seconds=times,cases=compact)),flush=True)
           assert len(rows)==14 and gate,'actual routing gate failed'
           PY
