@@ -16,8 +16,8 @@ from .evidence import verify_authored_parts, save_evidence, check_evidence_fresh
 from .part_matrix import evidence_paths, summarize_parts, write_matrix, render_matrix_markdown
 from .addon_builder import build_addon
 from .extension_preflight import write_preflight_report
-from .feature_catalog import load_feature_catalog, plan_features
-from .modular_builder import validate_modular_recipe
+from .feature_catalog import load_feature_catalog
+from .modular_builder import plan_modular_recipe
 from .registration_draft import propose_registration, write_draft
 from .registration_scaffold import scaffold_from_saved_draft
 from .glb_inspector import write_glb_inspection
@@ -541,15 +541,9 @@ def main(argv=None) -> int:
             return 0
         if args.command == 'addon-plan':
             recipe = _json(args.recipe)
-            _name, selected = validate_modular_recipe(recipe)
-            report = plan_features(selected, root=Path(__file__).resolve().parent.parent,
-                                   target_blender=args.target_blender)
-            if args.with_ui:
-                from .ui_layout import plan_ui_layout
-                sections, options = plan_ui_layout(report['ordered_features'],
-                    root=Path(__file__).resolve().parent.parent, include_options=True)
-                report['ui_layout'] = {'sections': sections, 'options': options,
-                                       'runtime_verified': False}
+            report = plan_modular_recipe(
+                recipe, root=Path(__file__).resolve().parent.parent,
+                target_blender=args.target_blender, include_ui=args.with_ui)
             print(json.dumps(report, ensure_ascii=False, indent=2))
             if args.output:
                 write_json(Path(args.output), report)

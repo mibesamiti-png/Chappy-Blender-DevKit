@@ -32,6 +32,42 @@ class TrustedFeatureCatalogTests(unittest.TestCase):
             self.assertFalse(plan['ui_layout']['runtime_verified'])
             self.assertFalse(plan['approved'])
             self.assertEqual(len(list(Path(directory).iterdir())), 1)
+    def test_r17_cli_recipe_local_ui_matches_builder_and_rejects_invalid_layout(self):
+        from test_ui_recipe_r17 import make_recipe
+        from cbdk.modular_builder import plan_modular_recipe
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            recipe_path = root / 'recipe.json'
+            output = root / 'plan.json'
+            with patch('cbdk.__main__.build_addon') as builder, patch('subprocess.run') as runtime, \
+                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                for variant in ('compact', 'grouped'):
+                    recipe = make_recipe(variant)
+                    recipe_path.write_text(json.dumps(recipe), encoding='utf-8')
+                    args = ['addon-plan', '--recipe', str(recipe_path),
+                            '--target-blender', '4.4.3', '--output', str(output)]
+                    self.assertEqual(main(args + ['--with-ui']), 0)
+                    actual = json.loads(output.read_text(encoding='utf-8'))
+                    expected = plan_modular_recipe(recipe, root=ROOT,
+                                                  target_blender='4.4.3', include_ui=True)
+                    self.assertEqual(actual, json.loads(json.dumps(expected)))
+                    self.assertFalse(actual['ui_layout']['runtime_verified'])
+                    self.assertFalse(actual['approved'])
+                    output.unlink()
+                    self.assertEqual(main(args), 0)
+                    self.assertNotIn('ui_layout', json.loads(output.read_text(encoding='utf-8')))
+                    output.unlink()
+                    recipe['ui_layout']['sections'][0]['controls'][0]['operator'] = 'wm.open_mainfile'
+                    recipe_path.write_text(json.dumps(recipe), encoding='utf-8')
+                    for flags in ([], ['--with-ui']):
+                        with self.assertRaises(SystemExit) as error:
+                            main(args + flags)
+                        self.assertEqual(error.exception.code, 2)
+                        self.assertFalse(output.exists())
+            builder.assert_not_called()
+            runtime.assert_not_called()
+            self.assertEqual(list(root.iterdir()), [recipe_path])
+
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
