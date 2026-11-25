@@ -2635,10 +2635,14 @@ jobs:
           import os,traceback
           root=Path(os.environ['RUNNER_TEMP'])
           exec((root/'ti54.py').read_text().split('\nrun54()',1)[0])
-          # New synthetic cylinder family. A common 65-bone axial rig approximates
+          # New synthetic cylinder family. A common 129-bone axial rig approximates
+          # First native run 45692210361 completed 12/15 groups; three rejected
+          # at unchanged .003 vertex tolerance. Analytic common-axis nlerp
+          # calibration on 35 poses per density: max errors 65=.003186681,
+          # 129=.000796490, 257=.000199377. Native preflight below is required.
           # continuous prescribed rotations; not a two-bone or anatomical rig.
           RIM57=24
-          BONE57=65
+          BONE57=129
           PROFILES57=('linear','smoothstep','localized','shifted','wave')
           MIX57=(0.,.25,.5,.75,1.)
           DESIGN57=(30,60,90,120)
@@ -2720,7 +2724,7 @@ jobs:
                   target=field57(u,t,a,kind)-ref0
                   errs=[np.linalg.norm(interpolate57(V,k,u,t,d)-interpolate57(rest,k,u,t,d)-target,axis=1) for d in (0,1)]
                   vertex_error=float(np.max(np.linalg.norm(V-field57(vu.ravel(),vt.ravel(),a,kind),axis=1)))
-                  req(vertex_error<.003,'native prescribed rotation mismatch')
+                  req(vertex_error<.003,'native prescribed rotation mismatch: %s/%s/%s = %.9g'%(kind,len(k)-1,deg,vertex_error))
                   row=dict(angle=deg,p95=max(float(np.quantile(e,.95)) for e in errs),maximum=max(float(e.max()) for e in errs),vertex_error=vertex_error)
                   if contact:
                       audit,_=audit54(*geom)
@@ -2728,10 +2732,31 @@ jobs:
                       row['flagged']=bool(row['contact']['nonincident'] or row['contact']['degenerate'] or any(x!='shared_only' and n for x,n in row['contact']['incident'].items()))
                   rows.append(row)
               return rows
+          def calibrate57(rig):
+              # Dense uniform rings independent of candidate layouts; quarter intervals
+              # of the 129-bone grid, all design and evaluation angles.
+              k=np.linspace(0,1,513);o=cylinder57(k,rig,'TI57_calibration')
+              u,t=np.meshgrid(np.arange(RIM57)/RIM57,k);u=u.ravel();t=t.ravel();rows=[]
+              try:
+                  for kind in PROFILES57:
+                      for deg in sorted(set(DESIGN57+EVAL57)):
+                          pose57(rig,kind,deg);v=geometry57(o)[0]
+                          e=float(np.max(np.linalg.norm(v-field57(u,t,np.deg2rad(deg),kind),axis=1)))
+                          rows.append(dict(profile=kind,angle=deg,max_error=e,ok=e<.003))
+                  return rows
+              finally:
+                  mesh=o.data;bpy.data.objects.remove(o,do_unlink=True)
+                  if mesh.users==0:bpy.data.meshes.remove(mesh)
           def run57():
               prev=json.loads(Path('ti54-results/results.json').read_text());req(prev['complete'],'Phase54 integrity failed')
               bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
-              rig=rig57();du,dt=samples57(48,129);eu,et=samples57(144,513)
+              rig=rig57();calibration=calibrate57(rig)
+              cal_gate=len(calibration)==35 and all(x['ok'] for x in calibration)
+              d=Path('ti57-results');d.mkdir(exist_ok=True)
+              (d/'calibration.json').write_text(json.dumps(dict(bones=BONE57,gate=cal_gate,rows=calibration),indent=2))
+              print('TI57_CALIBRATION',json.dumps(dict(bones=BONE57,gate=cal_gate,passed=sum(x['ok'] for x in calibration),total=len(calibration),worst=max(calibration,key=lambda x:x['max_error']))),flush=True)
+              req(cal_gate,'native axial rig preflight failed')
+              du,dt=samples57(48,129);eu,et=samples57(144,513)
               groups=[];rows=[];failures=[]
               # Reduced first native pass: three budgets, five profiles, five mixes.
               for kind in PROFILES57:
@@ -2760,8 +2785,8 @@ jobs:
                           for o in objs:
                               mesh=o.data;bpy.data.objects.remove(o,do_unlink=True)
                               if mesh.users==0:bpy.data.meshes.remove(mesh)
-              complete=len(groups)==15 and len(rows)==45 and not failures
-              out=dict(approved=False,blender=bpy.app.version_string,complete=complete,groups=len(groups),candidates=sum(len(g['candidates']) for g in groups),eligible=sum(c['quality']['valid'] for g in groups for c in g['candidates']),selected_mix_counts=dict(Counter(str(g['selected_mix']) for g in groups)),eval_pairs=len(rows),better=sum(r['gain']>1e-6 for r in rows),same=sum(abs(r['gain'])<=1e-6 for r in rows),worse=sum(r['gain']< -1e-6 for r in rows),max_error_worse=sum(r['max_gain']< -1e-6 for r in rows),result_only=[dict(profile=r['profile'],levels=r['levels'],angle=r['angle']) for r in rows if r['selected']['flagged'] and not r['uniform']['flagged']],max_vertex_error=max((max(r['uniform']['vertex_error'],r['selected']['vertex_error']) for r in rows),default=None),failures=failures)
+              complete=cal_gate and len(groups)==15 and len(rows)==45 and not failures
+              out=dict(approved=False,blender=bpy.app.version_string,complete=complete,calibration_gate=cal_gate,bones=BONE57,calibration_worst=max(x['max_error'] for x in calibration),groups=len(groups),candidates=sum(len(g['candidates']) for g in groups),eligible=sum(c['quality']['valid'] for g in groups for c in g['candidates']),selected_mix_counts=dict(Counter(str(g['selected_mix']) for g in groups)),eval_pairs=len(rows),better=sum(r['gain']>1e-6 for r in rows),same=sum(abs(r['gain'])<=1e-6 for r in rows),worse=sum(r['gain']< -1e-6 for r in rows),max_error_worse=sum(r['max_gain']< -1e-6 for r in rows),result_only=[dict(profile=r['profile'],levels=r['levels'],angle=r['angle']) for r in rows if r['selected']['flagged'] and not r['uniform']['flagged']],max_vertex_error=max((max(r['uniform']['vertex_error'],r['selected']['vertex_error']) for r in rows),default=None),failures=failures)
               d=Path('ti57-results');d.mkdir(exist_ok=True)
               (d/'results.json').write_text(json.dumps(dict(**out,records=groups,rows=rows),indent=2))
               print('TI57_SUMMARY',json.dumps(out),flush=True)
