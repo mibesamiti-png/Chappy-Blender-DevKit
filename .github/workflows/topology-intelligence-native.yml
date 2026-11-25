@@ -2327,3 +2327,148 @@ jobs:
           path: ti50-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase50 verified run 45641557233: 272/272, 160/160, 8.1059x nonincident.
+      # Phase51: batch incident SVD by rank, compare full mesh audit, retain uncertainty.
+      - name: Phase51 batch incident SVD and benchmark combined contact audit
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti51.py" <<'PY'
+          from pathlib import Path
+          import os,time,traceback
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti50.py').read_text().split('\n# Isolate benchmark locals',1)[0])
+          # Preserve Phase46 tolerances and classification; group independent SVDs by rank.
+          SUBSETS={r:np.array(list(combinations(range(6),r))) for r in range(1,6)}
+          def batch_incident(items,chunk=128):
+              result=[];rhs=np.array([0,0,0,1,1.])
+              for start in range(0,len(items),chunk):
+                  part=items[start:start+chunk];out=['uncertain']*len(part)
+                  active=[];points=[];masks=[]
+                  for k,(V,ia,ib) in enumerate(part):
+                      ia=list(ia);ib=list(ib);shared=set(ia)&set(ib)
+                      if len(shared)==3:out[k]='duplicate_face';continue
+                      if len(shared) not in (1,2):out[k]='unsupported';continue
+                      V=np.asarray(V,float);points.append(V[ia+ib]-V[min(shared)])
+                      masks.append([int(i not in shared) for i in ia+ib]);active.append(k)
+                  if active:
+                      P=np.asarray(points);mask=np.asarray(masks);active=np.asarray(active)
+                      scale=np.linalg.norm(P,axis=2).max(axis=1)
+                      valid=np.isfinite(scale)&(scale>0)
+                      for k in active[~valid]:out[k]='invalid'
+                      P=P[valid]/scale[valid,None,None];mask=mask[valid];active=active[valid]
+                      if len(active):
+                          n1=np.cross(P[:,1]-P[:,0],P[:,2]-P[:,0]);n2=np.cross(P[:,4]-P[:,3],P[:,5]-P[:,3])
+                          valid=np.minimum(np.linalg.norm(n1,axis=1),np.linalg.norm(n2,axis=1))>=1e-10
+                          for k in active[~valid]:out[k]='invalid'
+                          P=P[valid];mask=mask[valid];active=active[valid]
+                      if len(active):
+                          E=np.zeros((len(active),5,6));E[:,:3,:3]=P[:,:3].transpose(0,2,1);E[:,:3,3:]=-P[:,3:].transpose(0,2,1);E[:,3,:3]=1;E[:,4,3:]=1
+                          sv=np.linalg.svd(E,compute_uv=False);rank=np.sum(sv>1e-11,axis=1);stable=~np.any((sv>1e-13)&(sv<1e-9),axis=1)
+                          for r,sub in SUBSETS.items():
+                              take=(rank==r)&stable
+                              if not take.any():continue
+                              M=E[take].transpose(0,2,1)[:,sub,:].transpose(0,1,3,2)
+                              U,S,Vh=np.linalg.svd(M,full_matrices=False)
+                              good=S[:,:,-1]>1e-11
+                              x=np.einsum('abki,abk->abi',Vh,np.einsum('abik,i->abk',U,rhs)/np.where(good[:,:,None],S,1))
+                              residual=np.max(np.abs(np.einsum('abik,abk->abi',M,x)-rhs),axis=2)
+                              ok=good&(residual<1e-9)&(x.min(axis=2)>=-1e-9)
+                              objective=np.sum(x*mask[take][:,sub],axis=2)
+                              mx=np.max(np.where(ok,objective,-np.inf),axis=1)
+                              for k,maximum in zip(active[take],mx):
+                                  if np.isfinite(maximum):out[k]='beyond_shared' if maximum>1e-6 else 'uncertain' if maximum>1e-9 else 'shared_only'
+                  result.extend(out)
+              return result
+          def controls51():
+              rng=np.random.default_rng(5101);items=[];expected=[]
+              A=[[0.,0,0],[1,0,0],[0,1,0]]
+              def add(V,ia,ib,want=None):
+                  R,_=np.linalg.qr(rng.normal(size=(3,3)));s=10.**rng.uniform(-2,2)
+                  items.append((np.asarray(V)@R.T*s+rng.uniform(-5,5,3)*s,tuple(rng.permutation(ia)),tuple(rng.permutation(ib))))
+                  expected.append(want)
+              for _,V,ia,ib,want in cases:
+                  for k in range(40):add(V,ia,ib,want)
+              for k in range(1600):
+                  V=rng.uniform(-1,1,(5,3));edge=k%2==0
+                  if k%4<2:V[:,2]=0
+                  add(V,(0,1,2),(0,1,3) if edge else (0,3,4))
+              for k in range(400):
+                  V=np.asarray(A+[[.5,.5,10.**rng.uniform(-14,-5)],[.2,.7,-10.**rng.uniform(-14,-5)]])
+                  add(V,(0,1,2),(0,1,3) if k%2 else (0,3,4))
+              a=[incident_probe(*i) for i in items];b=batch_incident(items)
+              return dict(samples=len(a),matches=sum(x==y for x,y in zip(a,b)),controls_pass=sum(w==v for w,v in zip(expected,b) if w is not None),controls_total=sum(w is not None for w in expected),counts=dict(Counter(a)))
+          def mesh_audit51(V,F,ids,fast):
+              base=(fast_contacts if fast else contacts)(V,F,ids)
+              by_vertex=defaultdict(list)
+              for i,tri in enumerate(F):
+                  for v in tri:by_vertex[v].append(i)
+              pairs=sorted({tuple(sorted((a,b))) for group in by_vertex.values() for a,b in combinations(group,2)})
+              items=[(V,F[i],F[j]) for i,j in pairs]
+              states=batch_incident(items) if fast else [incident_probe(*item) for item in items]
+              return dict(nonincident=base,incident_counts=dict(Counter(states)),incident_tested=len(pairs),flags=[dict(triangles=[i,j],faces=[ids[i],ids[j]],state=s) for (i,j),s in zip(pairs,states) if s!='shared_only'])
+          def geometry51(o,data):
+              dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+              try:
+                  m.calc_loop_triangles()
+                  V=np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+                  V=(V-data['origin'])@data['Q']/data['scale']
+                  return V,[tuple(t.vertices) for t in m.loop_triangles],[t.polygon_index for t in m.loop_triangles]
+              finally:ev.to_mesh_clear()
+          def run51():
+              prior=json.loads(Path('ti50-results/results.json').read_text())
+              req(prior['complete'],'Phase50 integrity')
+              ref=json.loads(Path('ti49-results/results.json').read_text())
+              anchors={(r['case'],r['angle'],r['preserve_volume']):r['contact'] for r in ref['rows'] if r['contact'] is not None}
+              ctrl=controls51();bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+              rows=[];failures=[]
+              for spec in HOLDOUT:
+                  name=spec[0];o=fixture(*spec[:-1]);init_attributes(o);g=None
+                  try:
+                      data=extract(o);new_weights(o,data,spec[-1]);before=all_snapshot(o)
+                      g=prepare(data);decision,m=route(data,g);req(m is not None,'no candidate')
+                      new,_=replace_attributes(o,data,*m)
+                      rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                      mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                      for enabled in (False,True):
+                          for mod in mods:mod.use_deform_preserve_volume=enabled
+                          for pose_deg in sorted(AUDIT):
+                              set_pose(rig,data,('twist'+str(pose_deg),(0,pose_deg,0),(0,-pose_deg,0),False))
+                              anchor=anchors[name,pose_deg,enabled]
+                              for label,obj in [('source',o),('result',new)]:
+                                  geom=geometry51(obj,data)
+                                  t=time.perf_counter();a=mesh_audit51(*geom,False);old=time.perf_counter()-t
+                                  t=time.perf_counter();b=mesh_audit51(*geom,True);fast=time.perf_counter()-t
+                                  t=time.perf_counter();b2=mesh_audit51(*geom,True);fast+=time.perf_counter()-t
+                                  t=time.perf_counter();a2=mesh_audit51(*geom,False);old+=time.perf_counter()-t
+                                  expected=anchor[label]
+                                  observed=dict(nonincident=len(a['nonincident']['contact_pairs']),degenerate=len(a['nonincident']['degenerate']),incident=a['incident_counts'])
+                                  rows.append(dict(case=name,angle=pose_deg,preserve_volume=enabled,mesh=label,match=a==b==a2==b2,anchor_match=observed==expected,incident_pairs=a['incident_tested'],old_seconds=old,new_seconds=fast,source_unchanged=all_snapshot(o)==before))
+                      for mod in mods:mod.use_deform_preserve_volume=False
+                      set_pose(rig,data,POSES[0])
+                  except Exception as e:failures.append(dict(case=name,reason=str(e),traceback=traceback.format_exc()))
+                  finally:
+                      if g is not None:remove(g)
+              d=Path('ti51-results');d.mkdir(exist_ok=True)
+              complete=len(rows)==272 and not failures and ctrl['samples']==2400 and ctrl['matches']==2400 and ctrl['controls_pass']==400 and all(r['match'] and r['anchor_match'] and r['source_unchanged'] for r in rows)
+              timings={}
+              for label in ('source','result','all'):
+                  a=[r for r in rows if label=='all' or r['mesh']==label]
+                  old=sum(r['old_seconds'] for r in a);new=sum(r['new_seconds'] for r in a)
+                  timings[label]=dict(samples=len(a),old_seconds=old,new_seconds=new,speedup=old/new if new else None,incident_pairs=sum(r['incident_pairs'] for r in a))
+              out=dict(approved=False,blender=bpy.app.version_string,complete=complete,controls=ctrl,matches=sum(r['match'] for r in rows),anchors=sum(r['anchor_match'] for r in rows),timings=timings,failures=failures)
+              (d/'results.json').write_text(json.dumps(dict(**out,rows=rows),indent=2))
+              print('TI51_SUMMARY',json.dumps(out),flush=True)
+              assert complete,'full contact audit equivalence failed'
+          run51()
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti51.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti51-combined-contact-audit-${{ github.sha }}
+          path: ti51-results/
+          if-no-files-found: warn
+          retention-days: 14
