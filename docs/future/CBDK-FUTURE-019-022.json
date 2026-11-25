@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
   "plan_id": "CBDK-FUTURE-019-022",
-  "status": "APPROVED_WAITING_FOR_V018_GATES",
-  "active": false,
+  "status": "ACTIVE_V019",
+  "active": true,
   "approved_on": "2026-11-07",
   "approval_basis": "User explicitly approved the future plan and transition policy; finish automatable v0.18 work and record remaining human blockers first.",
   "transition_authorized": true,
   "repeat_transition_approval_required": false,
   "canonical_current_state": "docs/project/STATE.json",
   "activation_gates": {
-    "v018_automatable_work_completed": false,
+    "v018_automatable_work_completed": true,
     "human_blockers_documented": true,
     "latest_pr25_code_checks_reviewed": true,
     "integration_policy_recorded": true
@@ -26,7 +26,7 @@
   "phases": [
     {
       "version": "0.19",
-      "status": "not_started",
+      "status": "in_progress",
       "goal": "Practical GLB analysis and conservative part correspondence",
       "candidates": [
         "Expand the 512-triangle research limit gradually with explicit computational budgets",
@@ -90,9 +90,25 @@
   ],
   "current_requirements_or_priorities_modified_by_future_plan": false,
   "last_current_code_evidence": {
-    "code_sha": "79fea17e70665392731780ed5a518982530b7323",
-    "blender_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42366055131",
+    "code_sha": "d4aa43016ad85159584a0d88b33e7cbb58368b97",
+    "blender_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45560603365",
     "result": "success",
-    "activation_decision": "Remain inactive; current automatable registry/UI work is not complete."
+    "activation_decision": "Bounded v0.18 foundation accepted after R19 and #148 independent 7CI. Existing unfinished requirements remain partial; generic expansion belongs to approved F019–F022; private/GUI/rights blockers remain. v0.19 activation candidate; no specialist dispatch until activation PR and dev CI pass."
+  },
+  "activation_evidence": {
+    "date": "2026-11-25",
+    "verified_base_sha": "d4aa43016ad85159584a0d88b33e7cbb58368b97",
+    "workflow_runs": {
+      "python": 45560603306,
+      "windows": 45560603301,
+      "blender": 45560603365,
+      "chromium": 45560603489,
+      "handoff": 45560603287,
+      "kit": 45560603398,
+      "skill": 45560603308
+    },
+    "pr25_draft": true,
+    "scope": "Bounded v0.18 development foundation, not product release or all requirements complete",
+    "dispatch": "A prepares F019 baseline and bounded assignments after activation validation; B/C/D paused until separately verified dispatch."
   }
 }

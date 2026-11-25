@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R19 C#145/D#146を#147で統合、dev 538e0b58a9d4c05fce49de617a7d84342e5290cd 独立7CI成功。2型の共通入力と固定自作Extensionの同一ZIP公式検証・隔離登録/実行/解除を3版実証。基盤の限定受入完了、全体partial/実GLB/GUI/権利・汎用化は残る。R20自動割当なし。次期移行判断候補、正式v0.17.0・次期active=false維持。
+- 最新の節目: v0.18: R19と節目同期#148のdev d4aa43016ad85159584a0d88b33e7cbb58368b97 独立7CI成功。限定自動化基盤の区切りを認定し承認済みv0.19への移行を決定。残るpartial/実データ/GUI/権利は維持、次期独立計画のみ有効化。専門割当は移行CI後。正式v0.17.0/main/last_verified不変。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
@@ -208,6 +208,7 @@
 - `DEC-079` R17限定受入と公式SHA固定キャッシュの統合。新規ラウンドの自動割当を止め、既存完成条件の残りを分離する。B#132/C#134/D#133各5CI、結合#135 c7609fa 5CI、dev 84c9629は5.2.1取得403で6/7。#136 e4e2e3a 5CI・3版cold/warm SHA一致、dev 236b9a3254928d7cb69d5c415fd8a3e792ee5de7 独立7CI成功（Python45533937263、Windows45533937251、Blender45533937378、Chromium45533937233、Handoff45533937238、Kit45533937212、Skill45533937244）。3版実行でB triage、C 2種UI、D optional 7例を確認。別PR共有ヒット未確認。44要件/24 NEXT/last_verified/正式v0.17.0/次期active=false維持。
 - `DEC-080` R18限定受入。6自作機能の生成と非インストール合成Extension経路を実証し、実機能のExtension化と汎用UIを残条件として分離する。C#140 be0f777/D#141 bbda166各5CI、A#142 79acfdc 5CI成功。専門21パス重複0、A追加2パス（preview検査と回帰）。dev 36d4090402f66f49d5644fbef91f1c03d95a6b34 独立7CI成功（Python45547799016、Windows45547799085、Blender45547798994、Chromium45547799025、Handoff45547799094、Kit45547799014、Skill45547799182）。3版各67 lifecycle、R18 global/inline、合成ZIP/公式build/validate、HIT/SHA一致。44要件/24 NEXT/正式v0.17.0/last_verified/次期active=false維持。R19自動発行なし。
 - `DEC-081` R19限定受入。v0.18の固定自作生成基盤の完成候補と残る汎用化・実環境・権利を分離し、追加ラウンドを自動発行しない。C#145 18de007/D#146 355daa2各5CI、A#147 393ee4e 5CI成功。12+6パス重複0。D Windows初回1失敗、同一HEAD再実行成功、原因未確定。dev 538e0b58a9d4c05fce49de617a7d84342e5290cd 独立7CI（Python45557832731、Windows45557832812、Blender45557833046、Chromium45557832787、Handoff45557832733、Kit45557832758、Skill45557832820）。3版各69 lifecycle、両R19型付き、R18 ZIP/build、R19実ZIP validate/runtime/同一ZIP precision 2→1、HIT/SHA成功。固定CI fixtureで手動stageのみ、公式installer/一般変換/権利未完了。#25は同HEADのdraft。44要件/24 NEXT/正式v0.17.0/last_verified/次期active=false維持。移行判定は節目同期後に確認。
+- `DEC-082` R19でv0.18の限定自動化基盤を区切り、承認済み独立計画v0.19へ移行する。#148修正候補012758c 6CI成功、dev d4aa43016ad85159584a0d88b33e7cbb58368b97 独立7CI成功（Python45560603306、Windows45560603301、Blender45560603365、Chromium45560603489、Handoff45560603287、Kit45560603398、Skill45560603308）。3版69 lifecycle・R19同一ZIP縦断・HIT/SHA、#25同HEAD draft。汎用化・大規模形状・因果・GUIは既承認F019〜022の範囲。現行44要件/24 NEXTの状態・正式v0.17.0/last_verified/main/別承認は不変。future JSON有効化候補、専門作業は移行PR統合後のCIと正式割当待ち。R20自動発行なし。
 
 ## 更新・プライバシールール
 
