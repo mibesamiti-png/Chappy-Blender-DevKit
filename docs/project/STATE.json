@@ -1108,7 +1108,7 @@
     {
       "id": "DEC-090",
       "decision": "R25の同一生成物の段階証拠と明示Undoを限定受入し、v0.20の限定3目標を区切る",
-      "note": "R25 #175 dev 1f8235589363e7ddbee89b6fff3599402e1d6aec 独立7CI（Python45722761380、Windows45722761395、Blender45722761515、Chromium45722761433、Handoff45722761411、Kit45722761407、Skill45722761464）成功、追加push Blender45722754722成功。C #174/D #173/A #175各5CI含む最終22/22系統＋追加1、3版×5段階=15 native jobs、最終再試行0。C初回probe cleanup参照エラーを再取得で修正、D初回Blender未発火は既存診断回帰追加。固定read/edit/grouped 3版×6工程54/54、同一ZIP SHA一致、grouped明示Undo/Redo単一/複数・接続/選択復元・取消/解除成功。通常背景Undo unavailable/Redo not_attempted、実GUI未検証。失敗/欠落/矛盾の負例はPython制御試験。F020-03限定受入、v0.20限定3/3目標受入。#125 rev19 paused、B/C/D待機。公式installer/任意コード/権利/配布未確認、正式v0.17.0/main/last_verified/44要件/24 NEXT維持、v0.21/R26自動開始なし。"
+      "note": "R25 #175 dev 1f8235589363e7ddbee89b6fff3599402e1d6aec 独立7CI＋追加push Blender成功。C #174/D #173/A #175各5CI含む最終22/22＋追加1、15 native jobs、最終再試行0。C初回cleanup参照エラー修正、D初回CI未発火は回帰追加。固定read/edit/grouped 3版×6工程54/54、SHA一致。grouped明示Undo/Redo単一/複数・接続/選択復元・取消/解除成功。通常背景Undo unavailable/Redo not_attempted、GUI未検証。失敗/欠落/矛盾はPython負例。F020-03とv0.20限定3/3受入。#125 rev19 paused、B/C/D待機。公式installer/任意コード/権利/配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持、v0.21/R26自動開始なし。詳細はPROGRESS・future JSON参照。"
     }
   ],
   "last_verified": {
