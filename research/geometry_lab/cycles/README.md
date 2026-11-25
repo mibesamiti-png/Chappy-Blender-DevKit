@@ -35,3 +35,5 @@ R11: r11/RESEARCH.md、RESULTS.md、STATUS.json。Blender4.4.3 Edit Mode BMesh�
 R12: r12/RESEARCH.md、RESULTS.md、STATUS.json。Blender4.4.3で元BMesh UVを境界拘束として読み取り、新面に1面1チャートのUV平行移動量を伝播。新規8/8、既知4/4、24全体メッシュCGAL交差0。元UV保持かつ境界誤差は最大6e-8、ただし内部シーム最大126/304辺・41.4%、最小シーム/UVパッキング/法線/実アセットは未検証。研究のみ成功、本体未統合、R13自動開始なし。
 
 R13: r13/RESEARCH.md、RESULTS.md、STATUS.json。R12の境界UVを固定し、内部UVシーム辺数・3D長をPareto改善。2チャートは最小カット、多ラベルは局所反復。新規8/8、分割5件で506→309辺・長さ148.053→91.019、連続3件はシーム0、独立Blender4.4.3+CGAL接合24件交差0。実テクスチャ・法線・実モデル未検証、R14自動開始なし。
+
+R14: r14/RESEARCH.md、RESULTS.md、STATUS.json。既存R11–R13人工出力の遡及監査。9分析対照、48 UV・76法線。全48 UVで正面積重なり、R13で同一島内重なり1814→4765。修復なし、製品未承認、R15自動開始なし。
