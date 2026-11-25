@@ -43,3 +43,5 @@ R15: r15/RESULTS.md、STATUS.json。既知48出力の周期U診断。7分析対�
 R16: r16/RESEARCH.md、RESULTS.md、STATUS.json。独立定義した長方形境界を固定、切断シーム1本・調和展開。新規8/8、重なり3710→0、シーム666→32、境界誤差0、CGAL0。異常入力4件拒否。比較は素朴な角度UV、R13ではない。歪みp95は5/8悪化。Blender統合未検証、R17自動開始なし。
 
 R17: r17/RESEARCH.md、RESULTS.md、STATUS.json。R16境界・シーム固定、自由UVの異方性を低減。新規8/8、全件p95 15%以上改善、UV重なり0、CGAL0。密度1件悪化。Blender組込未検証、R18自動開始なし。
+
+R18: r18/RESEARCH.md、RESULTS.md、STATUS.json。Blender4.4.3実機で既知12形状×2方式=24/24。全体UV重なり0、境界差0、シームフラグ一致、元面保持、CGAL0。レンダリング・実モデル未検証。R19自動開始なし。

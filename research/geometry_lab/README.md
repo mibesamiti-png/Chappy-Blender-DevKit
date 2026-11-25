@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R17
+# CBDK Geometry Research Lab — R18
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -189,3 +189,7 @@ R8を一度生成して最小三角形品質が0.1以上なら即採用、未満
 ## R17 — 境界・シーム固定のUV異方性低減
 
 [事前条件](cycles/r17/RESEARCH.md) / [実測結果](cycles/r17/RESULTS.md) / [状態](cycles/r17/STATUS.json)。R16を初期値として自由UVのみ補正。既知4/4、新規8/8。新規全8件p95改善5%以上、平均24.4%減。全12件境界・シーム固定、UV重なり0、CGAL交差0。密度指標は新規1件悪化。Blender実機・実モデル未検証。approved=false、R18自動開始なし。
+
+## R18 — Blender編集モードでの接合全体UV監査
+
+[事前条件](cycles/r18/RESEARCH.md) / [実測](cycles/r18/RESULTS.md) / [状態](cycles/r18/STATUS.json)。既知12形状×R16/R17の24出力すべて合格。元面保持、シーム設定一致、全体UV重なり・CGAL交差0。新規holdoutではない。実チェッカー画像・任意UV・法線補正未検証。旧R12ダウンロード403は別問題。approved=false、R19自動開始なし。
