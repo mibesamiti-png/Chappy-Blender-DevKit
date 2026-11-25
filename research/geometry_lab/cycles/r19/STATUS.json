@@ -1,0 +1,333 @@
+{
+  "cycle": "R19",
+  "status": "not_preferred_frozen_improvement_gate_failed",
+  "approved": false,
+  "synthetic_only": true,
+  "retrospective": true,
+  "detached_only": true,
+  "implementation_head": "18b91671e0c1e9eef08a709c4e8bfb8c411f8917",
+  "run": 45520668308,
+  "job": 138891772333,
+  "gate": false,
+  "known_cases": 12,
+  "safe_outputs": 12,
+  "improved_at_least_5pct": 1,
+  "required_improved": 6,
+  "baseline_fallbacks": 11,
+  "attempted": 180,
+  "screened_candidates": 5,
+  "rejected": {
+    "normal": 42,
+    "uv": 133,
+    "geometry": 0,
+    "oracle": 0
+  },
+  "mean_p95_relative_gain": 0.018079615656013254,
+  "source_sha256": {
+    "cycles/r19/refine.py": "c6dbde47bc6c62f8f53b51cef5459dd5475f60b300e9b1e9f32dfc2019daf510",
+    "cycles/r19/run.py": "a05479c9dcdc44b22170da0068da3b4fc2ca2d560cb7ae7c2fd53ff7bd35c49c"
+  },
+  "rows": [
+    {
+      "case": "r16_circle",
+      "passed": true,
+      "method": "smooth1.0_step1.0",
+      "before": {
+        "edges": 45,
+        "mean_deg": 9.620945410198201,
+        "p95_deg": 19.450987832618686,
+        "max_deg": 19.587506656231614
+      },
+      "after": {
+        "edges": 45,
+        "mean_deg": 7.495054439771037,
+        "p95_deg": 15.230991222896252,
+        "max_deg": 15.808904640081128
+      },
+      "rejected": {
+        "normal": 4,
+        "uv": 6,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0.21695538787215907,
+      "max_displacement": 0.021086671500636735
+    },
+    {
+      "case": "r16_ellipse",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 46,
+        "mean_deg": 14.118450387286732,
+        "p95_deg": 36.081074492622925,
+        "max_deg": 46.185537080344865
+      },
+      "after": {
+        "edges": 46,
+        "mean_deg": 14.118450387286732,
+        "p95_deg": 36.081074492622925,
+        "max_deg": 46.185537080344865
+      },
+      "rejected": {
+        "normal": 0,
+        "uv": 15,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r16_sparse",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 35,
+        "mean_deg": 14.393077706433047,
+        "p95_deg": 27.653872756971214,
+        "max_deg": 28.74074413449129
+      },
+      "after": {
+        "edges": 35,
+        "mean_deg": 14.393077706433047,
+        "p95_deg": 27.653872756971214,
+        "max_deg": 28.74074413449129
+      },
+      "rejected": {
+        "normal": 3,
+        "uv": 12,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r16_skew",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 51,
+        "mean_deg": 18.01605939245384,
+        "p95_deg": 35.63963226443734,
+        "max_deg": 45.535232401397785
+      },
+      "after": {
+        "edges": 51,
+        "mean_deg": 18.01605939245384,
+        "p95_deg": 35.63963226443734,
+        "max_deg": 45.535232401397785
+      },
+      "rejected": {
+        "normal": 4,
+        "uv": 11,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r17_round",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 50,
+        "mean_deg": 9.195770482878045,
+        "p95_deg": 18.227016186114298,
+        "max_deg": 18.775164164860076
+      },
+      "after": {
+        "edges": 50,
+        "mean_deg": 9.195770482878045,
+        "p95_deg": 18.227016186114298,
+        "max_deg": 18.775164164860076
+      },
+      "rejected": {
+        "normal": 3,
+        "uv": 12,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r17_oval",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 49,
+        "mean_deg": 15.60775725006981,
+        "p95_deg": 31.55997519897567,
+        "max_deg": 43.348297015398195
+      },
+      "after": {
+        "edges": 49,
+        "mean_deg": 15.60775725006981,
+        "p95_deg": 31.55997519897567,
+        "max_deg": 43.348297015398195
+      },
+      "rejected": {
+        "normal": 1,
+        "uv": 14,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r17_lobed",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 57,
+        "mean_deg": 11.029624621305862,
+        "p95_deg": 16.629024367669782,
+        "max_deg": 16.864639797998144
+      },
+      "after": {
+        "edges": 57,
+        "mean_deg": 11.029624621305862,
+        "p95_deg": 16.629024367669782,
+        "max_deg": 16.864639797998144
+      },
+      "rejected": {
+        "normal": 5,
+        "uv": 10,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r17_offset",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 46,
+        "mean_deg": 21.502705939809015,
+        "p95_deg": 39.58156266254448,
+        "max_deg": 40.543036795454896
+      },
+      "after": {
+        "edges": 46,
+        "mean_deg": 21.502705939809015,
+        "p95_deg": 39.58156266254448,
+        "max_deg": 40.543036795454896
+      },
+      "rejected": {
+        "normal": 7,
+        "uv": 8,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r17_taper",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 45,
+        "mean_deg": 24.800656094805525,
+        "p95_deg": 47.556880919706664,
+        "max_deg": 54.1107766277694
+      },
+      "after": {
+        "edges": 45,
+        "mean_deg": 24.800656094805525,
+        "p95_deg": 47.556880919706664,
+        "max_deg": 54.1107766277694
+      },
+      "rejected": {
+        "normal": 3,
+        "uv": 12,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r17_sparse",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 38,
+        "mean_deg": 12.861264449858442,
+        "p95_deg": 25.642635128733296,
+        "max_deg": 26.01885667929532
+      },
+      "after": {
+        "edges": 38,
+        "mean_deg": 12.861264449858442,
+        "p95_deg": 25.642635128733296,
+        "max_deg": 26.01885667929532
+      },
+      "rejected": {
+        "normal": 3,
+        "uv": 12,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r17_wave",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 62,
+        "mean_deg": 12.499680947045546,
+        "p95_deg": 20.0021101431776,
+        "max_deg": 21.770618202445625
+      },
+      "after": {
+        "edges": 62,
+        "mean_deg": 12.499680947045546,
+        "p95_deg": 20.0021101431776,
+        "max_deg": 21.770618202445625
+      },
+      "rejected": {
+        "normal": 6,
+        "uv": 9,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    },
+    {
+      "case": "r17_skew",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 54,
+        "mean_deg": 16.956040661595665,
+        "p95_deg": 35.13248856189808,
+        "max_deg": 52.15779453282301
+      },
+      "after": {
+        "edges": 54,
+        "mean_deg": 16.956040661595665,
+        "p95_deg": 35.13248856189808,
+        "max_deg": 52.15779453282301
+      },
+      "rejected": {
+        "normal": 3,
+        "uv": 12,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "p95_gain": 0,
+      "max_displacement": 0
+    }
+  ],
+  "next": "R20 not started; joint geometry plus constrained UV reoptimization feasibility"
+}
