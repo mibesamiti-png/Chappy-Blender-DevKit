@@ -1242,3 +1242,152 @@ jobs:
           path: ti41-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase41 verified run 45625925100: 4/4, 64 welded edges, exact outside audit.
+      # Phase42 scope: one continuous UV layer, normalized source vertex groups.
+      # Attribute interpolation/storage audit is not a rig deformation or UV distortion test.
+      - name: Phase42 transfer continuous UV and normalized weights
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti42.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti41.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          def weights(v):
+              return tuple(sorted((int(g.group),float(g.weight)) for g in v.groups))
+          def attributes(source,data,V,boundary_map):
+              m=source.data
+              req(len(m.uv_layers)==1,'exactly one UV layer supported')
+              req(m.shape_keys is None,'shape keys unsupported')
+              req(len(source.vertex_groups)>0,'no weight groups')
+              uv=m.uv_layers.active
+              selected=[p for p in m.polygons if p.select]
+              by_vertex={}
+              for p in selected:
+                  for li in p.loop_indices:
+                      vi=m.loops[li].vertex_index
+                      value=tuple(uv.data[li].uv)
+                      req(np.isfinite(value).all(),'nonfinite UV')
+                      if vi in by_vertex:req(by_vertex[vi]==value,'selected UV discontinuity')
+                      by_vertex[vi]=value
+              ids=sorted(by_vertex)
+              req(len(ids)==len(data['V']),'source vertex mapping')
+              U=np.array([by_vertex[i] for i in ids],float)
+              W=np.zeros((len(ids),len(source.vertex_groups)),float)
+              for j,i in enumerate(ids):
+                  for group,w in weights(m.vertices[i]):W[j,group]=w
+              req(np.isfinite(W).all() and np.min(W)>=0 and np.max(W)<=1 and np.max(np.abs(W.sum(axis=1)-1))<1e-6,'unsupported unnormalized weights')
+              points=np.asarray(data['V'],float)[:,:2];tris=np.asarray(data['F'],int)
+              Q=points[tris];A=Q[:,0];M=np.stack((Q[:,1]-A,Q[:,2]-A),axis=2)
+              inv=np.linalg.inv(M)
+              outuv=[];outw=[]
+              index={i:j for j,i in enumerate(ids)}
+              for i,p in enumerate(V):
+                  if i in boundary_map:
+                      j=index[boundary_map[i]];u=U[j];w=W[j]
+                  else:
+                      b=np.einsum('nij,nj->ni',inv,np.asarray(p[:2])-A)
+                      b=np.column_stack((1-b.sum(axis=1),b))
+                      candidates=np.where(b.min(axis=1)>=-1e-6)[0]
+                      req(len(candidates)>0,'attribute projection miss')
+                      j=int(candidates[0]);k=np.maximum(b[j],0);k/=k.sum()
+                      u=k@U[tris[j]];w=k@W[tris[j]]
+                  outuv.append(u);outw.append(w)
+              return np.array(outuv),np.array(outw),uv.name
+          # Reuse Phase41 transactional replacement, adding attribute transfer before commit.
+          src=(root/'ti41.py').read_text().split('def replace_copy(',1)[1].split('\nbpy.ops.object.select_all(action=',1)[0]
+          def inject(a,b):
+              global src
+              req(a in src,'missing replacement marker: '+a)
+              src=src.replace(a,b,1)
+          inject("world=V@data['Q'].T*data['scale']+data['origin']",
+                 "uv_values,weight_values,uv_name=attributes(source,data,V,candidate_to_original)\n    world=V@data['Q'].T*data['scale']+data['origin']")
+          inject('source_verts=list(bm.verts);source_faces=list(bm.faces)',
+                 "source_verts=list(bm.verts);source_faces=list(bm.faces)\n        uv_layer=bm.loops.layers.uv.get(uv_name);req(uv_layer is not None,'missing UV layer')\n        deform=bm.verts.layers.deform.verify()")
+          inject('else:v=bm.verts.new(inverse@Vector(w.tolist()))',
+                 "else:\n                v=bm.verts.new(inverse@Vector(w.tolist()))\n                for j,value in enumerate(weight_values[i]):\n                    if value>0:v[deform][j]=float(value)")
+          inject('created.append(face)',
+                 "for loop in face.loops:\n                i=next(j for j in ordered if pv[j]==loop.vert)\n                loop[uv_layer].uv=uv_values[i].tolist()\n            created.append(face)")
+          inject('created_new=[f.index for f in created]',
+                 "created_new=[f.index for f in created]\n        new_to_candidate={v.index:i for i,v in pv.items()}")
+          inject("req(boundary_error==0.,'seam coordinate changed')",
+                 """req(boundary_error==0.,'seam coordinate changed')
+                  req(all(weights(new.data.vertices[j])==weights(orig.vertices[i]) for i,j in old_to_new.items()),'outside weight changed')
+                  stored_uv=new.data.uv_layers.get(uv_name)
+                  uv_error=0.;weight_error=0.;sum_error=0.;new_uv_loops=0
+                  for fi in created_new:
+                      for li in new.data.polygons[fi].loop_indices:
+                          i=new_to_candidate[new.data.loops[li].vertex_index]
+                          uv_error=max(uv_error,float(np.max(np.abs(np.array(stored_uv.data[li].uv)-uv_values[i]))))
+                          new_uv_loops+=1
+                  for j,i in new_to_candidate.items():
+                      actual_weights=np.zeros(len(source.vertex_groups))
+                      for k,value in weights(new.data.vertices[j]):actual_weights[k]=value
+                      weight_error=max(weight_error,float(np.max(np.abs(actual_weights-weight_values[i]))))
+                      sum_error=max(sum_error,abs(float(actual_weights.sum())-1.))
+                  req(uv_error<1e-6 and weight_error<1e-6 and sum_error<1e-6,'attribute storage mismatch')""")
+          inject('interior_uv_transferred=False)',
+                 'interior_uv_transferred=True,uv_storage_error=uv_error,weight_storage_error=weight_error,weight_sum_error=sum_error,new_uv_loops=new_uv_loops,outside_weights_exact=True)')
+          exec('def replace_attributes('+src,globals())
+          def all_snapshot(o):
+              return full_snapshot(o),[weights(v) for v in o.data.vertices],[(g.name,g.index) for g in o.vertex_groups]
+          def init_attributes(o):
+              uv=o.data.uv_layers.new(name='TestUV')
+              g0=o.vertex_groups.new(name='Group_A');g1=o.vertex_groups.new(name='Group_B')
+              # Continuous, nonconstant source attributes, with arbitrary outside UV islands.
+              world=np.array([tuple(v.co) for v in o.data.vertices])
+              lo=world.min(axis=0);extent=np.maximum(world.max(axis=0)-lo,1e-8)
+              a=(world-lo)/extent
+              for v,p in zip(o.data.vertices,a):
+                  w=float(.15+.7*(.6*p[0]+.4*p[2]))
+                  g0.add([v.index],w,'REPLACE');g1.add([v.index],1-w,'REPLACE')
+              for face in o.data.polygons:
+                  for li in face.loop_indices:
+                      v=o.data.loops[li].vertex_index
+                      p=a[v]
+                      uv.data[li].uv=(.1+.7*p[0]+.15*p[2],.1+.65*p[1]+.1*p[2]) if face.select else (li*.017%1,li*.031%1)
+              for e in o.data.edges:
+                  e.use_seam=bool(e.index%3==0);e.use_edge_sharp=bool(e.index%5==0)
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];controls=[]
+          for spec in specs:
+              o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None;row=dict(case=spec[0])
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  if spec[0]=='round':
+                      uv=o.data.uv_layers.active
+                      p=next(p for p in o.data.polygons if p.select)
+                      li=p.loop_indices[0];saved=tuple(uv.data[li].uv)
+                      uv.data[li].uv=(saved[0]+.123,saved[1])
+                      count=len(bpy.data.objects)
+                      try:
+                          bad,_=replace_attributes(o,data,*m);remove(bad);controls.append(dict(case='UV discontinuity',rejected=False))
+                      except ValueError as e:controls.append(dict(case='UV discontinuity',rejected=str(e)=='selected UV discontinuity',reason=str(e),no_output=len(bpy.data.objects)==count))
+                      finally:uv.data[li].uv=saved
+                  new,stats=replace_attributes(o,data,*m);new.show_wire=True;new.show_all_edges=True
+                  row.update(status='accepted',**stats)
+              except Exception as e:row.update(status='rejected',reason=str(e))
+              finally:
+                  if g is not None:remove(g)
+              row['source_unchanged']=all_snapshot(o)==before
+              rows.append(row)
+          d=Path('ti42-results');d.mkdir(exist_ok=True)
+          gate=len(rows)==4 and all(r['status']=='accepted' and r['source_unchanged'] for r in rows) and len(controls)==1 and all(c['rejected'] and c.get('no_output',False) for c in controls)
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'attributes.blend').resolve()))
+          print('TI42_SUMMARY',json.dumps(out),flush=True)
+          assert gate,'attribute transfer gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti42.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti42-attribute-transfer-${{ github.sha }}
+          path: ti42-results/
+          if-no-files-found: warn
+          retention-days: 14
