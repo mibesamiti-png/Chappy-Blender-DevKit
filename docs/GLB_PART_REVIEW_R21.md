@@ -35,7 +35,7 @@ their defaults; A owns the shared CLI hook. No viewer or GL research change.
   query budgets, forged aggregate/ID/flags. Reuse old 256/257 native guard tests.
   Native smoke adds genuine 64-part/2048-face GLB parent roundtrip,
   reversed anonymous IDs, retessellation, warmup+3 timing, SHA invariant,
-  cap and global budget skip. Actual results pending CI.
+  cap and global budget skip. Actual results are recorded in the acceptance evidence below.
 - No claim of arbitrary part identity, hidden cavities, native memory,
   general 2048/64 performance or speedup. Private data not used.
   Stop after exact-head 5CI and native measurements, or report blockers.
@@ -45,4 +45,10 @@ their defaults; A owns the shared CLI hook. No viewer or GL research change.
 
 B exact HEAD `96b3bf3c6037f8b567ea498a7fc8e9a2e95ae38b` independent review of specialist 5CI: Python45572009684, Windows45572009717, Blender45572009882, Chromium45572009721, Handoff45572009823. Actual native jobs139060683474/139060683053/139060683389: 2048/64 reverse-order candidates all64 suggested, complementary closed shapes old false suggestion 1->0, tie ambiguous, separate 65-part skip, 2049 and dense global skip, SHA unchanged. Parent warmup+3 median 5.581/9.171/6.205s. Global counts 131232/2230944/1049856, local 98304/491520/786432, 64 attempted of 128 max, 128 local BVHs, 98304 boundary reservation of 2M. Synthetic scoped evidence; no arbitrary identity, native memory, threshold calibration or native local exhaustion claim. The near-small/far-large contrast is not separately established, and motion/split/merge controls are Python only.
 
-A exposes `python -m cbdk glb-surface-review ref.glb cand.glb --blender <trusted-executable> --profile expanded_2048_parts --output review.json`. Existing default and R20 profiles remain unchanged. Schema3 stdout separates global status and part_status/part_reason, counts unmeasured candidate observations; exit2 if the requested part review is skipped even when global measurements exist. Exit0 for a review-only report (including ambiguous/unmeasured candidates); never automatic identity approval. Native CLI checks real 64-part, closed-shape and 65-part fixtures, source SHA. Candidate CI pending; no merge/release, no GL adoption or viewer expansion.
+A exposes `python -m cbdk glb-surface-review ref.glb cand.glb --blender <trusted-executable> --profile expanded_2048_parts --output review.json`. Existing default and R20 profiles remain unchanged. Schema3 stdout separates global status and part_status/part_reason, counts unmeasured candidate observations; exit2 if the requested part review is skipped even when global measurements exist. Exit0 for a review-only report (including ambiguous/unmeasured candidates); never automatic identity approval. Native CLI checks real 64-part, closed-shape and 65-part fixtures, source SHA. Candidate CI passed; merged to dev only, no release, GL adoption or viewer expansion.
+
+## Scoped acceptance — 2026-11-25 JST
+
+#155 B 96b3bf3 5CI、#156 A 946de66 5CI、dev b45549ca8e502d6e9ba22365f4dfd28e791a4d41 独立7CI（Python45577551917、Windows45577551636、Blender45577551663、Chromium45577551853、Handoff45577551821、Kit45577551711、Skill45577551854）。実3版2048面/64部品、64候補、旧誤suggestion 1→0、競合曖昧、65部品skip/exit2、SHA不変。親中央値5.615/5.812/7.349秒。全体+局所上限263744 samples/16M node/8M eval、130 BVH、精密128 pairs、境界予約2M。未測定/曖昧を保持、近小/遠大対照未独立実証、移動/split/merge Pythonのみ、native局所予算枯渇・任意identity・実データ・viewer拡張・GL採用未確認。F019-03残、R22自動発行なし。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
+
+Native jobs 139079123453 / 139079123607 / 139079123003. Actual CBDK_R21_PART_REVIEW_PASS and CBDK_R21_CLI_PART_PROFILE_PASS on all three versions; R20 CLI regressions also passed. No claim of general speed, identity or native local-budget exhaustion. Not a release.

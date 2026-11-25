@@ -396,3 +396,9 @@ A統合[#130](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/130)�
 ## 2026-11-25 JST — R21 / F019-02 B限定割当候補
 
 #153節目同期dev `26eeeb02ac3ee75d6f1dbbbbcb5892e00f3e32e4` 独立7CI成功（Python45568640215、Windows45568640035、Blender45568640113、Chromium45568640092、Handoff45568640031、Kit45568640146、Skill45568640071）。実3版69 lifecycle/R19/R20 CLI/SHAを確認。F019-02は既存空間候補・境界guardとR20有限表面距離を再利用し、匿名部品候補の局所形状証拠と競合/未測定を明示。目標2048面/64部品、精密候補を有限総予算に限定、旧schema/viewer保持。 [R21割当候補](R21_ABCD_START.md)。Bのみ1PR、C/D待機、GL/DIL独立。割当統合・独立7CI・#125更新まで専門実装禁止。R22自動発行なし。
+
+## 2026-11-25 JST — R21 / F019-02限定受入
+
+#155 B 96b3bf3 5CI、#156 A 946de66 5CI、dev b45549ca8e502d6e9ba22365f4dfd28e791a4d41 独立7CI（Python45577551917、Windows45577551636、Blender45577551663、Chromium45577551853、Handoff45577551821、Kit45577551711、Skill45577551854）。実3版2048面/64部品、64候補、旧誤suggestion 1→0、競合曖昧、65部品skip/exit2、SHA不変。親中央値5.615/5.812/7.349秒。全体+局所上限263744 samples/16M node/8M eval、130 BVH、精密128 pairs、境界予約2M。未測定/曖昧を保持、近小/遠大対照未独立実証、移動/split/merge Pythonのみ、native局所予算枯渇・任意identity・実データ・viewer拡張・GL採用未確認。F019-03残、R22自動発行なし。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
+
+実Blender jobs139079123453/139079123607/139079123003。全体 counts 131232/2230944/1049856、局所98304/491520/786432（samples/node/eval）、64精密pair、128局所BVH、境界予約98304。既定512・R20 schema2互換。専門チーム待機、B #155を二重統合しない。詳細 [R21検証](GLB_PART_REVIEW_R21.md)。節目同期PRの検証後に次の正式割当を判断。Notion最終同期未確認。

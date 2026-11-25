@@ -120,8 +120,10 @@
         "scope": "Explicit standalone surface review 2048 triangles per scene; legacy 512 default; finite budgets; authored synthetic GLB only. Larger/general mesh, partitioning needs, native memory and actual user models remain unverified."
       },
       "F019-02": {
-        "status": "not_started_in_v019",
-        "scope": "Existing matcher baseline retained; practical expanded part correspondence pending."
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "b45549ca8e502d6e9ba22365f4dfd28e791a4d41",
+        "blender_run": 45577551663,
+        "scope": "Explicit expanded_2048_parts schema3, synthetic 2048 triangles / 64 parts per scene; spatial candidate guards, bounded local surface evidence demotes only, ambiguous/unmeasured retained; 64 reverse-order suggestions, one false suggestion demoted, 65 cap exit2, SHA unchanged, 3 Blender versions. Legacy schemas/viewer unchanged. General identity, native memory/local exhaustion, near-small/far-large separate contrast, arbitrary user models and larger viewer remain unverified; motion/split/merge Python controls only."
       },
       "F019-03": {
         "status": "not_started_in_v019",
