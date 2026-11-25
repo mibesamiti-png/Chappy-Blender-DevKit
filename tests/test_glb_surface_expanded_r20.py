@@ -1,4 +1,5 @@
 """R20 expanded-profile core checks; native GLB integration is separate."""
+import copy
 import unittest
 from unittest.mock import patch
 
@@ -10,6 +11,7 @@ from cbdk.glb_multires_surface import (
     compare_multires_triangle_surfaces,
 )
 from cbdk import glb_multires_surface
+from cbdk.glb_surface_pipeline import _validate_expanded_report
 
 
 def grid(n, z=0.0):
@@ -37,6 +39,24 @@ class ExpandedSurfaceTests(unittest.TestCase):
         self.assertEqual(new["work_budget"]["used"]["triangle_evaluations"],
                          sum(x[k]["triangle_distance_evaluations"]
                              for x in reports for k in directions))
+
+    def test_expanded_parent_rejects_forged_counters_and_schema(self):
+        evidence = compare_expanded_triangle_surfaces(grid(5), grid(5, 0.25))
+        _validate_expanded_report(evidence)
+        for key, replacement in (
+            ("samples", -1), ("node_visits", True),
+            ("triangle_evaluations", evidence["work_budget"]["used"]["triangle_evaluations"] + 1),
+        ):
+            forged = copy.deepcopy(evidence)
+            forged["work_budget"]["used"][key] = replacement
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                _validate_expanded_report(forged)
+        for key, value in (("schema_version", 1), ("symmetric_mean", float("inf")),
+                           ("exact_surface_equivalence_verified", True)):
+            forged = copy.deepcopy(evidence)
+            forged["fixed_surface"][key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                _validate_expanded_report(forged)
 
     def test_strict_limits(self):
         with self.assertRaises(SurfaceDistanceError):
