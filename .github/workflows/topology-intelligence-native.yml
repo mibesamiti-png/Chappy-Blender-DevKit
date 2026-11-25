@@ -1953,3 +1953,118 @@ jobs:
           path: ti47-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase47 run 45632392439: all 232 comparisons executed; preserve volume
+      # eliminated 3 result-only contacts but worst displacement P95 rose to .890918.
+      # Phase48: local rest-triangle stretch/area and step discontinuity diagnostics.
+      - name: Phase48 measure strain and twist path discontinuities
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti48.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti47.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          ref47=json.loads(Path('ti47-results/results.json').read_text())
+          req(ref47['complete'],'Phase47 incomplete')
+          lookup={(r['case'],r['pose'],r['preserve_volume']):r for r in ref47['rows']}
+          # Rest-triangle tangent metric: singular values of deformation gradient.
+          # Independent of rigid rotation; does not predict all collisions.
+          def metrics(X,Y,F):
+              A=X[F];B=Y[F]
+              e=A[:,1]-A[:,0];g=A[:,2]-A[:,0]
+              L=np.linalg.norm(e,axis=1);u=e/L[:,None]
+              p=np.sum(u*g,axis=1);q=np.linalg.norm(g-u*p[:,None],axis=1)
+              req(np.min(L)>1e-10 and np.min(q)>1e-10,'degenerate rest triangle')
+              D=np.zeros((len(F),2,2));D[:,0,0]=L;D[:,0,1]=p;D[:,1,1]=q
+              M=np.stack((B[:,1]-B[:,0],B[:,2]-B[:,0]),axis=2)@np.linalg.inv(D)
+              s=np.linalg.svd(M,compute_uv=False)
+              return s[:,1],s[:,0],s[:,0]*s[:,1],L*q/2
+          def weighted_quantile(v,w,p):
+              i=np.argsort(v);a=np.cumsum(w[i])
+              return float(v[i[min(np.searchsorted(a,p*a[-1]),len(i)-1)]])
+          def stats(X,Y,F):
+              lo,hi,area,w=metrics(X,Y,F)
+              return dict(min_stretch=float(lo.min()),p05_stretch=weighted_quantile(lo,w,.05),p95_stretch=weighted_quantile(hi,w,.95),max_stretch=float(hi.max()),p05_area=weighted_quantile(area,w,.05),p95_area=weighted_quantile(area,w,.95),compressed_fraction=float(w[lo<.25].sum()/w.sum()),expanded_fraction=float(w[hi>2.].sum()/w.sum()))
+          A=np.array([[0.,0,0],[1,0,0],[0,1,0]]);F=np.array([[0,1,2]])
+          controls=[]
+          for label,M,want in [('identity',np.eye(3),(1,1)),('uniform',2*np.eye(3),(2,2)),('anisotropic',np.diag([.2,3.,1.]),(.2,3)),('collapse',np.diag([0.,1.,1.]),(0,1)),('shear',np.array([[1.,1.,0],[0,1,0],[0,0,1]]),((np.sqrt(5)-1)/2,(np.sqrt(5)+1)/2))]:
+              for angle0 in (0,37,113):
+                  R=rotation((1,2,3),angle0)
+                  lo,hi,_,_=metrics(A,(A@M.T)@R.T+np.array([2.,3.,4.]),F)
+                  controls.append(dict(case=label,rotation=angle0,ok=bool(np.allclose([lo[0],hi[0]],want,atol=1e-10))))
+          def rest_faces(o,ids):
+              o.data.calc_loop_triangles()
+              return np.array([tuple(t.vertices) for t in o.data.loop_triangles if t.polygon_index in ids],int)
+          # Pose path is chronological; record maximum consecutive-frame displacement
+          # divided by rest boundary radius, NOT a velocity or a collision proof.
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g);req(m is not None,'no candidate')
+                  new,_=replace_attributes(o,data,*m)
+                  outside={signature(o,p) for p in o.data.polygons if not p.select}
+                  sf={p.index for p in o.data.polygons if p.select}
+                  tf={p.index for p in new.data.polygons if signature(new,p) not in outside}
+                  sf0=rest_faces(o,sf);tf0=rest_faces(new,tf)
+                  s0=coords(o);t0=coords(new);sm=sampling(o,sf,data,S);tm=sampling(new,tf,data,S)
+                  sr=interpolate(s0,sm);tr=interpolate(t0,tm)
+                  rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                  mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                  for enabled in (False,True):
+                      for mod in mods:mod.use_deform_preserve_volume=enabled
+                      prev=None
+                      # finer sampling around the 90-degree relative-rotation singularity
+                      angles=sorted(set(range(0,121,5))|set(range(80,101)))
+                      for a in angles:
+                          pose=('rest',(0,0,0),(0,0,0),False) if a==0 else ('twist'+str(a),(0,a,0),(0,-a,0),False)
+                          set_pose(rig,data,pose);sv=evaluated(o);tv=evaluated(new)
+                          ss=stats(s0,sv,sf0);ts=stats(t0,tv,tf0)
+                          ds=interpolate(sv,sm)-sr;dt=interpolate(tv,tm)-tr
+                          err=np.linalg.norm(ds-dt,axis=1)/data['scale'];p95=float(np.quantile(err,.95))
+                          anchor=lookup.get((name,pose[0],enabled))
+                          match=abs(p95-anchor['p95_displacement'])<1e-6 if anchor else None
+                          step=None
+                          if prev is not None:
+                              pa,ps,pt=prev
+                              step=dict(degrees=a-pa,source=float(np.quantile(np.linalg.norm(ds-ps,axis=1)/data['scale'],.95)),result=float(np.quantile(np.linalg.norm(dt-pt,axis=1)/data['scale'],.95)))
+                          prev=(a,ds,dt)
+                          # Exploratory predeclared strain screen; not tuned against known risks.
+                          flagged=ts['p05_stretch']<.25 or ts['p95_stretch']>2. or (step is not None and step['result']/step['degrees']>.10)
+                          rows.append(dict(case=name,preserve_volume=enabled,angle=a,source=ss,result=ts,p95_displacement=p95,step=step,flagged=flagged,anchor_same=match,prior_classification=anchor['classification'] if anchor else None,source_unchanged=all_snapshot(o)==before))
+                  for mod in mods:mod.use_deform_preserve_volume=False
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=name,reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti48-results');d.mkdir(exist_ok=True)
+          anchors=[r for r in rows if r['anchor_same'] is not None]
+          complete=len(rows)==328 and len(anchors)==200 and not failures and all(r['anchor_same'] for r in anchors) and all(c['ok'] for c in controls) and all(r['source_unchanged'] for r in rows)
+          # Report detection and false alarms at known sampled contacts only. No claim
+          # about untested intermediate collision states or future predictive validity.
+          summaries=[]
+          for enabled in (False,True):
+              a=[r for r in rows if r['preserve_volume']==enabled]
+              known=[r for r in a if r['prior_classification'] is not None]
+              cm=Counter(('flag' if r['flagged'] else 'clear')+' / '+r['prior_classification'] for r in known)
+              worst=max(a,key=lambda r:r['p95_displacement'],default=None)
+              jumps=[r for r in a if r['step'] is not None]
+              jump=max(jumps,key=lambda r:r['step']['result']/r['step']['degrees'],default=None)
+              summaries.append(dict(preserve_volume=enabled,counts=dict(cm),worst=worst,max_step=jump))
+          out=dict(approved=False,blender=bpy.app.version_string,complete=complete,anchors=len(anchors),controls=controls,rows=rows,summaries=summaries,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          print('TI48_SUMMARY',json.dumps({k:v for k,v in out.items() if k!='rows'}),flush=True)
+          assert complete,'strain diagnostic integrity failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti48.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti48-strain-diagnostics-${{ github.sha }}
+          path: ti48-results/
+          if-no-files-found: warn
+          retention-days: 14
