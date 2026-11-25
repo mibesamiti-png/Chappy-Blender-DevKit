@@ -833,3 +833,228 @@ jobs:
           path: ti39-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase39 verified run 45578298715: 20/20 equivariant, 3/3 negative controls.
+      # Phase40 selected mesh only; synthetic fixture math is not part of route input.
+      - name: Phase40 selected mesh extraction and non-destructive patch generation
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti40.py" <<'PY'
+          from pathlib import Path
+          import os
+          from mathutils import Vector
+          from mathutils.bvhtree import BVHTree
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti39.py').read_text().split('\npatchsrc=',1)[0])
+          # Adapt the frozen operators and evaluator to geometry extracted from selected faces.
+          # No analytic surface formula or fixture parameters are used by the extraction/route.
+          def adapt(file,name,end,newname,replacements):
+              source=(root/file).read_text().split('def '+name+'(',1)[1].split(end,1)[0]
+              for a,b in replacements:
+                  req(a in source,'missing helper marker '+a)
+                  source=source.replace(a,b)
+              exec('def '+newname+'('+source,globals())
+          adapt('ti32.py','fill','\nassert bpy.app.background','fill_source',[('target(B,c)','BOUNDARY')])
+          adapt('ti35.py','collar','\nrows=[];raw=[];selected=[]','collar_source',[
+              ('outer=target(B,c)','outer=BOUNDARY'),
+              ('inner=target(width*((1-blend)*np.sqrt(2)*B+blend*SQUARE),c)','inner=inner_seed(width,blend)')])
+          adapt('ti33.py','patch','\nrows=[];','patch_source',[
+              ('q=result[interior,:2]/np.array(c[:2]);residual=float(np.max(np.abs(result[interior,2]-target(q,c)[:,2])))','residual=float(np.max(np.abs(result[interior,2]-sample_guide(result[interior,:2]))))')])
+          adapt('ti32.py','assess','\ndef fill(','assess_source',[
+              ('target(B,c)','BOUNDARY'),('P=V[:,:2]/np.array(c[:2])','P=V[:,:2]'),
+              ('8*np.sin(np.pi/8)','DOMAIN_AREA'),('target(S,c)[:,2]','GUIDE_Z')])
+          def snapshot(o):
+              return ([tuple(v.co) for v in o.data.vertices],[list(f.vertices) for f in o.data.polygons],[bool(f.select) for f in o.data.polygons],tuple(tuple(r) for r in o.matrix_world))
+          def extract(o):
+              m=o.data
+              selected=[p for p in m.polygons if p.select]
+              req(bool(selected),'empty selection')
+              fs=[list(p.vertices) for p in selected]
+              E=Counter(tuple(sorted((a,b))) for f in fs for a,b in zip(f,f[1:]+f[:1]))
+              req(max(E.values())<=2,'nonmanifold selected edge')
+              D=Counter((a,b) for f in fs for a,b in zip(f,f[1:]+f[:1]))
+              req(all(D[a,b]==1 and D[b,a]==1 for (a,b),n in E.items() if n==2),'inconsistent source winding')
+              used=sorted({i for f in fs for i in f})
+              req(len(used)-len(E)+len(fs)==1,'not a disk')
+              edgefaces=defaultdict(list)
+              for fi,f in enumerate(fs):
+                  for a,b in zip(f,f[1:]+f[:1]):edgefaces[tuple(sorted((a,b)))].append(fi)
+              adj=defaultdict(set)
+              for ids in edgefaces.values():
+                  if len(ids)==2:adj[ids[0]].add(ids[1]);adj[ids[1]].add(ids[0])
+              seen={0};todo=[0]
+              while todo:
+                  for j in adj[todo.pop()]:
+                      if j not in seen:seen.add(j);todo.append(j)
+              req(len(seen)==len(fs),'disconnected selection')
+              directed=[(a,b) for a,b in D if E[tuple(sorted((a,b)))]==1]
+              req(len(directed)==16,'unsupported boundary count')
+              nxt=dict(directed);req(len(nxt)==16 and len(set(nxt.values()))==16,'branched boundary')
+              order=[min(nxt)]
+              for _ in range(15):
+                  req(nxt[order[-1]] not in order,'multiple loops')
+                  order.append(nxt[order[-1]])
+              req(nxt[order[-1]]==order[0],'open loop')
+              world=np.asarray([tuple(o.matrix_world@v.co) for v in m.vertices],float)
+              bw=world[order];origin,Q=frame(bw)
+              scale=float(np.max(np.linalg.norm(bw-origin,axis=1)))
+              local=(world-origin)@Q/scale
+              remap={v:i for i,v in enumerate(used)}
+              ids={p.index for p in selected}
+              m.calc_loop_triangles()
+              tris=[tuple(remap[v] for v in t.vertices) for t in m.loop_triangles if t.polygon_index in ids]
+              return dict(boundary_ids=order,boundary_world=bw,boundary_local=local[order],V=local[used],F=tris,origin=origin,Q=Q,scale=scale,selected_faces=len(fs),source_vertices=len(used))
+          def inner_seed(width,blend):
+              b=BOUNDARY
+              square=np.array([(1-(i%4)/4)*b[(i//4)*4]+((i%4)/4)*b[((i//4+1)*4)%16] for i in range(16)])
+              # Seed only from actual boundary, no target interior oracle.
+              center=b.mean(axis=0)
+              return center+width*((1-blend)*np.sqrt(2)*(b-center)+blend*(square-center))
+          def sample_guide(P):
+              out=[]
+              for x,y in P:
+                  loc,_,_,_=TREE.ray_cast(Vector((float(x),float(y),3.)),Vector((0.,0.,-1.)),6.)
+                  req(loc is not None,'guide ray miss')
+                  out.append(loc.z)
+              return np.array(out)
+          def prepare(data):
+              global BOUNDARY,DOMAIN_AREA,S,GUIDE_Z,TREE
+              # Float32 boundary is the exact native input for both candidate generators.
+              BOUNDARY=data['boundary_local'].astype(np.float32).astype(float)
+              P=BOUNDARY[:,:2]
+              DOMAIN_AREA=float(np.sum(P[:,0]*np.roll(P[:,1],-1)-P[:,1]*np.roll(P[:,0],-1))/2)
+              req(DOMAIN_AREA>1e-8,'bad projected boundary area')
+              g=make_obj('TI40_extracted_guide',data['V'].tolist(),data['F'])
+              try:
+                  V=np.array([tuple(v.co) for v in g.data.vertices]);F=np.array([list(f.vertices) for f in g.data.polygons])
+                  q=V[F,:2];cross=(q[:,1,0]-q[:,0,0])*(q[:,2,1]-q[:,0,1])-(q[:,1,1]-q[:,0,1])*(q[:,2,0]-q[:,0,0])
+                  req(np.min(cross)>1e-9 and abs(cross.sum()/2-DOMAIN_AREA)<1e-5,'source not a supported height field')
+                  TREE=BVHTree.FromPolygons(V.tolist(),F.tolist(),all_triangles=True)
+                  xx,yy=np.meshgrid(np.linspace(P[:,0].min(),P[:,0].max(),121),np.linspace(P[:,1].min(),P[:,1].max(),121))
+                  pts=np.column_stack((xx.ravel(),yy.ravel()));x,y=pts.T
+                  inside=np.zeros(len(pts),bool);near=np.zeros(len(pts),bool)
+                  for a,b in zip(P,np.roll(P,-1,axis=0)):
+                      e=b-a;v=pts-a
+                      t=np.clip(v@e/np.dot(e,e),0.,1.)
+                      near|=np.linalg.norm(v-t[:,None]*e,axis=1)<1e-5
+                      if abs(e[1])>1e-15:
+                          inside^=((a[1]>y)!=(b[1]>y))&(x<a[0]+(y-a[1])*e[0]/e[1])
+                  S=pts[inside&~near];req(len(S)>500,'insufficient sample domain')
+                  GUIDE_Z=sample_guide(S)
+                  return g
+              except Exception:
+                  remove(g);raise
+          def source_bound():
+              q=[]
+              for i,b in enumerate(BOUNDARY):
+                  a,d=BOUNDARY[(i-1)%16],BOUNDARY[(i+1)%16]
+                  q.append(min(angle(a,b,d),angle(b,a,d),angle(a,d,b)))
+              return sorted(q,reverse=True)[3]
+          def materialize_candidate(data,V,F):
+              # Keep the original source boundary coordinates exactly in the output.
+              W=np.asarray(V)@data['Q'].T*data['scale']+data['origin']
+              E=Counter(tuple(sorted((a,b))) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              bids=sorted({i for e,n in E.items() if n==1 for i in e})
+              dist=np.linalg.norm(np.asarray(V)[bids,None,:]-BOUNDARY[None,:,:],axis=2)
+              match=dist.argmin(axis=1)
+              req(len(set(match))==16 and dist.min(axis=1).max()<1e-6,'output boundary mismatch')
+              W[bids]=data['boundary_world'][match]
+              # Orient output consistently in local projection; no topology edits.
+              faces=[]
+              for f in F:
+                  q=np.asarray(V)[f,:2]
+                  ar=np.sum(q[:,0]*np.roll(q[:,1],-1)-q[:,1]*np.roll(q[:,0],-1))
+                  faces.append(f if ar>0 else f[::-1])
+              o=make_obj('TI40_result',W.tolist(),faces)
+              actual=np.array([tuple(v.co) for v in o.data.vertices])
+              error=float(np.max(np.abs(actual[bids]-data['boundary_world'][match])))
+              req(error==0.,'stored output boundary changed')
+              o.show_wire=True;o.show_all_edges=True
+              return o,error
+          def route(data,g):
+              bound=source_bound();skip=bound<15.-1e-4
+              trials=[];best=None;mesh=None
+              def attempt(arm,offset,simple):
+                  nonlocal best,mesh
+                  row=dict(arm=arm,offset=offset,simple=simple)
+                  try:
+                      if arm=='direct':
+                          v,f,_=fill_source(None,4,offset,simple);smooth=6
+                      else:
+                          v,f=collar_source(None,.58,.5,0);smooth=3
+                      V,F,extra=patch_source(v,f,g,smooth,1,None)
+                      a=assess_source(V,F,None)
+                      req((a['vertices'],a['quads'])==((25,16) if arm=='direct' else (41,32)),'budget mismatch')
+                      # New source-mesh gate: P95 vertical error <= 0.06 boundary radius.
+                      # Separate from the analytic Coons-relative gate used in earlier phases.
+                      row.update(**a,**extra,status='valid',joint_pass=a['gate_angle15'] and a['p95_worst']<=.06)
+                      if row['joint_pass'] and (best is None or row['p95_worst']<best['p95_worst']):
+                          best=row;mesh=(V,F)
+                  except Exception as e:row.update(status='rejected',reason=str(e))
+                  trials.append(row)
+              if not skip:
+                  for offset in range(8):
+                      for simple in (False,True):attempt('direct',offset,simple)
+              if best is None:attempt('collar',0,False)
+              return dict(bound=bound,skip=skip,trials=trials,selected=best),mesh
+          # Synthetic source construction ONLY. The pipeline above consumes a Blender mesh selection.
+          def fixture(name,c,blend,axis,deg,translation):
+              set_domain(blend)
+              R=rotation(axis,deg);T=np.asarray(translation)
+              radii=(1.18,1.,.83,.66,.49,.32,.16)
+              V=np.vstack([target0(B*r,c) for r in radii]+[target0(np.zeros((1,2)),c)])
+              F=[]
+              for j in range(len(radii)-1):
+                  F.extend([[j*16+i,j*16+(i+1)%16,(j+1)*16+(i+1)%16,(j+1)*16+i] for i in range(16)])
+              F.extend([[(len(radii)-1)*16+i,(len(radii)-1)*16+(i+1)%16,len(V)-1] for i in range(16)])
+              o=make_obj('Source_'+name,(V@R.T+T).tolist(),F)
+              for p in o.data.polygons:p.select=p.index>=16
+              return o
+          specs=[('round',(.18,.18,.055,0.),0.,(0,1,0),90,(.4,0,0)),
+                 ('rounded',(.19,.16,.08,-.015),.72,(1,2,3),67,(-.4,.3,.1)),
+                 ('square',(.18,.18,.065,.01),1.,(1,1,0),173,(0.,-.5,.2)),
+                 ('curved',(.20,.16,.19,.045),0.,(1,0,1),43,(.2,.5,-.2))]
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];controls=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec);before=snapshot(o);g=None
+              row=dict(case=name)
+              try:
+                  data=extract(o)
+                  row.update(source_faces=data['selected_faces'],source_vertices=data['source_vertices'],boundary=len(data['boundary_ids']))
+                  g=prepare(data)
+                  result,m=route(data,g);row.update(result)
+                  if m is not None:
+                      new,error=materialize_candidate(data,*m);new.name='Result_'+name
+                      row.update(status='accepted',stored_boundary_error=error)
+                  else:row.update(status='rejected',reason='no candidate met gate')
+              except Exception as e:row.update(status='rejected',reason=str(e))
+              finally:
+                  if g is not None:remove(g)
+              row['source_unchanged']=snapshot(o)==before
+              rows.append(row)
+          # Isolated negative controls from the same source topology, without editing source examples.
+          for name,indices in [('empty',[]),('disconnected',[16,48]),('hole',[i for i in range(16,112) if i!=48]),('wrong_count',[16])]:
+              o=fixture('control',*specs[0][1:])
+              for p in o.data.polygons:p.select=p.index in indices
+              try:extract(o);controls.append(dict(case=name,rejected=False))
+              except ValueError as e:controls.append(dict(case=name,rejected=True,reason=str(e)))
+              finally:remove(o)
+          d=Path('ti40-results');d.mkdir(exist_ok=True)
+          gate=sum(r['status']=='accepted' for r in rows)>=3 and all(r['source_unchanged'] for r in rows) and all(r['rejected'] for r in controls) and any(r.get('selected') and r['selected']['arm']=='direct' for r in rows) and any(r.get('selected') and r['selected']['arm']=='collar' for r in rows)
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'source_and_results.blend').resolve()))
+          print('TI40_SUMMARY',json.dumps(dict(gate=gate,accepted=sum(r['status']=='accepted' for r in rows),cases=[{k:v for k,v in r.items() if k!='trials'} for r in rows],controls=controls)),flush=True)
+          assert gate,'source-selection research gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti40.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti40-selected-source-${{ github.sha }}
+          path: ti40-results/
+          if-no-files-found: warn
+          retention-days: 14
