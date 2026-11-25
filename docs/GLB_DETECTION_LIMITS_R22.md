@@ -34,7 +34,7 @@ bounds for samples; exact constant-distance cases must match within 2e-5
 
 Budget: max 16 matrix rows, max 64 triangles/side, 3 parts/side; one R20/R21
 parent invocation per native row except one aperture representative
-warmup+3 median (three additional invocations). Retain per parent 180s
+warmup+3 median (three additional invocations) and two compatibility\nprofile calls on that same case: max 21 parent invocations. Retain per parent 180s
 timeout, 1MiB report cap, global+local 263744 samples/16M node pops/8M
 evaluations and <=130 BVH builds; actual counters logged. Auxiliary
 boundary/feature passes linear bounded input except shared-vertex hints
