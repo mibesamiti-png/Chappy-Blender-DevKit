@@ -11,7 +11,8 @@ import math
 
 from .glb_surface_distance import (
     SurfaceDistanceError, _validated_triangles, _build_bvh,
-    _bvh_nearest_distance_squared, _radical_inverse,
+    _bvh_nearest_distance_squared, _radical_inverse, _fixed_report,
+    SurfaceBudgetExceeded, _SurfaceWorkBudget, EXPANDED_MAX_TRIANGLES,
 )
 from .glb_feature_priority import choose_exploration_faces
 
@@ -31,15 +32,20 @@ def _sample_at(face, index):
                  for axis in range(3))
 
 
-def _directed_multires(source, target, *, feature_aware=True):
-    tree = _build_bvh(target)
+def _directed_multires(source, target, *, feature_aware=True, tree=None, budget=None):
+    if tree is None:
+        tree = _build_bvh(target)
+
+    def nearest(point):
+        if budget is None:
+            return _bvh_nearest_distance_squared(point, target, tree)
+        return _bvh_nearest_distance_squared(point, target, tree, budget=budget)
     per_face = []
     precise_checks = 0
     for face, area in source:
         values = []
         for index in range(1, COARSE_SAMPLES + 1):
-            d2, performed = _bvh_nearest_distance_squared(
-                _sample_at(face, index), target, tree)
+            d2, performed = nearest(_sample_at(face, index))
             precise_checks += performed
             distance = math.sqrt(d2)
             if not math.isfinite(distance):
@@ -67,8 +73,7 @@ def _directed_multires(source, target, *, feature_aware=True):
     for i in sorted(refined):
         face = source[i][0]
         for index in range(COARSE_SAMPLES + 1, FINE_SAMPLES + 1):
-            d2, performed = _bvh_nearest_distance_squared(
-                _sample_at(face, index), target, tree)
+            d2, performed = nearest(_sample_at(face, index))
             precise_checks += performed
             distance = math.sqrt(d2)
             if not math.isfinite(distance):
@@ -136,10 +141,20 @@ def compare_multires_triangle_surfaces(reference: list, candidate: list, *, feat
         raise SurfaceDistanceError("feature_aware must be a boolean")
     ref = _validated_triangles(reference, "reference")
     cand = _validated_triangles(candidate, "candidate")
-    forward = _directed_multires(ref, cand, feature_aware=feature_aware)
-    backward = _directed_multires(cand, ref, feature_aware=feature_aware)
+    return _adaptive_report(ref, cand, feature_aware=feature_aware)
+
+
+def _adaptive_report(ref, cand, *, feature_aware=True, trees=None, budget=None):
+    if trees is None:
+        forward = _directed_multires(ref, cand, feature_aware=feature_aware)
+        backward = _directed_multires(cand, ref, feature_aware=feature_aware)
+    else:
+        forward = _directed_multires(ref, cand, feature_aware=feature_aware,
+                                     tree=trees[1], budget=budget)
+        backward = _directed_multires(cand, ref, feature_aware=feature_aware,
+                                      tree=trees[0], budget=budget)
     return {
-        "schema_version": 1,
+        "schema_version": 2 if trees is not None else 1,
         "kind": "cbdk_multires_sampled_surface_distance",
         "status": "review_only",
         "metric": "area_weighted_bidirectional_selectively_refined_point_to_triangle",
@@ -193,3 +208,49 @@ def compare_multires_triangle_surfaces(reference: list, candidate: list, *, feat
             "automatic_parameter_changes": False,
         },
     }
+
+
+def compare_expanded_triangle_surfaces(reference: list, candidate: list) -> dict:
+    """Opt-in combined fixed/adaptive review with finite cumulative work.
+
+    Never emits a completed distance on exhausted work. The 2048-face
+    ceiling and provisional query ceilings require native measurement before
+    the expanded profile is accepted for the GLB parent/child pipeline.
+    """
+    return _expanded_review(reference, candidate, _SurfaceWorkBudget())
+
+
+def _expanded_review(reference, candidate, budget):
+    ref = _validated_triangles(reference, "reference", expanded=True)
+    cand = _validated_triangles(candidate, "candidate", expanded=True)
+    trees = (_build_bvh(ref), _build_bvh(cand))
+    report = {
+        "schema_version": 2,
+        "kind": "cbdk_expanded_triangle_surface_review",
+        "profile": "expanded_2048",
+        "triangle_limit_per_scene": EXPANDED_MAX_TRIANGLES,
+        "reference_triangles": len(ref),
+        "candidate_triangles": len(cand),
+        "bvh_build_count": 2,
+        "auto_apply": False,
+        "complete_surface_equivalence_proven": False,
+    }
+    stage = "fixed"
+    try:
+        fixed = _fixed_report(ref, cand, trees=trees, budget=budget)
+        stage = "adaptive"
+        adaptive = _adaptive_report(ref, cand, trees=trees, budget=budget)
+    except SurfaceBudgetExceeded as exc:
+        report.update(status="skipped", reason="work_budget",
+                      exhausted_counter=str(exc), stopped_stage=stage,
+                      surface_observation="not_measured")
+    else:
+        report.update(status="review_only", fixed_surface=fixed,
+                      adaptive_surface=adaptive,
+                      surface_observation=(
+                          "sampled_difference_detected"
+                          if max(fixed["symmetric_sampled_max"],
+                                 adaptive["refined_symmetric_sampled_max"]) > SIGNAL_THRESHOLD
+                          else "no_difference_observed_at_samples"))
+    report["work_budget"] = budget.snapshot()
+    return report

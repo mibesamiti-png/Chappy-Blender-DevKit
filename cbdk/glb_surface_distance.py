@@ -11,6 +11,7 @@ from __future__ import annotations
 import math
 
 MAX_TRIANGLES = 512
+EXPANDED_MAX_TRIANGLES = 2048
 BVH_LEAF_TRIANGLES = 8
 SAMPLES_PER_TRIANGLE = 24
 MAX_COORDINATE = 1_000_000.0
@@ -19,6 +20,31 @@ MIN_DOUBLE_AREA = 1e-10
 
 class SurfaceDistanceError(ValueError):
     pass
+
+
+class SurfaceBudgetExceeded(SurfaceDistanceError):
+    """A finite expanded-profile work allowance was exhausted."""
+
+
+class _SurfaceWorkBudget:
+    # Provisional engineering ceilings; acceptance depends on measured fixtures.
+    # Not caller-configurable through the public comparison API.
+    LIMITS = {
+        "samples": 131_872,
+        "node_visits": 8_000_000,
+        "triangle_evaluations": 4_000_000,
+    }
+
+    def __init__(self):
+        self.counts = dict.fromkeys(self.LIMITS, 0)
+
+    def charge(self, key):
+        if self.counts[key] >= self.LIMITS[key]:
+            raise SurfaceBudgetExceeded(key)
+        self.counts[key] += 1
+
+    def snapshot(self):
+        return {"limits": dict(self.LIMITS), "used": dict(self.counts)}
 
 
 def _sub(a, b):
@@ -41,9 +67,10 @@ def _norm2(v):
     return _dot(v, v)
 
 
-def _validated_triangles(value, label):
-    if not isinstance(value, list) or not 1 <= len(value) <= MAX_TRIANGLES:
-        raise SurfaceDistanceError(f"{label} needs 1..{MAX_TRIANGLES} triangles")
+def _validated_triangles(value, label, *, expanded=False):
+    limit = EXPANDED_MAX_TRIANGLES if expanded else MAX_TRIANGLES
+    if not isinstance(value, list) or not 1 <= len(value) <= limit:
+        raise SurfaceDistanceError(f"{label} needs 1..{limit} triangles")
     items = []
     for i, face in enumerate(value):
         if not isinstance(face, (list, tuple)) or len(face) != 3:
@@ -180,14 +207,18 @@ def _build_bvh(target):
     return build(tuple(range(len(target))))
 
 
-def _bvh_nearest_distance_squared(point, target, tree):
+def _bvh_nearest_distance_squared(point, target, tree, *, budget=None):
     """Exact nearest triangle distance with AABB lower-bound pruning.
 
     Returns (distance squared, number of precise triangle evaluations).
     """
+    if budget is not None:
+        budget.charge("samples")
     best, evaluations = math.inf, 0
     pending = [(0.0, tree)]
     while pending:
+        if budget is not None:
+            budget.charge("node_visits")
         lower, node = pending.pop()
         if lower >= best:
             continue
@@ -196,6 +227,8 @@ def _bvh_nearest_distance_squared(point, target, tree):
             for index in indices:
                 # Triangle-local AABB pruning also helps crowded leaf nodes.
                 # The parent node bound is sufficient for correctness.
+                if budget is not None:
+                    budget.charge("triangle_evaluations")
                 evaluations += 1
                 d2 = _closest_distance_squared(point, target[index][0])
                 if d2 < best:
@@ -219,10 +252,12 @@ def _bvh_nearest_distance_squared(point, target, tree):
     return max(best, 0.0), evaluations
 
 
-def _directed(source, target, *, accelerated=True):
+def _directed(source, target, *, accelerated=True, tree=None, budget=None):
     total_area = sum(area for _, area in source)
     weighted_sum, worst, evaluations = 0.0, 0.0, 0
-    tree = _build_bvh(target) if accelerated else None
+    if budget is not None and not accelerated:
+        raise SurfaceDistanceError("Budgeted queries require BVH acceleration")
+    tree = (tree if tree is not None else _build_bvh(target)) if accelerated else None
     for face, area in source:
         face_sum = 0.0
         for point in _sample(face):
@@ -231,8 +266,11 @@ def _directed(source, target, *, accelerated=True):
                                for other, _ in target)
                 evaluations += len(target)
             else:
-                shortest, performed = _bvh_nearest_distance_squared(
-                    point, target, tree)
+                if budget is None:
+                    shortest, performed = _bvh_nearest_distance_squared(point, target, tree)
+                else:
+                    shortest, performed = _bvh_nearest_distance_squared(
+                        point, target, tree, budget=budget)
                 evaluations += performed
             distance = math.sqrt(max(shortest, 0.0))
             if not math.isfinite(distance):
@@ -262,12 +300,20 @@ def compare_triangle_surfaces(reference: list, candidate: list) -> dict:
     """
     ref = _validated_triangles(reference, "reference")
     cand = _validated_triangles(candidate, "candidate")
-    forward = _directed(ref, cand)
-    backward = _directed(cand, ref)
+    return _fixed_report(ref, cand)
+
+
+def _fixed_report(ref, cand, *, trees=None, budget=None):
+    if trees is None:
+        forward = _directed(ref, cand)
+        backward = _directed(cand, ref)
+    else:
+        forward = _directed(ref, cand, tree=trees[1], budget=budget)
+        backward = _directed(cand, ref, tree=trees[0], budget=budget)
     symmetric_mean = (forward["mean"] + backward["mean"]) * 0.5
     symmetric_max = max(forward["sampled_max"], backward["sampled_max"])
     return {
-        "schema_version": 1,
+        "schema_version": 2 if trees is not None else 1,
         "kind": "cbdk_sampled_triangle_surface_distance",
         "status": "review_only",
         "metric": "area_weighted_bidirectional_sampled_point_to_triangle_distance",
@@ -279,7 +325,7 @@ def compare_triangle_surfaces(reference: list, candidate: list) -> dict:
         "candidate_triangles": len(cand),
         "samples_per_triangle": SAMPLES_PER_TRIANGLE,
         "search_acceleration": "deterministic_median_split_triangle_aabb_bvh",
-        "max_triangles_per_mesh": MAX_TRIANGLES,
+        "max_triangles_per_mesh": EXPANDED_MAX_TRIANGLES if trees is not None else MAX_TRIANGLES,
         "units": "input_coordinate_units",
         "vertex_correspondence_required": False,
         "triangulation_correspondence_required": False,

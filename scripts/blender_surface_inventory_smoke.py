@@ -372,6 +372,119 @@ def _boundary_many_parts_roundtrip(output):
     print("CBDK_GLB_BOUNDARY_MULTIPART_ROUNDTRIP_PASS")
 
 
+
+def _expanded_surface_roundtrip(output):
+    """R20 synthetic GLBs through the real parent process, not just arrays."""
+    from statistics import median
+    from time import perf_counter
+    import json
+
+    def export(label, width, height, *, z=0., alternate=False, hole=False,
+               extra=False, dense=False):
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        vertices, faces = [], []
+        def triangle(points):
+            i = len(vertices)
+            vertices.extend(points)
+            faces.append((i, i + 1, i + 2))
+        for y in range(height):
+            for x in range(width):
+                if hole and 4 <= x < 6 and 4 <= y < 6:
+                    continue
+                if dense:
+                    points = ((0., 0., z), (1., 0., z), (0., 1., z))
+                    if alternate:
+                        points = ((1., 1., z), (1., 0., z), (0., 1., z))
+                    triangle(points)
+                    triangle(points)
+                    continue
+                a, b = (x, y, z), (x+1, y, z)
+                c, d = (x+1, y+1, z), (x, y+1, z)
+                if alternate:
+                    triangle((a, b, d))
+                    triangle((b, c, d))
+                else:
+                    triangle((a, b, c))
+                    triangle((a, c, d))
+        if extra:
+            triangle(((100., 0., z), (101., 0., z), (100., 1., z)))
+        mesh = bpy.data.meshes.new("CBDK_R20_Synthetic")
+        mesh.from_pydata(vertices, [], faces)
+        mesh.update()
+        obj = bpy.data.objects.new("CBDK_R20_Synthetic", mesh)
+        bpy.context.collection.objects.link(obj)
+        source = output / ("r20_" + label + ".glb")
+        bpy.ops.export_scene.gltf(filepath=str(source), export_format="GLB")
+        return source
+
+    def compare(label, a, b, *, profile="expanded_2048"):
+        hashes = [hashlib.sha256(p.read_bytes()).digest() for p in (a, b)]
+        start = perf_counter()
+        result = run_glb_surface_review(
+            bpy.app.binary_path, a, b, output / ("r20_" + label + ".json"),
+            profile=profile)
+        elapsed = (perf_counter() - start) * 1000
+        assert [hashlib.sha256(p.read_bytes()).digest() for p in (a, b)] == hashes
+        assert result["auto_apply"] is False
+        return result, elapsed
+
+    observations = {}
+    for width, height in ((16, 16), (32, 16), (32, 32)):
+        n = 2 * width * height
+        ref = export(str(n) + "_base", width, height)
+        cand = export(str(n) + "_raised", width, height, z=.25, alternate=True)
+        samples = []
+        for trial in range(4):  # first warmup, then three same-condition timings
+            result, elapsed = compare(str(n) + "_offset_" + str(trial), ref, cand)
+            assert result["status"] == "review_only", result
+            assert result["reference_triangles"] == result["candidate_triangles"] == n
+            assert abs(result["fixed_surface"]["symmetric_mean"] - .25) < 1e-6
+            assert abs(result["adaptive_surface"]["refined_symmetric_mean"] - .25) < 1e-6
+            if trial:
+                samples.append(elapsed)
+        observations[str(n)] = {
+            "median_parent_roundtrip_ms": round(median(samples), 3),
+            "work": result["work_budget"]["used"],
+        }
+        if n == 512:
+            legacy, _ = compare("legacy_parity", ref, cand, profile="legacy_512")
+            for group in ("fixed_surface", "adaptive_surface"):
+                for direction in ("reference_to_candidate", "candidate_to_reference"):
+                    assert result[group][direction] == legacy[group][direction]
+        if n == 2048:
+            same = export("retessellated", width, height, alternate=True)
+            same_result, _ = compare("same", ref, same)
+            assert same_result["status"] == "review_only", same_result
+            assert same_result["fixed_surface"]["symmetric_sampled_max"] < 1e-6
+            assert same_result["adaptive_surface"]["refined_symmetric_sampled_max"] < 1e-6
+            cut = export("opening", width, height, hole=True)
+            cut_result, _ = compare("cut", ref, cut)
+            assert cut_result["status"] == "review_only", cut_result
+            assert 0 < cut_result["fixed_surface"]["symmetric_sampled_max"] <= 1.000001
+            assert 0 < cut_result["adaptive_surface"]["refined_symmetric_sampled_max"] <= 1.000001
+            assert cut_result["fixed_surface"]["candidate_to_reference"]["sampled_max"] < 1e-6
+            over = export("over_limit", width, height, extra=True)
+            over_result, _ = compare("over", ref, over)
+            assert over_result["status"] == "skipped"
+            assert over_result["reason"] == "triangle_limit"
+            assert over_result["candidate_triangles"] == 2049
+            old_over, _ = compare("old_cap", ref, ref, profile="legacy_512")
+            assert old_over["status"] == "skipped"
+    # Positive point-to-triangle distance inside overlapping AABBs prevents
+    # nearest pruning from concealing the deliberately expensive fixture.
+    dense_ref = export("dense_ref", 32, 32, dense=True)
+    dense_cand = export("dense_cand", 32, 32, dense=True, alternate=True)
+    exhausted, elapsed = compare("dense", dense_ref, dense_cand)
+    assert exhausted["status"] == "skipped", exhausted
+    assert exhausted["reason"] == "work_budget"
+    assert exhausted["surface_observation"] == "not_measured"
+    assert "fixed_surface" not in exhausted and "adaptive_surface" not in exhausted
+    observations["dense"] = {"work": exhausted["work_budget"]["used"],
+                              "stopped_stage": exhausted["stopped_stage"],
+                              "elapsed_ms": round(elapsed, 3)}
+    print("CBDK_R20_EXPANDED_SURFACE_PASS " + json.dumps(observations, sort_keys=True))
+
+
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if len(args) != 1:
@@ -428,6 +541,7 @@ def main():
     _boundary_component_roundtrip(output)
     _boundary_budget_roundtrip(output)
     _boundary_many_parts_roundtrip(output)
+    _expanded_surface_roundtrip(output)
     print("CBDK_SURFACE_INVENTORY_PASS")
 
 
