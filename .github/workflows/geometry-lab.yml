@@ -979,3 +979,37 @@ jobs:
           path: research/geometry_lab/runs/applied03/placement.json
           if-no-files-found: warn
           retention-days: 14
+
+  applied-modeling-pilot-03-axis:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    permissions:
+      contents: read
+      actions: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-oracle.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: geometry-lab-applied02b-9ead229eafee65c768b6968e6094af685023621b
+          run-id: 45533897555
+          github-token: ${{ github.token }}
+          path: research/geometry_lab/runs/applied03-input
+      - name: Reproduce baseline and compare fixed stagger and tilted axes
+        run: python -m applied03.axis_diagnostic --dir runs/applied03-input --output runs/applied03/axis.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-applied03-axis-${{ github.sha }}
+          path: research/geometry_lab/runs/applied03/axis.json
+          if-no-files-found: warn
+          retention-days: 14
