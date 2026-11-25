@@ -8,6 +8,9 @@ import re
 
 REQUIRED = ("schema_version", "id", "version", "name", "tagline", "maintainer",
             "type", "blender_version_min", "license")
+OPTIONAL = ("blender_version_max", "permissions")
+SUPPORTED = REQUIRED + OPTIONAL
+PERMISSION_KEYS = frozenset(("files", "network", "clipboard", "camera", "microphone"))
 SEMVER = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$")
 VERSION = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 SPDX = re.compile(r"^SPDX:[A-Za-z0-9][A-Za-z0-9.+-]{0,99}$")
@@ -21,7 +24,16 @@ RULES = {
     "type": "Choose add-on or theme",
     "blender_version_min": "Use three numeric components and at least Blender 4.2.0",
     "license": "Owner must review SPDX identifiers and component license compatibility separately",
+    "blender_version_max": "Optional exclusive upper Blender version; use three numeric components above the minimum",
+    "permissions": "Optional table of known add-on permission names and short printable purpose descriptions; owner must review actual needs",
 }
+
+
+def _version_tuple(value):
+    if (type(value) is str and 1 <= len(value) <= 256
+            and value.isascii() and VERSION.fullmatch(value)):
+        return tuple(map(int, value.split(".")))
+    return None
 
 
 def review_manifest_fields(fields):
@@ -58,8 +70,32 @@ def review_manifest_fields(fields):
             valid = value.isascii() and VERSION.fullmatch(value) is not None and tuple(map(int, value.split("."))) >= (4, 2, 0)
         if not valid:
             errors.append({"field": key, "code": "invalid_" + key})
-    for key in sorted(set(fields) - set(REQUIRED)):
-        errors.append({"field": key, "code": "unsupported_field_requires_official_validation"})
+    # Optional absence is not a missing owner input. Explicit invalid values
+    # are distinct from an unknown field outside the reviewed subset.
+    if "blender_version_max" in fields:
+        maximum = fields["blender_version_max"]
+        valid = _version_tuple(maximum) is not None
+        minimum = _version_tuple(fields.get("blender_version_min"))
+        if valid and minimum is not None:
+            valid = _version_tuple(maximum) > minimum
+        if not valid:
+            errors.append({"field": "blender_version_max", "code": "invalid_blender_version_max"})
+    if "permissions" in fields:
+        permissions = fields["permissions"]
+        valid = (type(permissions) is dict and len(permissions) <= len(PERMISSION_KEYS)
+                 and all(type(k) is str and k in PERMISSION_KEYS
+                         and type(v) is str and 1 <= len(v) <= 64
+                         and v == v.strip() and v.isprintable()
+                         and (v[-1].isalnum() or v[-1] in ")]}")
+                         for k, v in permissions.items()))
+        # This bounded policy only supports the known add-on permission table.
+        if valid and permissions and fields.get("type") != "add-on":
+            valid = False
+        if not valid:
+            errors.append({"field": "permissions", "code": "invalid_permissions"})
+    # Never return unknown key names, even from the dictionary-level API.
+    for _ in set(fields) - set(SUPPORTED):
+        errors.append({"field": "unsupported_field", "code": "unsupported_field_requires_official_validation"})
     return {"status": "invalid" if errors else "incomplete" if missing else "structurally_valid_subset",
             "missing_required_fields": missing, "errors": errors,
             "license_identifier_syntax_checked": "license" not in missing and not any(e["field"] == "license" for e in errors),
@@ -73,8 +109,10 @@ def manifest_field_diagnostics(fields):
     invalid = {row["field"] for row in review["errors"]}
     return [{"field": field,
              "status": "missing" if field in review["missing_required_fields"] else
-                       "invalid" if field in invalid else "valid_in_supported_subset",
-             "guidance": RULES[field]} for field in REQUIRED]
+                       "invalid" if field in invalid else
+                       "optional_not_provided" if field in OPTIONAL and field not in fields else
+                       "valid_in_supported_subset",
+             "guidance": RULES[field]} for field in SUPPORTED]
 
 
 def observe_official_validation(returncode, output):
@@ -125,7 +163,7 @@ def observe_official_validation(returncode, output):
             continue
         if line.startswith('key "'):
             match = re.match(r'key "([a-z_]+)" invalid:', line)
-            if (match and match[1] in REQUIRED and not success
+            if (match and match[1] in SUPPORTED and not success
                     and not any(field == match[1] for field, _ in diagnostics)):
                 diagnostics.add((match[1], "invalid"))
             else:
@@ -152,7 +190,7 @@ def compare_official_validation(fields, returncode, output):
     expected = {(field, "missing") for field in local["missing_required_fields"]}
     expected |= {(row["field"], "invalid") for row in local["errors"]}
     actual = {(row["field"], row["code"]) for row in observed["diagnostics"]}
-    if any(row["field"] not in REQUIRED for row in local["errors"]):
+    if any(row["field"] not in SUPPORTED for row in local["errors"]):
         status = "outside_supported_subset"
     elif observed["status"] == "unclassified":
         status = "unclassified"
