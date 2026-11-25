@@ -1,6 +1,10 @@
 """R21 synthetic controls, legacy false suggestion and bounded review."""
 import copy
+import io
+import json
+from contextlib import redirect_stdout
 import unittest
+from unittest.mock import patch
 
 from cbdk.glb_part_match import (
     suggest_spatial_part_matches, review_part_surfaces, _review_part_surfaces,
@@ -116,6 +120,31 @@ class PartReviewR21(unittest.TestCase):
             mutate(bad)
             with self.assertRaises(ValueError):
                 _validate_part_review(envelope(bad))
+
+
+class PartReviewCLIR21(unittest.TestCase):
+    def test_explicit_profile_forwarding_and_part_skip_exit(self):
+        from cbdk.__main__ import main
+        args = ["glb-surface-review", "ref.glb", "cand.glb", "--blender", "blender",
+                "--output", "out.json", "--profile", "expanded_2048_parts"]
+        evidence = {"kind": "cbdk_glb_surface_review", "status": "review_only",
+                    "reference_triangles": 2048, "candidate_triangles": 2048,
+                    "surface_observation": "sampled_difference_detected",
+                    "part_review": {"status": "review_only", "reference_parts": [
+                        {"observations": [{"status": "not_measured"}]}]}}
+        with patch("cbdk.__main__.run_glb_surface_review", return_value=evidence) as run:
+            with redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(main(args), 0)
+            run.assert_called_once_with("blender", "ref.glb", "cand.glb", "out.json",
+                                        timeout=180, profile="expanded_2048_parts")
+            self.assertEqual(json.loads(stdout.getvalue())["unmeasured_candidate_count"], 1)
+            evidence["part_review"] = {"status": "skipped", "reason": "part_limit"}
+            with redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(main(args), 2)
+            result = json.loads(stdout.getvalue())
+            self.assertEqual(result["status"], "review_only")
+            self.assertEqual(result["part_status"], "skipped")
+            self.assertEqual(result["part_reason"], "part_limit")
 
 
 if __name__ == "__main__":

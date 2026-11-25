@@ -39,3 +39,10 @@ their defaults; A owns the shared CLI hook. No viewer or GL research change.
 - No claim of arbitrary part identity, hidden cavities, native memory,
   general 2048/64 performance or speedup. Private data not used.
   Stop after exact-head 5CI and native measurements, or report blockers.
+
+
+## A integration candidate
+
+B exact HEAD `96b3bf3c6037f8b567ea498a7fc8e9a2e95ae38b` independent review of specialist 5CI: Python45572009684, Windows45572009717, Blender45572009882, Chromium45572009721, Handoff45572009823. Actual native jobs139060683474/139060683053/139060683389: 2048/64 reverse-order candidates all64 suggested, complementary closed shapes old false suggestion 1->0, tie ambiguous, separate 65-part skip, 2049 and dense global skip, SHA unchanged. Parent warmup+3 median 5.581/9.171/6.205s. Global counts 131232/2230944/1049856, local 98304/491520/786432, 64 attempted of 128 max, 128 local BVHs, 98304 boundary reservation of 2M. Synthetic scoped evidence; no arbitrary identity, native memory, threshold calibration or native local exhaustion claim. The near-small/far-large contrast is not separately established, and motion/split/merge controls are Python only.
+
+A exposes `python -m cbdk glb-surface-review ref.glb cand.glb --blender <trusted-executable> --profile expanded_2048_parts --output review.json`. Existing default and R20 profiles remain unchanged. Schema3 stdout separates global status and part_status/part_reason, counts unmeasured candidate observations; exit2 if the requested part review is skipped even when global measurements exist. Exit0 for a review-only report (including ambiguous/unmeasured candidates); never automatic identity approval. Native CLI checks real 64-part, closed-shape and 65-part fixtures, source SHA. Candidate CI pending; no merge/release, no GL adoption or viewer expansion.

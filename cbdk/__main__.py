@@ -230,9 +230,9 @@ def main(argv=None) -> int:
     glb_surface_cmd.add_argument('--blender', required=True, help='Trusted local Blender executable path')
     glb_surface_cmd.add_argument('--output', default='reports/latest/glb_surface_review.json')
     glb_surface_cmd.add_argument('--timeout', type=int, default=180)
-    glb_surface_cmd.add_argument('--profile', choices=('legacy_512', 'expanded_2048'),
+    glb_surface_cmd.add_argument('--profile', choices=('legacy_512', 'expanded_2048', 'expanded_2048_parts'),
                                  default='legacy_512',
-                                 help='Explicit opt-in expanded surface review (bounded 2048 triangles per GLB); default legacy_512')
+                                 help='Explicit opt-in expanded surface review (2048 triangles), optionally with up to 64 anonymous parts; default legacy_512')
 
     glb_diff_cmd = sub.add_parser(
         'glb-diff-visualize',
@@ -464,7 +464,7 @@ def main(argv=None) -> int:
             return 0 if report['passed'] else 1
         if args.command == 'glb-surface-review':
             options = {'timeout': args.timeout}
-            if args.profile == 'expanded_2048':
+            if args.profile != 'legacy_512':
                 options['profile'] = args.profile
             report = run_glb_surface_review(
                 args.blender, args.reference, args.candidate, args.output,
@@ -479,8 +479,17 @@ def main(argv=None) -> int:
                 'output': str(Path(args.output)),
                 'complete_surface_equivalence_proven': False,
                 **({'profile': args.profile, 'reason': report.get('reason')}
-                   if args.profile == 'expanded_2048' else {}),
+                   if args.profile != 'legacy_512' else {}),
+                **({'part_status': report['part_review']['status'],
+                    'part_reason': report['part_review'].get('reason'),
+                    'unmeasured_candidate_count': sum(
+                        observation['status'] == 'not_measured'
+                        for row in report['part_review'].get('reference_parts', [])
+                        for observation in row['observations'])}
+                   if args.profile == 'expanded_2048_parts' else {}),
             }, ensure_ascii=False, indent=2))
+            if args.profile == 'expanded_2048_parts' and report['part_review']['status'] != 'review_only':
+                return 2
             return 0 if report['status'] == 'review_only' else 2
         if args.command == 'glb-diff-visualize':
             report = run_glb_diff_visualize(
