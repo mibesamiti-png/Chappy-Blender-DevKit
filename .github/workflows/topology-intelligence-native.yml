@@ -563,3 +563,106 @@ jobs:
           path: ti37-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase37 verified run 45575543890 / job 139072452920:
+      # 10/10 route agreement, 3 direct, 6 collar, 1 reject; 71 vs 170 hypothetical calls.
+      # Actual Phase38 comparison uses direct-first in BOTH arms, not mandatory collar.
+      - name: Phase38 execute real prefilter and measure direct-first comparison
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti38.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti37.py').read_text().split('\nrows=[];raw=[]',1)[0])
+          # Frozen Phase37 generators and gate, with actual execution control.
+          # Same analytic surface family; the four extra shapes are new to this experiment.
+          fixtures += [('fresh_round',(.21,.12,.19,.035),0.),
+                       ('fresh_roundish',(.15,.21,.13,-.025),.4),
+                       ('fresh_rounded_rect',(.24,.12,.09,.02),.9),
+                       ('fresh_rectangle',(.26,.11,.07,-.035),1.)]
+          def run_route(c,g,ref,use_prefilter):
+              start=time.perf_counter()
+              bound=corner_bound(c)
+              skip=use_prefilter and bound<15.-1e-4
+              attempts=[]
+              best=None;mesh=None
+              def generate(arm,offset,simple):
+                  row=dict(arm=arm,offset=offset,simple=simple)
+                  t=time.perf_counter()
+                  try:
+                      if arm=='direct':
+                          V,F,_=fill(c,4,offset,simple);smooth=6
+                      else:
+                          V,F=collar(c,.58,.5,0);smooth=3
+                      V,F,extra=patch(V,F,g,smooth,1,c)
+                      a=assess(V,F,c)
+                      req((a['vertices'],a['quads'])==((25,16) if arm=='direct' else (41,32)),'budget')
+                      if arm=='direct':
+                          row['corners']=direct_corner_check(V,F,c)
+                          req(a['min_angle']<=bound+1e-4,'angle bound contradicted')
+                      row.update(**a,**extra,status='valid')
+                      row['joint_pass']=a['gate_angle15'] and a['p95_worst']<=1.1*ref
+                  except Exception as exc:
+                      row.update(status='rejected',reason=str(exc))
+                      V,F=None,None
+                  row['elapsed_seconds']=time.perf_counter()-t
+                  attempts.append(row)
+                  return row,(V,F)
+              if not skip:
+                  for offset in range(8):
+                      for simple in (False,True):
+                          row,m=generate('direct',offset,simple)
+                          if row.get('joint_pass',False) and (best is None or row['p95_worst']<best['p95_worst']):
+                              best,mesh=row,m
+              if best is None:
+                  row,m=generate('collar',0,False)
+                  if row.get('joint_pass',False):best,mesh=row,m
+              return dict(bound=bound,skip=skip,attempts=attempts,selected=best,elapsed_seconds=time.perf_counter()-start),mesh
+          def same_result(a,b,ma,mb):
+              x,y=a['selected'],b['selected']
+              if x is None or y is None:return x is None and y is None and ma is None and mb is None
+              return (x['arm'],x['offset'],x['simple'])==(y['arm'],y['offset'],y['simple']) and abs(x['p95_worst']-y['p95_worst'])<1e-7 and abs(x['min_angle']-y['min_angle'])<1e-4 and ma[1]==mb[1] and np.allclose(ma[0],mb[0],rtol=0,atol=1e-7)
+          rows=[];selected=[]
+          for i,(name,c,blend) in enumerate(fixtures):
+              set_domain(blend)
+              refs=[]
+              for shift in range(4):
+                  try:refs.append(assess(*coons(shift,c),c)['p95_worst'])
+                  except ValueError:pass
+              req(bool(refs),'no valid reference')
+              g=guide(c)
+              try:
+                  # Alternate measurement order across fixtures, no per-case parameter changes.
+                  if i%2:
+                      fast,fm=run_route(c,g,min(refs),True);slow,sm=run_route(c,g,min(refs),False)
+                  else:
+                      slow,sm=run_route(c,g,min(refs),False);fast,fm=run_route(c,g,min(refs),True)
+                  same=same_result(fast,slow,fm,sm)
+                  if fm is not None:selected.append(dict(case=name,vertices=fm[0],faces=fm[1]))
+                  violations=[t for x in (fast,slow) for t in x['attempts'] if any(e in t.get('reason','') for e in ('angle bound contradicted','corner premise','not a four-corner grid'))]
+                  rows.append(dict(case=name,params=c,blend=blend,reference=min(refs),same=same,premise_violations=len(violations),fast=fast,slow=slow))
+              finally:remove(g)
+          d=Path('ti38-results');d.mkdir(exist_ok=True)
+          gate=all(x['same'] and x['premise_violations']==0 for x in rows) and any(x['fast']['skip'] for x in rows) and any(x['fast']['selected'] and x['fast']['selected']['arm']=='direct' for x in rows)
+          counts={arm:sum(len(x[arm]['attempts']) for x in rows) for arm in ('fast','slow')}
+          times={arm:sum(x[arm]['elapsed_seconds'] for x in rows) for arm in ('fast','slow')}
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,counts=counts,seconds=times,rows=rows)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'selected.json').write_text(json.dumps(selected))
+          compact=[]
+          for x in rows:
+              a=x['fast'];b=x['slow'];v=a['selected']
+              compact.append(dict(case=x['case'],same=x['same'],skip=a['skip'],bound=a['bound'],fast_calls=len(a['attempts']),slow_calls=len(b['attempts']),fast_seconds=a['elapsed_seconds'],slow_seconds=b['elapsed_seconds'],selected=v['arm'] if v else 'none',min_angle=v['min_angle'] if v else None,p95=v['p95_worst'] if v else None,premise_violations=x['premise_violations']))
+          print('TI38_SUMMARY',json.dumps(dict(gate=gate,counts=counts,seconds=times,cases=compact)),flush=True)
+          assert len(rows)==14 and gate,'actual routing gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti38.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti38-actual-router-${{ github.sha }}
+          path: ti38-results/
+          if-no-files-found: warn
+          retention-days: 14
