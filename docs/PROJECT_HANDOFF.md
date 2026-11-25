@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.20 R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI、F020-01限定受入・F020-03限定実装受入（partial）、F020-02残。B/C/D待機、節目同期中。正式v0.17.0/main/last_verified不変。
+- 最新の節目: v0.20 R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI/Notion同期成功。F020-02 R24 C/D限定割当候補。実装は正式ゲート後、正式v0.17.0/main/last_verified維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
@@ -214,6 +214,7 @@
 - `DEC-085` F019-03をR22で測定限定受入し、v0.19限定3目標の区切りを記録する。#159 B dfe61bee 5CI、#160 A d11839ec 5CI、dev a816d5ec0f08456c469af134b4b7dc1b69987258 独立7CI（Python45636769946、Windows45636769714、Blender45636769495 attempt2、Chromium45636769899、Handoff45636769741、Kit45636769989、Skill45636769864）。3版16ケース固定8/10・適応9/10、誤警告0/5、情報欠落1。小穴見逃し、境界ヒントは物理証明でない。旧profile・入力SHA維持。初回4.4.3 artifact確定失敗は同一HEAD失敗job再試行成功。測定のみ、製品変更・GL採用なし。限定3目標受入、実データ/一般精度/物理診断/native memory/viewer未確認。#125 rev13 paused、R23/v0.20自動開始なし、正式版/44要件/24 NEXT/last_verified維持。
 - `DEC-086` v0.19限定目標を区切り、既承認v0.20生成エンジンの最初の限定割当を候補化する。dev 1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791 独立7CI（Python45644535642、Windows45644535499、Blender45644535704、Chromium45644535823、Handoff45644535761、Kit45644535523、Skill45644535575）。実3版R22/R21 marker、#25同HEAD draft。既存Notion節目追記成功。F019限定3/3を区切るが実データ/一般精度/物理診断/native memory/viewer未完。既承認F020へ進む候補、R23はCの明示複数panelとDの既存レシピからの非配布Extension準備に限定。F020-02は統合後別判断。割当文書統合・独立7CI・#125更新前は実装禁止。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
 - `DEC-087` R23の限定複数パネル生成と同一Extension縦断を受入、F020-02の残範囲を次に判断する。R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI成功（Python45698148532、Windows45698148921、Blender45698148477、Chromium45698148381、Handoff45698148674、Kit45698148611、Skill45698148654）。C #164/D #163/A #165各5CIと合わせ22/22、再試行0。3版で同一CLI生成ZIP公式validate・隔離bl_ext登録・2panel/4機能/2型のdraw/操作/解除・SHA不変、artifact保存。F020-01限定受入、F020-03限定実装受入（全体partial）、F020-02残。#125 rev15 paused、B/C/D待機。実GUI/Undo/公式installer/任意コード/権利・正式配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
+- `DEC-088` F020-02の非空依存グラフ実機検証とExtension互換範囲をR24限定割当候補にする。R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI（Python45700815698、Windows45700815565、Blender45700815591、Chromium45700815541、Handoff45700815542、Kit45700815896、Skill45700815567）成功、3版R23 marker、Notion既存ページ追記成功。F020-02既存6機能のrequires_featuresは全空。既存plannerの推移/循環Python検査は再利用し、R24 Cはテスト専用の非空依存閉包・登録/逆順解除/rollbackの実機縦断、Dはroot ZIPの依存閉包とmanifest互換範囲の独立照合/過大表示拒否。A同一物縦断。正式割当統合・独立7CI・#125更新前は着手禁止。B待機、GL/DIL独立、44要件/24 NEXT/正式版/main/last_verified維持。
 
 ## 更新・プライバシールール
 
