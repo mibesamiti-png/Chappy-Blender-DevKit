@@ -234,7 +234,7 @@ class ManifestReviewTests(unittest.TestCase):
         result = compare_official_validation({**fields(), 'license': None, 'version': None}, 1, 'missing "license"')
         self.assertEqual(result['status'], 'partial_diagnostic_agreement')
         self.assertFalse(result['complete_diagnostic_agreement'])
-        result = compare_official_validation({**fields(), 'permissions': {}}, 0, 'Success parsing TOML in "fixture"')
+        result = compare_official_validation({**fields(), 'unreviewed_private_field': {}}, 0, 'Success parsing TOML in "fixture"')
         self.assertEqual(result['status'], 'outside_supported_subset')
         self.assertFalse(result['complete_diagnostic_agreement'])
 
@@ -343,9 +343,79 @@ class ManifestReviewTests(unittest.TestCase):
                 self.assertEqual(report["errors"][0]["field"], key)
 
     def test_unknown_fields_are_outside_bounded_subset(self):
-        report = review_manifest_fields({**fields(), "permissions": {"network": "Fetch data"}})
+        report = review_manifest_fields({**fields(), "unreviewed_private_field": {"network": "Fetch data"}})
         self.assertEqual(report["errors"][0]["code"], "unsupported_field_requires_official_validation")
 
     def test_semver_prerelease_and_build_identifiers(self):
         for value in ("1.0.0+build-id", "1.0.0-alpha.1+build-id", "0.1.0"):
             self.assertEqual(review_manifest_fields({**fields(), "version": value})["status"], "structurally_valid_subset")
+
+
+    def test_r17_supported_optional_fields_and_omission(self):
+        for changes in ({}, {"blender_version_max": "5.3.0"},
+                        {"permissions": {}},
+                        {"blender_version_max": "5.3.0",
+                         "permissions": {"files": "Read synthetic data",
+                                         "network": "Fetch synthetic data"}}):
+            with self.subTest(changes=changes):
+                data = {**fields(), **changes}
+                result = review_manifest_fields(data)
+                self.assertEqual(result["status"], "structurally_valid_subset")
+                self.assertEqual(result["missing_required_fields"], [])
+                self.assertFalse(result["owner_approval_verified"])
+                rows = {row["field"]: row for row in manifest_field_diagnostics(data)}
+                for key in ("blender_version_max", "permissions"):
+                    self.assertEqual(rows[key]["status"],
+                                     "valid_in_supported_subset" if key in changes
+                                     else "optional_not_provided")
+                self.assertNotIn("Read synthetic data", str(rows))
+
+    def test_r17_invalid_optional_fields_are_not_missing_owner_inputs(self):
+        cases = (
+            ("blender_version_max", "4.4.0"),
+            ("blender_version_max", "4.3.0"),
+            ("blender_version_max", "not-version"),
+            ("blender_version_max", None),
+            ("permissions", 1), ("permissions", ["files"]),
+            ("permissions", {"unknown_private_permission": "secret"}),
+            ("permissions", {"files": ""}),
+            ("permissions", {"files": "x" * 65}),
+            ("permissions", {"files": "Private description!"}),
+            ("permissions", {"files": True}),
+        )
+        for key, value in cases:
+            with self.subTest(field=key, value_type=type(value).__name__):
+                result = review_manifest_fields({**fields(), key: value})
+                self.assertEqual(result["status"], "invalid")
+                self.assertEqual(result["missing_required_fields"], [])
+                self.assertEqual(result["errors"], [
+                    {"field": key, "code": "invalid_" + key}])
+                self.assertNotIn("unknown_private_permission", str(result))
+                self.assertNotIn("Private description", str(result))
+
+    def test_r17_unknown_fields_and_official_optional_diagnostics(self):
+        unknown = {**fields(), "private_unknown_top_level": "private-value"}
+        report = review_manifest_fields(unknown)
+        self.assertNotIn("private_unknown_top_level", str(report))
+        self.assertNotIn("private-value", str(report))
+        compared = compare_official_validation(
+            unknown, 0, 'Success parsing TOML in "fixture"')
+        self.assertEqual(compared["status"], "outside_supported_subset")
+        for field, bad in (("blender_version_max", "bad"), ("permissions", 1)):
+            data = {**fields(), field: bad}
+            msg = 'key "' + field + '" invalid: private-detail'
+            result = compare_official_validation(data, 1, msg)
+            self.assertEqual(result["status"], "agreement")
+            self.assertNotIn("private-detail", str(result))
+            self.assertEqual(compare_official_validation(
+                data, 0, 'Success parsing TOML in "fixture"')["status"], "disagreement")
+            self.assertEqual(compare_official_validation(
+                data, 1, msg + "\nunknown private warning")["status"], "unclassified")
+
+    def test_r17_theme_permissions_are_not_supported_and_owner_stays_unapproved(self):
+        data = {**fields(), "type": "theme", "permissions": {"files": "Read data"}}
+        result = review_manifest_fields(data)
+        self.assertEqual(result["errors"], [
+            {"field": "permissions", "code": "invalid_permissions"}])
+        self.assertFalse(result["owner_approval_verified"])
+        self.assertFalse(result["license_registry_or_compatibility_verified"])

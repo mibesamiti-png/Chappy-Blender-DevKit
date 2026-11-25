@@ -91,3 +91,21 @@ class ManifestFileReviewTests(unittest.TestCase):
         runtime.assert_not_called()
         self.assertNotIn('Private Person',stdout.getvalue())
         self.assertNotIn(str(self.source),stdout.getvalue())
+
+
+    def test_r17_optional_toml_review_preserves_known_field_names_and_privacy(self):
+        self.source.write_text(
+            'blender_version_min="4.4.0"\nblender_version_max="bad"\n'
+            'private_unknown_top="private-top-value"\n'
+            '[permissions]\nprivate_permission="private-purpose"\n',
+            encoding="utf-8")
+        report = review_manifest_file(self.source)
+        self.assertEqual(report["structure"]["errors"], [
+            {"field": "blender_version_max", "code": "invalid_blender_version_max"},
+            {"field": "permissions", "code": "invalid_permissions"},
+            {"field": "unsupported_field", "code": "unsupported_field_requires_official_validation"},
+        ])
+        for token in ("private_unknown_top", "private-top-value",
+                      "private_permission", "private-purpose", str(self.source)):
+            self.assertNotIn(token, json.dumps(report))
+        self.assertFalse(report["release_authorized"])
