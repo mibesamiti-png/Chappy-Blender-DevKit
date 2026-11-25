@@ -1394,3 +1394,8 @@ R13の担当枝・所有パス・負例・受け入れ条件・共通開始プ�
 - B: 既存の測定元一致実験・双方向focus/triageを次確認へ接続。C: 2種inlineレイアウトの計画・生成・Panel.draw・operator・解除を3版で確認、Aのaddon-plan CLI連携済み。D: optional max/permissionsの公式7例は各版4一致、1不一致(equal max)、1未分類、1範囲外。全一致/権利承認を主張しない。
 - 公式アーカイブは固定SHAを復元後も照合。同一PRのcold/warm全3版成功。今回独立PR検証は3版MISSから保存まで成功したが、dev pushキャッシュ初期化と兄弟PR共有ヒットは未確認。速度改善未測定。
 - R17限定受入成立。R18自動割当なし。44要件（実装26/一部16/未実装1/保留1）、24 NEXT（完了18/継続5/保留1）維持。現行自動化完了とはしない。[完成ゲート](V018_COMPLETION_GATES.md)参照。main・正式v0.17.0・last_verified・研究・次期active=false不変。
+
+
+## 2026-11-25 JST — #138 CI保守受入・R18限定割当候補
+
+#137節目同期dev 922ad354 独立7CI成功。#138候補87e5b323 5CI成功、4.5.15 MISS→SHA→即時保存、4.4.3/5.2.1 HIT。dev 91d8cdcbf3950203b945afdbc84ede3beffd7c7a 独立7CI全成功、Blender45536736023全3版HIT・SHA・native成功。公式ミラー未実測、容量/速度未測定。GL #114へ確定方式通知、Issue #125 revision3 paused。R18は[限定割当](R18_ABCD_START.md)の開始条件成立まで設計のみ。状態数・正式版・研究・次期active=false不変。
