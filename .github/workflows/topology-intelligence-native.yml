@@ -448,3 +448,118 @@ jobs:
           path: ti36-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase36 first-run: 5/6 frozen collar pass, 0/6 direct pass,
+      # all 102 valid. Case2 angle 14.477337 deg fails the 15 deg gate.
+      # Evidence: run 45574289345, job 139068247402, artifact 15004025069.
+      # Phase37: no false route selection on audited cases and two direct positive controls.
+      - name: Phase37 boundary-aware candidate routing
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti37.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti35.py').read_text().split('\nrows=[];raw=[];selected=[]',1)[0])
+          # Generalize only the evaluation domain and analytic area to convex XY boundaries.
+          # All existing thresholds, both triangle diagonals, and geometry checks remain.
+          src=(root/'ti32.py').read_text().split('def assess(',1)[1].split('\ndef fill(',1)[0]
+          assert '8*np.sin(np.pi/8)' in src
+          exec('def assess('+src.replace('8*np.sin(np.pi/8)','DOMAIN_AREA'))
+          CIRCLE=B.copy()
+          def set_domain(blend):
+              global B,S,DOMAIN_AREA
+              B=(1-blend)*CIRCLE+blend*SQUARE
+              e=np.roll(B,-1,axis=0)-B
+              DOMAIN_AREA=float(np.sum(B[:,0]*np.roll(B[:,1],-1)-B[:,1]*np.roll(B[:,0],-1))/2)
+              req(DOMAIN_AREA>0,'boundary orientation')
+              xx,yy=np.meshgrid(np.linspace(-.99,.99,201),np.linspace(-.99,.99,201))
+              pts=np.column_stack((xx.ravel(),yy.ravel()))
+              delta=pts[:,None,:]-B[None,:,:]
+              S=pts[np.all(e[None,:,0]*delta[:,:,1]-e[None,:,1]*delta[:,:,0]>1e-8,axis=1)]
+          def angle(a,b,c):
+              u=a-b;v=c-b
+              return float(np.degrees(np.arccos(np.clip(np.dot(u,v)/(np.linalg.norm(u)*np.linalg.norm(v)),-1,1))))
+          def corner_bound(c):
+              V=target(B,c).astype(np.float32).astype(float)
+              q=[]
+              for i,b in enumerate(V):
+                  a,d=V[(i-1)%16],V[(i+1)%16]
+                  q.append(min(angle(a,b,d),angle(b,a,d),angle(a,d,b)))
+              return sorted(q,reverse=True)[3]
+          def direct_corner_check(V,F,c):
+              V=np.asarray(V)
+              match=np.linalg.norm(V[:,None,:]-target(B,c)[None,:,:],axis=2).argmin(axis=0)
+              req(len(set(match))==16,'corner mapping')
+              corners=[]
+              for i,v in enumerate(match):
+                  incident=[f for f in F if int(v) in f]
+                  if len(incident)==1:
+                      req(int(match[(i-1)%16]) in incident[0] and int(match[(i+1)%16]) in incident[0],'corner premise')
+                      corners.append(i)
+              req(len(corners)==4,'not a four-corner grid')
+              return corners
+          # Seen cases are not fresh holdout; four new shapes test both sides of the decision.
+          prior=json.loads(Path('ti36-results/results.json').read_text())
+          fixtures=[('seen%d'%i,tuple(x['params']),0.) for i,x in enumerate(prior['rows'])]
+          fixtures += [('new_round',(.17,.20,.105,.028),0.),
+                       ('new_roundedsquare',(.19,.16,.08,-.015),.72),
+                       ('new_square',(.18,.18,.065,.01),1.),
+                       ('new_rectangle',(.23,.13,.095,-.02),1.)]
+          rows=[];raw=[]
+          for name,c,blend in fixtures:
+              set_domain(blend)
+              refs=[]
+              for shift in range(4):
+                  try:refs.append(assess(*coons(shift,c),c)['p95_worst'])
+                  except ValueError:pass
+              req(bool(refs),'no valid Coons reference')
+              ref=min(refs);bound=corner_bound(c)
+              # Conservative bound: use the four best distinct corners, regardless of routing.
+              # Only skip when clearly below the unchanged gate. Audit every candidate anyway.
+              skip=bound<15.-1e-4
+              g=guide(c);trials=[]
+              try:
+                  for arm,offset,simple in [('direct',o,s) for o in range(8) for s in (False,True)]+[('collar',0,False)]:
+                      row=dict(arm=arm,offset=offset,simple=simple)
+                      try:
+                          if arm=='direct':
+                              V,F,_=fill(c,4,offset,simple);smooth=6
+                          else:
+                              V,F=collar(c,.58,.5,0);smooth=3
+                          V,F,extra=patch(V,F,g,smooth,1,c)
+                          a=assess(V,F,c)
+                          req((a['vertices'],a['quads'])==((25,16) if arm=='direct' else (41,32)),'budget')
+                          if arm=='direct':
+                              row['corners']=direct_corner_check(V,F,c)
+                              req(a['min_angle']<=bound+1e-4,'angle bound contradicted')
+                          row.update(**a,**extra,status='valid')
+                          row['joint_pass']=a['gate_angle15'] and a['p95_worst']<=1.1*ref
+                          raw.append(dict(case=name,arm=arm,offset=offset,simple=simple,vertices=V,faces=F))
+                      except Exception as exc:row.update(status='rejected',reason=str(exc))
+                      trials.append(row)
+              finally:remove(g)
+              direct=[x for x in trials[:-1] if x.get('joint_pass',False)]
+              fallback=trials[-1]
+              exhaustive='direct' if direct else 'collar' if fallback.get('joint_pass',False) else 'none'
+              routed='direct' if direct and not skip else 'collar' if fallback.get('joint_pass',False) else 'none'
+              # Counts refer to hypothetical execution of the router, not actual CI savings.
+              rows.append(dict(case=name,blend=blend,bound=bound,skip_direct=skip,coons_p95=ref,direct_valid=sum(x['status']=='valid' for x in trials[:-1]),direct_pass=len(direct),direct_best=min(direct,key=lambda x:x['p95_worst']) if direct else None,collar=fallback,exhaustive=exhaustive,routed=routed,hypothetical_attempts=(0 if skip else 16)+(0 if routed=='direct' else 1),trials=trials))
+          d=Path('ti37-results');d.mkdir(exist_ok=True)
+          gate=all(x['routed']==x['exhaustive'] for x in rows) and all(x['routed']=='direct' for x in rows if x['case'] in ('new_square','new_rectangle')) and not any('angle bound contradicted' in t.get('reason','') or 'corner premise' in t.get('reason','') or 'not a four-corner grid' in t.get('reason','') for x in rows for t in x['trials'])
+          out=dict(approved=False,blender=bpy.app.version_string,rows=rows,gate=gate,audit_attempts=len(rows)*17,hypothetical_attempts=sum(x['hypothetical_attempts'] for x in rows))
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'raw.json').write_text(json.dumps(raw))
+          compact=[{k:v for k,v in x.items() if k!='trials'} for x in rows]
+          print('TI37_SUMMARY',json.dumps(dict(gate=gate,cases=compact,audit_attempts=out['audit_attempts'],hypothetical_attempts=out['hypothetical_attempts'])),flush=True)
+          assert len(rows)==10 and all(len(x['trials'])==17 for x in rows),'incomplete audit'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti37.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti37-boundary-router-${{ github.sha }}
+          path: ti37-results/
+          if-no-files-found: warn
+          retention-days: 14
