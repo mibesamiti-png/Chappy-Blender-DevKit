@@ -1,0 +1,39 @@
+{
+  "cycle": "R15",
+  "status": "local_wrap_diagnostic_complete_ci_reproduction_pending",
+  "approved": false,
+  "diagnostic_only": true,
+  "synthetic_only": true,
+  "parent_head": "165d392c5a0c0245b57f659ad330182b234a2be7",
+  "local_tested_sha256": "4d00d01f18cfeb668b0dc03b5a353254f20f653d0299b7eeb939627e4813436b",
+  "historical_outputs": 48,
+  "controls": 7,
+  "free": {
+    "overlap_before": 29799,
+    "overlap_after": 4917,
+    "same_island_before": 15803,
+    "same_island_after": 193,
+    "same_island_above_1e_minus6_before": 15479,
+    "same_island_above_1e_minus6_after": 0,
+    "mixed_winding_outputs_before": 48,
+    "mixed_winding_outputs_after": 0,
+    "wide_u_faces_before": 386,
+    "wide_u_faces_after": 0,
+    "seam_edges_before": 2202,
+    "seam_edges_after": 2495,
+    "boundary_mismatch_outputs": 48
+  },
+  "strict": {
+    "already_mismatched": 7,
+    "incompatible_short_span": 41,
+    "accepted": 0,
+    "wide_source_edges_total": 96,
+    "wide_source_u_span_range": [
+      0.9411764144897461,
+      0.9879367351531982
+    ],
+    "max_boundary_gap": 5.960464477539063e-8
+  },
+  "decision": "angular_wrap_contribution_confirmed_strict_repair_rejected",
+  "next": "R16 not started; independent seam-aware boundary fixtures and coherent cut-chart mapping"
+}
