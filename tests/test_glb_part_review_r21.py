@@ -73,6 +73,18 @@ class PartReviewR21(unittest.TestCase):
         _validate_part_review(envelope(missing))
         _validate_part_review(envelope(added))
 
+    def test_split_merge_and_degenerate_remain_uncertain(self):
+        whole = planar()
+        split = review_part_surfaces(whole, whole, [2], [1,1])
+        self.assertNotEqual(split["reference_parts"][0]["status"],"suggested")
+        merge = review_part_surfaces(whole, whole, [1,1], [2])
+        self.assertTrue(all(row["status"] != "suggested" for row in merge["reference_parts"]))
+        _validate_part_review(envelope(split))
+        _validate_part_review(envelope(merge))
+        degenerate = [((0.,0.,0.),(1.,0.,0.),(2.,0.,0.))]
+        self.assertEqual(review_part_surfaces(degenerate,whole,[1],[2])["reason"],
+                         "invalid_geometry")
+
     def test_layout_caps_and_budget(self):
         for ref,cand,rc,cc,reason in (
             (planar()*65,planar(),[2]*65,[2],"part_limit"),
