@@ -24,3 +24,8 @@ PR [#109](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/109) HEAD
 
 - R17 #135 は dev `84c9629b0db4707f43009fd819be9402f68580f7` へ統合済み。独立7系統中6成功、Blender 5.2.1 の公式取得段階で HTTP 403（[run 45530836361](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45530836361)）。4.4.3/4.5.15 は成功。R17の正式受入は保留。
 - #136旧HEAD `ecf7b7712548643e1b7e8554c0de8caf47f9f424` の [Blender run 45530757098](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45530757098) は3版成功。Python run 45530756986 は旧YAML表記を前提とする静的テスト2件で失敗。今回の修正はテストを新しい固定SHA行列と照合順序に合わせ、R17統合済みdevを取り込む。新HEADのCI、warm cache、共有ヒットは未確認。
+
+
+## R17統合後の検証
+
+#136 `e4e2e3aa4fbda487b9619e0ba4bae2e69cbdf415` の run 45532395189 で全3版実ログのCACHE_HITとSHA256_PASS、nativeテスト成功を確認。旧run 45530757098の全3版MISS・SHA256_PASS・保存も確認。dev `236b9a3254928d7cb69d5c415fd8a3e792ee5de7` のrun 45533937378は全3版MISS・SHA256_PASS・保存・native成功、独立7CI成功。これはPR検証の証拠でありdev push初期化完了・別PR間HITを証明しない。速度改善未測定。

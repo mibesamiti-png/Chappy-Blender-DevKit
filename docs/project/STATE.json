@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18: R16 B#126/C#124/D#127をA統合PR #130で10パス一度だけ反映（b9936b35a17ec538c61e82622eabaf8bfcf3bc35）。個別各5CI、結合5CI、dev独立7CI全成功。機能挙動は変更なし。R17は完成条件に直結する実装を優先、節目同期後の新dev独立7CIとIssue #125更新を条件に開始。正式v0.17.0、実GLB/GUI/権利/正式公開未検証、v0.19未有効。"
+    "milestone": "v0.18: R17 B#132/C#134/D#133を#135で統合、#136で公式SHA固定キャッシュを導入。dev 236b9a3254928d7cb69d5c415fd8a3e792ee5de7 独立7CI全成功、R17限定受入成立。実GLB/GUI/権利・汎用UI/正式Extension経路は未完了。R18自動割当なし、正式v0.17.0・次期active=false維持。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -84,7 +84,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/modular_builder.py",
-      "note": "レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。"
+      "note": "レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17 #135/#136: inline UIレシピ計画とA CLI連携、2種の生成/実操作/解除を3版で実測。236b9a3独立7CI成功。正式Extension経路/権利未完了。"
     },
     {
       "id": "EDIT-001",
@@ -116,7 +116,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/ui_layout.py",
-      "note": "既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。"
+      "note": "既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17: 既存5機能のレシピ別inline UIと2種のnative描画/操作/解除を236b9a3で3版確認。任意operator/汎用UI/GUIは未完了。"
     },
     {
       "id": "EXT-001",
@@ -124,7 +124,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/extension_preflight.py",
-      "note": "必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。"
+      "note": "必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。 R17: max/permissionsのoptional構造と公式7例（4一致/1不一致/1未分類/1範囲外）を236b9a3の3版で確認。正式ZIP・残optional・権利未完了。"
     },
     {
       "id": "INST-001",
@@ -356,7 +356,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/glb_visual_experiment_review.py",
-      "note": "AST候補/日本語シート/変更履歴に、初期GLB-020集計SHA一致の合成反復レビューを追加。宣言/参照/構文経路と完了・未完了・失敗prefixを私有JSON/MDに整理。手動socket役割と完全一致名は合成操作の確認候補のみで、実プロパティ効果/因果/値は未証明。79fea17e70665392731780ed5a518982530b7323でPython752件×3/Windows2/Blender4.4.3/4.5.15/5.2.1の連携・別集計拒否・元データ不変に成功。6CI: Python42366055143、Windows42366055138、Blender42366055131、Kit42366055135、Handoff42366055133、Chromium42366055162。全体partial、実データ・GUI・実インスタンス検証は未完了。 今回NEXT-008/009: 双方向調査focus・複数宣言triage・constructor再束縛の安全側除外を追加。b17fa4dでPython787件×3/Windows2/Blender3と全6CI成功。宣言不確実性・実体/因果未証明のため全体partial維持。"
+      "note": "AST候補/日本語シート/変更履歴に、初期GLB-020集計SHA一致の合成反復レビューを追加。宣言/参照/構文経路と完了・未完了・失敗prefixを私有JSON/MDに整理。手動socket役割と完全一致名は合成操作の確認候補のみで、実プロパティ効果/因果/値は未証明。79fea17e70665392731780ed5a518982530b7323でPython752件×3/Windows2/Blender4.4.3/4.5.15/5.2.1の連携・別集計拒否・元データ不変に成功。6CI: Python42366055143、Windows42366055138、Blender42366055131、Kit42366055135、Handoff42366055133、Chromium42366055162。全体partial、実データ・GUI・実インスタンス検証は未完了。 今回NEXT-008/009: 双方向調査focus・複数宣言triage・constructor再束縛の安全側除外を追加。b17fa4dでPython787件×3/Windows2/Blender3と全6CI成功。宣言不確実性・実体/因果未証明のため全体partial維持。 R17: 私有triageの次確認候補を整理、236b9a3の3版と独立7CI成功。実データ因果未確認。"
     },
     {
       "id": "GLB-022",
@@ -364,7 +364,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/glb_synthetic_run_compare.py",
-      "note": "合成最大4試行/失敗レビューに条件付きschema2と旧schema1読取互換、同条件2〜16実行比較を追加。プロトコル/ソースSHA/Blender版（LTS保持）/基準・初期GLB SHA/スケール/初期観測/予算を照合。失敗・未完了・改変・不一致を除外し距離/面数混在は人手確認。2867ab31cf355486232f1f1b257315c9e73146a1でPython742件×3/Windows2/Blender3の独立通常4試行2回比較・失敗除外成功。6CI: Python42364086005、Windows42364086014、Blender42364085988、Kit42364085981、Handoff42364085980、Chromium42364085989。全体partial、任意実ユーザー因果/最適値/完全一致は未保証。 b17fa4d/Blender42374909099で検証済み経過と双方向focus/AST曖昧さの私有triageを接続。自動再実行/実プロパティ因果は認定せずpartial維持。"
+      "note": "合成最大4試行/失敗レビューに条件付きschema2と旧schema1読取互換、同条件2〜16実行比較を追加。プロトコル/ソースSHA/Blender版（LTS保持）/基準・初期GLB SHA/スケール/初期観測/予算を照合。失敗・未完了・改変・不一致を除外し距離/面数混在は人手確認。2867ab31cf355486232f1f1b257315c9e73146a1でPython742件×3/Windows2/Blender3の独立通常4試行2回比較・失敗除外成功。6CI: Python42364086005、Windows42364086014、Blender42364085988、Kit42364085981、Handoff42364085980、Chromium42364085989。全体partial、任意実ユーザー因果/最適値/完全一致は未保証。 b17fa4d/Blender42374909099で検証済み経過と双方向focus/AST曖昧さの私有triageを接続。自動再実行/実プロパティ因果は認定せずpartial維持。 R17: 既存合成実験triageの次確認前提を整理、236b9a3の3版と独立7CI成功。実ユーザー因果/値未確認。"
     },
     {
       "id": "DASH-001",
@@ -397,7 +397,7 @@
       "status": "open",
       "severity": "low",
       "title": "Blender公式アーカイブ取得で稀にHTTP 403",
-      "workaround": "ダウンロード失敗とコード失敗を区別し、CIの失敗ジョブのみ再実行する",
+      "workaround": "固定公式SHAでアーカイブを毎回検証し同一PRキャッシュ再利用を確認。キャッシュミス時の403は残り得る。失敗ジョブのみ再実行。別PR共有ヒットは未確認。",
       "related_requirement": "TEST-001"
     },
     {
@@ -1049,6 +1049,11 @@
       "id": "DEC-078",
       "decision": "R16統合受入と完成優先R17への移行。DIL手順のみ限定利用し研究コードは導入しない",
       "note": "B#126 f1f4fb1/C#124 ddd7cbe/D#127 477c1e2各5CI、結合#130 bb93d51の5CI、dev b9936b35の独立7CI全成功（Python45520525702、Windows45520525596、Blender45520525689、Chromium45520525694、Handoff45520525609、Kit45520525591、Skill45520525679）。結合Blender3版各63チェック、R16各6項目。10パス重複0、実装挙動変更なし、CI再試行0。段階取得/CI概要優先/短い引継ぎ/同種一括は既存ゲート内で使用、効率の定量効果未測定。新管理/研究なし。R17は節目同期後の独立7CIと正式dispatch更新まで実装不可。44要件/24 NEXT/last_verified/正式v0.17.0/v0.19 active=false維持。"
+    },
+    {
+      "id": "DEC-079",
+      "decision": "R17限定受入と公式SHA固定キャッシュの統合。新規ラウンドの自動割当を止め、既存完成条件の残りを分離する",
+      "note": "B#132/C#134/D#133各5CI、結合#135 c7609fa 5CI、dev 84c9629は5.2.1取得403で6/7。#136 e4e2e3a 5CI・3版cold/warm SHA一致、dev 236b9a3254928d7cb69d5c415fd8a3e792ee5de7 独立7CI成功（Python45533937263、Windows45533937251、Blender45533937378、Chromium45533937233、Handoff45533937238、Kit45533937212、Skill45533937244）。3版実行でB triage、C 2種UI、D optional 7例を確認。別PR共有ヒット未確認。44要件/24 NEXT/last_verified/正式v0.17.0/次期active=false維持。"
     }
   ],
   "last_verified": {
