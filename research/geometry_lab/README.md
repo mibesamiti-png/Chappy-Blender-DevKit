@@ -205,3 +205,7 @@ R8を一度生成して最小三角形品質が0.1以上なら即採用、未満
 ## R21 — 新規8形状・Blender実機での連携最適化検証
 
 [条件](cycles/r21/RESEARCH.md) / [結果](cycles/r21/RESULTS.md) / [状態](cycles/r21/STATUS.json)。新規の同系統人工8形状で安全8/8、法線p95改善5%以上5/8（必要4/8）、全体UV重なり・CGAL交差0、元面・シーム・UV保持、実機roundtrip一致。3件は元形状維持。実作品・レンダリング未検証、approved=false、R22自動開始なし。
+
+## R22 — 第一段階の区切り
+
+[実測](cycles/r22/RESULTS.md) / [状態](cycles/r22/STATUS.json)。修正版96/96画像、白飛び指標64/64、fallback18組一致。実画像2組を確認、見た目の優位は未確定。R19未達維持、製品承認なし。次は[限定実践研究](APPLIED_MODELING_PILOT.md)、DILの既存方針を使う。新組織・R23自動開始なし。

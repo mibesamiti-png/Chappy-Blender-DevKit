@@ -1,6 +1,6 @@
 {
   "cycle": "R22",
-  "status": "revision_1_integrity_passed_shading_clipped_revision_2_pending",
+  "status": "phase_one_closed_scoped_render_integrity_passed_visual_limitations_retained",
   "approved": false,
   "synthetic_only": true,
   "blender": "4.4.3",
@@ -34,7 +34,23 @@
     "light_scale": 0.125,
     "samples": 32,
     "gate": "each flat/smooth panel <=.10 near-white fraction among max RGB>100 pixels and >=256 such pixels",
-    "status": "pending"
+    "status": "passed",
+    "run": 45524132560,
+    "job": 138903546091,
+    "artifact_id": 14980444585,
+    "artifact_bytes": 15882626,
+    "render_count": 96,
+    "pair_count": 48,
+    "fallback_pairs": 18,
+    "fallback_mae_max": 0,
+    "exposure_panels": 64,
+    "near_white_max": 0,
+    "manifest_file_hashes_verified": 98,
+    "comparison_sheets_inspected": [
+      "r21_sparse_view0_comparison.png",
+      "r21_oval_view180_comparison.png"
+    ],
+    "visual_observation": "clipping resolved in inspected sheets; smooth-shaded differences small, no universal visual superiority claim"
   },
-  "next": "Inspect revision 2 actual render; no R23 automatic start"
+  "next": "Phase one closed; no R23 by default. One bounded applied modeling pilot, using existing DIL workflow only; no production approval."
 }

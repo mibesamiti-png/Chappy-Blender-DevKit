@@ -51,3 +51,5 @@ R19: r19/RESEARCH.md、RESULTS.md、STATUS.json。境界法線改善は1/12の�
 R20: r20/RESEARCH.md、RESULTS.md、STATUS.json。R19とR17連携、既知12形状で安全12/12・改善9/12、UV救済68/133（予備審査）、限定ゲート達成。未承認、R21自動開始なし。
 
 R21: r21/RESEARCH.md、RESULTS.md、STATUS.json。新規8形状のBlender前後比較、安全8/8、改善5/8、元面保持・UV重なり0・CGAL0。限定研究ゲート達成、R22自動開始なし。
+
+R22: r22/RESULTS.md、STATUS.json。修正レンダリング成功、露出検査64/64、画像差の品質解釈に限界。第一段階終了、approved=false、R23自動開始なし。
