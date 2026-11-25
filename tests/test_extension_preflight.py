@@ -261,6 +261,28 @@ class ExtensionPreflightTests(unittest.TestCase):
         self.assertFalse(known["source_authenticity_verified"])
         self.assertFalse(known.get("release_authorized", False))
 
+    def test_r16_two_matching_observations_never_authorize_release(self):
+        """Watched Extensions CI: a two-sample success is not source approval."""
+        import test_extension_two_sample_round16 as r16
+        from unittest.mock import patch
+        # Missing independent prior basis must fail BEFORE invoking a reader.
+        with patch.object(
+            r16.r15, "_digest_review",
+            side_effect=AssertionError("unknown basis must not read"),
+        ):
+            unknown = r16._two_sample_review(
+                None, None, "parts/blender/context.py", prior_digest=None)
+        self.assertEqual(unknown["reason_code"], "inconclusive_reference_basis")
+        self.assertEqual(unknown["samples_attempted"], 0)
+        self.assertEqual(unknown["content_opens"], 0)
+        self.assertFalse(unknown["current_source_stability_verified"])
+        self.assertFalse(unknown["release_authorized"])
+        self.build("mesh_inspector")
+        preview = inspect_preview_archive(self.zip)
+        self.assertEqual(preview["status"], "blocked_for_extension_release")
+        self.assertFalse(preview["source_authenticity_verified"])
+        self.assertFalse(preview.get("release_authorized", False))
+
     def test_all_feature_preview_is_verified_but_not_extension_approved(self):
         self.build()
         result = inspect_preview_archive(self.zip)

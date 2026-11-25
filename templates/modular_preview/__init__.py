@@ -48,6 +48,8 @@ assert set(_FEATURE_IDS) <= _OBJECT_MODE_FEATURES | _EDIT_MODE_FEATURES
 # R15 checks this distinction using live Blender Panel.draw enabled flags
 # versus real bpy.ops FINISHED/CANCELLED results across selection/mode changes.
 # A previous enabled hint is not authorization to bypass execute() guards.
+# R16: mode/selection may change after Panel.draw; the trusted operator must
+# still reject stale permissions using live Blender context on every call.
 def _preview_unavailable_reason(feature_id, context):
     active = getattr(context, "active_object", None)
     mesh = getattr(active, "data", None)
