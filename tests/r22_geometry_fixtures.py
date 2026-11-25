@@ -134,6 +134,9 @@ def inspect_case(case, ref, cand, rc, cc, report=None):
         else:
             # Same exported surface; the physical hidden interior is unknown.
             assert value <= ROUNDTRIP_TOL
+    if case["family"] == "aperture":
+        assert fixed["candidate_to_reference"]["sampled_max"] <= ROUNDTRIP_TOL
+        assert adaptive["candidate_to_reference"]["refined_sampled_max"] <= ROUNDTRIP_TOL
     if case["reference_to_candidate_zero"]:
         assert fixed["reference_to_candidate"]["sampled_max"] <= ROUNDTRIP_TOL
         assert adaptive["reference_to_candidate"]["refined_sampled_max"] <= ROUNDTRIP_TOL
@@ -167,6 +170,7 @@ def inspect_case(case, ref, cand, rc, cc, report=None):
     observations = [o for row in rows for o in row["observations"]]
     result.update(
         fixed_max=fmax, adaptive_max=amax,
+        physical_diagnosis_status="not_established",
         fixed_class=classify(fmax),adaptive_class=classify(amax),
         classification=classify(max(fmax,amax)),
         ref_hints=hint_counts(ref,rc),cand_hints=hint_counts(cand,cc),
