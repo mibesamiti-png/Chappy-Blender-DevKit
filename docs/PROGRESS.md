@@ -1427,3 +1427,8 @@ C#145 18de007 / D#146 355daa2 各5CI、A#147 393ee4e 5CI（再試行0）。12+6�
 ### EXT-001 — 圧縮前の備考履歴（保存）
 
 必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。 R17: max/permissionsのoptional構造と公式7例（4一致/1不一致/1未分類/1範囲外）を236b9a3の3版で確認。正式ZIP・残optional・権利未完了。 R18 #142/36d40904: 明示合成metadata→TOML→非インストール固定2member ZIP、公式build/validate双方を3版実測。Aが6機能の実preview検査を接続。実機能をExtensionへ変換・登録する経路、実権利・正式配布は未完了。 R19 #147/538e0b58: 固定CI専用レシピの実生成物をroot ZIP化し公式validate、隔離offline local repoに手動stageしてbl_extでenable/2 operator/disable/cleanup、型付き設定も同一ZIPで確認。公式installerは未実行、一般変換/出力入口なし、実権利/正式配布未承認。全体partial維持。
+
+
+## 2026-11-25 JST — v0.18基盤区切り・v0.19移行候補
+
+#148修正012758c 6CI成功、統合dev `d4aa43016ad85159584a0d88b33e7cbb58368b97` 独立7CI成功（Python45560603306、Windows45560603301、Blender45560603365、Chromium45560603489、Handoff45560603287、Kit45560603398、Skill45560603308）。実行ログ3版69 lifecycleとR19同一ZIP typed vertical成功。#25同HEAD draft。限定基盤の自動化区切りを判断、未実装/実データ/GUI/権利は[完成ゲート](V018_COMPLETION_GATES.md)に保持し既承認F019〜022との対応を明示。次期計画のみ有効化する候補、専門実装は独立CIと正式割当後。現行状態数/正式版/main/last_verified不変。
