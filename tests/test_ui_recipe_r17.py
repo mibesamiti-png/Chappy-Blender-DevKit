@@ -6,7 +6,6 @@ script. Ordinary unittest never imports bpy or executes generated code.
 from __future__ import annotations
 
 import ast
-import copy
 import json
 from pathlib import Path
 import tempfile
@@ -135,6 +134,24 @@ class RecipeLayoutR17Tests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         build_modular(recipe, path, root=ROOT, preview_unapproved=True)
                     self.assertFalse(path.exists())
+
+    def test_native_fixture_has_only_fixed_trusted_imports(self):
+        tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+        allowed = {"ast", "json", "pathlib", "tempfile", "unittest", "zipfile",
+                   "__future__", "cbdk.addon_builder", "cbdk.modular_builder",
+                   "importlib", "sys", "types", "bmesh", "bpy"}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                self.assertTrue(all(a.name in allowed for a in node.names))
+            elif isinstance(node, ast.ImportFrom):
+                self.assertEqual(node.level, 0)
+                self.assertIn(node.module, allowed)
+            elif isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name):
+                    self.assertNotIn(node.func.id, {"eval", "exec", "__import__"})
+                elif isinstance(node.func, ast.Attribute) and node.func.attr == "import_module":
+                    self.assertEqual(ast.unparse(node.args[0]), "PACKAGE_ID")
+        self.assertEqual(PACKAGE_ID, "cbdk_modular_preview")
 
     def test_legacy_planner_refuses_custom_rather_than_misreport_global(self):
         with self.assertRaisesRegex(ValueError, "plan_modular_recipe"):
