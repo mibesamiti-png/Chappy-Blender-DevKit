@@ -1077,3 +1077,65 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  applied-modeling-pilot-04-flashlight:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install independent geometry oracle
+        run: python -m pip install -r requirements-oracle.txt shapely==2.1.2
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned publisher Blender archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Build editable flashlight and render native model
+        run: |
+          mkdir -p runs/applied04
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python applied04/blender_run.py -- --output runs/applied04
+      - name: Independent geometry audit and fixed budget
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          from applied02.audit import check_mesh
+          from applied04.geometry import PROFILE
+          d=Path("runs/applied04");raw=json.loads((d/"raw.json").read_text());b=raw["open"]
+          meshes={k:check_mesh(v) for k,v in b.items()}
+          vertices=sum(v["base_vertices"] for v in b.values())
+          triangles=sum(v["triangles"] for v in meshes.values())
+          body=np.asarray(b["Body"]["vertices"])
+          rings=body.reshape(len(PROFILE),24,3)
+          radii=np.linalg.norm(rings[:,:,:2],axis=2)
+          profile_error=max(float(np.max(np.abs(radii-np.asarray([p[1] for p in PROFILE])[:,None]/1000))),float(np.max(np.abs(rings[:,:,2]-np.asarray([p[0] for p in PROFILE])[:,None]/1000))))
+          result=dict(approved=False,vertices=vertices,triangles=triangles,meshes=meshes,roundtrip_exact=raw["roundtrip_exact"],profile_error_m=profile_error,visual_review="pending",gate=bool(set(b)=={"Body","Lens","Switch"} and raw["roundtrip_exact"] and vertices<=600 and triangles<=2500 and profile_error<1e-7 and all(v["passed"] for v in meshes.values())))
+          (d/"evaluation.json").write_text(json.dumps(result,indent=2))
+          print("APPLIED04",json.dumps(result))
+          if not result["gate"]:raise SystemExit("flashlight gate unmet")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-applied04-${{ github.sha }}
+          path: research/geometry_lab/runs/applied04/
+          if-no-files-found: warn
+          retention-days: 14
+
