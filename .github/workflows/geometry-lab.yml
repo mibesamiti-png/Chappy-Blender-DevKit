@@ -1013,3 +1013,67 @@ jobs:
           path: research/geometry_lab/runs/applied03/axis.json
           if-no-files-found: warn
           retention-days: 14
+
+  applied-modeling-pilot-02-simple:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install independent geometry oracle
+        run: python -m pip install -r requirements-oracle.txt shapely==2.1.2
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned publisher Blender archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Build editable eyewear and test native saved poses
+        run: |
+          mkdir -p runs/applied02-simple
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python applied02/simple_run.py -- --output runs/applied02-simple
+      - run: python -m applied02.audit --dir runs/applied02-simple
+      - run: python -m applied02.region_audit --dir runs/applied02-simple
+      - name: Check lightweight budget and nonexempt open contacts
+        run: |
+          python - <<'PY'
+          import json,itertools
+          from pathlib import Path
+          import numpy as np
+          from applied02.contact_diagnostic import intended_pair,hit_pairs
+          d=Path("runs/applied02-simple")
+          e=json.loads((d/"evaluation.json").read_text())
+          b=json.loads((d/"raw.json").read_text())["open"]
+          controls=e["base_mesh_vertices"]+e["bezier_controls"]
+          n=e["evaluated_triangles"]
+          tri={k:np.asarray(m["vertices"])[np.asarray(m["triangles"],int)] for k,m in b.items()}
+          pairs=[(x,y) for x,y in itertools.combinations(sorted(b),2) if (b[x]["parent"] or b[y]["parent"]) and not intended_pair(x,y,b)]
+          hits={x+"+"+y:h for x,y in pairs if (h:=hit_pairs(tri[x],tri[y]))}
+          result=dict(approved=False, controls=controls, triangles=n, prior_controls=292, prior_triangles=5656, open_pairs=len(pairs), open_nonexempt_contacts=hits, visual_review="pending", mechanical_clearance="not_certified", gate=bool(e["gate"] and controls<=292 and n<=4524 and len(pairs)==24 and not hits))
+          (d/"simple_evaluation.json").write_text(json.dumps(result,indent=2))
+          print("APPLIED02_SIMPLE",json.dumps(result))
+          if not result["gate"]:raise SystemExit("simple gate unmet")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-applied02-simple-${{ github.sha }}
+          path: research/geometry_lab/runs/applied02-simple/
+          if-no-files-found: warn
+          retention-days: 14
+
