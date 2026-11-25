@@ -384,3 +384,10 @@ A統合[#130](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/130)�
 ## 2026-11-25 JST — v0.19最初のB限定割当候補
 
 #149 dev `1b32541dd425e1d1555f9612d766fbbdad3b6b25` 独立7CI成功、future active=true。GL #114と既存GLB実装を読取照合し、重複する研究の再実装を避ける。F019-01をB限定の1PRで、既存512面経路を保持し明示選択・有限予算の512超（目標2048/scene）表面比較を実測する。[R20正式割当候補](R20_ABCD_START.md)。R20はv0.19内のラウンド番号。C/D待機、GL/DIL独立。割当候補統合と独立7CIおよび#125更新前は全専門チーム停止。R21自動発行なし。
+
+
+## 2026-11-25 JST — R20 / F019-01限定受入
+
+#151 B `0ab8defe358c6928f6df00da03836a9638c82eb7` 5CI、#152候補 `910ada89ecf3285d1a45559e39542229fadd0639` 5CI、統合dev `7e8bd21994a3b12dc1282fedc3ceceb4230e6860` 独立7CI成功。Python45566806276、Windows45566806261、Blender45566806341、Chromium45566806269、Handoff45566806324、Kit45566806376、Skill45566806258。実Blender jobs139043471425/139043471439/139043471125、3版各69 lifecycle、R19保持、R20 expanded/CLI marker・archive SHA検証。
+
+2048/sceneの合成GLBのZ=.25/別分割/開口、既定512維持、2049超過と密集4M評価停止、CLI exit2・元SHA不変を確認。2048面中央値（親roundtrip warmup+3）3.904/4.057/4.303秒、131872 samples/2241824 node visits/1054976 exact evals。上限131872/8M/4M、BVH2構築共有。密集停止時測定値なし。速度比較の保証やnative memory、任意実モデルは未確認。旧glb-regression、matcher/viewer上限は不変。研究採用なし。F019-01の今回の限定目標は達成したが、v0.19全体は未完、F019-02/03は残る。#125 rev9 paused、B/C/D待機。次ラウンド自動発行なし。正式v0.17.0/main/last_verified/44要件/24 NEXT状態不変。

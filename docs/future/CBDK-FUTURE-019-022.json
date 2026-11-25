@@ -110,5 +110,23 @@
     "pr25_draft": true,
     "scope": "Bounded v0.18 development foundation, not product release or all requirements complete",
     "dispatch": "A prepares F019 baseline and bounded assignments after activation validation; B/C/D paused until separately verified dispatch."
+  },
+  "phase_progress": {
+    "0.19": {
+      "F019-01": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "7e8bd21994a3b12dc1282fedc3ceceb4230e6860",
+        "blender_run": 45566806341,
+        "scope": "Explicit standalone surface review 2048 triangles per scene; legacy 512 default; finite budgets; authored synthetic GLB only. Larger/general mesh, partitioning needs, native memory and actual user models remain unverified."
+      },
+      "F019-02": {
+        "status": "not_started_in_v019",
+        "scope": "Existing matcher baseline retained; practical expanded part correspondence pending."
+      },
+      "F019-03": {
+        "status": "not_started_in_v019",
+        "scope": "Detailed geometry diagnostics and GL candidate evaluation pending; no research adoption."
+      }
+    }
   }
 }
