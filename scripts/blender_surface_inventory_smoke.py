@@ -580,6 +580,11 @@ def _expanded_part_review_roundtrip(output):
     report,_ = compare("face_cap",left,over)
     assert report["status"] == "skipped"
     assert report["part_review"]["reason"] == "global_surface_not_measured"
+    dense_a = output / "r20_dense_ref.glb"
+    dense_b = output / "r20_dense_cand.glb"
+    dense, _ = compare("global_budget",dense_a,dense_b)
+    assert dense["status"] == "skipped" and dense["reason"] == "work_budget"
+    assert dense["part_review"]["reason"] == "global_surface_not_measured"
     print("CBDK_R21_PART_REVIEW_PASS " + json.dumps(stats,sort_keys=True))
 
 
