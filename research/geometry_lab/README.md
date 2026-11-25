@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R16
+# CBDK Geometry Research Lab — R17
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -185,3 +185,7 @@ R8を一度生成して最小三角形品質が0.1以上なら即採用、未満
 ## R16 — 独立境界UVと一つのシームによる調和展開
 
 [事前条件](cycles/r16/RESEARCH.md) / [実測結果](cycles/r16/RESULTS.md) / [状態](cycles/r16/STATUS.json)。既存入力輪郭から独立に定義した長方形UV境界を固定し、R10接合帯を一つのシームで開く。既知4/4、新規8/8、異常境界4/4拒否。新規重なり3710→0、シーム666→32、境界誤差0、接合帯CGAL交差0。比較は新境界を固定した素朴な角度UVでありR13ではない。歪みp95は5/8悪化、Blender実機・実モデル未検証。approved=false、R17自動開始なし。
+
+## R17 — 境界・シーム固定のUV異方性低減
+
+[事前条件](cycles/r17/RESEARCH.md) / [実測結果](cycles/r17/RESULTS.md) / [状態](cycles/r17/STATUS.json)。R16を初期値として自由UVのみ補正。既知4/4、新規8/8。新規全8件p95改善5%以上、平均24.4%減。全12件境界・シーム固定、UV重なり0、CGAL交差0。密度指標は新規1件悪化。Blender実機・実モデル未検証。approved=false、R18自動開始なし。

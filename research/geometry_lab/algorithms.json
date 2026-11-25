@@ -420,6 +420,38 @@
       ],
       "status": "research_scoped_detached_uv_gate_passed_not_product_approved",
       "approved": false
+    },
+    {
+      "id": "fixed-boundary-conformal-refinement-r17",
+      "version": "0.17.0",
+      "api": "cycles.r17.refine.refine",
+      "purpose": "R16の境界UVとシームを固定したまま局所異方性を抑える研究用補正",
+      "preconditions": [
+        "R16 valid one-island rectangular cut chart",
+        "<=600 triangles",
+        "exact shared corners and explicit seam path"
+      ],
+      "input": "R16 XYZ, triangles, UV corners and seam path",
+      "output": "new corner UVs and optimizer diagnostics, approved=false",
+      "parameters": {
+        "p": [
+          2,
+          6,
+          12
+        ],
+        "iterations": 180,
+        "selection": "p95 then max with no regression and validity checks"
+      },
+      "success": "12/12 gate, 8/8 fresh p95 reduction >=5%, zero overlaps and CGAL, exact pins and seam",
+      "failure": "density not optimized; 1/8 fresh worse; Blender real asset not verified",
+      "validation": "cycles/r17/run.py; R14 UV auditor and CGAL",
+      "performance": "cycles/r17/RESULTS.md",
+      "references": [
+        "cycles/r17/RESEARCH.md",
+        "cycles/r17/STATUS.json"
+      ],
+      "status": "research_scoped_detached_distortion_gate_passed_not_product_approved",
+      "approved": false
     }
   ]
 }
