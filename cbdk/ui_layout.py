@@ -15,6 +15,8 @@ from .feature_catalog import TRUSTED_FEATURES, INPUT_SPECS
 
 UI_CATALOG = "catalog/ui_layouts.json"
 MAX_BYTES = 20_000
+PANEL_SLOTS = {"primary": "VIEW3D_PT_cbdk_modular_primary",
+               "secondary": "VIEW3D_PT_cbdk_modular_secondary"}
 NUDGE_PARAMETER = {key: INPUT_SPECS["offset"][key]
                    for key in ("type", "size", "min", "max", "default")}
 
@@ -97,11 +99,49 @@ def _label(value, *, limit=72):
     )
 
 
+def _flatten_panel_layout(data):
+    """Schema 2 opt-in: two fixed slots and a shared four-section budget."""
+    if (type(data) is not dict or set(data) != {
+            "schema_version", "kind", "preview_only", "panels"}
+            or type(data["schema_version"]) is not int or data["schema_version"] != 2
+            or data["kind"] != "cbdk_authored_preview_ui_layout"
+            or data["preview_only"] is not True):
+        raise ValueError("Unsupported authored multi-panel layout schema")
+    panels = data["panels"]
+    if type(panels) is not list or len(panels) != 2:
+        raise ValueError("Expected exactly two authored panel slots")
+    seen = set()
+    flat = []
+    planned = []
+    for panel in panels:
+        if type(panel) is not dict or set(panel) != {"slot", "label", "sections"}:
+            raise ValueError("Unexpected authored panel fields")
+        slot = panel["slot"]
+        if type(slot) is not str or slot not in PANEL_SLOTS or slot in seen:
+            raise ValueError("Unknown or repeated authored panel slot")
+        if not _label(panel["label"]):
+            raise ValueError("Invalid authored panel label")
+        sections = panel["sections"]
+        if type(sections) is not list or not 1 <= len(sections) <= 4:
+            raise ValueError("Expected nonempty authored panel sections")
+        if len(flat) + len(sections) > 4:
+            raise ValueError("Expected at most four authored UI sections across panels")
+        seen.add(slot)
+        indices = tuple(range(len(flat), len(flat) + len(sections)))
+        flat.extend(sections)
+        planned.append({"slot": slot, "panel_id": PANEL_SLOTS[slot],
+                        "label": panel["label"], "section_indices": indices})
+    return {"schema_version": 1, "kind": data["kind"], "preview_only": True,
+            "sections": flat}, tuple(planned)
+
+
 def validate_ui_layout(data: object, *, expected_features=None) -> tuple:
     """Validate exact feature coverage; default is the complete authored catalog."""
     expected = set(TRUSTED_FEATURES) if expected_features is None else set(expected_features)
     if not expected or not expected <= set(TRUSTED_FEATURES):
         raise ValueError("Invalid authored UI coverage")
+    if type(data) is dict and type(data.get("schema_version")) is int and data["schema_version"] == 2:
+        data, _ = _flatten_panel_layout(data)
     if (type(data) is not dict or set(data) != {
             "schema_version", "kind", "preview_only", "sections"}
             or type(data["schema_version"]) is not int
@@ -175,11 +215,14 @@ def plan_ui_layout(requested_features: object, *, root: Path, include_options=Fa
             or len(set(requested_features)) != len(requested_features)):
         raise ValueError("Invalid authored UI feature selection")
     chosen = set(requested_features)
+    panels = None
     if layout_data is None:
         source = _trusted_read(UI_CATALOG, root=root.resolve())
         if len(source) > MAX_BYTES:
             raise ValueError("Authored UI layout exceeds size limit")
         data = json.loads(source.decode("utf-8"), object_pairs_hook=_strict_object)
+        if type(data) is not dict or data.get("schema_version") != 1:
+            raise ValueError("Global catalog must retain schema 1; panels are inline opt-in only")
         layout = validate_ui_layout(data)
     else:
         # The inline recipe is data only. Every resolved feature appears
@@ -188,6 +231,8 @@ def plan_ui_layout(requested_features: object, *, root: Path, include_options=Fa
         layout = validate_ui_layout(data, expected_features=chosen)
         if len(json.dumps(data, ensure_ascii=False, allow_nan=False).encode("utf-8")) > MAX_BYTES:
             raise ValueError("Authored recipe UI layout exceeds size limit")
+        if data["schema_version"] == 2:
+            data, panels = _flatten_panel_layout(data)
     visible = tuple(
         (title, tuple((feature_id, label) for feature_id, label in controls
                       if feature_id in chosen))
@@ -216,7 +261,11 @@ def plan_ui_layout(requested_features: object, *, root: Path, include_options=Fa
         for section in data["sections"]
         if any(control["feature_id"] in chosen for control in section["controls"])
     )
-    return result, {"section_styles": styles,
-                    "control_visibility": control_visibility,
-                    "nudge_offset": validate_nudge_settings(values["offset"]),
-                    "typed_inputs": typed}
+    options = {"section_styles": styles,
+               "control_visibility": control_visibility,
+               "nudge_offset": validate_nudge_settings(values["offset"]),
+               "typed_inputs": typed}
+    if panels is not None:
+        # Inline exact coverage means no filtering/reindexing of these sections.
+        options["panels"] = panels
+    return result, options

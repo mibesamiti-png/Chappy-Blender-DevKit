@@ -114,7 +114,10 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
         raw_mode = getattr(context, "mode", None)
         visible_mode = raw_mode.lower() if type(raw_mode) is str else None
         visible_sections = 0
+        panel_indices = getattr(self, "_cbdk_section_indices", None)
         for index, (title, buttons) in enumerate(_UI_SECTIONS):
+            if panel_indices is not None and index not in panel_indices:
+                continue
             style = _UI_OPTIONS["section_styles"][index]
             if style["visible_in"] not in ("always", visible_mode):
                 continue
@@ -159,7 +162,44 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
         col.label(text=context.scene.cbdk_modular_result)
 
 
-_CLASSES = tuple(_OPERATORS) + (VIEW3D_PT_cbdk_modular_preview,)
+# The legacy class remains the only registered panel for schema 1.
+# Schema 2 selects only two code-owned panel classes, never user class names.
+if "panels" in _UI_OPTIONS:
+    class VIEW3D_PT_cbdk_modular_primary(bpy.types.Panel):
+        bl_idname = "VIEW3D_PT_cbdk_modular_primary"
+        bl_label = "CBDK Primary"
+        bl_space_type = "VIEW_3D"
+        bl_region_type = "UI"
+        bl_category = "CBDK"
+        draw = VIEW3D_PT_cbdk_modular_preview.draw
+
+    class VIEW3D_PT_cbdk_modular_secondary(bpy.types.Panel):
+        bl_idname = "VIEW3D_PT_cbdk_modular_secondary"
+        bl_label = "CBDK Secondary"
+        bl_space_type = "VIEW_3D"
+        bl_region_type = "UI"
+        bl_category = "CBDK"
+        draw = VIEW3D_PT_cbdk_modular_preview.draw
+
+    _SLOTS = {"primary": VIEW3D_PT_cbdk_modular_primary,
+              "secondary": VIEW3D_PT_cbdk_modular_secondary}
+    _panels = []
+    for order, panel in enumerate(_UI_OPTIONS["panels"]):
+        cls = _SLOTS[panel["slot"]]
+        if cls.bl_idname != panel["panel_id"] or cls in _panels:
+            raise RuntimeError("Authored panel registration contract mismatch")
+        cls.bl_label = panel["label"]
+        cls.bl_order = order
+        cls._cbdk_section_indices = panel["section_indices"]
+        _panels.append(cls)
+    if len(_panels) != 2 or sorted(index for cls in _panels
+            for index in cls._cbdk_section_indices) != list(range(len(_UI_SECTIONS))):
+        raise RuntimeError("Authored panel section coverage mismatch")
+    _PANEL_CLASSES = tuple(_panels)
+else:
+    _PANEL_CLASSES = (VIEW3D_PT_cbdk_modular_preview,)
+
+_CLASSES = tuple(_OPERATORS) + _PANEL_CLASSES
 _REGISTERED = []
 
 
@@ -177,6 +217,11 @@ def register():
     if (_REGISTERED or _OWNED_PROPERTIES or _OWNED_PROPERTY_TOKENS
             or any(hasattr(bpy.types.Scene, name) for name in _PROPERTY_NAMES)):
         raise RuntimeError("CBDK preview is already registered or Scene properties conflict")
+    # Blender can replace a foreign panel with a matching identifier. Refuse
+    # before any owned property/class changes in the new multi-panel path.
+    if _UI_OPTIONS.get("panels") and any(
+            hasattr(bpy.types, panel["panel_id"]) for panel in _UI_OPTIONS["panels"]):
+        raise RuntimeError("CBDK preview panel registration conflict")
     try:
         bpy.types.Scene.cbdk_modular_result = bpy.props.StringProperty(
             name="Last CBDK preview result", default="No inspection yet"

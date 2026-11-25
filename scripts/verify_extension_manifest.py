@@ -15,6 +15,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from cbdk.extension_manifest import compare_official_validation
+from cbdk.extension_recipe_preview import ci_recipe, write_recipe_extension
 from cbdk.extension_authored_fixture import fixture_metadata, write_authored_fixture
 from cbdk.extension_preflight import MAX_ARCHIVE_BYTES
 from cbdk.extension_synthetic_build import (
@@ -149,6 +150,81 @@ def verify_authored_package(blender):
                 "temporary_archive_retained": False}
 
 
+def verify_recipe_packages(blender):
+    """R23 distinct local-only recipe variants, no executable report artifacts."""
+    results = {}
+    for case in ("read", "edit", "grouped"):
+        with tempfile.TemporaryDirectory(prefix="cbdk-r23-runtime-") as folder:
+            root = Path(folder).resolve()
+            archive = root / "authored.zip"
+            if case == "grouped":
+                import sys
+                import hashlib
+                sys.path.insert(0, str(ROOT / "tests"))
+                from test_ui_recipe_r17 import make_r23_recipe
+                recipe_path = root / "recipe.json"
+                source = json.dumps(make_r23_recipe("grouped"), ensure_ascii=False).encode("utf-8")
+                recipe_path.write_bytes(source)
+                built = subprocess.run([sys.executable, "-m", "cbdk", "build-extension-preview",
+                                        "--recipe", str(recipe_path), "--output", str(archive),
+                                        "--preview-unapproved"], cwd=ROOT, capture_output=True,
+                                       text=True, timeout=90)
+                if built.returncode != 0:
+                    raise AssertionError("R23 combined CLI generation failed: " + built.stderr[-400:])
+                report = json.loads(built.stdout)
+                if (recipe_path.read_bytes() != source or report["feature_count"] != 4
+                        or report["preview_only"] is not True or report["approved"] is not False
+                        or report["install_authorized"] is not False or report["release_authorized"] is not False
+                        or report["original_preview_unchanged"] is not True):
+                    raise AssertionError("R23 combined CLI report mismatch")
+                archive_sha = hashlib.sha256(archive.read_bytes()).hexdigest()
+            else:
+                report = write_recipe_extension(ci_recipe(case), archive, preview_unapproved=True)
+            env = dict(os.environ)
+            for name in ("RESOURCES", "CONFIG", "SCRIPTS", "EXTENSIONS", "DATAFILES"):
+                target = root / name.lower()
+                target.mkdir()
+                env["BLENDER_USER_" + name] = str(target)
+            env["CBDK_R19_TEMP"] = str(root)
+            env["CBDK_R23_CASE"] = case
+            prefix = [blender, "--background", "--factory-startup", "--disable-autoexec",
+                      "--offline-mode"]
+            proc = subprocess.run([*prefix, "--command", "extension", "validate", str(archive)],
+                                  env=env, capture_output=True, text=True, timeout=90)
+            checked = compare_official_validation(
+                fixture_metadata(), proc.returncode, proc.stdout + "\n" + proc.stderr)
+            if proc.returncode != 0 or not checked["complete_diagnostic_agreement"]:
+                raise AssertionError("R23 recipe Extension official validation failed: " + case)
+            print("CBDK_R23_RECIPE_EXTENSION_VALIDATE_PASS: " + case)
+            proc = subprocess.run([*prefix, "--python-exit-code", "1", "--python",
+                                   str(ROOT / "scripts/verify_recipe_extension_runtime.py")],
+                                  env=env, capture_output=True, text=True, timeout=120)
+            marker = "CBDK_R23_RECIPE_EXTENSION_RUNTIME_PASS: " + case
+            if proc.returncode != 0 or marker not in proc.stdout.splitlines():
+                for line in (proc.stdout + "\n" + proc.stderr).splitlines():
+                    if line.startswith("AssertionError: R23 "):
+                        print(line[:200])
+                raise AssertionError("R23 isolated recipe runtime failed: " + case)
+            print(marker)
+            if case == "grouped":
+                vertical = "CBDK_R23_A_MULTIPANEL_EXTENSION_VERTICAL_PASS: two panels, four features, typed read/edit and cleanup"
+                if (vertical not in proc.stdout.splitlines()
+                        or hashlib.sha256(archive.read_bytes()).hexdigest() != archive_sha):
+                    raise AssertionError("R23 combined same-archive vertical evidence missing")
+                print(vertical)
+                report.update(same_archive_sha_unchanged=True, extension_sha256=archive_sha,
+                              cli_generated=True, native_two_panel_draw_verified=True,
+                              real_windows_gui_tested=False)
+            results[case] = {**report, "official_validation": checked,
+                             "native_namespace_runtime_verified": True,
+                             "manual_local_repository_staging": True,
+                             "official_install_exercised": False,
+                             "temporary_archive_retained": False}
+    print("CBDK_R23_RECIPE_EXTENSION_MATRIX_PASS: two separate generated ZIPs")
+    print("CBDK_R23_A_COMBINED_MATRIX_PASS: additional same-artifact four-feature CLI vertical")
+    return results
+
+
 def verify(blender, output):
     root = Path(output)
     if not root.parent.resolve().is_relative_to(ROOT / "reports/ci") or root.exists():
@@ -214,9 +290,11 @@ def verify(blender, output):
                         "local_status": compared["local_status"], "diagnostic_comparison": compared})
     package = verify_synthetic_package(blender, root)
     authored = verify_authored_package(blender)
+    recipes = verify_recipe_packages(blender)
     report = {"kind": "cbdk_synthetic_official_manifest_validation", "cases": results,
               "synthetic_package": package,
               "authored_runtime_fixture": authored,
+              "r23_recipe_runtime_fixtures": recipes,
               "top_level_source_executed_scope": "synthetic_fixture_only",
               "real_component_license_chosen": False, "real_extension_validated": False,
               "source_executed": False, "extension_zip_created": True,

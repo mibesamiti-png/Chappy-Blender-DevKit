@@ -16,6 +16,7 @@ from .evidence import verify_authored_parts, save_evidence, check_evidence_fresh
 from .part_matrix import evidence_paths, summarize_parts, write_matrix, render_matrix_markdown
 from .addon_builder import build_addon
 from .extension_preflight import write_preflight_report
+from .extension_recipe_preview import write_recipe_extension
 from .feature_catalog import load_feature_catalog
 from .modular_builder import plan_modular_recipe
 from .registration_draft import propose_registration, write_draft
@@ -39,6 +40,28 @@ from .search import search
 
 def _json(path: str) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _local_extension_recipe(path: str) -> dict:
+    """Bounded plain JSON only; reject ambiguous duplicate keys."""
+    with Path(path).open("rb") as stream:
+        data = stream.read(32769)
+    if len(data) > 32768:
+        raise ValueError("Local Extension recipe exceeds byte budget")
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate key in local Extension recipe")
+            result[key] = value
+        return result
+    def reject_constant(value):
+        raise ValueError("Non-finite local Extension recipe value")
+    try:
+        return json.loads(data.decode("utf-8"), object_pairs_hook=unique,
+                          parse_constant=reject_constant)
+    except (UnicodeError, RecursionError):
+        raise ValueError("Invalid local Extension recipe encoding or nesting") from None
 
 
 def main(argv=None) -> int:
@@ -122,6 +145,14 @@ def main(argv=None) -> int:
     addon_cmd.add_argument('--output', default='dist/CBDK_Mesh_Inspector_Preview.zip')
     addon_cmd.add_argument('--preview-unapproved', action='store_true',
                            help='Required explicit opt-in; output is NOT a release or approved component')
+
+    extension_build_cmd = sub.add_parser('build-extension-preview',
+                                         help='Build a local-only test Extension from a trusted declarative recipe')
+    extension_build_cmd.add_argument('--recipe', required=True)
+    extension_build_cmd.add_argument('--output', required=True,
+                                     help='Fresh local ZIP in an existing directory; never a release')
+    extension_build_cmd.add_argument('--preview-unapproved', action='store_true',
+                                     help='Required explicit local test opt-in')
 
     ext_cmd = sub.add_parser('extension-preflight',
                              help='Static, blocked-for-release compatibility audit of a CBDK preview ZIP')
@@ -535,6 +566,13 @@ def main(argv=None) -> int:
             from .extension_manifest_review import write_manifest_review
             report = write_manifest_review(args.manifest, args.output)
             print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
+        if args.command == 'build-extension-preview':
+            if not args.preview_unapproved:
+                raise ValueError("Explicit local preview opt-in required")
+            recipe = _local_extension_recipe(args.recipe)
+            result = write_recipe_extension(recipe, args.output, preview_unapproved=True)
+            print(json.dumps(result, ensure_ascii=False, indent=2))
             return 0
         if args.command == 'extension-preflight':
             report = write_preflight_report(args.preview_zip, args.output)
