@@ -131,22 +131,24 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
             for feature_id, label in visible_buttons:
                 button_row = body.row(align=True)
                 reason = _preview_unavailable_reason(feature_id, context)
-                if _FEATURE_CONTRACT[feature_id]["input"] == "offset":
+                spec = _FEATURE_CONTRACT[feature_id]["input_spec"]
+                if spec is not None:
                     # A disabled nudge action must not also disable its XYZ
                     # editor. Only disable the input for invalid mesh/mode.
                     active = getattr(context, "active_object", None)
                     button_row.enabled = (
                         getattr(active, "type", None) == "MESH"
                         and getattr(active, "data", None) is not None
-                        and getattr(context, "mode", None) == "EDIT_MESH"
+                        and getattr(context, "mode", None) == _FEATURE_CONTRACT[feature_id]["mode"]
                     )
-                    button_row.prop(context.scene, "cbdk_modular_nudge_offset", text="XYZ")
+                    button_row.prop(context.scene, spec["rna"], text=spec["label"])
                     action = button_row.row(align=True)
                     action.enabled = reason is None
                     button = action.operator(
                         _OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label
                     )
-                    button.offset = context.scene.cbdk_modular_nudge_offset
+                    if spec["operator_arg"] is not None:
+                        setattr(button, spec["operator_arg"], getattr(context.scene, spec["rna"]))
                 else:
                     button_row.enabled = reason is None
                     button_row.operator(_OPERATORS_BY_FEATURE[feature_id].bl_idname, text=label)
@@ -161,7 +163,9 @@ _CLASSES = tuple(_OPERATORS) + (VIEW3D_PT_cbdk_modular_preview,)
 _REGISTERED = []
 
 
-_PROPERTY_NAMES = ("cbdk_modular_result", "cbdk_modular_nudge_offset")
+_PROPERTY_NAMES = ("cbdk_modular_result",) + tuple(spec["rna"] for spec in _UI_OPTIONS["typed_inputs"])
+if len(set(_PROPERTY_NAMES)) != len(_PROPERTY_NAMES):
+    raise RuntimeError("Duplicate authored Scene property")
 _OWNED_PROPERTIES = []
 # Blender's registered bpy.props declarations also remain in Scene.__dict__.
 # Keep the exact descriptor to avoid deleting a foreign replacement by name.
@@ -180,15 +184,20 @@ def register():
         _OWNED_PROPERTIES.append("cbdk_modular_result")
         _OWNED_PROPERTY_TOKENS["cbdk_modular_result"] = (
             bpy.types.Scene.__dict__.get("cbdk_modular_result"))
-        parameter = _UI_OPTIONS["nudge_offset"]
-        bpy.types.Scene.cbdk_modular_nudge_offset = bpy.props.FloatVectorProperty(
-            name="Local Nudge XYZ", description="Local-space offset for selected vertices",
-            size=parameter["size"], default=parameter["default"],
-            min=parameter["min"], max=parameter["max"], subtype="TRANSLATION",
-        )
-        _OWNED_PROPERTIES.append("cbdk_modular_nudge_offset")
-        _OWNED_PROPERTY_TOKENS["cbdk_modular_nudge_offset"] = (
-            bpy.types.Scene.__dict__.get("cbdk_modular_nudge_offset"))
+        for parameter in _UI_OPTIONS["typed_inputs"]:
+            kwargs = {key: parameter[key] for key in
+                      ("name", "description", "default", "min", "max")}
+            if parameter["type"] == "float_vector":
+                declaration = bpy.props.FloatVectorProperty(
+                    **kwargs, size=parameter["size"], subtype=parameter["subtype"])
+            elif parameter["type"] == "int":
+                declaration = bpy.props.IntProperty(**kwargs)
+            else:
+                raise RuntimeError("Unsupported authored RNA input type")
+            name = parameter["rna"]
+            setattr(bpy.types.Scene, name, declaration)
+            _OWNED_PROPERTIES.append(name)
+            _OWNED_PROPERTY_TOKENS[name] = bpy.types.Scene.__dict__.get(name)
         for cls in _CLASSES:
             bpy.utils.register_class(cls)
             _REGISTERED.append(cls)

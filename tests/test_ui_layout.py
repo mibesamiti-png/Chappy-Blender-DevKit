@@ -66,6 +66,30 @@ class AuthoredUILayoutTests(unittest.TestCase):
         self.assertEqual(options["nudge_offset"]["default"], (0.125, -0.25, 0.5))
         self.assertEqual(options["nudge_offset"]["min"], -10)
 
+    def test_r19_integer_contract_and_legacy_selection(self):
+        control = self.data["sections"][0]["controls"][3]
+        control["parameters"] = {"precision": {"default": 2, "min": 1, "max": 4}}
+        self.write()
+        _, options = plan_ui_layout(["mesh_center", "vertex_nudge"], root=self.root, include_options=True)
+        inputs = {entry["rna"]: entry for entry in options["typed_inputs"]}
+        self.assertEqual(set(inputs), {"cbdk_modular_center_precision", "cbdk_modular_nudge_offset"})
+        self.assertEqual(inputs["cbdk_modular_center_precision"]["type"], "int")
+        self.assertEqual(inputs["cbdk_modular_center_precision"]["default"], 2)
+        self.assertEqual(inputs["cbdk_modular_center_precision"]["min"], 1)
+        self.assertEqual(inputs["cbdk_modular_center_precision"]["max"], 4)
+        _, legacy = plan_ui_layout(["mesh_bounds"], root=self.root, include_options=True)
+        self.assertEqual([entry["rna"] for entry in legacy["typed_inputs"]], ["cbdk_modular_nudge_offset"])
+        for bad in (True, 3.0, -1, 7, "3", [3], {"default": 3, "min": 0, "max": 7},
+                    {"default": 3, "min": 4, "max": 6},
+                    {"default": 3, "min": 0, "max": 6, "type": "int"},
+                    {"default": 3, "min": False, "max": 6}):
+            control["parameters"] = {"precision": bad}
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                validate_ui_layout(self.data)
+        control["parameters"] = {"offset": [0, 0, 1]}
+        with self.assertRaises(ValueError):
+            validate_ui_layout(self.data)
+
     def test_bad_parameter_values_and_operator_injection_rejected(self):
         for value in ([0, 0, 0], [True, 0, 1], [float("nan"), 0, 1], [11, 0, 1], [1, 2]):
             with self.subTest(value=value):

@@ -53,14 +53,30 @@ TRUSTED_FEATURES["mesh_center"] = {
     "source": "templates/modular_preview/features/mesh_center.py",
     "parts": frozenset({"BLCTX-001", "BLGEO-001"}),
     "mode": "OBJECT", "ui_hint": "bounds",
-    "operator": "cbdk.modular_mesh_center", "input": None,
+    "operator": "cbdk.modular_mesh_center", "input": "precision",
+}
+
+
+# Code-owned input specs. Recipe data may provide only bounded numeric values.
+INPUT_SPECS = {
+    "offset": {"type": "float_vector", "size": 3, "min": -10.0, "max": 10.0,
+               "default": (0.0, 0.0, 0.1),
+               "rna": "cbdk_modular_nudge_offset", "name": "Local Nudge XYZ",
+               "description": "Local-space offset for selected vertices",
+               "label": "XYZ", "subtype": "TRANSLATION", "operator_arg": "offset"},
+    "precision": {"type": "int", "min": 0, "max": 6, "default": 3,
+                  "rna": "cbdk_modular_center_precision", "name": "Center decimal places",
+                  "description": "Number of decimal places in the bounds center result",
+                  "label": "Decimals", "operator_arg": None},
 }
 
 
 def feature_runtime_contract(features):
     """Code-owned, literal-only runtime metadata for the selected feature modules."""
-    return {feature: {key: TRUSTED_FEATURES[feature][key]
-                      for key in ("mode", "ui_hint", "operator", "input")}
+    return {feature: {**{key: TRUSTED_FEATURES[feature][key]
+                      for key in ("mode", "ui_hint", "operator", "input")},
+                      "input_spec": dict(INPUT_SPECS[TRUSTED_FEATURES[feature]["input"]])
+                      if TRUSTED_FEATURES[feature]["input"] else None}
             for feature in features}
 
 
