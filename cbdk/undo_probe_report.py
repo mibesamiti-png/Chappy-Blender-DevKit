@@ -7,9 +7,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 PREFIX = "CBDK_UNDO_PROBE "
+R25_PREFIX = "CBDK_R25_GROUPED_UNDO_PROBE "
 _UNDO = {"passed", "unavailable"}
 _REDO = {"passed", "unavailable", "not_attempted"}
 PREPARED_CASES = {"single_vertex": 1, "multi_vertex_repeated": 2}
@@ -87,6 +89,32 @@ def validate_report(data: object) -> dict:
                             prepared_cases=data.get("prepared_stack_cases"))
     if data != expected:
         raise ValueError("Undo/Redo verification claim does not match observation")
+    return data
+
+
+def validate_grouped_observation(data: object) -> dict:
+    """Specialist envelope; old schema 1/2 probe records remain unchanged.
+
+    Not an execution authorization or proof of official validate/install.
+    """
+    required = {"schema_version", "case_id", "blender_version", "artifact_sha256",
+                "undo_probe", "registered_during_probe", "fixture_cleanup_verified",
+                "extension_cleanup_verified", "input_sha_unchanged"}
+    if (type(data) is not dict or set(data) != required
+            or type(data["schema_version"]) is not int or data["schema_version"] != 1
+            or data["case_id"] != "grouped"):
+        raise ValueError("Invalid grouped Undo observation")
+    version = data["blender_version"]
+    digest = data["artifact_sha256"]
+    if (type(version) is not str or re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) is None
+            or type(digest) is not str or re.fullmatch(r"[0-9a-f]{64}", digest) is None):
+        raise ValueError("Invalid grouped Undo artifact or version")
+    if any(data[key] is not True for key in ("registered_during_probe", "fixture_cleanup_verified",
+                                             "extension_cleanup_verified", "input_sha_unchanged")):
+        raise ValueError("Incomplete grouped Undo observation")
+    probe = validate_report(data["undo_probe"])
+    if probe["schema_version"] != 2 or probe["blender"].split()[0] != version:
+        raise ValueError("Grouped Undo probe version or schema mismatch")
     return data
 
 

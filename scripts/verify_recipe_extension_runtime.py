@@ -1,5 +1,7 @@
 """Internal CI-only Blender subprocess. Not a general installer."""
 import io
+import hashlib
+import json
 import os
 from pathlib import Path
 import sys
@@ -12,12 +14,13 @@ import bmesh
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 from cbdk.extension_authored_fixture import FIXTURE_ID
 from cbdk.extension_recipe_preview import ci_recipe, build_recipe_extension_bytes
 from cbdk.extension_preflight import MAX_ARCHIVE_BYTES
 
 
-def verify():
+def verify(observe=None):
     case = os.environ["CBDK_R23_CASE"]
     if case in ("grouped", "dependency"):
         sys.path.insert(0, str(ROOT / "tests"))
@@ -107,6 +110,8 @@ def verify():
             raise AssertionError("R23 native Extension registration mismatch")
         if case == "dependency" and trace != [("register", name) for name in R24_REGISTRATION]:
             raise AssertionError("R24 A actual Extension registration order mismatch")
+        if observe is not None:
+            observe("enable")
         mesh = bpy.data.meshes.new("CBDK R23 asymmetric")
         mesh.from_pydata([(-2,-1,-3), (4,3,5), (1,0,0)], [], [(0,1,2)])
         mesh.update()
@@ -256,6 +261,16 @@ def verify():
                 bpy.ops.object.mode_set(mode="OBJECT")
             if [tuple(v.co) for v in mesh.vertices] != [(-1.75,-1.5,-2.875), *before[1:]]:
                 raise AssertionError("R23 committed mesh mismatch")
+        if observe is not None:
+            undo_report = None
+            if case == "grouped":
+                from blender_undo_redo_smoke import probe_registered_fixture
+                from blender_r25_grouped_undo import scene_snapshot
+                prior = scene_snapshot()
+                undo_report = probe_registered_fixture(module)
+                if scene_snapshot() != prior:
+                    raise AssertionError("R25 Undo probe changed earlier fixture")
+            observe("operation")
     finally:
         if case == "dependency":
             bpy.utils.unregister_class = observed_unregister
@@ -311,9 +326,50 @@ def verify():
             print("CBDK_R24_DEPENDENCY_EXTENSION_RUNTIME_PASS: requested 1, resolved 4, typed read/edit and cleanup")
         else:
             print("CBDK_R23_A_MULTIPANEL_EXTENSION_VERTICAL_PASS: two panels, four features, typed read/edit and cleanup")
+    if observe is not None:
+        observe("cleanup")
+        if case == "grouped":
+            from cbdk.undo_probe_report import R25_PREFIX, validate_grouped_observation
+            result = validate_grouped_observation({
+                "schema_version": 1, "case_id": "grouped",
+                "blender_version": ".".join(map(str, bpy.app.version)),
+                "artifact_sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(),
+                "undo_probe": undo_report, "registered_during_probe": True,
+                "fixture_cleanup_verified": True, "extension_cleanup_verified": True,
+                "input_sha_unchanged": archive_path.read_bytes() == blob,
+            })
+            print(R25_PREFIX + json.dumps(result, sort_keys=True), flush=True)
     if case != "dependency":
         print("CBDK_R23_RECIPE_EXTENSION_RUNTIME_PASS: " + case)
 
 
+def verify_observed():
+    from r25_stage_observer import STAGE_PREFIX, stage_record, archive_digest
+    from cbdk.extension_stage_evidence import CASES, STAGES, VERSIONS
+    case = os.environ["CBDK_R23_CASE"]
+    run_id = os.environ["CBDK_R25_RUN_ID"]
+    version = ".".join(map(str, bpy.app.version))
+    if case not in CASES or version not in VERSIONS:
+        raise AssertionError("R25 unexpected fixed case/version")
+    archive = Path(os.environ["CBDK_R19_TEMP"]) / "authored.zip"
+    stages = STAGES[2:5]
+    emitted = []
+    def observe(stage, status="passed"):
+        if len(emitted) >= len(stages) or stages[len(emitted)] != stage:
+            raise AssertionError("R25 child stage order mismatch")
+        row = stage_record(case, version, run_id, archive_digest(archive), stage, status)
+        print(STAGE_PREFIX + json.dumps(row, sort_keys=True), flush=True)
+        emitted.append(stage)
+    try:
+        verify(observe)
+    except Exception:
+        if len(emitted) < len(stages):
+            observe(stages[len(emitted)], "failed")
+        raise
+
+
 if __name__ == "__main__":
-    verify()
+    if "CBDK_R25_RUN_ID" in os.environ:
+        verify_observed()
+    else:
+        verify()
