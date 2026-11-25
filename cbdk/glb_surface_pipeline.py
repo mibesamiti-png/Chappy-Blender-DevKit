@@ -492,6 +492,7 @@ def _validate_part_review(report):
         "cumulative_boundary_budget_exceeded",
     }
     used = set()
+    spatial_used = set()
     expected_work = dict.fromkeys(limits, 0)
     attempted = 0
     exhausted = False
@@ -520,6 +521,10 @@ def _validate_part_review(report):
         if row["spatial_status"] == "suggested" and (
                 len(ids) != 1 or topo or row["normalized_score"] > MAX_SCORE):
             raise ValueError("invalid spatial suggestion")
+        if row["spatial_status"] == "suggested":
+            if ids[0] in spatial_used:
+                raise ValueError("duplicate spatial suggestion")
+            spatial_used.add(ids[0])
         if row["spatial_status"] == "unmatched" and ids:
             raise ValueError("unmatched row cannot have candidates")
         if row["spatial_status"] == "ambiguous" and not ids:
