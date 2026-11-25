@@ -27,26 +27,61 @@ def verify(blender, output):
         raise ValueError("Expected fresh reports/ci fixture directory")
     root.mkdir(parents=True)
     results = []
-    for name, change, expected in (("valid_subset", {}, True),
+    required_cases = (("valid_subset", {}, True),
                                     ("missing_license", {"license": None}, False),
                                     ("punctuated_tagline", {"tagline": "Invalid tagline!"}, False),
                                     ("invalid_id", {"id": "invalid-id"}, False),
                                     ("invalid_version", {"version": "not-version"}, False),
-                                    ("empty_maintainer", {"maintainer": ""}, False)):
+                                    ("empty_maintainer", {"maintainer": ""}, False))
+    # Local expectations are intentionally separate from official observations:
+    # some Blender releases may accept a locally unsupported declaration.
+    optional_cases = (
+        ("optional_valid", {"blender_version_max": "5.3.0",
+                            "permissions": {"files": "Read synthetic data"}}, "structurally_valid_subset"),
+        ("optional_bad_max", {"blender_version_max": "not-version"}, "invalid"),
+        ("optional_equal_max", {"blender_version_max": "4.4.0"}, "invalid"),
+        ("optional_bad_permissions_type", {"permissions": 7}, "invalid"),
+        ("optional_unknown_permission", {"permissions": {"synthetic_unknown": "Read data"}}, "invalid"),
+        ("optional_legacy_permissions", {"permissions": ["files"]}, "invalid"),
+        ("optional_unsupported_website", {"website": "https://example.invalid"}, "invalid"),
+    )
+    cases = [(name, change, expected, None) for name, change, expected in required_cases]
+    cases += [(name, change, None, local) for name, change, local in optional_cases]
+    for name, change, expected, local_expected in cases:
         fields = {**FIXTURE, **change}
         folder = root / name
         folder.mkdir()
         # JSON literals for the fixture's ASCII strings/arrays are also TOML
         # literals. No user text, code, license inference or general serializer.
         (folder / "blender_manifest.toml").write_text("\n".join(
-            key + " = " + json.dumps(value) for key, value in fields.items() if value is not None) + "\n", encoding="utf-8")
+            key + " = " + (
+                "{ " + ", ".join(k + " = " + json.dumps(v) for k, v in value.items()) + " }"
+                if isinstance(value, dict) else json.dumps(value)
+            ) for key, value in fields.items() if value is not None) + "\n", encoding="utf-8")
         (folder / "__init__.py").write_text('raise RuntimeError("validator must never import fixture")\n', encoding="utf-8")
         proc = subprocess.run([blender, "--background", "--factory-startup", "--disable-autoexec",
                                "--command", "extension", "validate", str(folder.resolve())],
                               capture_output=True, text=True, timeout=90)
         compared = compare_official_validation(fields, proc.returncode, proc.stdout + "\n" + proc.stderr)
-        if ((proc.returncode == 0) != expected or not compared["complete_diagnostic_agreement"]):
-            raise AssertionError("Official manifest validator disagrees with synthetic case: " + name)
+        if expected is not None:
+            # The original six cases remain strict regression gates.
+            if ((proc.returncode == 0) != expected or not compared["complete_diagnostic_agreement"]):
+                raise AssertionError("Official manifest validator disagrees with synthetic case: " + name)
+        else:
+            if compared["local_status"] != local_expected:
+                raise AssertionError("Unexpected local optional fixture classification: " + name)
+            if name == "optional_valid" and (
+                    proc.returncode != 0 or not compared["complete_diagnostic_agreement"]):
+                raise AssertionError("Official validator rejected supported optional positive")
+            # A permissive CLI or unfamiliar wording is evidence of a limit,
+            # not grounds to expand local approval. A crash is not a fixture
+            # verdict. Other unclassified outcomes remain visible in the log.
+            if proc.returncode < 0:
+                raise AssertionError("Official validator terminated abnormally: " + name)
+            print("CBDK_R17_OPTIONAL_CASE", name,
+                  "exit=" + str(proc.returncode),
+                  "official=" + compared["official_observation"]["status"],
+                  "comparison=" + compared["status"])
         results.append({"case": name, "official_accepted": proc.returncode == 0,
                         "local_status": compared["local_status"], "diagnostic_comparison": compared})
     report = {"kind": "cbdk_synthetic_official_manifest_validation", "cases": results,
@@ -55,6 +90,7 @@ def verify(blender, output):
     (root / "validation.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print("CBDK_SYNTHETIC_OFFICIAL_MANIFEST_PASS (not a component license or release approval)")
     print("CBDK_MANIFEST_DIAGNOSTIC_AGREEMENT_PASS: six synthetic cases, exit codes and fields checked")
+    print("CBDK_R17_OPTIONAL_OBSERVATIONS_COMPLETE: seven synthetic cases; see individual comparisons")
 
 
 if __name__ == "__main__":
