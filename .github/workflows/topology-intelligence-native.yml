@@ -1391,3 +1391,134 @@ jobs:
           path: ti42-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase42 verified run 45627280114: 4/4 attribute transfer, 384 new UV loops.
+      # Phase43: actual two-bone linear skinning, fixed rest-surface correspondence,
+      # 4 shapes x 5 poses; normalized P95 displacement error <= .06.
+      # Not a full character rig, collision, or pose-dependent remeshing test.
+      - name: Phase43 compare actual armature deformation on remeshed patches
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti43.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti42.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          # Actual Blender Armature modifier, normalized linear skinning.
+          def rig_for(data,name):
+              arm=bpy.data.armatures.new('TI43_'+name)
+              o=bpy.data.objects.new('Rig_'+name,arm);bpy.context.collection.objects.link(o)
+              bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+              bpy.ops.object.mode_set(mode='EDIT')
+              try:
+                  origin=data['origin'];Q=data['Q'];s=data['scale']
+                  for name,offset in [('Group_A',-.45),('Group_B',.45)]:
+                      bone=arm.edit_bones.new(name)
+                      bone.head=Vector((origin+Q@np.array([offset,-.65,0])*s).tolist())
+                      bone.tail=Vector((origin+Q@np.array([offset,.65,0])*s).tolist())
+              finally:bpy.ops.object.mode_set(mode='OBJECT')
+              return o
+          def attach(o,rig):
+              m=o.modifiers.new('TI43_Armature','ARMATURE');m.object=rig
+              m.use_vertex_groups=True;m.use_bone_envelopes=False;m.use_deform_preserve_volume=False
+          def coords(o):
+              return np.array([tuple(o.matrix_world@v.co) for v in o.data.vertices],float)
+          def evaluated(o):
+              dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+              try:
+                  req(len(m.vertices)==len(o.data.vertices) and [tuple(p.vertices) for p in m.polygons]==[tuple(p.vertices) for p in o.data.polygons],'evaluated topology changed')
+                  return np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+              finally:ev.to_mesh_clear()
+          def signature(o,p):
+              return cycle([tuple(o.data.vertices[v].co) for v in p.vertices])
+          def sampling(o,face_ids,data,points):
+              # Freeze material correspondences in the undeformed local projection.
+              V=(coords(o)-data['origin'])@data['Q']/data['scale']
+              o.data.calc_loop_triangles()
+              ids=np.array([tuple(t.vertices) for t in o.data.loop_triangles if t.polygon_index in face_ids],int)
+              req(len(ids)>0,'empty sampling faces')
+              index=np.full((len(points),3),-1,int);weight=np.zeros((len(points),3))
+              for tri in ids:
+                  q=V[tri,:2];M=np.column_stack((q[1]-q[0],q[2]-q[0]))
+                  req(abs(np.linalg.det(M))>1e-10,'degenerate rest triangle')
+                  b=(points-q[0])@np.linalg.inv(M).T
+                  b=np.column_stack((1-b.sum(axis=1),b))
+                  mask=(index[:,0]<0)&(b.min(axis=1)>=-1e-7)
+                  index[mask]=tri;weight[mask]=b[mask]
+              req(np.min(index)>=0,'rest sample miss')
+              return index,weight
+          def interpolate(V,map):
+              idx,w=map
+              return np.einsum('ni,nij->nj',w,V[idx])
+          POSES=[('rest',(0,0,0),(0,0,0),False),
+                 ('rigid_translation',(0,0,0),(0,0,0),True),
+                 ('bend',(0,0,25),(0,0,-20),False),
+                 ('twist',(0,25,0),(0,-30,0),False),
+                 ('mixed',(15,20,-20),(-20,-15,25),False)]
+          def set_pose(rig,data,spec):
+              name,a,b,translation=spec
+              move=data['Q']@np.array([.07,-.04,.12])*data['scale']
+              for bone,angles in zip(rig.pose.bones,(a,b)):
+                  bone.rotation_mode='XYZ';bone.rotation_euler=np.radians(angles).tolist()
+                  bone.location=bone.bone.matrix_local.to_3x3().inverted()@Vector(move.tolist()) if translation else (0,0,0)
+                  bone.scale=(1,1,1)
+              bpy.context.view_layer.update()
+              return move if translation else np.zeros(3)
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  # Map surviving outside faces and vertices by exact original coordinates.
+                  outside=[p for p in o.data.polygons if not p.select]
+                  expected={signature(o,p) for p in outside}
+                  outside_new=[p for p in new.data.polygons if signature(new,p) in expected]
+                  req(len(outside_new)==len(outside),'outside correspondence')
+                  old_ids={v for p in outside for v in p.vertices}
+                  new_by_coord={tuple(v.co):v.index for v in new.data.vertices}
+                  oi=sorted(old_ids);ni=[new_by_coord[tuple(o.data.vertices[i].co)] for i in oi]
+                  source_map=sampling(o,{p.index for p in o.data.polygons if p.select},data,S)
+                  result_map=sampling(new,{p.index for p in new.data.polygons if signature(new,p) not in expected},data,S)
+                  s0=coords(o);r0=coords(new)
+                  src_rest=interpolate(s0,source_map);dst_rest=interpolate(r0,result_map)
+                  rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                  for pose in POSES:
+                      move=set_pose(rig,data,pose)
+                      sv=evaluated(o);rv=evaluated(new)
+                      sd=interpolate(sv,source_map)-src_rest;rd=interpolate(rv,result_map)-dst_rest
+                      err=np.linalg.norm(sd-rd,axis=1)/data['scale']
+                      absolute=np.linalg.norm(interpolate(sv,source_map)-interpolate(rv,result_map),axis=1)/data['scale']
+                      outside_error=float(np.max(np.linalg.norm(sv[oi]-rv[ni],axis=1))/data['scale'])
+                      control_error=None
+                      if pose[0] in ('rest','rigid_translation'):
+                          control_error=float(max(np.linalg.norm(sv-s0-move,axis=1).max(),np.linalg.norm(rv-r0-move,axis=1).max())/data['scale'])
+                      # Prespecified exploratory threshold; displacement, not absolute shape error.
+                      row=dict(case=name,pose=pose[0],samples=len(S),p95_displacement=float(np.quantile(err,.95)),max_displacement=float(err.max()),p95_absolute=float(np.quantile(absolute,.95)),outside_error=outside_error,control_error=control_error,source_unchanged=all_snapshot(o)==before)
+                      row['pass']=row['p95_displacement']<=.06 and outside_error<1e-6 and row['source_unchanged'] and (control_error is None or control_error<1e-6)
+                      rows.append(row)
+                  # Keep the source and output in rest pose, with rig available for inspection.
+                  set_pose(rig,data,POSES[0]);new.show_wire=True;new.show_all_edges=True
+              except Exception as e:failures.append(dict(case=name,reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti43-results');d.mkdir(exist_ok=True)
+          gate=len(rows)==20 and not failures and all(x['pass'] for x in rows)
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'rigged_patches.blend').resolve()))
+          print('TI43_SUMMARY',json.dumps(out),flush=True)
+          assert gate,'deformation transfer research gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti43.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti43-deformation-${{ github.sha }}
+          path: ti43-results/
+          if-no-files-found: warn
+          retention-days: 14
