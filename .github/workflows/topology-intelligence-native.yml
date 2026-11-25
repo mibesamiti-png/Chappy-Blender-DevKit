@@ -1851,3 +1851,105 @@ jobs:
           path: ti46-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase46 run 45631278121: 400/400 controls, 32/32 poses, 3 result-only risks.
+      # Phase47 keeps geometry and weights fixed; compares actual native Armature
+      # Preserve Volume off/on. 232 mode/shape/pose cases, 32 prior anchors.
+      - name: Phase47 isolate skinning method from topology and weight effects
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti47.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti46.py').read_text().split("\nprior=json.loads(Path('ti45-results/results.json')",1)[0])
+          prior=json.loads(Path('ti46-results/results.json').read_text())
+          req(prior['complete'] and prior['controls_gate'],'Phase46 integrity failed')
+          anchors={(r['case'],r['pose']):r for r in prior['rows']}
+          def summary(x):
+              return dict(nonincident=x['nonincident_pairs'],degenerate=x['degenerate'],incident=dict(x['incident_counts']))
+          def bad(x):
+              return bool(x['nonincident'] or x['degenerate'] or any(k!='shared_only' and n for k,n in x['incident'].items()))
+          def classify(a,b):
+              return ('both_flagged' if bad(b) else 'source_only') if bad(a) else ('result_only' if bad(b) else 'both_clear')
+          # Reuse all 32 Phase46 anchors, add remaining 5-degree twist samples.
+          motions=list(POSES)+[('twist'+str(a),(0,a,0),(0,-a,0),False) for a in range(5,121,5)]
+          req(len(motions)==29,'unexpected pose count')
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[];evidence=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  expected={signature(o,p) for p in o.data.polygons if not p.select}
+                  outside=[p for p in o.data.polygons if not p.select]
+                  ids=sorted({v for p in outside for v in p.vertices})
+                  new_by_coord={tuple(v.co):v.index for v in new.data.vertices}
+                  ni=[new_by_coord[tuple(o.data.vertices[i].co)] for i in ids]
+                  sm=sampling(o,{p.index for p in o.data.polygons if p.select},data,S)
+                  tm=sampling(new,{p.index for p in new.data.polygons if signature(new,p) not in expected},data,S)
+                  s0=coords(o);t0=coords(new);sr=interpolate(s0,sm);tr=interpolate(t0,tm)
+                  rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                  mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                  for pose in motions:
+                      move=set_pose(rig,data,pose)
+                      for enabled in (False,True):
+                          for mod in mods:mod.use_deform_preserve_volume=enabled
+                          bpy.context.view_layer.update()
+                          sv=evaluated(o);tv=evaluated(new)
+                          sd=interpolate(sv,sm)-sr;td=interpolate(tv,tm)-tr
+                          err=np.linalg.norm(sd-td,axis=1)/data['scale']
+                          absolute=np.linalg.norm(interpolate(sv,sm)-interpolate(tv,tm),axis=1)/data['scale']
+                          a=audit(o,data);b=audit(new,data);sa=summary(a);sb=summary(b)
+                          state=classify(sa,sb)
+                          anchor=anchors.get((name,pose[0])) if not enabled else None
+                          anchor_same=(sa==summary(anchor['source']) and sb==summary(anchor['result'])) if anchor else None
+                          outside_error=float(np.max(np.linalg.norm(sv[ids]-tv[ni],axis=1))/data['scale'])
+                          control_error=None
+                          if pose[0] in ('rest','rigid_translation'):
+                              control_error=float(max(np.linalg.norm(sv-s0-move,axis=1).max(),np.linalg.norm(tv-t0-move,axis=1).max())/data['scale'])
+                          row=dict(case=name,pose=pose[0],preserve_volume=enabled,source=sa,result=sb,classification=state,anchor_same=anchor_same,p95_displacement=float(np.quantile(err,.95)),p95_absolute=float(np.quantile(absolute,.95)),max_displacement=float(err.max()),outside_error=outside_error,control_error=control_error,source_unchanged=all_snapshot(o)==before)
+                          rows.append(row)
+                          if state!='both_clear':evidence.append(dict(case=name,pose=pose[0],preserve_volume=enabled,source=a,result=b))
+                  for mod in mods:mod.use_deform_preserve_volume=False
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=name,reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti47-results');d.mkdir(exist_ok=True)
+          checked=[r for r in rows if r['anchor_same'] is not None]
+          complete=len(rows)==232 and not failures and len(checked)==32 and all(r['anchor_same'] for r in checked) and all(r['source_unchanged'] and r['outside_error']<1e-6 and (r['control_error'] is None or r['control_error']<1e-6) for r in rows)
+          modes={}
+          for mode in (False,True):
+              subset=[r for r in rows if r['preserve_volume']==mode]
+              normal=[r for r in subset if r['pose'] in {p[0] for p in POSES}]
+              modes['preserve' if mode else 'linear']=dict(counts=dict(Counter(r['classification'] for r in subset)),risk_cases=[dict(case=r['case'],pose=r['pose']) for r in subset if r['classification']=='result_only'],worst_normal_p95=max((r['p95_displacement'] for r in normal),default=None),worst_all_p95=max((r['p95_displacement'] for r in subset),default=None),normal_clear=all(r['classification']=='both_clear' for r in normal))
+          # Diagnostic comparison, not a change to the generator or a universal best method.
+          pairs=defaultdict(dict)
+          for r in rows:pairs[r['case'],r['pose']][r['preserve_volume']]=r
+          transitions=Counter()
+          changed=[]
+          for (name,pose),pair in pairs.items():
+              if len(pair)!=2:continue
+              a,b=pair[False],pair[True]
+              transitions[a['classification']+' -> '+b['classification']]+=1
+              if a['classification']!=b['classification']:
+                  changed.append(dict(case=name,pose=pose,linear=a['classification'],preserve=b['classification'],linear_p95=a['p95_displacement'],preserve_p95=b['p95_displacement']))
+          out=dict(approved=False,blender=bpy.app.version_string,complete=complete,anchors=len(checked),modes=modes,transitions=dict(transitions),changed=changed,rows=rows,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'contact_evidence.json').write_text(json.dumps(evidence,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'comparison_rigs.blend').resolve()))
+          print('TI47_SUMMARY',json.dumps({k:v for k,v in out.items() if k!='rows'}),flush=True)
+          assert complete,'skinning comparison integrity failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti47.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti47-skinning-comparison-${{ github.sha }}
+          path: ti47-results/
+          if-no-files-found: warn
+          retention-days: 14
