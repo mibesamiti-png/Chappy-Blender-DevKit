@@ -21,7 +21,8 @@
         },
         {
           "feature_id": "mesh_center",
-          "label": "Bounds Center"
+          "label": "Bounds Center",
+          "parameters": {"precision": {"default": 3, "min": 0, "max": 6}}
         }
       ]
     },

@@ -11,12 +11,12 @@ import math
 from pathlib import Path
 
 from .addon_builder import _trusted_read
-from .feature_catalog import TRUSTED_FEATURES
+from .feature_catalog import TRUSTED_FEATURES, INPUT_SPECS
 
 UI_CATALOG = "catalog/ui_layouts.json"
 MAX_BYTES = 20_000
-NUDGE_PARAMETER = {"type": "float_vector", "size": 3, "min": -10.0,
-                   "max": 10.0, "default": (0.0, 0.0, 0.1)}
+NUDGE_PARAMETER = {key: INPUT_SPECS["offset"][key]
+                   for key in ("type", "size", "min", "max", "default")}
 
 
 def validate_nudge_default(value):
@@ -52,6 +52,32 @@ def validate_nudge_settings(value):
     if any(not settings["min"] <= component <= settings["max"] for component in settings["default"]):
         raise ValueError("Nudge default lies outside declared bounds")
     return settings
+
+
+def validate_input_settings(parameter, value):
+    """Two authored types; callers cannot select an RNA name or property type."""
+    spec = INPUT_SPECS[parameter]
+    if spec["type"] == "float_vector":
+        return validate_nudge_settings(value)
+    if spec["type"] != "int":
+        raise ValueError("Unsupported authored input type")
+    settings = {key: spec[key] for key in ("type", "min", "max", "default")}
+    if type(value) is dict:
+        if set(value) != {"default", "min", "max"}:
+            raise ValueError("Expected default/min/max for authored integer settings")
+        settings.update(value)
+    else:
+        settings["default"] = value
+    lo, hi, default = (settings[key] for key in ("min", "max", "default"))
+    if (any(type(v) is not int for v in (lo, hi, default))
+            or not spec["min"] <= lo <= default <= hi <= spec["max"]):
+        raise ValueError("Integer input must narrow authored bounds and contain integer default")
+    return settings
+
+
+def plan_input_registration(parameter, value):
+    """Literal, code-owned RNA metadata plus validated numeric settings."""
+    return {**INPUT_SPECS[parameter], **validate_input_settings(parameter, value)}
 
 
 def _strict_object(pairs):
@@ -128,9 +154,10 @@ def validate_ui_layout(data: object, *, expected_features=None) -> tuple:
                 raise ValueError("Section visibility would make an authored control unreachable")
             if "parameters" in control:
                 parameters = control["parameters"]
-                if TRUSTED_FEATURES[feature_id]["input"] != "offset" or type(parameters) is not dict or set(parameters) != {"offset"}:
-                    raise ValueError("Only the authored nudge offset parameter is configurable")
-                validate_nudge_settings(parameters["offset"])
+                parameter = TRUSTED_FEATURES[feature_id]["input"]
+                if parameter is None or type(parameters) is not dict or set(parameters) != {parameter}:
+                    raise ValueError("Only the authored input parameter is configurable")
+                validate_input_settings(parameter, parameters[parameter])
             entries.append((feature_id, control["label"]))
         output.append((title, tuple(entries)))
     if seen_features != expected:
@@ -172,11 +199,17 @@ def plan_ui_layout(requested_features: object, *, root: Path, include_options=Fa
     styles = tuple({"layout": s.get("layout", "column"), "boxed": s.get("boxed", True),
                     "visible_in": s.get("visible_in", "always")}
                    for s in data["sections"] if any(c["feature_id"] in chosen for c in s["controls"]))
-    offset = NUDGE_PARAMETER["default"]
+    # Historical nudge Scene property is always registered, even in a reader
+    # subset. New inputs are registered only for selected features.
+    values = {"offset": INPUT_SPECS["offset"]["default"]}
     for section in data["sections"]:
         for control in section["controls"]:
-            if control["feature_id"] == "vertex_nudge" and "vertex_nudge" in chosen:
-                offset = control.get("parameters", {}).get("offset", offset)
+            if control["feature_id"] in chosen:
+                parameter = TRUSTED_FEATURES[control["feature_id"]]["input"]
+                if parameter is not None:
+                    values[parameter] = control.get("parameters", {}).get(
+                        parameter, INPUT_SPECS[parameter]["default"])
+    typed = tuple(plan_input_registration(key, value) for key, value in values.items())
     control_visibility = tuple(
         tuple(control.get("visible_in", "always") for control in section["controls"]
               if control["feature_id"] in chosen)
@@ -185,4 +218,5 @@ def plan_ui_layout(requested_features: object, *, root: Path, include_options=Fa
     )
     return result, {"section_styles": styles,
                     "control_visibility": control_visibility,
-                    "nudge_offset": validate_nudge_settings(offset)}
+                    "nudge_offset": validate_nudge_settings(values["offset"]),
+                    "typed_inputs": typed}

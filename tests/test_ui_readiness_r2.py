@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 from cbdk.addon_builder import ROOT
 from cbdk.feature_catalog import feature_runtime_contract
+from cbdk.ui_layout import plan_input_registration
 
 
 TEMPLATE = ROOT / "templates/modular_preview/__init__.py"
@@ -259,7 +260,8 @@ class RetryAndCollisionTests(unittest.TestCase):
             "_OWNED_PROPERTIES": [],
             "_OWNED_PROPERTY_TOKENS": {},
             "_PROPERTY_NAMES": ("cbdk_modular_result", "cbdk_modular_nudge_offset"),
-            "_UI_OPTIONS": {"nudge_offset": {"size": 3, "min": -10., "max": 10.,
+            "_UI_OPTIONS": {"typed_inputs": (plan_input_registration("offset", (0., 0., .1)),),
+                            "nudge_offset": {"size": 3, "min": -10., "max": 10.,
                                              "default": (0., 0., 0.1)}},
         }
         exec(_trusted_functions("register", "unregister"), self.namespace)
