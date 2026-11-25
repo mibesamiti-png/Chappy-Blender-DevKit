@@ -765,3 +765,55 @@ jobs:
           path: research/geometry_lab/runs/r21/*.json
           if-no-files-found: warn
           retention-days: 14
+
+  r22-visual-evidence:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    needs: [r21-frozen-new-blender]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install independent image validator
+        run: python -m pip install numpy==2.3.5 pillow==12.0.0
+      - name: Acquire publisher-checksum-verified Blender 4.4.3
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://download.blender.org/release/Blender4.4"
+          curl --fail --location --retry 3 --max-time 300 "$base/blender-4.4.3.sha256" -o "$RUNNER_TEMP/blender.sha256"
+          curl --fail --location --retry 3 --max-time 400 "$base/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          python - "$RUNNER_TEMP/blender.sha256" "$RUNNER_TEMP/blender.tar.xz" <<'PY'
+          import hashlib,pathlib,re,sys
+          lines=[s for s in pathlib.Path(sys.argv[1]).read_text().splitlines()
+                 if 'blender-4.4.3-linux-x64.tar.xz' in s]
+          if len(lines)!=1: raise SystemExit('official checksum entry count invalid')
+          checksum=re.findall(r'\b[0-9a-fA-F]{64}\b',lines[0])
+          if len(checksum)!=1: raise SystemExit('official checksum format invalid')
+          actual=hashlib.sha256(pathlib.Path(sys.argv[2]).read_bytes()).hexdigest()
+          if actual.lower()!=checksum[0].lower():raise SystemExit('official Blender SHA256 mismatch')
+          print('R22 VERIFIED BLENDER',actual)
+          PY
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - uses: actions/download-artifact@v4
+        with:
+          name: geometry-lab-r21-${{ github.sha }}
+          path: research/geometry_lab/runs/r22-input
+      - name: Render all frozen comparisons with Blender Cycles
+        run: |
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r22/render.py -- --input-dir runs/r22-input --output-dir runs/r22
+      - run: python -m cycles.r22.verify --dir runs/r22
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-r22-${{ github.sha }}
+          path: research/geometry_lab/runs/r22/
+          if-no-files-found: warn
+          retention-days: 14
