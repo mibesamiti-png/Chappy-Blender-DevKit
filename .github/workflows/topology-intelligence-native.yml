@@ -1522,3 +1522,126 @@ jobs:
           path: ti43-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase43 verified run 45628160609: 20/20 deformation conditions passed.
+      # Phase44: discrete poses only; conservative contacts of nonincident
+      # triangles, not proof of no collision or exact penetration classification.
+      - name: Phase44 detect nonincident triangle contacts under actual armature poses
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti44.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti43.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          # Conservative contact test for nonincident triangles using separating axes.
+          # Coordinates normalized by fixture radius. Coplanar and near contacts count,
+          # not just proper penetration. This is not an exact-predicate general engine.
+          EPS=1e-7
+          def tri_contact(A,B):
+              ea=np.roll(A,-1,axis=0)-A;eb=np.roll(B,-1,axis=0)-B
+              na=np.cross(ea[0],ea[1]);nb=np.cross(eb[0],eb[1])
+              axes=[na,nb]
+              axes.extend(np.cross(a,b) for a in ea for b in eb)
+              # Additional in-plane edge normals handle coplanar disjoint triangles.
+              axes.extend(np.cross(na,a) for a in ea)
+              axes.extend(np.cross(nb,b) for b in eb)
+              for axis in axes:
+                  norm=np.linalg.norm(axis)
+                  if norm<1e-12:continue
+                  axis=axis/norm
+                  x=A@axis;y=B@axis
+                  if max(x.min()-y.max(),y.min()-x.max())>EPS:return False
+              return True
+          def contacts(V,F,face_ids):
+              F=np.asarray(F,int);V=np.asarray(V,float)
+              req(np.isfinite(V).all(),'nonfinite evaluated vertices')
+              T=V[F];lo=T.min(axis=1);hi=T.max(axis=1)
+              area=np.linalg.norm(np.cross(T[:,1]-T[:,0],T[:,2]-T[:,0]),axis=1)*.5
+              degenerate=np.where(area<1e-10)[0].tolist()
+              pairs=[];face_pairs=set();tested=0;excluded=0
+              for i in range(len(F)):
+                  j=np.where(np.all(lo[i]<=hi[i+1:]+EPS,axis=1)&np.all(lo[i+1:]<=hi[i]+EPS,axis=1))[0]+i+1
+                  for k in j:
+                      if face_ids[i]==face_ids[k] or len(set(F[i])&set(F[k])):
+                          excluded+=1;continue
+                      tested+=1
+                      if tri_contact(T[i],T[k]):
+                          pairs.append((i,int(k)));face_pairs.add(tuple(sorted((int(face_ids[i]),int(face_ids[k])))))
+              return dict(triangles=len(F),tested=tested,excluded_incident=excluded,degenerate=degenerate,contact_pairs=pairs,face_pairs=sorted(face_pairs))
+          def evaluated_contacts(o,data):
+              dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+              try:
+                  m.calc_loop_triangles()
+                  V=np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+                  V=(V-data['origin'])@data['Q']/data['scale']
+                  F=[tuple(t.vertices) for t in m.loop_triangles]
+                  ids=[t.polygon_index for t in m.loop_triangles]
+                  return contacts(V,F,ids)
+              finally:ev.to_mesh_clear()
+          A=np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.]])
+          controls=[]
+          for name,B,expected in [
+              ('proper_crossing',[[.2,.2,-.5],[.2,.2,.5],[.7,.2,0]],True),
+              ('parallel_gap',[[0,0,.01],[1,0,.01],[0,1,.01]],False),
+              ('coplanar_overlap',[[.1,.1,0],[.7,.1,0],[.1,.7,0]],True),
+              ('coplanar_disjoint_aabb_overlap',[[.8,.8,0],[1,.8,0],[.8,1,0]],False),
+              ('point_contact',[[1,0,0],[1.5,0,0],[1,.5,0]],True),
+              ('edge_contact',[[0,0,0],[1,0,0],[.5,-.5,0]],True)]:
+              B=np.asarray(B,float)
+              # Check classification under rigid rotations and translations.
+              for angle0 in (0,37,113):
+                  R=rotation((1,2,3),angle0);T=np.array([.31,-.2,.42])
+                  out=contacts(np.vstack((A@R.T+T,B@R.T+T)),[(0,1,2),(3,4,5)],[0,1])
+                  actual=bool(out['contact_pairs'])
+                  controls.append(dict(case=name,rotation=angle0,expected=expected,actual=actual,ok=actual==expected))
+          adjacent=contacts(np.array([[0.,0,0],[1,0,0],[0,1,0],[0,-1,0]]),[(0,1,2),(1,0,3)],[0,1])
+          controls.append(dict(case='shared_edge_excluded',ok=not adjacent['contact_pairs'] and adjacent['excluded_incident']==1))
+          deg=contacts(np.array([[0.,0,0],[1,0,0],[2,0,0]]),[(0,1,2)],[0])
+          controls.append(dict(case='degenerate_triangle',ok=deg['degenerate']==[0]))
+          STRESS=[('stress_bend45',(0,0,45),(0,0,-45),False),
+                  ('stress_bend90',(0,0,90),(0,0,-90),False),
+                  ('stress_bend120',(0,0,120),(0,0,-120),False),
+                  ('stress_twist90',(0,90,0),(0,-90,0),False),
+                  ('stress_mixed',(45,60,-60),(-45,-60,60),False)]
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[]
+          for spec in specs:
+              o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  rig=rig_for(data,spec[0]);attach(o,rig);attach(new,rig)
+                  for pose in POSES+STRESS:
+                      set_pose(rig,data,pose)
+                      a=evaluated_contacts(o,data);b=evaluated_contacts(new,data)
+                      a_bad=bool(a['contact_pairs'] or a['degenerate'])
+                      b_bad=bool(b['contact_pairs'] or b['degenerate'])
+                      state=('both_flagged' if b_bad else 'source_only') if a_bad else ('result_only' if b_bad else 'both_clear')
+                      rows.append(dict(case=spec[0],pose=pose[0],stress=pose in STRESS,classification=state,source=a,result=b,source_unchanged=all_snapshot(o)==before))
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=spec[0],reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti44-results');d.mkdir(exist_ok=True)
+          # A new flag on a previously clear baseline is a research failure.
+          # Stress outcomes are diagnostic; source and output tessellations differ,
+          # so counts cannot establish pair-by-pair equality or collision-free motion.
+          gate=len(rows)==40 and not failures and all(c['ok'] for c in controls) and all(x['source_unchanged'] for x in rows) and all(x['classification']!='result_only' for x in rows if not x['stress'])
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          compact=[dict(case=x['case'],pose=x['pose'],stress=x['stress'],classification=x['classification'],source_pairs=len(x['source']['face_pairs']),result_pairs=len(x['result']['face_pairs']),source_degenerate=len(x['source']['degenerate']),result_degenerate=len(x['result']['degenerate'])) for x in rows]
+          print('TI44_SUMMARY',json.dumps(dict(gate=gate,controls_pass=sum(c['ok'] for c in controls),controls_total=len(controls),cases=compact,failures=failures)),flush=True)
+          assert gate,'nonincident triangle contact gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti44.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti44-pose-contact-audit-${{ github.sha }}
+          path: ti44-results/
+          if-no-files-found: warn
+          retention-days: 14
