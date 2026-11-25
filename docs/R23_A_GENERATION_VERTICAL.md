@@ -1,0 +1,9 @@
+# R23 A — combined generation and local Extension validation candidate
+
+2026-11-26 JST. #164 C head 8b872c61040faadc404baa538745c1be0fba95ed, #163 D head b1b15306b304013cee41ec86a5c5a94906e7c8ff, unchanged base 1564b7892977d28de573c06e1f4a08ca1b110cfd; both exact-head 5 CI success and each native 3-version markers verified by A. Four C and five D files, zero overlap. No specialist PR individually merged.
+
+A adds explicit local-only CLI `python -m cbdk build-extension-preview --recipe recipe.json --output fresh.zip --preview-unapproved` (existing output parent, no overwrite). Bounded JSON read, duplicate/nonfinite rejection, same trusted-checkout recipe assembly; no external ZIP/code/root/metadata/install permission. This produces a test-only Extension, not a licensed release. Existing CLI unchanged. New static regression checks exact bytes, original recipe, opt-in and refusal.
+
+A combined native gate uses C grouped schema2 fixture (two panels, four code-owned features, two typed inputs) via actual CLI → one Extension root ZIP → official validate → isolated offline manual local repo stage and byte-identical reconstruction → real bl_ext enable → recorded draw in object/edit modes, typed RNA bounds and changed precision, bounds/center, edit selection, UI-forwarded offset, wrong-mode/empty-selection cancellation, selected-only edit → disable/cleanup → unchanged archive SHA. Both D separate read/edit cases and C two native cases remain. Draw uses recorder, not actual Windows GUI; official installer/Undo/rights/redistribution/arbitrary new code not established. Executable ZIP temporary only; report contains evidence not executable ZIP.
+
+Candidate not yet verified; require exact combined 5 CI and native marker CBDK_R23_A_MULTIPANEL_EXTENSION_VERTICAL_PASS on all 3 versions, then dev independent 7 CI. F020-01/03 classification deferred until evidence; F020-02 later separate judgment. No automatic R24 or release.
