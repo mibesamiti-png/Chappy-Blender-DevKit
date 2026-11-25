@@ -2620,3 +2620,159 @@ jobs:
           path: ti54-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase54 verified run 45646579779: 358/358, 1.967x large mesh audit.
+      # Phase57 local analytic comparison: 100 candidates, 86 eligible,
+      # 41 better / 15 same / 4 worse on held-out poses; native check below
+      # uses a shared axial rig and both triangulations, no production approval.
+      - name: Phase57 choose equal-budget ring placement using native axial rig
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti57.py" <<'PY'
+          from pathlib import Path
+          import os,traceback
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti54.py').read_text().split('\nrun54()',1)[0])
+          # New synthetic cylinder family. A common 65-bone axial rig approximates
+          # continuous prescribed rotations; not a two-bone or anatomical rig.
+          RIM57=24
+          BONE57=65
+          PROFILES57=('linear','smoothstep','localized','shifted','wave')
+          MIX57=(0.,.25,.5,.75,1.)
+          DESIGN57=(30,60,90,120)
+          EVAL57=(45,75,105)
+          def profile57(t,kind):
+              if kind=='linear':return t
+              if kind=='smoothstep':return t*t*(3-2*t)
+              if kind in ('localized','shifted'):
+                  center=.5 if kind=='localized' else .27
+                  return (np.tanh(8*(t-center))-np.tanh(-8*center))/(np.tanh(8*(1-center))-np.tanh(-8*center))
+              if kind=='wave':return t+.12*np.sin(2*np.pi*t)
+              raise ValueError(kind)
+          def adaptive57(n,kind):
+              t=np.linspace(0,1,4097);h=t[1]-t[0];f=profile57(t,kind)
+              curv=[np.abs(np.gradient(np.gradient(np.exp(1j*(2*f-1)*a),h,edge_order=2),h,edge_order=2)) for a in np.deg2rad(DESIGN57)]
+              d=np.sqrt(np.max(curv,axis=0));d=np.maximum(d,.25*d.mean())
+              c=np.r_[0,np.cumsum((d[1:]+d[:-1])*h/2)];c/=c[-1]
+              k=np.interp(np.linspace(0,1,n+1),c,t);k[0]=0;k[-1]=1
+              return k
+          def quality57(k):
+              n=len(k)-1;d=np.diff(k);chord=2*np.sin(np.pi/RIM57);ax=2*d
+              ratio=float(np.max(np.maximum(ax/chord,chord/ax)))
+              return dict(aspect=ratio,min_relative=float(n*d.min()),max_relative=float(n*d.max()),valid=bool(k[0]==0 and k[-1]==1 and np.all(d>0) and n*d.min()>=.35 and n*d.max()<=2.5 and ratio<=6))
+          def field57(u,t,a,kind):
+              th=2*np.pi*u+(2*profile57(t,kind)-1)*a
+              return np.stack((np.cos(th),np.sin(th),2*t),axis=-1)
+          def rig57():
+              arm=bpy.data.armatures.new('TI57_axis');obj=bpy.data.objects.new('TI57_axis',arm);bpy.context.collection.objects.link(obj)
+              bpy.context.view_layer.objects.active=obj;obj.select_set(True)
+              bpy.ops.object.mode_set(mode='EDIT')
+              for i,t in enumerate(np.linspace(0,1,BONE57)):
+                  b=arm.edit_bones.new('Axis_%03d'%i);b.head=(0,0,2*t);b.tail=(0,0,2*t+.025);b.use_deform=True
+              bpy.ops.object.mode_set(mode='OBJECT')
+              return obj
+          def cylinder57(k,rig,name):
+              u,t=np.meshgrid(np.arange(RIM57)/RIM57,k)
+              v=field57(u.ravel(),t.ravel(),0.,'linear');faces=[]
+              for j in range(len(k)-1):
+                  for i in range(RIM57):
+                      a=j*RIM57+i;b=j*RIM57+(i+1)%RIM57
+                      faces.append((a,b,b+RIM57,a+RIM57))
+              m=bpy.data.meshes.new(name);m.from_pydata(v.tolist(),[],faces);m.update()
+              o=bpy.data.objects.new(name,m);bpy.context.collection.objects.link(o)
+              groups=[o.vertex_groups.new(name='Axis_%03d'%i) for i in range(BONE57)]
+              for j,t0 in enumerate(k):
+                  x=t0*(BONE57-1);i=min(int(x),BONE57-2);w=x-i;ids=list(range(j*RIM57,(j+1)*RIM57))
+                  if 1-w>0:groups[i].add(ids,float(1-w),'REPLACE')
+                  if w>0:groups[i+1].add(ids,float(w),'REPLACE')
+              mod=o.modifiers.new('TI57_skin','ARMATURE');mod.object=rig;mod.use_deform_preserve_volume=True
+              return o
+          def pose57(rig,kind,deg):
+              for i,t in enumerate(np.linspace(0,1,BONE57)):
+                  b=rig.pose.bones['Axis_%03d'%i];b.rotation_mode='XYZ'
+                  b.rotation_euler=(0,float((2*profile57(t,kind)-1)*np.deg2rad(deg)),0)
+              bpy.context.view_layer.update()
+          def geometry57(o):
+              deps=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(deps);m=ev.to_mesh()
+              try:
+                  m.calc_loop_triangles()
+                  return np.array([tuple(v.co) for v in m.vertices],float),[tuple(t.vertices) for t in m.loop_triangles],[t.polygon_index for t in m.loop_triangles]
+              finally:ev.to_mesh_clear()
+          def interpolate57(V,k,u,t,diag):
+              i=np.floor(u*RIM57).astype(int);j=np.clip(np.searchsorted(k,t,side='right')-1,0,len(k)-2)
+              x=u*RIM57-i;y=(t-k[j])/(k[j+1]-k[j]);a=j*RIM57+i;b=j*RIM57+(i+1)%RIM57
+              p,q,r,s=V[a],V[b],V[b+RIM57],V[a+RIM57]
+              x=x[:,None];y=y[:,None]
+              if diag==0:return np.where(x>=y,(1-x)*p+(x-y)*q+y*r,(1-y)*p+x*r+(y-x)*s)
+              return np.where(x+y<=1,(1-x-y)*p+x*q+y*s,(1-y)*q+(x+y-1)*r+(1-x)*s)
+          def samples57(nu,nt):
+              u,t=np.meshgrid((np.arange(nu)+.371)/nu,np.linspace(0,1,nt))
+              return u.ravel(),t.ravel()
+          def measure57(o,k,rig,kind,angles,u,t,contact):
+              pose57(rig,kind,0);rest=geometry57(o)[0];vu,vt=np.meshgrid(np.arange(RIM57)/RIM57,k)
+              ref0=field57(u,t,0,kind);rest_exact=field57(vu.ravel(),vt.ravel(),0,kind)
+              req(float(np.max(np.linalg.norm(rest-rest_exact,axis=1)))<1e-6,'native rest mismatch')
+              rows=[]
+              for deg in angles:
+                  pose57(rig,kind,deg);geom=geometry57(o);V=geom[0];a=np.deg2rad(deg)
+                  target=field57(u,t,a,kind)-ref0
+                  errs=[np.linalg.norm(interpolate57(V,k,u,t,d)-interpolate57(rest,k,u,t,d)-target,axis=1) for d in (0,1)]
+                  vertex_error=float(np.max(np.linalg.norm(V-field57(vu.ravel(),vt.ravel(),a,kind),axis=1)))
+                  req(vertex_error<.003,'native prescribed rotation mismatch')
+                  row=dict(angle=deg,p95=max(float(np.quantile(e,.95)) for e in errs),maximum=max(float(e.max()) for e in errs),vertex_error=vertex_error)
+                  if contact:
+                      audit,_=audit54(*geom)
+                      row['contact']=dict(nonincident=len(audit['nonincident']['contact_pairs']),degenerate=len(audit['nonincident']['degenerate']),incident=dict(audit['incident_counts']))
+                      row['flagged']=bool(row['contact']['nonincident'] or row['contact']['degenerate'] or any(x!='shared_only' and n for x,n in row['contact']['incident'].items()))
+                  rows.append(row)
+              return rows
+          def run57():
+              prev=json.loads(Path('ti54-results/results.json').read_text());req(prev['complete'],'Phase54 integrity failed')
+              bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+              rig=rig57();du,dt=samples57(48,129);eu,et=samples57(144,513)
+              groups=[];rows=[];failures=[]
+              # Reduced first native pass: three budgets, five profiles, five mixes.
+              for kind in PROFILES57:
+                  for n in (4,8,16):
+                      objs=[]
+                      try:
+                          uniform=np.linspace(0,1,n+1);ad=adaptive57(n,kind);cs=[]
+                          for mix in MIX57:
+                              k=(1-mix)*uniform+mix*ad;k[0]=0;k[-1]=1;q=quality57(k)
+                              rec=dict(mix=mix,knots=k.tolist(),quality=q,design=[])
+                              if q['valid']:
+                                  o=cylinder57(k,rig,'TI57_%s_%d_%s'%(kind,n,mix));objs.append(o)
+                                  rec['design']=measure57(o,k,rig,kind,DESIGN57,du,dt,False);rec['object']=o
+                                  rec['score']=max(x['p95'] for x in rec['design'])
+                              cs.append(rec)
+                          valid=[c for c in cs if c['quality']['valid']]
+                          best=min(valid,key=lambda c:(c['score'],max(x['maximum'] for x in c['design']),c['mix']))
+                          base=cs[0];req(base['quality']['valid'] and best['score']<=base['score']+1e-12,'design gate')
+                          a=measure57(base['object'],np.array(base['knots']),rig,kind,EVAL57,eu,et,True)
+                          b=measure57(best['object'],np.array(best['knots']),rig,kind,EVAL57,eu,et,True)
+                          for x,y in zip(a,b):
+                              rows.append(dict(profile=kind,levels=n,quads=n*RIM57,angle=x['angle'],selected_mix=best['mix'],uniform=x,selected=y,gain=1-y['p95']/x['p95'],max_gain=1-y['maximum']/x['maximum']))
+                          groups.append(dict(profile=kind,levels=n,selected_mix=best['mix'],candidates=[{k:v for k,v in c.items() if k!='object'} for c in cs]))
+                      except Exception as e:failures.append(dict(profile=kind,levels=n,reason=str(e),traceback=traceback.format_exc()))
+                      finally:
+                          for o in objs:
+                              mesh=o.data;bpy.data.objects.remove(o,do_unlink=True)
+                              if mesh.users==0:bpy.data.meshes.remove(mesh)
+              complete=len(groups)==15 and len(rows)==45 and not failures
+              out=dict(approved=False,blender=bpy.app.version_string,complete=complete,groups=len(groups),candidates=sum(len(g['candidates']) for g in groups),eligible=sum(c['quality']['valid'] for g in groups for c in g['candidates']),selected_mix_counts=dict(Counter(str(g['selected_mix']) for g in groups)),eval_pairs=len(rows),better=sum(r['gain']>1e-6 for r in rows),same=sum(abs(r['gain'])<=1e-6 for r in rows),worse=sum(r['gain']< -1e-6 for r in rows),max_error_worse=sum(r['max_gain']< -1e-6 for r in rows),result_only=[dict(profile=r['profile'],levels=r['levels'],angle=r['angle']) for r in rows if r['selected']['flagged'] and not r['uniform']['flagged']],max_vertex_error=max((max(r['uniform']['vertex_error'],r['selected']['vertex_error']) for r in rows),default=None),failures=failures)
+              d=Path('ti57-results');d.mkdir(exist_ok=True)
+              (d/'results.json').write_text(json.dumps(dict(**out,records=groups,rows=rows),indent=2))
+              print('TI57_SUMMARY',json.dumps(out),flush=True)
+              assert complete,'native candidate routing integrity failed'
+          run57()
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti57.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti57-native-ring-routing-${{ github.sha }}
+          path: ti57-results/
+          if-no-files-found: warn
+          retention-days: 14
