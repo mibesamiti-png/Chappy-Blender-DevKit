@@ -19,10 +19,13 @@ from cbdk.extension_preflight import MAX_ARCHIVE_BYTES
 
 def verify():
     case = os.environ["CBDK_R23_CASE"]
-    if case == "grouped":
+    if case in ("grouped", "dependency"):
         sys.path.insert(0, str(ROOT / "tests"))
         from test_ui_recipe_r17 import make_r23_recipe
         recipe = make_r23_recipe("grouped")
+        if case == "dependency":
+            from extension_r24_dependency_fixture import dependency_recipe, dependency_catalog, ORDER
+            recipe = dependency_recipe()
     else:
         recipe = ci_recipe(case)
     root = Path(os.environ["CBDK_R19_TEMP"]).resolve()
@@ -36,7 +39,12 @@ def verify():
         blob = stream.read(MAX_ARCHIVE_BYTES + 1)
     # A supplied path or hash cannot authorize code execution. Rebuild the
     # fixed authored recipe inside this trusted checkout and compare bytes.
-    if blob != build_recipe_extension_bytes(recipe, preview_unapproved=True):
+    if case == "dependency":
+        with dependency_catalog():
+            regenerated = build_recipe_extension_bytes(recipe, preview_unapproved=True)
+    else:
+        regenerated = build_recipe_extension_bytes(recipe, preview_unapproved=True)
+    if blob != regenerated:
         raise AssertionError("R23 runtime input differs from fixed authored generation")
     directory = root / "local_repo"
     directory.mkdir()
@@ -76,7 +84,8 @@ def verify():
                 Path(module.__file__).resolve() != package / "__init__.py" or
                 not addon_utils.check(namespace)[1] or
                 bpy.context.preferences.addons.get(namespace) is None or
-                set(module._FEATURE_IDS) != set(recipe["features"]) or
+                (tuple(module._FEATURE_IDS) != ORDER if case == "dependency"
+                 else set(module._FEATURE_IDS) != set(recipe["features"])) or
                 any(not c.is_registered for c in classes)):
             raise AssertionError("R23 native Extension registration mismatch")
         mesh = bpy.data.meshes.new("CBDK R23 asymmetric")
@@ -92,7 +101,7 @@ def verify():
         bpy.context.view_layer.update()
         scene = bpy.context.scene
         before = [tuple(v.co) for v in mesh.vertices]
-        if case == "grouped":
+        if case in ("grouped", "dependency"):
             panels = module._PANEL_CLASSES
             if [(cls.bl_idname, cls.bl_label) for cls in panels] != [
                     ("VIEW3D_PT_cbdk_modular_primary", "Geometry"),
@@ -237,11 +246,15 @@ def verify():
             any(hasattr(bpy.types.Scene, n) for n in
                 ("cbdk_modular_result", "cbdk_modular_nudge_offset", "cbdk_modular_center_precision"))):
         raise AssertionError("R23 registration cleanup incomplete")
-    if case == "grouped":
+    if case in ("grouped", "dependency"):
         if any(hasattr(bpy.types, cls.bl_idname) for cls in panels):
             raise AssertionError("R23 combined panel registration leaked")
-        print("CBDK_R23_A_MULTIPANEL_EXTENSION_VERTICAL_PASS: two panels, four features, typed read/edit and cleanup")
-    print("CBDK_R23_RECIPE_EXTENSION_RUNTIME_PASS: " + case)
+        if case == "dependency":
+            print("CBDK_R24_DEPENDENCY_EXTENSION_RUNTIME_PASS: requested 1, resolved 4, typed read/edit and cleanup")
+        else:
+            print("CBDK_R23_A_MULTIPANEL_EXTENSION_VERTICAL_PASS: two panels, four features, typed read/edit and cleanup")
+    if case != "dependency":
+        print("CBDK_R23_RECIPE_EXTENSION_RUNTIME_PASS: " + case)
 
 
 if __name__ == "__main__":
