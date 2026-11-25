@@ -2068,3 +2068,123 @@ jobs:
           path: ti48-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase48 run 45634619135: 328/328, 15/15 controls, 200 prior anchors.
+      # Phase49 freezes diagnostic thresholds and adds new synthetic fixtures and
+      # weight fields. Counts rejected patches in coverage; no universal claim.
+      - name: Phase49 frozen strain screen on new shapes and weight fields
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti49.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti48.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          # Frozen screen from Phase48. New fixtures defined before any native results.
+          # Same synthetic topology family; this is not an independent real-world dataset.
+          HOLDOUT=[
+           ('h_asymmetric',(.23,.12,.065,.018),.28,(2,1,3),38,(.3,.15,-.3),'sigmoid'),
+           ('h_saddle',(.16,.21,.055,-.11),.85,(1,3,2),109,(-.4,.2,.15),'oblique'),
+           ('h_steep',(.18,.16,.16,.055),.1,(3,1,1),73,(.1,-.35,.4),'steep'),
+           ('h_biased',(.25,.13,.08,-.025),.55,(1,1,3),151,(-.3,-.2,.1),'biased')]
+          ANGLES=sorted(set(range(0,121,5))|set(range(80,101)))
+          AUDIT=set(range(0,121,10))|{85,89,91,95}
+          req(len(ANGLES)==41 and len(AUDIT)==17 and AUDIT.issubset(ANGLES),'angle schedule')
+          def new_weights(o,data,kind):
+              V=(coords(o)-data['origin'])@data['Q']/data['scale']
+              x,y,z=V.T
+              if kind=='sigmoid':w=.5+.43*np.tanh(2.8*x+.6*y)
+              elif kind=='oblique':w=.5+.4*np.sin(1.7*x+1.2*y)
+              elif kind=='steep':w=.5+.47*np.tanh(8.*(x-.12*y))
+              elif kind=='biased':w=.72+.23*np.tanh(3.*y+1.2*x)
+              else:raise ValueError('unknown weight field')
+              for i,a in enumerate(w):
+                  o.vertex_groups['Group_A'].add([i],float(a),'REPLACE')
+                  o.vertex_groups['Group_B'].add([i],float(1.-a),'REPLACE')
+              return [float(w.min()),float(w.max())]
+          def state(a,b):
+              return ('both_flagged' if bad(b) else 'source_only') if bad(a) else ('result_only' if bad(b) else 'both_clear')
+          def report(rows):
+              cm=Counter()
+              for r in rows:
+                  if r['contact'] is None:continue
+                  actual=bad(r['contact']['result'])
+                  cm[('flag' if r['flagged'] else 'clear')+' / '+('target_flag' if actual else 'target_clear')]+=1
+              return dict(cm)
+          prior48=json.loads(Path('ti48-results/results.json').read_text())
+          req(prior48['complete'],'Phase48 integrity failed')
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];coverage=[];failures=[]
+          for spec in HOLDOUT:
+              name=spec[0];o=fixture(*spec[:-1]);init_attributes(o);g=None;new=None
+              try:
+                  data=extract(o);wrange=new_weights(o,data,spec[-1]);before=all_snapshot(o);g=prepare(data)
+                  decision,m=route(data,g)
+                  if m is None:
+                      coverage.append(dict(case=name,status='no_candidate',weight=spec[-1],weight_range=wrange,route=decision,source_unchanged=all_snapshot(o)==before))
+                      continue
+                  new,transfer=replace_attributes(o,data,*m)
+                  outside={signature(o,p) for p in o.data.polygons if not p.select}
+                  sf={p.index for p in o.data.polygons if p.select}
+                  tf={p.index for p in new.data.polygons if signature(new,p) not in outside}
+                  sf0=rest_faces(o,sf);tf0=rest_faces(new,tf)
+                  s0=coords(o);t0=coords(new);sm=sampling(o,sf,data,S);tm=sampling(new,tf,data,S)
+                  sr=interpolate(s0,sm);tr=interpolate(t0,tm)
+                  rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                  mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                  for enabled in (False,True):
+                      for mod in mods:mod.use_deform_preserve_volume=enabled
+                      prev=None
+                      for a in ANGLES:
+                          pose=('twist'+str(a),(0,a,0),(0,-a,0),False)
+                          set_pose(rig,data,pose);sv=evaluated(o);tv=evaluated(new)
+                          ss=stats(s0,sv,sf0);ts=stats(t0,tv,tf0)
+                          ds=interpolate(sv,sm)-sr;dt=interpolate(tv,tm)-tr
+                          p95=float(np.quantile(np.linalg.norm(ds-dt,axis=1)/data['scale'],.95))
+                          rate=None
+                          if prev is not None:
+                              pa,pt=prev
+                              rate=float(np.quantile(np.linalg.norm(dt-pt,axis=1)/data['scale'],.95)/(a-pa))
+                          prev=(a,dt)
+                          flagged=ts['p05_stretch']<.25 or ts['p95_stretch']>2. or (rate is not None and rate>.10)
+                          contact=None
+                          if a in AUDIT:
+                              x=summary(audit(o,data));y=summary(audit(new,data))
+                              contact=dict(source=x,result=y,classification=state(x,y))
+                          rows.append(dict(case=name,weight=spec[-1],angle=a,preserve_volume=enabled,source=ss,result=ts,p95_displacement=p95,step_rate=rate,flagged=flagged,contact=contact,source_unchanged=all_snapshot(o)==before))
+                  for mod in mods:mod.use_deform_preserve_volume=False
+                  set_pose(rig,data,POSES[0])
+                  coverage.append(dict(case=name,status='accepted',weight=spec[-1],weight_range=wrange,selected=decision['selected'],source_unchanged=all_snapshot(o)==before))
+              except Exception as e:failures.append(dict(case=name,reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti49-results');d.mkdir(exist_ok=True)
+          accepted=sum(x['status']=='accepted' for x in coverage)
+          audit_rows=[r for r in rows if r['contact'] is not None]
+          complete=len(coverage)==4 and not failures and len(rows)==82*accepted and len(audit_rows)==34*accepted and all(r['source_unchanged'] for r in rows) and all(r['source_unchanged'] for r in coverage)
+          # Holdout is diagnostic only. Do not optimize thresholds using these results
+          # and then count the same cases as independent validation.
+          summaries=[]
+          for enabled in (False,True):
+              a=[r for r in rows if r['preserve_volume']==enabled]
+              known=[r for r in a if r['contact'] is not None]
+              missed=[dict(case=r['case'],angle=r['angle'],classification=r['contact']['classification']) for r in known if bad(r['contact']['result']) and not r['flagged']]
+              risks=[dict(case=r['case'],angle=r['angle']) for r in known if r['contact']['classification']=='result_only']
+              summaries.append(dict(preserve_volume=enabled,samples=len(a),audited=len(known),target_confusion=report(a),classifications=dict(Counter(r['contact']['classification'] for r in known)),missed=missed,result_only=risks,worst_p95=max((r['p95_displacement'] for r in a),default=None)))
+          out=dict(approved=False,blender=bpy.app.version_string,complete=complete,accepted=accepted,coverage=coverage,summaries=summaries,rows=rows,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'holdout_rigs.blend').resolve()))
+          compact=[{k:v for k,v in x.items() if k!='route'} for x in coverage]
+          print('TI49_SUMMARY',json.dumps(dict(complete=complete,accepted=accepted,coverage=compact,rows=len(rows),audit_rows=len(audit_rows),summaries=summaries,failures=failures)),flush=True)
+          assert complete and accepted>0,'holdout execution incomplete'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti49.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti49-frozen-holdout-${{ github.sha }}
+          path: ti49-results/
+          if-no-files-found: warn
+          retention-days: 14
