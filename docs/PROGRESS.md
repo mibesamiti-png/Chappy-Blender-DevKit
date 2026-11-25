@@ -1465,3 +1465,9 @@ C#145 18de007 / D#146 355daa2 各5CI、A#147 393ee4e 5CI（再試行0）。12+6�
 #159 B dfe61bee 5CI、#160 A d11839ec 5CI、dev a816d5ec0f08456c469af134b4b7dc1b69987258 独立7CI（Python45636769946、Windows45636769714、Blender45636769495 attempt2、Chromium45636769899、Handoff45636769741、Kit45636769989、Skill45636769864）。3版16ケース固定8/10・適応9/10、誤警告0/5、情報欠落1。小穴見逃し、境界ヒントは物理証明でない。旧profile・入力SHA維持。初回4.4.3 artifact確定失敗は同一HEAD失敗job再試行成功。測定のみ、製品変更・GL採用なし。限定3目標受入、実データ/一般精度/物理診断/native memory/viewer未確認。#125 rev13 paused、R23/v0.20自動開始なし、正式版/44要件/24 NEXT/last_verified維持。
 
 実Blender jobs139299743712 (4.4.3 retry)/139284224979 (4.5.15)/139284225490 (5.2.1)。4.4.3初回139284225529は全形状検査成功後、artifact finalize HTML/JSON応答異常で失敗、同一run attempt2の失敗jobのみ再実行しartifact15035179114保存成功。代表親中央値553.366/460.909/564.990 ms（異なるrunner、速度保証なし）。B #159は#160に包含済みのため別マージせずclosed。詳細 [R22測定](GLB_DETECTION_LIMITS_R22.md)。3/3は限定目標のみであり、v0.19全体の完成・正式公開ではない。節目同期候補CIおよび統合後独立CIを確認して区切り判断。Notion最終同期未実施。
+
+## 2026-11-26 JST — v0.20移行・R23 C/D限定割当候補
+
+dev 1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791 独立7CI（Python45644535642、Windows45644535499、Blender45644535704、Chromium45644535823、Handoff45644535761、Kit45644535523、Skill45644535575）。実3版R22/R21 marker、#25同HEAD draft。既存Notion節目追記成功。F019限定3/3を区切るが実データ/一般精度/物理診断/native memory/viewer未完。既承認F020へ進む候補、R23はCの明示複数panelとDの既存レシピからの非配布Extension準備に限定。F020-02は統合後別判断。割当文書統合・独立7CI・#125更新前は実装禁止。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
+
+R19既存基盤の6機能/7部品、2型入力、単一panel内の宣言sectionと固定2機能Extension試験を再利用。CはF020-01の明示複数panel、DはF020-03の安全な複数既存レシピからのローカルpreview Extension生成準備。Aは契約・CLI・同一生成物の縦断検証を担当。F020-02は既存依存/登録経路との差分をR23受入後に判断。[R23割当候補](R23_ABCD_START.md)。B待機、GL/DIL独立。v0.19の実モデル等は未完了として維持。Notion既存ページ410948b7-4937-8144-9462-ca76e9567e75へ#161節目追記成功（新規ページ/私有データなし）。

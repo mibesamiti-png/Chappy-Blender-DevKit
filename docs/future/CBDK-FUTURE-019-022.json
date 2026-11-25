@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_id": "CBDK-FUTURE-019-022",
-  "status": "ACTIVE_V019",
+  "status": "ACTIVE_V020",
   "active": true,
   "approved_on": "2026-11-07",
   "approval_basis": "User explicitly approved the future plan and transition policy; finish automatable v0.18 work and record remaining human blockers first.",
@@ -26,7 +26,7 @@
   "phases": [
     {
       "version": "0.19",
-      "status": "in_progress",
+      "status": "scoped_milestones_accepted",
       "goal": "Practical GLB analysis and conservative part correspondence",
       "candidates": [
         "Expand the 512-triangle research limit gradually with explicit computational budgets",
@@ -40,7 +40,7 @@
     },
     {
       "version": "0.20",
-      "status": "not_started",
+      "status": "in_progress",
       "goal": "Blender addon generation engine",
       "candidates": [
         "Declarative panels, buttons, properties and operators",
@@ -131,6 +131,36 @@
         "blender_run": 45636769495,
         "scope": "Measurement-only: 16 authored synthetic cases, all three Blender versions; fixed 8/10 and adaptive 9/10 known positive sampled surface differences, both 0/5 false warnings, 1 information absent. Narrow opening missed; physical thickness/contact/void topology, native memory, held-out/general models and user data unverified. No production or GL adoption, existing profiles unchanged. Artifact finalize retry on same HEAD succeeded."
       }
+    },
+    "0.20": {
+      "F020-01": {
+        "status": "assignment_candidate",
+        "scope": "R23 C: bounded opt-in multi-panel composition, existing code-owned six features and two input types; legacy single panel unchanged."
+      },
+      "F020-02": {
+        "status": "not_started_in_v020",
+        "scope": "Dependency and registration composition remaining scope evaluated after R23; reuse current authored catalog, no arbitrary adoption."
+      },
+      "F020-03": {
+        "status": "assignment_candidate",
+        "scope": "R23 D: bounded recipe-to-local-preview Extension generation for multiple existing trusted recipes; A vertical verification. No distribution or generic installer."
+      }
     }
+  },
+  "v020_transition_evidence": {
+    "date": "2026-11-26",
+    "verified_base_sha": "1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791",
+    "workflow_runs": {
+      "python": 45644535642,
+      "windows": 45644535499,
+      "blender": 45644535704,
+      "chromium": 45644535823,
+      "handoff": 45644535761,
+      "kit": 45644535523,
+      "skill": 45644535575
+    },
+    "pr25_draft": true,
+    "scope": "F019 scoped milestones 3/3 accepted; general/real model accuracy, native memory, physical defect classification and viewer remain incomplete. No release.",
+    "dispatch": "R23 candidate only; merge and independent seven CI plus #125 revision before implementation."
   }
 }
