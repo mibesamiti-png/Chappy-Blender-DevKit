@@ -14,10 +14,10 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R17 B#132/C#134/D#133を#135で統合、#136で公式SHA固定キャッシュを導入。dev 236b9a3254928d7cb69d5c415fd8a3e792ee5de7 独立7CI全成功、R17限定受入成立。実GLB/GUI/権利・汎用UI/正式Extension経路は未完了。R18自動割当なし、正式v0.17.0・次期active=false維持。
+- 最新の節目: v0.18: R18 C#140/D#141を#142で統合、dev 36d4090402f66f49d5644fbef91f1c03d95a6b34 独立7CI成功。6自作機能の生成・検査、非インストール合成Extension ZIP/公式build/validateを3版実測。実機能のExtension化・汎用型付きUI・実GLB/GUI/権利は未完了。R19自動割当なし、正式v0.17.0・次期active=false維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
-- 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
+- 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
 - 部品の正式採用と再配布ライセンス確認は未完了。個人用プレビューのみ。
 
 ## 仕様・実装・未実装の一覧
@@ -30,18 +30,18 @@
 | `ISO-001` | ソース内/複数ファイルの依存静的検査 | 一部実装 | Pythonテスト | 条件に合う安全側パターンのみ |
 | `AUD-001` | Blender API静的監査・契約 | 実装済 | Pythonテスト | 実機検査とは分離 |
 | `PART-001` | 再利用自作部品の台帳と実機スモーク | 実装済 | Blender CI | 7部品。実行証拠はPR #16のCI。台帳は承認を与えない |
-| `PLAN-001` | 機能依存閉包・Blender互換性チェック | 実装済 | Pythonテスト | 5機能。許可リストにないコードは実行しない |
-| `BUILD-001` | レシピからのBlenderアドオン生成 | 一部実装 | Blender CI | レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17 #135/#136: inline UIレシピ計画とA CLI連携、2種の生成/実操作/解除を3版で実測。236b9a3独立7CI成功。正式Extension経路/権利未完了。 |
+| `PLAN-001` | 機能依存閉包・Blender互換性チェック | 実装済 | Pythonテスト | 6自作機能・7部品。R18コード所有descriptor、旧5機能の互換性と追加mesh_centerを独立検証。許可リストにないコードは実行しない。 |
+| `BUILD-001` | レシピからのBlenderアドオン生成 | 一部実装 | Blender CI | レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17 #135/#136: inline UIレシピ計画とA CLI連携、2種の生成/実操作/解除を3版で実測。236b9a3独立7CI成功。正式Extension経路/権利未完了。 R18 #142/36d40904 独立7CI: 第6自作機能を共通descriptorから生成・描画・実行・解除し、中心座標を独立照合。既存レシピ維持。実機能のExtension化・任意コード採用は未完了。 |
 | `EDIT-001` | Edit Mode選択頂点の安全な移動 | 実装済 | Blender CI | 単一メッシュ/有限オフセット/Blender UNDOフラグ |
 | `EDIT-002` | 編集差分の監査とベストエフォート復元 | 一部実装 | Blender CI | 加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。PR #21のBlender 4.4.3/4.5.15/5.2.1 CIで実測成功 |
 | `TEST-001` | Python/Windows/Blender 3バージョンCI | 実装済 | Blender CI | リポジトリ公開化後、PR #21でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。mainの正式last_verifiedは未更新 |
-| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17: 既存5機能のレシピ別inline UIと2種のnative描画/操作/解除を236b9a3で3版確認。任意operator/汎用UI/GUIは未完了。 |
-| `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | 必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。 R17: max/permissionsのoptional構造と公式7例（4一致/1不一致/1未分類/1範囲外）を236b9a3の3版で確認。正式ZIP・残optional・権利未完了。 |
+| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17: 既存5機能のレシピ別inline UIと2種のnative描画/操作/解除を236b9a3で3版確認。任意operator/汎用UI/GUIは未完了。 R18 #142/36d40904: mesh_centerをglobal/inline UIの両方で3版実測、67 lifecycleチェック各版成功。コード所有のmode/operator/input契約を追加。汎用型付きUI・任意operator・実Windows GUIは未完了。 |
+| `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | 必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。 R17: max/permissionsのoptional構造と公式7例（4一致/1不一致/1未分類/1範囲外）を236b9a3の3版で確認。正式ZIP・残optional・権利未完了。 R18 #142/36d40904: 明示合成metadata→TOML→非インストール固定2member ZIP、公式build/validate双方を3版実測。Aが6機能の実preview検査を接続。実機能をExtensionへ変換・登録する経路、実権利・正式配布は未完了。 |
 | `INST-001` | GitHubからBlenderへの直接インストール・更新 | 保留 | 未検証 | ユーザー希望で保留。UI確認段階まで実装しない |
 | `PERF-001` | 巨大メッシュ向け監査・効率化 | 一部実装 | Blender CI | 20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否 |
 | `GUI-001` | 実際のGUI Undo・操作感の自動検証 | 未実装 | 未検証 | ヘッドレスではUndoフラグと編集結果まで確認 |
 | `UNDO-001` | 背景BlenderでのネイティブUndo/Redo検査 | 一部実装 | Blender CI | c80f2a0/Blender42368190461の3版で明示ed.undo_pushの単一/複数頂点2ケースNative Undo/Redo成功。正確な接続/選択・取消無変更を確認。通常背景Undo不可、GUI/実ユーザー未検証でpartialを維持。 |
-| `PLAN-002` | 全レシピと部品依存の一括静的監査 | 一部実装 | Pythonテスト | 6レシピ・5機能・7部品の依存/3版互換性に加え、生成前AST相対import/export・登録衝突・実機KNOWN/CI一覧を照合。NEXT-003の受け入れ完了。固定自作previewのみで一般の新規登録/承認は未対応、全体partialを維持。Python767件×3/Windows2/Blender3版確認。 |
+| `PLAN-002` | 全レシピと部品依存の一括静的監査 | 一部実装 | Pythonテスト | 6レシピ・5機能・7部品の依存/3版互換性に加え、生成前AST相対import/export・登録衝突・実機KNOWN/CI一覧を照合。NEXT-003の受け入れ完了。固定自作previewのみで一般の新規登録/承認は未対応、全体partialを維持。Python767件×3/Windows2/Blender3版確認。 R18: 旧6レシピ/5機能/7部品を凍結し第6機能の独立合成coverageと登録監査を追加。36d40904独立7CI成功。新規任意部品の自動承認なし。 |
 | `REG-001` | 自作部品・機能の登録計画自動生成 | 一部実装 | Pythonテスト | 未登録ID・依存・ソース衝突を検査して非実行のレビュー計画を生成。コード/台帳の自動追加・承認は行わない。PR #21のPython 3版CIで回帰テスト成功 |
 | `REG-002` | 登録計画から未完成テストのひな形を安全に生成 | 一部実装 | Pythonテスト | 現行カタログと登録計画の完全一致を確認し、TODO失敗テストをignored領域に新規生成。Windows短縮パス差も修正し、PR #21のPython/Windows CI成功 |
 | `REG-003` | 読み取り専用・メッシュ編集で未完成テストの内容を切替 | 一部実装 | Pythonテスト | --behavior read_only/mesh_editを明示指定。共通項目に不変性・Undo・選択範囲・復元を追加。PR #21のPython 3版CIで回帰テスト成功 |
@@ -75,7 +75,7 @@
 |---|---|---|---|
 | `LIM-001` | medium | open | 監査後のトポロジー破損は座標復元だけでは修復不可。回避策: 作業ファイルのバックアップとBlender標準Undoを使い、危険な加工は正式採用しない |
 | `LIM-002` | low | open | GUIのCtrl+Zと操作感はヘッドレスCIでは未検証。回避策: UIのある開発段階でWindows上で確認する |
-| `LIM-003` | low | open | Blender公式アーカイブ取得で稀にHTTP 403。回避策: 固定公式SHAでアーカイブを毎回検証し同一PRキャッシュ再利用を確認。キャッシュミス時の403は残り得る。失敗ジョブのみ再実行。別PR共有ヒットは未確認。 |
+| `LIM-003` | low | open | Blender公式アーカイブ取得で稀にHTTP 403。回避策: 固定公式SHAで復元/取得後に毎回照合。#138以降のdevおよびR18候補・独立CIで別PR共有HITを確認。MISS時は検証直後保存、公式mirror fallbackあり（fallback実測なし）。403は残り得る。失敗ジョブのみ再実行。容量・速度効果未測定。 |
 | `LIM-004` | medium | open | 自作部品の採用・ライセンス/再配布確認は未完了。回避策: 開発用プレビューのみで、approved=falseを維持する |
 | `LIM-005` | low | open | 大規模メッシュは監査20万要素上限を超えると操作しない。回避策: 小さなメッシュに分割するか、必要に応じ監査上限を再設計する。安全を確認せず上限を解除しない |
 | `LIM-006` | low | fixed | 非公開時のGitHub Actionsランナー未割当(steps=null)は公開化で解消。回避策: 2026-11-06にリポジトリをpublicへ変更後、同じPRワークフローで実ランナー・steps・logsが生成され全CIが実行可能になった。Issue #19は解決としてclose |
@@ -206,6 +206,7 @@
 - `DEC-077` R15のB/C/D限定成果をAのPR #122で一度だけ統合し、独立7CI成功後にR16を小さく割り当てる。B#120 70b27ab/C#121 54832e7/D#119 cae75c5は各最終HEADの5CI成功。A結合#122 25180ceの5CI成功。Windows Python3.13の既存dashboard Node 15秒timeoutは失敗ジョブ単独再試行でsuccess、原因未断定。dev squash 08ddb3e3a51e526ddfe857268f31b2de443c0fecの独立7CI全成功（Python42915099059、Windows42915098806、Blender42915099109、Chromium42915098872、Handoff42915098940、Kit42915098954、Skill42915098964）。Blender3版にnative R15各6項目。正式v0.17.0/44要件/24 NEXT/last_verified/next v0.19 active=false維持。実GLB/GUI/権利/研究コード採用は未承認。R16実装はA節目同期統合後の新dev独立7CI成功まで禁止。
 - `DEC-078` R16統合受入と完成優先R17への移行。DIL手順のみ限定利用し研究コードは導入しない。B#126 f1f4fb1/C#124 ddd7cbe/D#127 477c1e2各5CI、結合#130 bb93d51の5CI、dev b9936b35の独立7CI全成功（Python45520525702、Windows45520525596、Blender45520525689、Chromium45520525694、Handoff45520525609、Kit45520525591、Skill45520525679）。結合Blender3版各63チェック、R16各6項目。10パス重複0、実装挙動変更なし、CI再試行0。段階取得/CI概要優先/短い引継ぎ/同種一括は既存ゲート内で使用、効率の定量効果未測定。新管理/研究なし。R17は節目同期後の独立7CIと正式dispatch更新まで実装不可。44要件/24 NEXT/last_verified/正式v0.17.0/v0.19 active=false維持。
 - `DEC-079` R17限定受入と公式SHA固定キャッシュの統合。新規ラウンドの自動割当を止め、既存完成条件の残りを分離する。B#132/C#134/D#133各5CI、結合#135 c7609fa 5CI、dev 84c9629は5.2.1取得403で6/7。#136 e4e2e3a 5CI・3版cold/warm SHA一致、dev 236b9a3254928d7cb69d5c415fd8a3e792ee5de7 独立7CI成功（Python45533937263、Windows45533937251、Blender45533937378、Chromium45533937233、Handoff45533937238、Kit45533937212、Skill45533937244）。3版実行でB triage、C 2種UI、D optional 7例を確認。別PR共有ヒット未確認。44要件/24 NEXT/last_verified/正式v0.17.0/次期active=false維持。
+- `DEC-080` R18限定受入。6自作機能の生成と非インストール合成Extension経路を実証し、実機能のExtension化と汎用UIを残条件として分離する。C#140 be0f777/D#141 bbda166各5CI、A#142 79acfdc 5CI成功。専門21パス重複0、A追加2パス（preview検査と回帰）。dev 36d4090402f66f49d5644fbef91f1c03d95a6b34 独立7CI成功（Python45547799016、Windows45547799085、Blender45547798994、Chromium45547799025、Handoff45547799094、Kit45547799014、Skill45547799182）。3版各67 lifecycle、R18 global/inline、合成ZIP/公式build/validate、HIT/SHA一致。44要件/24 NEXT/正式v0.17.0/last_verified/次期active=false維持。R19自動発行なし。
 
 ## 更新・プライバシールール
 
