@@ -165,3 +165,108 @@ jobs:
           path: ti32-results/
           if-no-files-found: warn
           retention-days: 14
+      - name: Phase33 native projection and smoothing
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti33.py" <<'PY'
+          from pathlib import Path
+          # Reuse exact Phase32 geometry and evaluator without rerunning its top-level driver.
+          import os
+          source=Path(os.environ['RUNNER_TEMP'])/'ti32.py'
+          exec(source.read_text().split('\nassert bpy.app.background',1)[0])
+          assert bpy.app.background
+          old=json.loads(Path('ti32-results/results.json').read_text())
+          raw=json.loads(Path('ti32-results/raw.json').read_text())
+          assert old['valid']==144 and len(raw)==144
+          MODES=[('project',0,1),('smooth1_project',1,1),('smooth3_project',3,1),('smooth6_project',6,1),('smooth_project_x3',1,3)]
+          def make_obj(name,V,F):
+              m=bpy.data.meshes.new(name);m.from_pydata(V,[],F);m.update()
+              o=bpy.data.objects.new(name,m);bpy.context.collection.objects.link(o)
+              return o
+          def remove(o):
+              m=o.data;bpy.data.objects.remove(o,do_unlink=True);bpy.data.meshes.remove(m)
+          def guide(c):
+              n=81
+              x,y=np.meshgrid(np.linspace(-1.1,1.1,n),np.linspace(-1.1,1.1,n))
+              V=target(np.column_stack((x.ravel(),y.ravel())),c).tolist()
+              F=[(i*n+j,i*n+j+1,(i+1)*n+j+1,(i+1)*n+j) for i in range(n-1) for j in range(n-1)]
+              return make_obj('TI33_analytic_guide',V,F)
+          def patch(V,F,g,smooth,cycles,c):
+              E=Counter(tuple(sorted((a,b))) for face in F for a,b in zip(face,face[1:]+face[:1]))
+              b=sorted({i for e,n in E.items() if n==1 for i in e})
+              interior=sorted(set(range(len(V)))-set(b))
+              o=make_obj('TI33_patch',V,F)
+              try:
+                  bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+                  vg=o.vertex_groups.new(name='INTERIOR_ONLY');vg.add(interior,1.0,'REPLACE')
+                  original=np.array([tuple(v.co) for v in o.data.vertices]);faces=[list(f.vertices) for f in o.data.polygons]
+                  t=time.perf_counter()
+                  for _ in range(cycles):
+                      if smooth:
+                          mod=o.modifiers.new('NativeSmooth','SMOOTH');mod.vertex_group=vg.name;mod.factor=.5;mod.iterations=smooth
+                          req('FINISHED' in bpy.ops.object.modifier_apply(modifier=mod.name),'smooth failed')
+                      mod=o.modifiers.new('NativeProject','SHRINKWRAP');mod.target=g;mod.vertex_group=vg.name
+                      mod.wrap_method='PROJECT';mod.use_project_x=False;mod.use_project_y=False;mod.use_project_z=True;mod.use_positive_direction=True;mod.use_negative_direction=True;mod.offset=0
+                      req('FINISHED' in bpy.ops.object.modifier_apply(modifier=mod.name),'project failed')
+                  dt=time.perf_counter()-t
+                  result=np.array([tuple(v.co) for v in o.data.vertices]);outfaces=[list(f.vertices) for f in o.data.polygons]
+                  req(outfaces==faces and len(result)==len(original),'connectivity changed')
+                  req(np.array_equal(result[b],original[b]),'boundary changed')
+                  q=result[interior,:2]/np.array(c[:2]);residual=float(np.max(np.abs(result[interior,2]-target(q,c)[:,2])))
+                  req(residual<.00015,'guide projection residual too large')
+                  return result.tolist(),outfaces,dict(modifier_seconds=dt,boundary_exact=True,interior_residual=residual)
+              finally:remove(o)
+          rows=[];meshes=[];comparisons=[]
+          for k,c in enumerate(CASES):
+              ref=old['matched_comparison'][k]['reference']
+              matched=[m for m in raw if m['case']==k and len(m['vertices'])==25 and len(m['faces'])==16]
+              assert len(matched)==16
+              g=guide(c)
+              try:
+                  for m in matched:
+                      v,f=m['vertices'],m['faces']
+                      original=assess(v,f,c)
+                      for mode,n,cycles in MODES:
+                          row=dict(case=k,span=m['span'],offset=m['offset'],simple=m['simple'],mode=mode)
+                          try:
+                              V,F,extra=patch(v,f,g,n,cycles,c)
+                              a=assess(V,F,c)
+                              row.update(**a,**extra,status='valid',raw_p95=original['p95_worst'],raw_min_angle=original['min_angle'])
+                              row['shape_pass']=a['p95_worst']<=1.10*ref['p95_worst']
+                              row['joint_pass']=row['shape_pass'] and a['gate_angle15']
+                              meshes.append(dict(case=k,offset=m['offset'],simple=m['simple'],mode=mode,vertices=V,faces=F))
+                          except Exception as exc:row.update(status='rejected',reason=str(exc))
+                          rows.append(row)
+              finally:remove(g)
+              valid=[r for r in rows if r['case']==k and r['status']=='valid']
+              modes={}
+              for mode,_,_ in MODES:
+                  subset=[r for r in valid if r['mode']==mode]
+                  modes[mode]=dict(valid=len(subset),shape_pass=sum(r['shape_pass'] for r in subset),joint_pass=sum(r['joint_pass'] for r in subset),best_error=min(subset,key=lambda r:r['p95_worst']) if subset else None,best_angle=max(subset,key=lambda r:r['min_angle']) if subset else None)
+              comparisons.append(dict(case=k,coons_p95=ref['p95_worst'],raw_best_p95=old['matched_comparison'][k]['best_native']['p95_worst'],modes=modes))
+          out=dict(blender=bpy.app.version_string,approved=False,guide_grid=81,rows=rows,comparisons=comparisons,valid=sum(r['status']=='valid' for r in rows))
+          d=Path('ti33-results');d.mkdir(exist_ok=True)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'raw.json').write_text(json.dumps(meshes))
+          compact=[]
+          for c in comparisons:
+              x=dict(case=c['case'],coons_p95=c['coons_p95'],raw_best_p95=c['raw_best_p95'],modes={})
+              for mode,m in c['modes'].items():
+                  x['modes'][mode]={a:m[a] for a in ('valid','shape_pass','joint_pass')}
+                  for key in ('best_error','best_angle'):
+                      a=m[key]
+                      x['modes'][mode][key]={q:a[q] for q in ('offset','simple','p95_worst','min_angle','interior_residual')} if a else None
+              compact.append(x)
+          print('TI33_SUMMARY',json.dumps(dict(blender=out['blender'],calls=len(rows),valid=out['valid'],shape_pass=sum(r.get('shape_pass',False) for r in rows),joint_pass=sum(r.get('joint_pass',False) for r in rows),comparisons=compact,rejections=dict(Counter(r.get('reason','') for r in rows if r['status']=='rejected')))),flush=True)
+          assert len(rows)==240 and all(any(r['case']==k and r['mode']==mode and r['status']=='valid' for r in rows) for k in range(3) for mode,_,_ in MODES),'incomplete native comparison'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti33.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti33-native-composite-${{ github.sha }}
+          path: ti33-results/
+          if-no-files-found: warn
+          retention-days: 14
