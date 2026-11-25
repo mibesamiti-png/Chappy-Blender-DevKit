@@ -166,16 +166,29 @@ def probe_registered_fixture(module):
             mesh = obj.data
             bpy.data.objects.remove(obj, do_unlink=True)
             bpy.data.meshes.remove(mesh)
-        for obj in bpy.context.view_layer.objects:
-            obj.select_set(obj.name in selected_names)
-        bpy.context.view_layer.objects.active = (bpy.data.objects.get(active_name)
-                                                 if active_name is not None else None)
+        # All three native versions exposed a transient None in the view
+        # layer immediately after object removal. Update before reacquiring
+        # live scene objects by name; never reuse the removed RNA reference.
+        bpy.context.view_layer.update()
+        view_objects = bpy.context.view_layer.objects
+        for obj in tuple(bpy.context.scene.objects):
+            live = view_objects.get(obj.name)
+            if live is not None:
+                live.select_set(live.name in selected_names)
+        restored_active = view_objects.get(active_name) if active_name is not None else None
+        if active_name is not None and restored_active is None:
+            raise AssertionError("Undo probe original active object missing")
+        view_objects.active = restored_active
         bpy.context.tool_settings.mesh_select_mode = select_mode
         bpy.context.scene.cbdk_modular_result = previous_result
+        bpy.context.view_layer.update()
     if (bpy.data.objects.get(OBJECT_NAME) is not None
             or bpy.data.meshes.get("CBDK_Undo_Probe_Mesh") is not None
             or any(not cls.is_registered for cls in module._CLASSES)
-            or {obj.name for obj in bpy.context.selected_objects} != selected_names):
+            or {obj.name for obj in bpy.context.selected_objects} != selected_names
+            or (bpy.context.active_object.name if bpy.context.active_object else None) != active_name
+            or tuple(bpy.context.tool_settings.mesh_select_mode) != select_mode
+            or bpy.context.scene.cbdk_modular_result != previous_result):
         raise AssertionError("Undo probe cleanup or addon registration failed")
     return report
 
