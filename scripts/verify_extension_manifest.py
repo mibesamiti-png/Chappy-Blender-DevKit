@@ -1,10 +1,13 @@
-"""Official validator on data-only synthetic fixtures, never CBDK components.
+"""Official synthetic validator and isolated fixed authored runtime fixture.
 
 The sample SPDX string is a test value, not a license decision for this repo.
-Synthetic ZIP/build/validate only; no install, addon import or runtime approval.
+R19 executes only code-owned read-only generated fixtures in a temporary repo.
+No public installer or release approval.
 """
 import argparse
 import json
+import os
+import tempfile
 from pathlib import Path
 import subprocess
 import sys
@@ -12,6 +15,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from cbdk.extension_manifest import compare_official_validation
+from cbdk.extension_authored_fixture import fixture_metadata, write_authored_fixture
 from cbdk.extension_preflight import MAX_ARCHIVE_BYTES
 from cbdk.extension_synthetic_build import (
     FIXTURE_ID, synthetic_extension_members, write_synthetic_extension_zip,
@@ -101,6 +105,50 @@ def verify_synthetic_package(blender, root):
     }
 
 
+def verify_authored_package(blender):
+    """Do not retain the executable ZIP in reports/CI artifacts."""
+    with tempfile.TemporaryDirectory(prefix="cbdk-r19-runtime-") as folder:
+        root = Path(folder).resolve()
+        archive = root / "authored.zip"
+        report = write_authored_fixture(archive)
+        env = dict(os.environ)
+        for name in ("RESOURCES", "CONFIG", "SCRIPTS", "EXTENSIONS", "DATAFILES"):
+            target = root / name.lower()
+            target.mkdir()
+            env["BLENDER_USER_" + name] = str(target)
+        env["CBDK_R19_TEMP"] = str(root)
+        prefix = [blender, "--background", "--factory-startup", "--disable-autoexec",
+                  "--offline-mode"]
+        proc = subprocess.run([*prefix, "--command", "extension", "validate", str(archive)],
+                              env=env, capture_output=True, text=True, timeout=90)
+        checked = compare_official_validation(
+            fixture_metadata(), proc.returncode, proc.stdout + "\n" + proc.stderr)
+        if proc.returncode != 0 or not checked["complete_diagnostic_agreement"]:
+            raise AssertionError("R19 official authored ZIP validation failed")
+        print("CBDK_R19_AUTHORED_EXTENSION_VALIDATE_PASS: actual generated root ZIP")
+        proc = subprocess.run([*prefix, "--python-exit-code", "1", "--python",
+                               str(ROOT / "scripts/verify_authored_extension_runtime.py")],
+                              env=env, capture_output=True, text=True, timeout=120)
+        marker = "CBDK_R19_AUTHORED_EXTENSION_RUNTIME_PASS:"
+        typed_marker = "CBDK_R19_TYPED_EXTENSION_VERTICAL_PASS:"
+        if (proc.returncode != 0
+                or not any(line.startswith(marker) for line in proc.stdout.splitlines())
+                or not any(line.startswith(typed_marker) for line in proc.stdout.splitlines())):
+            for line in (proc.stdout + "\n" + proc.stderr).splitlines():
+                if line.startswith("AssertionError: R19 "):
+                    print(line[:200])
+            raise AssertionError("R19 isolated Extension runtime failed")
+        print(marker + " real local repo namespace, bounds/center, disable; manual staging only")
+        print(typed_marker + " same validated ZIP, inline precision 2 -> 1, native result and cleanup")
+        return {**report, "official_validation": checked,
+                "typed_extension_vertical_verified": True,
+                "isolated_authored_source_executed": True,
+                "native_namespace_runtime_verified": True,
+                "official_install_exercised": False,
+                "manual_local_repository_staging": True,
+                "temporary_archive_retained": False}
+
+
 def verify(blender, output):
     root = Path(output)
     if not root.parent.resolve().is_relative_to(ROOT / "reports/ci") or root.exists():
@@ -165,8 +213,11 @@ def verify(blender, output):
         results.append({"case": name, "official_accepted": proc.returncode == 0,
                         "local_status": compared["local_status"], "diagnostic_comparison": compared})
     package = verify_synthetic_package(blender, root)
+    authored = verify_authored_package(blender)
     report = {"kind": "cbdk_synthetic_official_manifest_validation", "cases": results,
               "synthetic_package": package,
+              "authored_runtime_fixture": authored,
+              "top_level_source_executed_scope": "synthetic_fixture_only",
               "real_component_license_chosen": False, "real_extension_validated": False,
               "source_executed": False, "extension_zip_created": True,
               "real_extension_zip_created": False}
