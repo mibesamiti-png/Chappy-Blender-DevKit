@@ -11,10 +11,16 @@ import tempfile
 from pathlib import Path
 import subprocess
 import sys
+import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from cbdk.extension_manifest import compare_official_validation
+from cbdk.extension_stage_evidence import (STAGES, VERSIONS, generation_diagnostic,
+                                          official_validate_observation, reduce_stage_records)
+from cbdk.undo_probe_report import R25_PREFIX, validate_grouped_observation
+from r25_stage_observer import (STAGE_PREFIX, stage_record, archive_digest, parse_records,
+                                finish_failure)
 from cbdk.extension_recipe_preview import ci_recipe, write_recipe_extension
 from cbdk.extension_authored_fixture import fixture_metadata, write_authored_fixture
 from cbdk.extension_preflight import MAX_ARCHIVE_BYTES
@@ -150,36 +156,62 @@ def verify_authored_package(blender):
                 "temporary_archive_retained": False}
 
 
-def verify_recipe_packages(blender):
-    """R23 distinct local-only recipe variants, no executable report artifacts."""
+def verify_recipe_packages(blender, output):
+    """Actual stage observations for fixed local-only recipe variants."""
+    version = os.environ.get("BLENDER_VERSION")
+    if version not in VERSIONS:
+        raise ValueError("R25 requires fixed CI Blender target version")
     results = {}
     for case in ("read", "edit", "grouped"):
+        run_id = uuid.uuid4().hex
+        records = []
+        digest = None
+        def add(stage, status, *, sha=None, diagnostic=None):
+            records.append(stage_record(case, version, run_id, sha, stage, status, diagnostic))
+        def save():
+            summary = reduce_stage_records(records, case=case, blender=version, run_id=run_id)
+            evidence = {"summary": summary}
+            if summary["status"] != "rejected":
+                evidence["records"] = records
+            (output / ("r25_stage_" + case + ".json")).write_text(
+                json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            print("CBDK_R25_STAGE_SUMMARY " + json.dumps(summary, sort_keys=True), flush=True)
+            return summary
+        def fail():
+            finish_failure(records)
+            save()
+            raise AssertionError("R25 fixed stage verification failed: " + case)
         with tempfile.TemporaryDirectory(prefix="cbdk-r23-runtime-") as folder:
             root = Path(folder).resolve()
             archive = root / "authored.zip"
-            if case == "grouped":
-                import sys
-                import hashlib
-                sys.path.insert(0, str(ROOT / "tests"))
-                from test_ui_recipe_r17 import make_r23_recipe
-                recipe_path = root / "recipe.json"
-                source = json.dumps(make_r23_recipe("grouped"), ensure_ascii=False).encode("utf-8")
-                recipe_path.write_bytes(source)
-                built = subprocess.run([sys.executable, "-m", "cbdk", "build-extension-preview",
-                                        "--recipe", str(recipe_path), "--output", str(archive),
-                                        "--preview-unapproved"], cwd=ROOT, capture_output=True,
-                                       text=True, timeout=90)
-                if built.returncode != 0:
-                    raise AssertionError("R23 combined CLI generation failed: " + built.stderr[-400:])
-                report = json.loads(built.stdout)
-                if (recipe_path.read_bytes() != source or report["feature_count"] != 4
-                        or report["preview_only"] is not True or report["approved"] is not False
-                        or report["install_authorized"] is not False or report["release_authorized"] is not False
-                        or report["original_preview_unchanged"] is not True):
-                    raise AssertionError("R23 combined CLI report mismatch")
-                archive_sha = hashlib.sha256(archive.read_bytes()).hexdigest()
-            else:
-                report = write_recipe_extension(ci_recipe(case), archive, preview_unapproved=True)
+            try:
+                if case == "grouped":
+                    sys.path.insert(0, str(ROOT / "tests"))
+                    from test_ui_recipe_r17 import make_r23_recipe
+                    recipe_path = root / "recipe.json"
+                    source = json.dumps(make_r23_recipe("grouped"), ensure_ascii=False).encode("utf-8")
+                    recipe_path.write_bytes(source)
+                    built = subprocess.run([sys.executable, "-m", "cbdk", "build-extension-preview",
+                                            "--recipe", str(recipe_path), "--output", str(archive),
+                                            "--preview-unapproved"], cwd=ROOT, capture_output=True,
+                                           text=True, timeout=90)
+                    if built.returncode != 0:
+                        raise AssertionError("R23 combined CLI generation failed: " + built.stderr[-400:])
+                    report = json.loads(built.stdout)
+                    if (recipe_path.read_bytes() != source or report["feature_count"] != 4
+                            or report["preview_only"] is not True or report["approved"] is not False
+                            or report["install_authorized"] is not False or report["release_authorized"] is not False
+                            or report["original_preview_unchanged"] is not True):
+                        raise AssertionError("R23 combined CLI report mismatch")
+                else:
+                    report = write_recipe_extension(ci_recipe(case), archive, preview_unapproved=True)
+                digest = archive_digest(archive)
+                if digest is None:
+                    raise ValueError("Missing generated archive")
+            except Exception as exc:
+                add("generation", "failed", diagnostic=generation_diagnostic(exc))
+                fail()
+            add("generation", "passed", sha=digest)
             env = dict(os.environ)
             for name in ("RESOURCES", "CONFIG", "SCRIPTS", "EXTENSIONS", "DATAFILES"):
                 target = root / name.lower()
@@ -187,41 +219,71 @@ def verify_recipe_packages(blender):
                 env["BLENDER_USER_" + name] = str(target)
             env["CBDK_R19_TEMP"] = str(root)
             env["CBDK_R23_CASE"] = case
+            env["CBDK_R25_RUN_ID"] = run_id
             prefix = [blender, "--background", "--factory-startup", "--disable-autoexec",
                       "--offline-mode"]
-            proc = subprocess.run([*prefix, "--command", "extension", "validate", str(archive)],
-                                  env=env, capture_output=True, text=True, timeout=90)
+            try:
+                proc = subprocess.run([*prefix, "--command", "extension", "validate", str(archive)],
+                                      env=env, capture_output=True, text=True, timeout=90)
+                status, diagnostic = official_validate_observation(
+                    fixture_metadata(), proc.returncode, proc.stdout + "\n" + proc.stderr)
+            except (OSError, subprocess.TimeoutExpired):
+                status, diagnostic = "failed", "official_unclassified"
+            add("validate", status, sha=archive_digest(archive), diagnostic=diagnostic)
+            if status != "passed" or records[-1]["artifact_sha256"] != digest:
+                fail()
             checked = compare_official_validation(
                 fixture_metadata(), proc.returncode, proc.stdout + "\n" + proc.stderr)
-            if proc.returncode != 0 or not checked["complete_diagnostic_agreement"]:
-                raise AssertionError("R23 recipe Extension official validation failed: " + case)
             print("CBDK_R23_RECIPE_EXTENSION_VALIDATE_PASS: " + case)
-            proc = subprocess.run([*prefix, "--python-exit-code", "1", "--python",
-                                   str(ROOT / "scripts/verify_recipe_extension_runtime.py")],
-                                  env=env, capture_output=True, text=True, timeout=120)
+            try:
+                proc = subprocess.run([*prefix, "--python-exit-code", "1", "--python",
+                                       str(ROOT / "scripts/verify_recipe_extension_runtime.py")],
+                                      env=env, capture_output=True, text=True, timeout=120)
+                records.extend(parse_records(proc.stdout, STAGE_PREFIX, max_records=3))
+            except (OSError, subprocess.TimeoutExpired, ValueError):
+                save()
+                raise AssertionError("R25 child evidence unavailable: " + case) from None
             marker = "CBDK_R23_RECIPE_EXTENSION_RUNTIME_PASS: " + case
-            if proc.returncode != 0 or marker not in proc.stdout.splitlines():
-                for line in (proc.stdout + "\n" + proc.stderr).splitlines():
-                    if line.startswith("AssertionError: R23 "):
-                        print(line[:200])
-                raise AssertionError("R23 isolated recipe runtime failed: " + case)
+            partial = reduce_stage_records(records, case=case, blender=version, run_id=run_id)
+            if (proc.returncode != 0 or marker not in proc.stdout.splitlines()
+                    or partial["status"] != "incomplete"
+                    or partial["passed_stages"] != list(STAGES[:5])):
+                fail()
             print(marker)
+            grouped = None
             if case == "grouped":
                 vertical = "CBDK_R23_A_MULTIPANEL_EXTENSION_VERTICAL_PASS: two panels, four features, typed read/edit and cleanup"
-                if (vertical not in proc.stdout.splitlines()
-                        or hashlib.sha256(archive.read_bytes()).hexdigest() != archive_sha):
-                    raise AssertionError("R23 combined same-archive vertical evidence missing")
+                try:
+                    observations = parse_records(proc.stdout, R25_PREFIX, max_records=1)
+                    if len(observations) != 1:
+                        raise ValueError("Missing grouped observation")
+                    grouped = validate_grouped_observation(observations[0])
+                    if (grouped["artifact_sha256"] != digest or grouped["blender_version"] != version
+                            or vertical not in proc.stdout.splitlines()):
+                        raise ValueError("Grouped evidence mismatch")
+                except ValueError:
+                    save()
+                    raise AssertionError("R25 grouped Undo evidence invalid") from None
                 print(vertical)
-                report.update(same_archive_sha_unchanged=True, extension_sha256=archive_sha,
+            after = archive_digest(archive)
+            add("sha_unchanged", "passed" if after == digest else "failed", sha=after)
+            summary = save()
+            if summary["status"] != "verified_fixed_stages":
+                raise AssertionError("R25 final stage evidence rejected")
+            if grouped is not None:
+                print(R25_PREFIX + json.dumps(grouped, sort_keys=True), flush=True)
+                report.update(same_archive_sha_unchanged=True, extension_sha256=digest,
                               cli_generated=True, native_two_panel_draw_verified=True,
-                              real_windows_gui_tested=False)
+                              real_windows_gui_tested=False, r25_grouped_undo=grouped)
             results[case] = {**report, "official_validation": checked,
                              "native_namespace_runtime_verified": True,
                              "manual_local_repository_staging": True,
                              "official_install_exercised": False,
-                             "temporary_archive_retained": False}
+                             "temporary_archive_retained": False,
+                             "r25_stage_summary": summary}
     print("CBDK_R23_RECIPE_EXTENSION_MATRIX_PASS: two separate generated ZIPs")
     print("CBDK_R23_A_COMBINED_MATRIX_PASS: additional same-artifact four-feature CLI vertical")
+    print("CBDK_R25_A_SAME_ARTIFACT_STAGE_MATRIX_PASS: read/edit/grouped; grouped Undo separate")
     return results
 
 
@@ -387,7 +449,7 @@ def verify(blender, output):
                         "local_status": compared["local_status"], "diagnostic_comparison": compared})
     package = verify_synthetic_package(blender, root)
     authored = verify_authored_package(blender)
-    recipes = verify_recipe_packages(blender)
+    recipes = verify_recipe_packages(blender, root)
     dependency = verify_dependency_package(blender)
     report = {"kind": "cbdk_synthetic_official_manifest_validation", "cases": results,
               "synthetic_package": package,

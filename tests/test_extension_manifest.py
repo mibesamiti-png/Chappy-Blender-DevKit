@@ -1,6 +1,7 @@
 """Manifest structure is not license/owner clearance or official validation."""
 import unittest
 from cbdk.extension_manifest import review_manifest_fields, compare_official_validation, manifest_field_diagnostics
+from cbdk.extension_stage_evidence import official_validate_observation
 
 
 def fields():
@@ -52,6 +53,11 @@ class ManifestReviewTests(unittest.TestCase):
                     self.assertFalse(compared["owner_approval_verified"])
                     self.assertFalse(compared["license_compatibility_verified"])
                     self.assertNotIn("synthetic fixture", str(compared))
+                    # R25 consumes this same diagnostic contract. Agreement on
+                    # rejection must never become a passed validation stage.
+                    self.assertEqual(official_validate_observation(example, exitcode, output),
+                                     ("passed", None) if exitcode == 0 else
+                                     ("failed", "official_rejected"))
 
                     # The exact same valid/invalid observation becomes
                     # unclassified when an unknown value-bearing line appears.
@@ -62,6 +68,8 @@ class ManifestReviewTests(unittest.TestCase):
                     self.assertTrue(blocked["official_observation"]["has_unrecognized_diagnostics"])
                     self.assertNotIn("private-marker-42", str(blocked))
                     self.assertNotIn("synthetic fixture", str(blocked))
+                    self.assertEqual(official_validate_observation(example, exitcode, injected),
+                                     ("failed", "official_unclassified"))
 
     def test_r5_official_versioned_logs_are_stable_with_line_ending_variants(self):
         """Known 3-version x 6-case observations must survive CRLF and blank lines.
