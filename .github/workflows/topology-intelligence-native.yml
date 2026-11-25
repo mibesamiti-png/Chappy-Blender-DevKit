@@ -1058,3 +1058,187 @@ jobs:
           path: ti40-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase40 verified run 45624461136: 4/4 patches accepted, exact stored
+      # boundary, original mesh unchanged, 4/4 negative controls rejected.
+      # Phase41 copies only: selected interior UV/weights transfer and collision
+      # validation outside this limited synthetic disk fixture are not claimed.
+      - name: Phase41 replace selected faces on isolated copy and weld seam
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti41.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti40.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          def cycle(f):
+              f=tuple(f)
+              return min(f[i:]+f[:i] for i in range(len(f)))
+          def full_snapshot(o):
+              m=o.data
+              return (snapshot(o),[(p.material_index,p.use_smooth) for p in m.polygons],
+                      [(e.vertices[:],e.use_seam,e.use_edge_sharp) for e in m.edges],
+                      [(u.name,[tuple(x.uv) for x in u.data]) for u in m.uv_layers])
+          def outside_signature(m,face_ids,ids):
+              uv=m.uv_layers.active
+              result=[]
+              for i in face_ids:
+                  p=m.polygons[i]
+                  loops=[]
+                  for li in p.loop_indices:
+                      vi=m.loops[li].vertex_index
+                      loops.append((ids[vi],tuple(m.vertices[vi].co),tuple(uv.data[li].uv) if uv else ()))
+                  result.append((cycle(loops),p.material_index,p.use_smooth))
+              return Counter(result)
+          def audit_topology(m):
+              F=[list(p.vertices) for p in m.polygons]
+              req(len({tuple(sorted(f)) for f in F})==len(F),'duplicate faces')
+              E=Counter(tuple(sorted((a,b))) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              D=Counter((a,b) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              req(max(E.values())<=2,'nonmanifold edge')
+              req(all(D[a,b]==D[b,a]==1 for (a,b),n in E.items() if n==2),'inconsistent winding')
+              req(len(E)==len(m.edges) and len({i for f in F for i in f})==len(m.vertices),'loose geometry')
+              adj=defaultdict(set);links=defaultdict(list)
+              for f in F:
+                  for i,v in enumerate(f):
+                      a,b=f[i-1],f[(i+1)%len(f)];links[v].append((a,b));adj[v].update((a,b))
+              def reach(g,v):
+                  seen={v};todo=[v]
+                  while todo:
+                      for j in g[todo.pop()]:
+                          if j not in seen:seen.add(j);todo.append(j)
+                  return seen
+              req(len(reach(adj,0))==len(m.vertices),'disconnected result')
+              boundary={i for e,n in E.items() if n==1 for i in e}
+              for v,ls in links.items():
+                  graph=defaultdict(set)
+                  for a,b in ls:graph[a].add(b);graph[b].add(a)
+                  deg=[len(x) for x in graph.values()]
+                  req(len(reach(graph,next(iter(graph))))==len(graph) and all(x in (1,2) for x in deg) and deg.count(1)==(2 if v in boundary else 0),'nonmanifold vertex')
+              req(len(m.vertices)-len(E)+len(F)==1,'not a disk')
+              return E
+          def replace_copy(source,data,V,F):
+              # All checks run on a separate mesh copy. Original object is never mutated.
+              orig=source.data
+              E0=audit_topology(orig)
+              outside=[p.index for p in orig.polygons if not p.select]
+              req(bool(outside),'no outside context')
+              original_ids={i:i for i in range(len(orig.vertices))}
+              expected=outside_signature(orig,outside,original_ids)
+              outside_edges={tuple(sorted((a,b))) for i in outside for a,b in zip(list(orig.polygons[i].vertices),list(orig.polygons[i].vertices)[1:]+list(orig.polygons[i].vertices)[:1])}
+              edge_flags={tuple(sorted(e.vertices)):(bool(e.use_seam),bool(e.use_edge_sharp)) for e in orig.edges if tuple(sorted(e.vertices)) in outside_edges}
+              seam={tuple(sorted((data['boundary_ids'][i],data['boundary_ids'][(i+1)%16]))) for i in range(16)}
+              req(all(E0[e]==2 and e in outside_edges for e in seam),'boundary lacks outside neighbour')
+              # Recheck candidate against the frozen source guide, even for callers other than route().
+              quality=assess_source(V,F,None)
+              req(quality['gate_angle15'] and quality['p95_worst']<=.06,'candidate gate failed')
+              V=np.asarray(V,float)
+              PE=Counter(tuple(sorted((a,b))) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              bids=sorted({v for e,n in PE.items() if n==1 for v in e})
+              dist=np.linalg.norm(V[bids,None,:]-BOUNDARY[None,:,:],axis=2)
+              match=dist.argmin(axis=1)
+              req(len(set(match))==16 and dist.min(axis=1).max()<1e-6,'candidate seam mismatch')
+              candidate_to_original={v:data['boundary_ids'][i] for v,i in zip(bids,match)}
+              world=V@data['Q'].T*data['scale']+data['origin']
+              inverse=source.matrix_world.inverted()
+              req(len({p.material_index for p in orig.polygons if p.select})==1,'mixed selected materials unsupported')
+              material=next(p.material_index for p in orig.polygons if p.select)
+              # New interior UVs are intentionally not transferred; outside UVs must remain exact.
+              new=source.copy();new.data=orig.copy();new.name='Replaced_'+source.name
+              bpy.context.collection.objects.link(new)
+              bm=bmesh.new()
+              try:
+                  bm.from_mesh(new.data);bm.verts.ensure_lookup_table();bm.faces.ensure_lookup_table()
+                  source_verts=list(bm.verts);source_faces=list(bm.faces)
+                  preserve=set(v for i in outside for v in source_faces[i].verts)
+                  bmesh.ops.delete(bm,geom=[f for i,f in enumerate(source_faces) if i not in outside],context='FACES_ONLY')
+                  loose=[e for e in bm.edges if not e.link_faces]
+                  req(all(tuple(sorted(v.index for v in e.verts)) not in outside_edges for e in loose),'outside edge deletion')
+                  if loose:bmesh.ops.delete(bm,geom=loose,context='EDGES')
+                  orphan=[v for v in bm.verts if not v.link_faces]
+                  req(not any(v in preserve for v in orphan),'outside vertex deletion')
+                  if orphan:bmesh.ops.delete(bm,geom=orphan,context='VERTS')
+                  pv={}
+                  for i,w in enumerate(world):
+                      if i in candidate_to_original:
+                          v=source_verts[candidate_to_original[i]]
+                          req(v.is_valid and v in preserve,'lost seam vertex')
+                      else:v=bm.verts.new(inverse@Vector(w.tolist()))
+                      pv[i]=v
+                  created=[]
+                  for f in F:
+                      q=V[f,:2];ar=np.sum(q[:,0]*np.roll(q[:,1],-1)-q[:,1]*np.roll(q[:,0],-1))
+                      ordered=f if ar>0 else f[::-1]
+                      face=bm.faces.new([pv[i] for i in ordered]);face.material_index=material;face.smooth=True;face.select=True
+                      created.append(face)
+                  bm.verts.index_update();bm.faces.index_update();bm.normal_update()
+                  old_to_new={i:v.index for i,v in enumerate(source_verts) if v.is_valid}
+                  new_to_old={j:i for i,j in old_to_new.items()}
+                  outside_new=[source_faces[i].index for i in outside]
+                  created_new=[f.index for f in created]
+                  bm.to_mesh(new.data);new.data.update()
+                  req(not new.data.validate(verbose=False),'Blender validation changed result')
+                  actual=outside_signature(new.data,outside_new,new_to_old)
+                  req(actual==expected,'outside face or UV changed')
+                  E=audit_topology(new.data)
+                  req(all(E[tuple(sorted((old_to_new[a],old_to_new[b]))) ]==2 for a,b in seam),'unwelded seam')
+                  actual_edges={tuple(sorted((new_to_old[e.vertices[0]],new_to_old[e.vertices[1]]))):(bool(e.use_seam),bool(e.use_edge_sharp)) for e in new.data.edges if all(v in new_to_old for v in e.vertices)}
+                  req(all(actual_edges.get(e)==flags for e,flags in edge_flags.items()),'outside edge flags changed')
+                  req(len(new.data.polygons)==len(outside)+len(F),'face budget mismatch')
+                  req(all(len(new.data.polygons[i].vertices)==4 for i in created_new),'new nonquad')
+                  boundary_error=max(float(np.max(np.abs(np.array(new.data.vertices[old_to_new[i]].co)-np.array(orig.vertices[i].co)))) for i in data['boundary_ids'])
+                  req(boundary_error==0.,'seam coordinate changed')
+                  return new,dict(outside_faces=len(outside),outside_edges=len(outside_edges),outside_exact=True,welded_edges=len(seam),boundary_error=boundary_error,faces_before=len(orig.polygons),faces_after=len(new.data.polygons),vertices_before=len(orig.vertices),vertices_after=len(new.data.vertices),new_quads=len(created_new),interior_uv_transferred=False)
+              except Exception:
+                  remove(new);raise
+              finally:bm.free()
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          materials=[bpy.data.materials.new('TI41_material_'+str(i)) for i in range(2)]
+          rows=[];controls=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec)
+              for mat in materials:o.data.materials.append(mat)
+              uv=o.data.uv_layers.new(name='OutsideUV')
+              for p in o.data.polygons:
+                  p.material_index=0 if p.select else p.index%2
+                  p.use_smooth=bool(p.index%2)
+                  for li in p.loop_indices:uv.data[li].uv=(li*.013%1,li*.031%1)
+              for e in o.data.edges:
+                  e.use_seam=bool(e.index%3==0);e.use_edge_sharp=bool(e.index%5==0)
+              before=full_snapshot(o);g=None
+              row=dict(case=name)
+              try:
+                  data=extract(o);g=prepare(data)
+                  decision,m=route(data,g)
+                  req(m is not None,'no candidate met gate')
+                  # Negative control: removing a candidate face must be rejected without publishing output.
+                  if name=='round':
+                      count=len(bpy.data.objects)
+                      try:
+                          bad,_=replace_copy(o,data,m[0],m[1][:-1]);remove(bad);controls.append(dict(case='missing_candidate_face',rejected=False))
+                      except ValueError as e:controls.append(dict(case='missing_candidate_face',rejected=True,reason=str(e),no_output=len(bpy.data.objects)==count))
+                  new,stats=replace_copy(o,data,*m);new.show_wire=True;new.show_all_edges=True
+                  row.update(status='accepted',selected=decision['selected'],**stats)
+              except Exception as e:row.update(status='rejected',reason=str(e))
+              finally:
+                  if g is not None:remove(g)
+              row['source_unchanged']=full_snapshot(o)==before
+              rows.append(row)
+          d=Path('ti41-results');d.mkdir(exist_ok=True)
+          gate=len(rows)==4 and all(r['status']=='accepted' and r['source_unchanged'] for r in rows) and len(controls)==1 and all(c['rejected'] and c.get('no_output',False) for c in controls)
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'replaced_copies.blend').resolve()))
+          print('TI41_SUMMARY',json.dumps(out),flush=True)
+          assert gate,'selected-region replacement gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti41.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti41-welded-replacement-${{ github.sha }}
+          path: ti41-results/
+          if-no-files-found: warn
+          retention-days: 14
