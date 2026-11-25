@@ -66,6 +66,43 @@ class AuthoredUILayoutTests(unittest.TestCase):
         self.assertEqual(options["nudge_offset"]["default"], (0.125, -0.25, 0.5))
         self.assertEqual(options["nudge_offset"]["min"], -10)
 
+    def test_r24_inline_ui_must_cover_resolved_dependencies_not_only_request(self):
+        # The fixed diamond is test-only; layout must cover the full resolved
+        # closure and cannot omit or substitute automatically added features.
+        from test_ui_recipe_r17 import prepare_r24_root, make_r24_recipe
+        from cbdk.modular_builder import plan_modular_recipe, build_modular
+        root = prepare_r24_root(self.root / "dependency")
+        recipe = make_r24_recipe()
+        plan = plan_modular_recipe(recipe, root=root, include_ui=True)
+        self.assertEqual(plan["ordered_features"],
+                         ["mesh_bounds", "edit_selection", "mesh_center", "vertex_nudge"])
+        sections = plan["ui_layout"]["sections"]
+        self.assertEqual(sections, (
+            ("Geometry inspection", (("mesh_bounds", "Read bounds"), ("mesh_center", "Read center"))),
+            ("Local edit", (("edit_selection", "Count selection"), ("vertex_nudge", "Move selection"))),
+        ))
+        inputs = {item["rna"]: item for item in plan["ui_layout"]["options"]["typed_inputs"]}
+        self.assertEqual(set(inputs), {"cbdk_modular_center_precision", "cbdk_modular_nudge_offset"})
+        self.assertEqual(inputs["cbdk_modular_center_precision"]["default"], 2)
+        self.assertEqual(inputs["cbdk_modular_nudge_offset"]["default"], (0.0, 0.0, .25))
+        for case in ("omit_dependency", "substitute_unselected", "request_only"):
+            bad = copy.deepcopy(recipe)
+            panels = bad["ui_layout"]["panels"]
+            if case == "omit_dependency":
+                panels[0]["sections"][0]["controls"].pop()
+            elif case == "substitute_unselected":
+                panels[0]["sections"][0]["controls"][0]["feature_id"] = "object_selection"
+            else:
+                panels.pop(0)
+                panels[0]["sections"][0]["controls"].pop(0)
+            output = self.root / (case + ".zip")
+            with self.subTest(case=case):
+                with self.assertRaises(ValueError):
+                    plan_modular_recipe(bad, root=root)
+                with self.assertRaises(ValueError):
+                    build_modular(bad, output, root=root, preview_unapproved=True)
+                self.assertFalse(output.exists())
+
     def test_r19_integer_contract_and_legacy_selection(self):
         control = self.data["sections"][0]["controls"][3]
         control["parameters"] = {"precision": {"default": 2, "min": 1, "max": 4}}

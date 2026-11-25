@@ -1,0 +1,7 @@
+# R24 A — 同一依存閉包の統合縦断
+
+2026-11-26 JST。dev 94eda96985262a7147c16c0c3189ac0a1ffaebf2、#125 rev16 active。C #169 e9424265b83c0fa6f46e81bdd48cc1fb1e475d12 最終5CI成功（Python45705695023、Windows45705694882、Blender45705694820、Chromium45705694800、Handoff45705694929）、3版native_r24_dependency_closure_register_reverse_rollback。C初回はBlender path filter未発火、対象UIの実質的回帰追加後に全実測。D #168 c96cf7067bd66d5206f1ac4faef8d9aece7f5a92 最終5CI成功（Python45705308752、Windows45705308710、Blender45705308731、Chromium45705309195、Handoff45705308713）、3版R24 validate/runtime/same ZIP。D再現専用 ee560372 Python45704973518 各版2件の狭いmin/max不具合確認後、固定manifestと異なる互換範囲を生成前拒否。実catalogは全依存空を維持。
+
+AはCの固定一時rootとDの固定in-memory graphの同じrecipeを独立生成し、要求1→閉包4・5part・inventoryを照合。legacy previewとExtensionの全実行payloadを、bl_infoのみ既存変換で除去し、byte一致を比較。Dの同一ZIP公式validate→隔離offline bl_extで実登録順（4 operator+2 panel）、実draw/read/edit/guard、逆順解除と同一moduleの依存途中制御失敗rollbackを確認する。元ソース・実catalog・両archive SHA不変。C/Dの既存個別試験は保持。A新marker CBDK_R24_A_CROSS_FORMAT_PAYLOAD_PASS / CBDK_R24_A_EXTENSION_ORDER_ROLLBACK_PASS / CBDK_R24_A_COMBINED_VERTICAL_PASS。候補CIは未実施、合格は実ログ確認後に記録。
+
+公式installer/実GUI/Undo/実機能間の意味的依存/任意code/正式採用・配布・権利は対象外。新規公開CLIや任意rootの実行許可なし。main、正式版、STATE、GL/DIL不変。
