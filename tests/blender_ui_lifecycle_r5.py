@@ -1938,6 +1938,17 @@ def run(path):
                 except Exception:
                     pass
             sys.path.remove(directory)
+    # R17: build two independent authored recipe layouts after the legacy
+    # preview has been fully detached. Reuse the existing Blender CI lane.
+    test_dir = Path(__file__).resolve().parent
+    project = test_dir.parent
+    sys.path[:0] = [str(test_dir), str(project)]
+    try:
+        from test_ui_recipe_r17 import run_native
+        checks.extend(run_native())
+    finally:
+        sys.path.remove(str(test_dir))
+        sys.path.remove(str(project))
     print("CBDK_R5_UI_LIFECYCLE_PASS " + json.dumps({
         "schema_version": 1,
         "blender": bpy.app.version_string,
