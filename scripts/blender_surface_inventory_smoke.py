@@ -588,6 +588,90 @@ def _expanded_part_review_roundtrip(output):
     print("CBDK_R21_PART_REVIEW_PASS " + json.dumps(stats,sort_keys=True))
 
 
+
+def _geometry_detection_limits_roundtrip(output):
+    """R22: fixed analytic matrix; actual export/import and parent review."""
+    import json
+    from statistics import median
+    from time import perf_counter
+    from scripts.blender_glb_surface_review import _read_world_triangles
+
+    tests_path = str(ROOT / "tests")
+    if tests_path not in sys.path:
+        sys.path.insert(0, tests_path)
+    from r22_geometry_fixtures import cases, flatten, inspect_case, summarize
+
+    def export(label, groups):
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        for i, group in enumerate(groups):
+            vertices, polygons = [], []
+            for face in group:
+                pos = len(vertices)
+                vertices.extend(face)
+                polygons.append((pos,pos+1,pos+2))
+            mesh = bpy.data.meshes.new("CBDK_R22_Synthetic")
+            mesh.from_pydata(vertices, [], polygons)
+            mesh.update()
+            obj = bpy.data.objects.new(f"CBDK_R22_{i:03d}", mesh)
+            bpy.context.collection.objects.link(obj)
+        path = output / ("r22_" + label + ".glb")
+        bpy.ops.export_scene.gltf(filepath=str(path), export_format="GLB")
+        return path
+
+    def compare(label, left, right, profile="expanded_2048_parts"):
+        start = perf_counter()
+        result = run_glb_surface_review(bpy.app.binary_path,left,right,
+            output / ("r22_" + label + ".json"),profile=profile)
+        return result,(perf_counter()-start)*1000
+
+    results = []
+    timing = None
+    for case in cases():
+        label = case["name"]
+        left = export(label+"_ref",case["left"])
+        right = export(label+"_cand",case["right"])
+        before = [hashlib.sha256(p.read_bytes()).digest() for p in (left,right)]
+        # Independent import for existing auxiliary audit/hint/probe baseline.
+        ref,n,rc = _read_world_triangles(left,limit=64)
+        cand,m,cc = _read_world_triangles(right,limit=64)
+        assert (n,rc) == (len(flatten(case["left"])[0]),flatten(case["left"])[1])
+        assert (m,cc) == (len(flatten(case["right"])[0]),flatten(case["right"])[1])
+        report,elapsed = compare(label,left,right)
+        assert report["schema_version"] == 3
+        assert report["reference_triangles"] == n and report["candidate_triangles"] == m
+        row = inspect_case(case,ref,cand,rc,cc,report)
+        row["parent_elapsed_ms"] = round(elapsed,3)
+        if label == "hole_0.5":
+            times = []
+            for trial in range(3):
+                repeated,ms = compare(label+"_repeat"+str(trial),left,right)
+                assert repeated == report
+                times.append(ms)
+            timing = round(median(times),3)
+            for profile,version in (("legacy_512",1),("expanded_2048",2)):
+                old,_ = compare(label+"_"+profile,left,right,profile)
+                assert old["schema_version"] == version and "part_review" not in old
+                for group in ("fixed_surface","adaptive_surface"):
+                    for direction in ("reference_to_candidate","candidate_to_reference"):
+                        assert old[group][direction] == report[group][direction]
+        assert before == [hashlib.sha256(p.read_bytes()).digest() for p in (left,right)]
+        results.append(row)
+    summary = summarize(results)
+    assert len(results)==16 and timing is not None
+    totals = summary["classification"]
+    assert totals["information_absent"]==1 and totals["not_measured"]==0
+    assert totals["detected"]+totals["missed"]==10
+    assert totals["negative_control"]+totals["false_warning"]==5
+    evidence = {"summary":summary,"representative_median_parent_ms":timing,
+                "rows":results,"native_memory_measured":False,
+                "physical_contact_thickness_cavity_proven":False,
+                "legacy_profiles_unchanged":True,"input_sha_unchanged":True}
+    encoded = json.dumps(evidence,sort_keys=True,allow_nan=False)
+    assert len(encoded.encode("utf-8")) < 1024*1024
+    (output/"r22_detection_limits.json").write_text(encoded+"\n",encoding="utf-8")
+    print("CBDK_R22_DETECTION_LIMITS_PASS "+encoded)
+
+
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if len(args) != 1:
@@ -646,6 +730,7 @@ def main():
     _boundary_many_parts_roundtrip(output)
     _expanded_surface_roundtrip(output)
     _expanded_part_review_roundtrip(output)
+    _geometry_detection_limits_roundtrip(output)
     print("CBDK_SURFACE_INVENTORY_PASS")
 
 
