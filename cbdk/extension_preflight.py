@@ -237,13 +237,13 @@ def inspect_preview_archive(source: str | Path) -> dict:
                     raise PreviewArchiveError("archive_integrity", "invalid_hash", "Invalid provenance SHA256")
                 if hashlib.sha256(archive.read(prefix + rel)).hexdigest() != digest:
                     raise PreviewArchiveError("archive_integrity", "hash_mismatch", "CBDK preview file changed since build")
+            from .feature_catalog import TRUSTED_FEATURES, TRUSTED_PART_SOURCES
             if schema == 2:
                 selected = metadata.get("features")
+                # Match the code-owned inventory, never names from the ZIP.
                 if (not isinstance(selected, list) or
-                        not selected or len(selected) > 5 or
-                        any(type(s) is not str or s not in {
-                            "object_selection", "edit_selection", "mesh_bounds",
-                            "modifier_summary", "vertex_nudge"} for s in selected)
+                        not selected or len(selected) > len(TRUSTED_FEATURES) or
+                        any(type(s) is not str or s not in TRUSTED_FEATURES for s in selected)
                         or len(selected) != len(set(selected))):
                     raise PreviewArchiveError("dependency_closure", "feature_inventory", "Preview feature inventory is not allowlisted")
                 if {n.removeprefix("features/").removesuffix(".py")
@@ -257,7 +257,6 @@ def inspect_preview_archive(source: str | Path) -> dict:
                            p.get("license_review") not in ("pending", "not_reviewed")
                            for p in parts)):
                 raise PreviewArchiveError("provenance", "part_state", "Preview part approvals or license metadata are unexpected")
-            from .feature_catalog import TRUSTED_FEATURES, TRUSTED_PART_SOURCES
             from .modular_builder import HELPERS
             expected_parts = ({p for f in selected for p in TRUSTED_FEATURES[f]["parts"]}
                               if schema == 2 else {"BLCTX-001", "BLCTX-002", "BME-001"})

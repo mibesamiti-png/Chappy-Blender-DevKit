@@ -95,6 +95,44 @@ class ExtensionPreflightTests(unittest.TestCase):
                 self.assertNotIn("synthetic-hidden-tail", json.dumps(result))
                 self.assertNotIn(str(corrupt), json.dumps(result))
 
+    def test_r18_descriptor_previews_pass_preflight_without_release_authority(self):
+        from cbdk.modular_builder import build_modular
+        from cbdk.recipe_matrix import r18_center_recipe
+        # Independent expected inventory, including the legacy five.
+        for label, features in (
+            ("center", ["mesh_bounds", "mesh_center"]),
+            ("all-six", ["object_selection", "edit_selection", "mesh_bounds",
+                         "modifier_summary", "vertex_nudge", "mesh_center"]),
+        ):
+            with self.subTest(label=label):
+                recipe = dict(r18_center_recipe(), features=features)
+                self.zip = self.root / (label + ".zip")
+                built = build_modular(recipe, self.zip, root=ROOT,
+                                      preview_unapproved=True, target_blender="4.4.3")
+                report = inspect_preview_archive(self.zip)
+                self.assertEqual(report["status"], "blocked_for_extension_release")
+                self.assertEqual(report["verified_source_file_count"], built["files"] - 1)
+                self.assertTrue(report["provenance_hashes_verified"])
+                self.assertFalse(report["source_authenticity_verified"])
+                self.assertFalse(report["python_code_executed"])
+                self.assertFalse(report["extension_zip_created"])
+                self.assertFalse(report["manifest_toml_emitted"])
+                self.assertFalse(report["official_blender_extension_validate_ran"])
+                self.assertFalse(report.get("release_authorized", False))
+                self.assertEqual(report["manifest_structure_review"]["missing_required_fields"],
+                                 ["version", "maintainer", "license"])
+                name = "cbdk_modular_preview/CBDK_BUILD_INFO.json"
+                with ZipFile(self.zip) as z:
+                    metadata = json.loads(z.read(name))
+                self.assertEqual(set(metadata["features"]), set(features))
+                for invalid in (["unknown_r18"], ["mesh_center", "mesh_center"]):
+                    changed = dict(metadata, features=invalid)
+                    target = self.replace_zip_member(name, json.dumps(changed).encode())
+                    result = diagnose_preview_archive(target)
+                    self.assertEqual(result["status"], "invalid_preview_archive")
+                    self.assertEqual(result["failure_code"], "feature_inventory")
+                    target.unlink()
+
     def test_r8_valid_preview_and_synthetic_validator_remain_independent(self):
         """Two successful *technical* observations never imply release rights."""
         from cbdk.extension_manifest import compare_official_validation
