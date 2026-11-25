@@ -1404,3 +1404,8 @@ R13の担当枝・所有パス・負例・受け入れ条件・共通開始プ�
 ## 2026-11-25 JST — R18限定受入
 
 C#140 be0f777、D#141 bbda166各5CI、A#142 79acfdc 5CI成功。C17+D4パス重複0、A追加2パス（既存preview検査の固定5機能制約を解消し新規/全6/不正IDの回帰）。Python3.12 1249件実行、失敗0/skip7。dev `36d4090402f66f49d5644fbef91f1c03d95a6b34` 独立7CI成功：Python45547799016、Windows45547799085、Blender45547798994、Chromium45547799025、Handoff45547799094、Kit45547799014、Skill45547799182。Blender3版各67 lifecycle・R18 global/inline center、合成ZIP/公式build/validate、HIT/SHA確認。正式配布・実用Extension登録は未実装。Cの初期CI失敗→Aのmatrix限定編集許可→修正成功。統合候補は初回成功。44要件/24 NEXTの状態数維持。R19自動割当なし。[完成ゲート](V018_COMPLETION_GATES.md)。
+
+
+## 2026-11-25 JST — R19完成直結の限定割当候補
+
+#143節目同期dev `2696a9b8e171a218b67865ba5caf47f1786164bf` 独立7CI全成功（Blender45549944774の3版成功）。[R19正式割当候補](R19_ABCD_START.md)：Cは既存6機能で型付き入力の共通化、Dは固定自作生成物の隔離Extension実行経路、Aは同一生成物の縦断統合検証。B待機。割当文書統合・独立7CI・Issue #125更新まで着手禁止。R20自動発行なし。次期active=false/正式版/状態数維持。

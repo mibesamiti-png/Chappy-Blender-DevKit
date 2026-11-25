@@ -364,3 +364,8 @@ A統合[#130](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/130)�
 ## 2026-11-25 JST — R18限定受入・専門チーム停止
 
 #142統合dev `36d4090402f66f49d5644fbef91f1c03d95a6b34` 独立7CI成功。C/Dの正式割当完了、旧PRを再統合しない。B/C/Dは次の正式割当まで新規実装/PR/CI不要。Aが[完成ゲート](V018_COMPLETION_GATES.md)の実機能Extension化と型付きUIの未達を限定確認。R19自動発行なし。main/正式版/研究/次期active=false維持。
+
+
+## 2026-11-25 JST — R19完成直結の限定割当候補
+
+#143節目同期dev `2696a9b8e171a218b67865ba5caf47f1786164bf` 独立7CI全成功（Blender45549944774の3版成功）。[R19正式割当候補](R19_ABCD_START.md)：Cは既存6機能で型付き入力の共通化、Dは固定自作生成物の隔離Extension実行経路、Aは同一生成物の縦断統合検証。B待機。割当文書統合・独立7CI・Issue #125更新まで着手禁止。R20自動発行なし。次期active=false/正式版/状態数維持。
