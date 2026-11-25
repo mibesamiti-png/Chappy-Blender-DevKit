@@ -101,7 +101,7 @@ def audit_registration(*, root: Path) -> dict:
     """Cross-check the independent runtime/CI inventory and six real builds."""
     from .addon_builder import _trusted_read
     from .feature_catalog import LEGACY_FEATURE_IDS
-    from .recipe_matrix import EXPECTED_RECIPES, audit_recipe_matrix
+    from .recipe_matrix import EXPECTED_RECIPES, audit_recipe_matrix, r18_center_recipe
     from .modular_builder import build_modular
 
     root = root.resolve()
@@ -127,9 +127,16 @@ def audit_registration(*, root: Path) -> dict:
             recipe = json.loads(_trusted_read("recipes/" + name + ".json", root=root))
             build_modular(recipe, Path(directory) / (name + ".zip"),
                           preview_unapproved=True, root=root)
+        # Also build the independent R18 feature example under the same
+        # static registration contract, without changing the legacy CI loop.
+        build_modular(r18_center_recipe(), Path(directory) / "r18_center.zip",
+                      preview_unapproved=True, root=root)
     return {"schema_version": 1, "kind": "cbdk_registration_static_audit",
             "status": "static_checks_passed", "recipe_count": matrix["recipe_count"],
-            "features": matrix["covered_features"], "preview_only": True,
+            "features": matrix["covered_features"],
+            "all_covered_features": matrix["all_covered_features"],
+            "additional_authored_coverage": matrix["additional_authored_coverage"],
+            "preview_only": True,
             "approved": False, "runtime_verified": False,
             "redistribution_cleared": False}
 
