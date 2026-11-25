@@ -1,4 +1,4 @@
-# CBDK Geometry Research Lab — R20
+# CBDK Geometry Research Lab — R21
 
 曲面接合・自己交差の検出/回避を人工データで比較する独立研究環境。CBDK本体へ自動登録しない。レビュー用、製品採用未承認。
 
@@ -201,3 +201,7 @@ R8を一度生成して最小三角形品質が0.1以上なら即採用、未満
 ## R20 — 形状・内部UVの連携最適化（限定研究ゲート達成）
 
 [条件](cycles/r20/RESEARCH.md) / [結果](cycles/r20/RESULTS.md) / [状態](cycles/r20/STATUS.json)。既知12形状で安全12/12、法線p95改善5%以上9/12（必要6/12）。UV救済68/133、8形状で内部UV再最適化を採用、3件元形状維持。未使用形状・Blender実機再検証は未実施、approved=false、R21自動開始なし。
+
+## R21 — 新規8形状・Blender実機での連携最適化検証
+
+[条件](cycles/r21/RESEARCH.md) / [結果](cycles/r21/RESULTS.md) / [状態](cycles/r21/STATUS.json)。新規の同系統人工8形状で安全8/8、法線p95改善5%以上5/8（必要4/8）、全体UV重なり・CGAL交差0、元面・シーム・UV保持、実機roundtrip一致。3件は元形状維持。実作品・レンダリング未検証、approved=false、R22自動開始なし。
