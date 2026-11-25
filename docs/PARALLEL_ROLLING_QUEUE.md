@@ -406,3 +406,9 @@ A統合[#130](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/130)�
 ## 2026-11-25 JST — R22 / F019-03 B限定割当候補
 
 #157節目同期dev `3d916d7585297c731e9f515eab82b07e871cbd41` 独立7CI成功（Python45627337180、Windows45627337341、Blender45627337202、Chromium45627337195、Handoff45627337163、Kit45627337178、Skill45627337387）。実3版R21 native/CLI marker確認。既存境界/特徴/追加probeとR20/21の有限表面距離を再利用し、穴・薄壁・接合・内部空洞の合成検出限界を独立期待で測定する。改善は再現した場合のみ、GL exact研究は読取評価に限定・採用なし。 [R22割当候補](R22_ABCD_START.md)。Bのみ1PR、C/D待機、#125 rev11 paused。割当文書統合・独立7CI・#125更新前は実装禁止。R23自動発行なし。正式版/44要件/24 NEXT/last_verified不変。
+
+## 2026-11-26 JST — R22 / F019-03測定限定受入
+
+#159 B dfe61bee 5CI、#160 A d11839ec 5CI、dev a816d5ec0f08456c469af134b4b7dc1b69987258 独立7CI（Python45636769946、Windows45636769714、Blender45636769495 attempt2、Chromium45636769899、Handoff45636769741、Kit45636769989、Skill45636769864）。3版16ケース固定8/10・適応9/10、誤警告0/5、情報欠落1。小穴見逃し、境界ヒントは物理証明でない。旧profile・入力SHA維持。初回4.4.3 artifact確定失敗は同一HEAD失敗job再試行成功。測定のみ、製品変更・GL採用なし。限定3目標受入、実データ/一般精度/物理診断/native memory/viewer未確認。#125 rev13 paused、R23/v0.20自動開始なし、正式版/44要件/24 NEXT/last_verified維持。
+
+実Blender jobs139299743712 (4.4.3 retry)/139284224979 (4.5.15)/139284225490 (5.2.1)。4.4.3初回139284225529は全形状検査成功後、artifact finalize HTML/JSON応答異常で失敗、同一run attempt2の失敗jobのみ再実行しartifact15035179114保存成功。代表親中央値553.366/460.909/564.990 ms（異なるrunner、速度保証なし）。B #159は#160に包含済みのため別マージせずclosed。詳細 [R22測定](GLB_DETECTION_LIMITS_R22.md)。3/3は限定目標のみであり、v0.19全体の完成・正式公開ではない。節目同期候補CIおよび統合後独立CIを確認して区切り判断。Notion最終同期未実施。
