@@ -112,6 +112,8 @@ def run_glb_surface_review(
             encoding="utf-8", errors="replace", timeout=timeout, check=False,
         )
     except subprocess.TimeoutExpired as exc:
+        if expanded:
+            target.unlink(missing_ok=True)
         raise GLBSurfacePipelineError("Trusted Blender surface review timed out") from exc
     except OSError as exc:
         raise GLBSurfacePipelineError("Could not start Blender for GLB review") from exc
@@ -119,6 +121,8 @@ def run_glb_surface_review(
     payloads = [line.split(MARKER, 1)[1] for line in result.stdout.splitlines()
                 if line.startswith(MARKER)]
     if result.returncode != 0 or len(payloads) != 1:
+        if expanded:
+            target.unlink(missing_ok=True)
         raise GLBSurfacePipelineError("Blender surface review failed; no report was accepted")
     try:
         payload = _strict_json(payloads[0])
@@ -249,7 +253,10 @@ def run_glb_surface_review(
                 raise ValueError("triangle-limit skip requires an over-limit scene")
         if expanded:
             _validate_expanded_report(report)
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError,
+            OverflowError, RecursionError) as exc:
+        if expanded:
+            target.unlink(missing_ok=True)
         raise GLBSurfacePipelineError("Untrusted or corrupt Blender surface report") from exc
     return report
 
@@ -260,10 +267,11 @@ def _validate_expanded_report(report):
         return type(value) is int and lo <= value <= hi
 
     def metric(value):
-        return (type(value) in (int, float) and math.isfinite(value)
-                and 0 <= value <= 4_000_000)
+        return (type(value) in (int, float) and 0 <= value <= 4_000_000
+                and math.isfinite(value))
 
-    if (report.get("profile") != "expanded_2048" or
+    if (type(report.get("schema_version")) is not int or report["schema_version"] != 2
+            or report.get("profile") != "expanded_2048" or
             type(report.get("triangle_limit_per_scene")) is not int or
             report["triangle_limit_per_scene"] != EXPANDED_MAX_TRIANGLES):
         raise ValueError("invalid expanded profile")
@@ -278,6 +286,15 @@ def _validate_expanded_report(report):
         raise ValueError("expanded input count outside bounds")
     if type(report.get("bvh_build_count")) is not int or report["bvh_build_count"] != 2:
         raise ValueError("invalid BVH build count")
+    def finite_tree(value):
+        if isinstance(value, dict):
+            return all(finite_tree(v) for v in value.values())
+        if isinstance(value, list):
+            return all(finite_tree(v) for v in value)
+        return not isinstance(value, float) or math.isfinite(value)
+
+    if not finite_tree(report):
+        raise ValueError("nonfinite expanded report")
     budget = report.get("work_budget")
     limits = _SurfaceWorkBudget.LIMITS
     if (not isinstance(budget, dict) or set(budget) != {"limits", "used"}
