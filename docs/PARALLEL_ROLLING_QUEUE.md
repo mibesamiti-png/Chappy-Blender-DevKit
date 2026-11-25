@@ -418,3 +418,9 @@ A統合[#130](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/130)�
 dev 1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791 独立7CI（Python45644535642、Windows45644535499、Blender45644535704、Chromium45644535823、Handoff45644535761、Kit45644535523、Skill45644535575）。実3版R22/R21 marker、#25同HEAD draft。既存Notion節目追記成功。F019限定3/3を区切るが実データ/一般精度/物理診断/native memory/viewer未完。既承認F020へ進む候補、R23はCの明示複数panelとDの既存レシピからの非配布Extension準備に限定。F020-02は統合後別判断。割当文書統合・独立7CI・#125更新前は実装禁止。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
 
 R19既存基盤の6機能/7部品、2型入力、単一panel内の宣言sectionと固定2機能Extension試験を再利用。CはF020-01の明示複数panel、DはF020-03の安全な複数既存レシピからのローカルpreview Extension生成準備。Aは契約・CLI・同一生成物の縦断検証を担当。F020-02は既存依存/登録経路との差分をR23受入後に判断。[R23割当候補](R23_ABCD_START.md)。B待機、GL/DIL独立。v0.19の実モデル等は未完了として維持。Notion既存ページ410948b7-4937-8144-9462-ca76e9567e75へ#161節目追記成功（新規ページ/私有データなし）。
+
+## 2026-11-26 JST — R23 / F020-01・03限定受入
+
+R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI成功（Python45698148532、Windows45698148921、Blender45698148477、Chromium45698148381、Handoff45698148674、Kit45698148611、Skill45698148654）。C #164/D #163/A #165各5CIと合わせ22/22、再試行0。3版で同一CLI生成ZIP公式validate・隔離bl_ext登録・2panel/4機能/2型のdraw/操作/解除・SHA不変、artifact保存。F020-01限定受入、F020-03限定実装受入（全体partial）、F020-02残。#125 rev15 paused、B/C/D待機。実GUI/Undo/公式installer/任意コード/権利・正式配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
+
+C #164 `8b872c61040faadc404baa538745c1be0fba95ed`、D #163 `b1b15306b304013cee41ec86a5c5a94906e7c8ff`、A #165候補 `52066fa0db30172a5f7e674140539a2a3860174e`。統合12ファイル、専門PRは包含済みのため個別mergeせずclosed。native jobs 139500883727/139500884434/139500883166、artifact 15061868289/15060608920/15060479125。R19・C grouped/mixed・D read/edit markerも維持。詳細 [R23 A](R23_A_GENERATION_VERTICAL.md)。F020-02は既存依存/登録経路と未達差分を次に判断、R24未発行。Notion同期は節目文書統合・独立CI後、未実施。

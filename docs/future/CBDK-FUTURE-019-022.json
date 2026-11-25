@@ -134,16 +134,20 @@
     },
     "0.20": {
       "F020-01": {
-        "status": "assignment_candidate",
-        "scope": "R23 C: bounded opt-in multi-panel composition, existing code-owned six features and two input types; legacy single panel unchanged."
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "7b16aed6dbdf422cbea069adb4b240b8de4dc2c1",
+        "blender_run": 45698148477,
+        "scope": "Explicit bounded schema2 two-panel UI; grouped/mixed four-feature fixtures with two typed inputs, placement, RNA, native operators, refusal, registration rollback and cleanup on Blender 4.4.3/4.5.15/5.2.1. Existing schema1 panel preserved; arbitrary UI/types and real GUI not verified."
       },
       "F020-02": {
         "status": "not_started_in_v020",
-        "scope": "Dependency and registration composition remaining scope evaluated after R23; reuse current authored catalog, no arbitrary adoption."
+        "scope": "Remaining dependency/registration composition to evaluate separately after R23 milestone sync; reuse six code-owned features, seven parts and existing six legacy recipes; no new assignment yet."
       },
       "F020-03": {
-        "status": "assignment_candidate",
-        "scope": "R23 D: bounded recipe-to-local-preview Extension generation for multiple existing trusted recipes; A vertical verification. No distribution or generic installer."
+        "status": "scoped_implementation_accepted_partial",
+        "verified_dev_sha": "7b16aed6dbdf422cbea069adb4b240b8de4dc2c1",
+        "blender_run": 45698148477,
+        "scope": "Explicit local CLI and trusted recipe root ZIP read/edit/grouped; same four-feature two-panel ZIP official validate, isolated offline manual local repo bl_ext enable/draw/read/edit/disable/cleanup, SHA unchanged, all 3 versions. Official installer, GUI/Undo, arbitrary code, license/distribution and broader cases remain unverified."
       }
     }
   },
@@ -162,5 +166,32 @@
     "pr25_draft": true,
     "scope": "F019 scoped milestones 3/3 accepted; general/real model accuracy, native memory, physical defect classification and viewer remain incomplete. No release.",
     "dispatch": "R23 candidate only; merge and independent seven CI plus #125 revision before implementation."
+  },
+  "v020_r23_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "7b16aed6dbdf422cbea069adb4b240b8de4dc2c1",
+    "workflow_runs": {
+      "python": 45698148532,
+      "windows": 45698148921,
+      "blender": 45698148477,
+      "chromium": 45698148381,
+      "handoff": 45698148674,
+      "kit": 45698148611,
+      "skill": 45698148654
+    },
+    "specialist_prs": {
+      "C": 164,
+      "D": 163
+    },
+    "combined_pr": 165,
+    "all_workflow_families": 22,
+    "retries": 0,
+    "native_jobs": [
+      139500883727,
+      139500884434,
+      139500883166
+    ],
+    "dispatch": "revision 15 paused; next assignment not issued",
+    "notion": "pending milestone sync after verified docs integration"
   }
 }
