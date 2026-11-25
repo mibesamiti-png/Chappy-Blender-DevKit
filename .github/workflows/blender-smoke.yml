@@ -134,11 +134,11 @@ jobs:
       # Archive bytes only: exact key, no fallback key, no cached executable.
       - name: Restore pinned official Blender archive
         id: blender-archive-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/blender-${{ matrix.blender-version }}-linux-x64.tar.xz
           key: cbdk-official-blender-linux-x64-pinned-v1-${{ matrix.blender-version }}-${{ matrix.archive-sha256 }}
-      - name: Verify pinned official Blender archive and extract for this job
+      - name: Obtain and verify pinned official Blender archive
         shell: bash
         env:
           CACHE_HIT: ${{ steps.blender-archive-cache.outputs.cache-hit }}
@@ -152,8 +152,15 @@ jobs:
             echo "CBDK_BLENDER_ARCHIVE_CACHE_HIT $BLENDER_VERSION"
           else
             echo "CBDK_BLENDER_ARCHIVE_CACHE_MISS $BLENDER_VERSION"
-            curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 30 \
-              "${base}/${archive}" -o "${archive_path}.download"
+            # One bounded official mirror fallback, only on transfer failure.
+            # Do not fetch a new digest or retry a digest mismatch.
+            if ! curl --fail --location --proto '=https' --proto-redir '=https' --retry 2 --retry-delay 3 --connect-timeout 30 \
+              "${base}/${archive}" -o "${archive_path}.download"; then
+              rm -f -- "${archive_path}.download"
+              echo "CBDK_BLENDER_ARCHIVE_OFFICIAL_MIRROR_FALLBACK $BLENDER_VERSION"
+              curl --fail --location --proto '=https' --proto-redir '=https' --retry 2 --retry-delay 3 --connect-timeout 30 \
+                "https://mirror.blender.org/release/Blender${BLENDER_VERSION%.*}/${archive}" -o "${archive_path}.download"
+            fi
             mv -- "${archive_path}.download" "$archive_path"
           fi
           # Cache content is untrusted; validate the pinned official digest
@@ -161,6 +168,21 @@ jobs:
           test -f "$archive_path" && test ! -L "$archive_path"
           printf '%s  %s\n' "$BLENDER_SHA256" "$archive_path" | sha256sum --check --strict
           echo "CBDK_BLENDER_ARCHIVE_SHA256_PASS $BLENDER_VERSION $BLENDER_SHA256"
+      # Save immediately after successful SHA verification, not at job end.
+      # This also primes a trusted dev push even if a later runtime test fails.
+      - name: Save verified Blender archive on exact cache miss
+        if: steps.blender-archive-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/blender-${{ matrix.blender-version }}-linux-x64.tar.xz
+          key: ${{ steps.blender-archive-cache.outputs.cache-primary-key }}
+      - name: Extract verified Blender archive for this job
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive_path="$RUNNER_TEMP/blender-${BLENDER_VERSION}-linux-x64.tar.xz"
+          test -f "$archive_path" && test ! -L "$archive_path"
+          printf '%s  %s\n' "$BLENDER_SHA256" "$archive_path" | sha256sum --check --strict
           tar -xJf "$archive_path"
           echo "BLENDER_PATH=$PWD/blender-${BLENDER_VERSION}-linux-x64/blender" >> "$GITHUB_ENV"
       - name: Check Blender is executable
