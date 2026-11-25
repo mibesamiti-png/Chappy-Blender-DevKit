@@ -201,14 +201,18 @@ jobs:
               o=make_obj('TI33_patch',V,F)
               try:
                   bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
-                  vg=o.vertex_groups.new(name='INTERIOR_ONLY');vg.add(interior,1.0,'REPLACE')
+                  vg=o.vertex_groups.new(name='INTERIOR_ONLY');vg.add(interior,1.0,'REPLACE');group_name=str(vg.name)
                   original=np.array([tuple(v.co) for v in o.data.vertices]);faces=[list(f.vertices) for f in o.data.polygons]
-                  t=time.perf_counter()
+                  t=time.perf_counter();boundary_drift=0.0
                   for _ in range(cycles):
                       if smooth:
-                          mod=o.modifiers.new('NativeSmooth','SMOOTH');mod.vertex_group=vg.name;mod.factor=.5;mod.iterations=smooth
+                          mod=o.modifiers.new('NativeSmooth','SMOOTH');mod.vertex_group=group_name;mod.factor=.5;mod.iterations=smooth
                           req('FINISHED' in bpy.ops.object.modifier_apply(modifier=mod.name),'smooth failed')
-                      mod=o.modifiers.new('NativeProject','SHRINKWRAP');mod.target=g;mod.vertex_group=vg.name
+                          current=np.array([tuple(v.co) for v in o.data.vertices]);req(len(current)==len(original),'smooth vertex count changed')
+                          boundary_drift=max(boundary_drift,float(np.max(np.abs(current[b]-original[b]))))
+                          for i in b:o.data.vertices[i].co=original[i].tolist()
+                          o.data.update()
+                      mod=o.modifiers.new('NativeProject','SHRINKWRAP');mod.target=g;mod.vertex_group=group_name
                       mod.wrap_method='PROJECT';mod.use_project_x=False;mod.use_project_y=False;mod.use_project_z=True;mod.use_positive_direction=True;mod.use_negative_direction=True;mod.offset=0
                       req('FINISHED' in bpy.ops.object.modifier_apply(modifier=mod.name),'project failed')
                   dt=time.perf_counter()-t
@@ -217,7 +221,7 @@ jobs:
                   req(np.array_equal(result[b],original[b]),'boundary changed')
                   q=result[interior,:2]/np.array(c[:2]);residual=float(np.max(np.abs(result[interior,2]-target(q,c)[:,2])))
                   req(residual<.00015,'guide projection residual too large')
-                  return result.tolist(),outfaces,dict(modifier_seconds=dt,boundary_exact=True,interior_residual=residual)
+                  return result.tolist(),outfaces,dict(modifier_seconds=dt,boundary_exact=True,pre_restore_boundary_drift=boundary_drift,interior_residual=residual)
               finally:remove(o)
           rows=[];meshes=[];comparisons=[]
           for k,c in enumerate(CASES):
@@ -257,7 +261,7 @@ jobs:
                   x['modes'][mode]={a:m[a] for a in ('valid','shape_pass','joint_pass')}
                   for key in ('best_error','best_angle'):
                       a=m[key]
-                      x['modes'][mode][key]={q:a[q] for q in ('offset','simple','p95_worst','min_angle','interior_residual')} if a else None
+                      x['modes'][mode][key]={q:a[q] for q in ('offset','simple','p95_worst','min_angle','interior_residual','pre_restore_boundary_drift')} if a else None
               compact.append(x)
           print('TI33_SUMMARY',json.dumps(dict(blender=out['blender'],calls=len(rows),valid=out['valid'],shape_pass=sum(r.get('shape_pass',False) for r in rows),joint_pass=sum(r.get('joint_pass',False) for r in rows),comparisons=compact,rejections=dict(Counter(r.get('reason','') for r in rows if r['status']=='rejected')))),flush=True)
           assert len(rows)==240 and all(any(r['case']==k and r['mode']==mode and r['status']=='valid' for r in rows) for k in range(3) for mode,_,_ in MODES),'incomplete native comparison'
