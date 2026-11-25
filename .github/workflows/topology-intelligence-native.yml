@@ -701,3 +701,135 @@ jobs:
           path: ti38-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase38 verified run 45577236623: all 14 equivalent, 13 generated,
+      # 120 vs 232 candidates, 12.6664 vs 26.0164 s; 1 rejected in both arms.
+      # Phase39: isolate rigid-frame equivariance on frozen synthetic seeds.
+      - name: Phase39 inferred local frame rigid transform benchmark
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti39.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti38.py').read_text().split('\nrows=[];selected=[]',1)[0])
+          target0=target
+          def frame(V):
+              V=np.asarray(V,float)
+              req(V.shape==(16,3) and np.isfinite(V).all(),'invalid boundary')
+              o=V.mean(axis=0);D=V-o
+              scale=float(np.max(np.linalg.norm(D,axis=1)))
+              req(scale>1e-10,'zero extent')
+              pair=np.linalg.norm(V[:,None,:]-V[None,:,:],axis=2)
+              req(np.min(pair+np.eye(16)*scale*10)>scale*1e-8,'duplicate boundary')
+              n=np.sum(np.cross(D,np.roll(D,-1,axis=0)),axis=0)
+              req(np.linalg.norm(n)>scale*scale*1e-8,'degenerate normal')
+              n/=np.linalg.norm(n)
+              # Deterministic anchor from ordered boundary only, not world axes or fixture parameters.
+              x=V[6]-V[14];x-=np.dot(x,n)*n
+              req(np.linalg.norm(x)>scale*1e-8,'degenerate anchor')
+              x/=np.linalg.norm(x);y=np.cross(n,x)
+              Q=np.column_stack((x,y,n))
+              req(np.max(np.abs(Q.T@Q-np.eye(3)))<1e-10 and np.linalg.det(Q)>0,'bad frame')
+              return o,Q
+          def rotation(axis,degrees):
+              a=np.asarray(axis,float);a/=np.linalg.norm(a);t=np.radians(degrees)
+              x,y,z=a
+              K=np.array([[0,-z,y],[z,0,-x],[-y,x,0]])
+              return np.eye(3)+np.sin(t)*K+(1-np.cos(t))*(K@K)
+          TRANSFORMS=[('identity',np.eye(3),np.zeros(3)),
+                      ('vertical',rotation((0,1,0),90),np.array([.3,-.2,.4])),
+                      ('oblique',rotation((1,2,3),67),np.array([-.7,.4,.2])),
+                      ('inverted',rotation((1,1,0),173),np.array([.8,.5,-.6]))]
+          # Use existing native modifiers, but check guide projection against analytic
+          # truth AFTER undoing the fixture transform; the local Z axis differs from analytic Z.
+          patchsrc=(root/'ti33.py').read_text().split('def patch(',1)[1].split('\nrows=[];',1)[0]
+          old="q=result[interior,:2]/np.array(c[:2]);residual=float(np.max(np.abs(result[interior,2]-target(q,c)[:,2])))"
+          req(old in patchsrc,'patch helper changed')
+          exec('def patch_local('+patchsrc.replace(old,"truth=to_truth(result[interior]);q=truth[:,:2]/np.array(c[:2]);residual=float(np.max(np.abs(truth[:,2]-target0(q,c)[:,2])))"))
+          # Controls for invalid frames, independent from the benchmark.
+          controls=[]
+          for name,V in [('collinear',np.column_stack((np.arange(16),np.zeros((16,2))))),
+                         ('duplicate',np.zeros((16,3))),
+                         ('nonfinite',np.full((16,3),np.nan))]:
+              try:frame(V);controls.append(dict(case=name,rejected=False))
+              except ValueError as e:controls.append(dict(case=name,rejected=True,reason=str(e)))
+          prior=json.loads(Path('ti38-results/results.json').read_text())
+          req(prior['gate'],'Phase38 must pass')
+          selected_names=('seen0','seen2','seen3','new_square','fresh_rounded_rect')
+          rows=[];raw=[]
+          for record in prior['rows']:
+              name=record['case']
+              if name not in selected_names:continue
+              c=tuple(record['params']);set_domain(record['blend'])
+              ref=record['reference']
+              spec=record['fast']['selected'] or dict(arm='collar',offset=0,simple=False)
+              truth_boundary=target0(B,c)
+              base=None;base_mesh=None;base_frame=None
+              for label,R,T in TRANSFORMS:
+                  row=dict(case=name,transform=label,arm=spec['arm'],offset=spec['offset'],simple=spec['simple'])
+                  world_boundary=truth_boundary@R.T+T
+                  o,Q=frame(world_boundary)
+                  def to_local(world):return (world-o)@Q
+                  def to_world(local):return np.asarray(local)@Q.T+o
+                  def to_truth(local):return (to_world(local)-T)@R
+                  # Analytic target and collar seed remain synthetic fixture inputs.
+                  # No known transform is supplied to frame().
+                  def local_target(p,c):return to_local(target0(p,c)@R.T+T)
+                  if base_frame is None:base_frame=(o,Q)
+                  row['frame_error']=float(np.max(np.abs(Q-R@base_frame[1])))
+                  row['origin_error']=float(np.max(np.abs(o-(base_frame[0]@R.T+T))))
+                  g=None
+                  try:
+                      target=local_target
+                      g=guide(c)
+                      if spec['arm']=='direct':
+                          v,f,_=fill(c,4,spec['offset'],spec['simple']);smooth=6
+                      else:
+                          v,f=collar(c,.58,.5,0);smooth=3
+                      V,F,extra=patch_local(v,f,g,smooth,1,c)
+                      truth=to_truth(V)
+                      world=to_world(V)
+                      target=target0
+                      a=assess(truth,F,c)
+                      req((a['vertices'],a['quads'])==((25,16) if spec['arm']=='direct' else (41,32)),'budget mismatch')
+                      row.update(**a,**extra,status='valid')
+                      row['joint_pass']=a['gate_angle15'] and a['p95_worst']<=1.1*ref
+                      # Verify original world-space boundary against unmodified input coordinates.
+                      E=Counter(tuple(sorted((i,j))) for face in F for i,j in zip(face,face[1:]+face[:1]))
+                      bids=sorted({i for e,n in E.items() if n==1 for i in e})
+                      distances=np.linalg.norm(world[bids,None,:]-world_boundary[None,:,:],axis=2)
+                      row['world_boundary_error']=float(distances.min(axis=1).max())
+                      req(len(set(distances.argmin(axis=1)))==16 and row['world_boundary_error']<1e-6,'world boundary moved')
+                      mesh=(truth.tolist(),F)
+                      if label=='identity':base=row.copy();base_mesh=mesh
+                      req(base is not None,'identity reference failed')
+                      eq=compare_mesh(mesh,base_mesh)
+                      row['equivalence']=eq
+                      row['same']=bool(eq['ok'] and row['joint_pass']==base['joint_pass'] and abs(row['p95_worst']-base['p95_worst'])<1e-7 and abs(row['min_angle']-base['min_angle'])<1e-4 and row['frame_error']<1e-10 and row['origin_error']<1e-10)
+                      row['prior_pass']=bool(record['fast']['selected'])
+                      raw.append(dict(case=name,transform=label,vertices=world.tolist(),faces=F))
+                  except Exception as e:row.update(status='rejected',reason=str(e),same=False)
+                  finally:
+                      target=target0
+                      if g is not None:remove(g)
+                  rows.append(row)
+          d=Path('ti39-results');d.mkdir(exist_ok=True)
+          gate=len(rows)==20 and all(r.get('same',False) for r in rows) and all(x['rejected'] for x in controls)
+          # Rigid equivariance is separate from prior analytic-axis quality.
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'raw.json').write_text(json.dumps(raw))
+          compact=[{k:v for k,v in r.items() if k in ('case','transform','arm','status','reason','same','frame_error','origin_error','world_boundary_error','min_angle','p95_worst','joint_pass','prior_pass','equivalence')} for r in rows]
+          print('TI39_SUMMARY',json.dumps(dict(gate=gate,valid=sum(r['status']=='valid' for r in rows),same=sum(r.get('same',False) for r in rows),controls=controls,cases=compact)),flush=True)
+          assert gate,'local frame equivariance gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti39.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti39-local-frame-${{ github.sha }}
+          path: ti39-results/
+          if-no-files-found: warn
+          retention-days: 14
