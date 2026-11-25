@@ -609,6 +609,58 @@ jobs:
           print('CBDK_R20_CLI_PROFILE_PASS: explicit 2048 measured, default and dense skip exit 2, source SHA unchanged')
           PY
 
+      - name: R21 explicit part profile on actual synthetic GLBs
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_inventory
+          sha256sum "$root/r21_large_a.glb" "$root/r21_large_b.glb" "$root/r21_closed_a.glb" "$root/r21_closed_b.glb" "$root/r21_65.glb" > "$root/r21_cli_inputs.sha256"
+          python -m cbdk glb-surface-review \
+            "$root/r21_large_a.glb" "$root/r21_large_b.glb" \
+            --blender "$BLENDER_PATH" --output "$root/r21_cli_large.json" \
+            --profile expanded_2048_parts > "$root/r21_cli_large_stdout.json"
+          python -m cbdk glb-surface-review \
+            "$root/r21_closed_a.glb" "$root/r21_closed_b.glb" \
+            --blender "$BLENDER_PATH" --output "$root/r21_cli_closed.json" \
+            --profile expanded_2048_parts > "$root/r21_cli_closed_stdout.json"
+          set +e
+          python -m cbdk glb-surface-review \
+            "$root/r21_65.glb" "$root/r21_65.glb" \
+            --blender "$BLENDER_PATH" --output "$root/r21_cli_cap.json" \
+            --profile expanded_2048_parts > "$root/r21_cli_cap_stdout.json"
+          rc=$?
+          set -e
+          test "$rc" -eq 2
+          sha256sum -c "$root/r21_cli_inputs.sha256"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/surface_inventory')
+          def read(name):
+              return json.loads((root / ('r21_cli_' + name + '.json')).read_text())
+          large, closed, cap = read('large'), read('closed'), read('cap')
+          assert large['schema_version'] == 3 and large['profile'] == 'expanded_2048_parts'
+          assert large['status'] == 'review_only'
+          assert large['reference_triangles'] == large['candidate_triangles'] == 2048
+          part = large['part_review']
+          assert part['status'] == 'review_only'
+          assert part['reference_triangle_counts'] == part['candidate_triangle_counts'] == [32]*64
+          assert [r['candidate_part_ids'] for r in part['reference_parts']] == [[f'part_{64-i:03d}'] for i in range(64)]
+          assert all(r['status'] == 'suggested' for r in part['reference_parts'])
+          assert part['pair_attempts'] == 64
+          assert part['work_budget']['used']['samples'] == 98304
+          assert read('large_stdout')['part_status'] == 'review_only'
+          assert read('large_stdout')['unmeasured_candidate_count'] == 0
+          row = closed['part_review']['reference_parts'][0]
+          assert row['spatial_status'] == 'suggested' and row['status'] == 'ambiguous'
+          assert row['observations'][0]['surface_difference_observed'] is True
+          assert cap['status'] == 'review_only' and cap['part_review']['status'] == 'skipped'
+          assert cap['part_review']['reason'] == 'part_limit'
+          assert read('cap_stdout')['part_reason'] == 'part_limit'
+          assert all(x['auto_apply'] is False and x['part_review']['cross_file_part_identity_proven'] is False for x in (large, closed, cap))
+          print('CBDK_R21_CLI_PART_PROFILE_PASS: 64 suggestions, closed false suggestion demoted, 65 parts skip exit 2, source SHA unchanged')
+          PY
+
       - name: GLB-020 review-only colored 3D difference exports and reimport
         shell: bash
         run: |

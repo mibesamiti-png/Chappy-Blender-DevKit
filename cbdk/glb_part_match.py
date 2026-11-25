@@ -9,7 +9,10 @@ import math
 
 from .glb_diff_colors import MAX_PARTS
 from .glb_boundary_audit import boundary_audit, local_boundary_segments
-from .glb_surface_distance import _validated_triangles
+from .glb_surface_distance import (
+    _validated_triangles, _build_bvh, _directed, _SurfaceWorkBudget,
+    SurfaceBudgetExceeded, EXPANDED_MAX_TRIANGLES, SAMPLES_PER_TRIANGLE,
+)
 
 METHOD = "anonymous_spatial_centroid_extent_triangle_heuristic_v1"
 MAX_SCORE = 0.20
@@ -19,14 +22,14 @@ MAX_LAYOUT_BOUNDARY_EDGES = 256
 BOUNDARY_LAYOUT_RELATIVE_TOLERANCE = 0.002
 
 
-def _features(faces, counts):
-    _validated_triangles(faces, "spatial_candidate_faces")
+def _features(faces, counts, *, expanded=False):
+    _validated_triangles(faces, "spatial_candidate_faces", expanded=expanded)
     if (not isinstance(counts, list) or not 1 <= len(counts) <= MAX_PARTS
             or any(type(n) is not int or n < 1 for n in counts)
             or sum(counts) != len(faces)):
         raise ValueError("Invalid original per-part face layout")
     result = []
-    edge_parts = boundary_audit(faces, counts)["parts"]
+    edge_parts = boundary_audit(faces, counts, _expanded=expanded)["parts"]
     start = 0
     for n in counts:
         pts = [p for f in faces[start:start + n] for p in f]
@@ -221,15 +224,19 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
     transform changes. Shapes with coincident bounds are intentionally marked
     ambiguous rather than automatically paired.
     """
-    ref = _features(reference, ref_counts)
-    cand = _features(candidate, cand_counts)
+    return _spatial_matches(reference, candidate, ref_counts, cand_counts)
+
+
+def _spatial_matches(reference, candidate, ref_counts, cand_counts, *, expanded=False, boundary_budget=None):
+    ref = _features(reference, ref_counts, expanded=expanded)
+    cand = _features(candidate, cand_counts, expanded=expanded)
     # Coordinate-bearing segments exist only transiently in memory. Never put
     # them into public JSON, debug logs, or a cross-file identity assertion.
     ref_lines = [[] for _ in ref]
     cand_lines = [[] for _ in cand]
-    for line in local_boundary_segments(reference, ref_counts):
+    for line in local_boundary_segments(reference, ref_counts, _expanded=expanded):
         ref_lines[line[0] - 1].append(line)
-    for line in local_boundary_segments(candidate, cand_counts):
+    for line in local_boundary_segments(candidate, cand_counts, _expanded=expanded):
         cand_lines[line[0] - 1].append(line)
     pts = [p for f in reference + candidate for p in f]
     low = [min(p[k] for p in pts) for k in range(3)]
@@ -283,9 +290,21 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
             topology_reasons.append("weld_collapsed_triangles_observed")
         if (ref[i]["boundary_edges"] > 0
                 and ref[i]["boundary_edges"] == cand[best_j]["boundary_edges"]):
-            layout_issue = _boundary_layout_issue(
-                ref_lines[i], cand_lines[best_j], ref[i], cand[best_j],
-            )
+            left, right = ref_lines[i], cand_lines[best_j]
+            reservation = 6 * len(left) * len(right)
+            if (boundary_budget is not None
+                    and len(left) <= MAX_LAYOUT_BOUNDARY_EDGES
+                    and len(right) <= MAX_LAYOUT_BOUNDARY_EDGES
+                    and boundary_budget["reserved"] + reservation > boundary_budget["limit"]):
+                layout_issue = "cumulative_boundary_budget_exceeded"
+            else:
+                if (boundary_budget is not None
+                        and len(left) <= MAX_LAYOUT_BOUNDARY_EDGES
+                        and len(right) <= MAX_LAYOUT_BOUNDARY_EDGES):
+                    boundary_budget["reserved"] += reservation
+                layout_issue = _boundary_layout_issue(
+                    left, right, ref[i], cand[best_j],
+                )
             if layout_issue is not None:
                 topology_reasons.append(layout_issue)
             elif (_observed_boundary_component_count(ref_lines[i])
@@ -331,3 +350,135 @@ def suggest_spatial_part_matches(reference, candidate, ref_counts, cand_counts):
             f"part_{j + 1:03d}" for j in range(len(cand)) if j not in used
         ],
     }
+
+
+PART_REVIEW_METHOD = "bounded_spatial_candidates_with_sampled_surface_v1"
+PART_PAIR_LIMIT = 128
+PART_BOUNDARY_RESERVATION_LIMIT = 2_000_000
+PART_RELATIVE_REVIEW_THRESHOLD = BOUNDARY_LAYOUT_RELATIVE_TOLERANCE
+
+
+def _part_review_header():
+    return {
+        "schema_version": 1,
+        "method": PART_REVIEW_METHOD,
+        "triangle_limit_per_scene": EXPANDED_MAX_TRIANGLES,
+        "part_limit_per_scene": MAX_PARTS,
+        "pair_limit": PART_PAIR_LIMIT,
+        "boundary_reservation_limit": PART_BOUNDARY_RESERVATION_LIMIT,
+        "cross_file_part_identity_proven": False,
+        "exact_surface_equivalence_proven": False,
+        "auto_apply": False,
+        "sampling": "fixed_bidirectional_world_space_24_per_triangle",
+        "relative_review_threshold": PART_RELATIVE_REVIEW_THRESHOLD,
+        "absolute_rounding_floor": 1e-6,
+    }
+
+
+def review_part_surfaces(reference, candidate, ref_counts, cand_counts):
+    """Review spatial candidates only; never promote or rerank a suggestion."""
+    return _review_part_surfaces(reference, candidate, ref_counts, cand_counts,
+                                 _SurfaceWorkBudget())
+
+
+def _review_part_surfaces(reference, candidate, ref_counts, cand_counts, budget):
+    report = _part_review_header()
+    if any(not isinstance(c, list) or not c or
+           any(type(n) is not int or n < 0 for n in c)
+           for c in (ref_counts, cand_counts)):
+        return dict(report, status="skipped", reason="invalid_part_layout")
+    if len(ref_counts) > MAX_PARTS or len(cand_counts) > MAX_PARTS:
+        return dict(report, status="skipped", reason="part_limit")
+    if sum(ref_counts) > EXPANDED_MAX_TRIANGLES or sum(cand_counts) > EXPANDED_MAX_TRIANGLES:
+        return dict(report, status="skipped", reason="triangle_limit")
+    if sum(ref_counts) != len(reference) or sum(cand_counts) != len(candidate):
+        return dict(report, status="skipped", reason="invalid_part_layout")
+    if 0 in ref_counts or 0 in cand_counts:
+        return dict(report, status="skipped", reason="empty_part")
+    boundary = {"reserved": 0, "limit": PART_BOUNDARY_RESERVATION_LIMIT}
+    try:
+        legacy = _spatial_matches(reference, candidate, ref_counts, cand_counts,
+                                  expanded=True, boundary_budget=boundary)
+    except ValueError:
+        return dict(report, status="skipped", reason="invalid_geometry")
+    report.update(status="review_only", reference_triangle_counts=list(ref_counts),
+                  candidate_triangle_counts=list(cand_counts))
+
+    def split(faces, counts):
+        pos, groups = 0, []
+        for n in counts:
+            groups.append(_validated_triangles(faces[pos:pos+n], "part", expanded=True))
+            pos += n
+        return groups
+
+    groups = (split(reference, ref_counts), split(candidate, cand_counts))
+    trees = {}
+    pair_count = 0
+    exhausted = False
+    used = set()
+    rows = []
+
+    def tree(side, i):
+        key = (side, i)
+        if key not in trees:
+            trees[key] = _build_bvh(groups[side][i])
+        return trees[key]
+
+    def diagonal(group):
+        points = [p for face, _ in group for p in face]
+        return _distance([min(p[k] for p in points) for k in range(3)],
+                         [max(p[k] for p in points) for k in range(3)])
+
+    scales = tuple([diagonal(group) for group in side] for side in groups)
+    for i, old in enumerate(legacy["reference_parts"]):
+        row = dict(old, spatial_status=old["status"], observations=[])
+        for part_id in old["candidate_part_ids"]:
+            j = int(part_id[5:]) - 1
+            if exhausted or pair_count >= PART_PAIR_LIMIT:
+                observation = {"candidate_part_id": part_id, "status": "not_measured",
+                               "reason": "cumulative_work_budget"}
+            else:
+                pair_count += 1
+                before = dict(budget.counts)
+                try:
+                    forward = _directed(groups[0][i], groups[1][j],
+                                        tree=tree(1, j), budget=budget)
+                    backward = _directed(groups[1][j], groups[0][i],
+                                         tree=tree(0, i), budget=budget)
+                except SurfaceBudgetExceeded as exc:
+                    exhausted = True
+                    observation = {"candidate_part_id": part_id, "status": "not_measured",
+                                   "reason": "cumulative_work_budget",
+                                   "exhausted_counter": str(exc)}
+                else:
+                    scale = max(scales[0][i], scales[1][j])
+                    worst = max(forward["sampled_max"], backward["sampled_max"])
+                    observation = {
+                        "candidate_part_id": part_id, "status": "measured",
+                        "local_scale": scale,
+                        "reference_to_candidate": forward,
+                        "candidate_to_reference": backward,
+                        "relative_sampled_max": worst / scale,
+                        "surface_difference_observed": worst > max(
+                            1e-6, scale * PART_RELATIVE_REVIEW_THRESHOLD),
+                    }
+                observation["work"] = {k: budget.counts[k] - before[k] for k in before}
+            row["observations"].append(observation)
+        row["surface_review_reasons"] = []
+        if any(x["status"] == "not_measured" for x in row["observations"]):
+            row["surface_review_reasons"].append("candidate_surface_not_measured")
+        if any(x.get("surface_difference_observed") is True for x in row["observations"]):
+            row["surface_review_reasons"].append("candidate_surface_difference")
+        if row["status"] == "suggested" and row["surface_review_reasons"]:
+            row["status"] = "ambiguous"
+        if row["status"] == "suggested":
+            used.add(row["candidate_part_ids"][0])
+        rows.append(row)
+    report.update(reference_parts=rows,
+                  unpaired_candidate_part_ids=[
+                      f"part_{j+1:03d}" for j in range(len(cand_counts))
+                      if f"part_{j+1:03d}" not in used],
+                  pair_attempts=pair_count, bvh_build_count=len(trees),
+                  boundary_comparison_reservation=boundary["reserved"],
+                  work_budget=budget.snapshot())
+    return report

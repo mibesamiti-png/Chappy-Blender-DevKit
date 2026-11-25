@@ -23,6 +23,7 @@ from cbdk.glb_multires_surface import (  # noqa: E402
     compare_multires_triangle_surfaces, compare_expanded_triangle_surfaces,
 )
 
+from cbdk.glb_part_match import review_part_surfaces, _part_review_header  # noqa: E402
 from cbdk.glb_part_hints import count_based_part_hints  # noqa: E402
 
 MARKER = "CBDK_GLB_SURFACE_REVIEW_PASS "
@@ -147,9 +148,10 @@ def main():
     if "--" not in sys.argv:
         raise RuntimeError("Missing -- separator for trusted GLB surface arguments")
     args = sys.argv[sys.argv.index("--") + 1:]
-    if len(args) not in (3, 4) or (len(args) == 4 and args[3] != "expanded_2048"):
+    if len(args) not in (3, 4) or (len(args) == 4 and args[3] not in ("expanded_2048", "expanded_2048_parts")):
         raise RuntimeError("Provide reference.glb, candidate.glb, output.json [expanded_2048]")
     expanded = len(args) == 4
+    parts = expanded and args[3] == "expanded_2048_parts"
     limit = EXPANDED_MAX_TRIANGLES if expanded else MAX_TRIANGLES
     ref, cand, output = (Path(value).resolve() for value in args[:3])
     # No user source scripts are imported or executed in this runner.
@@ -159,6 +161,15 @@ def main():
         reference, candidate, ref_count=ref_count, cand_count=cand_count,
         ref_parts=ref_parts, cand_parts=cand_parts, expanded=expanded,
     )
+    if parts:
+        report["schema_version"] = 3
+        report["profile"] = "expanded_2048_parts"
+        if report["status"] != "review_only":
+            report["part_review"] = dict(_part_review_header(), status="skipped",
+                                         reason="global_surface_not_measured")
+        else:
+            report["part_review"] = review_part_surfaces(
+                reference, candidate, ref_parts, cand_parts)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(
         json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2,

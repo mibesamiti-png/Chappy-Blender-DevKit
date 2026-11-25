@@ -485,6 +485,109 @@ def _expanded_surface_roundtrip(output):
     print("CBDK_R20_EXPANDED_SURFACE_PASS " + json.dumps(observations, sort_keys=True))
 
 
+
+def _expanded_part_review_roundtrip(output):
+    """R21: native export/import, independent local shape difference, caps."""
+    import json
+    from statistics import median
+    from time import perf_counter
+
+    def export(label, groups, reverse_names=False):
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        for i, group in enumerate(groups):
+            vertices, polygons = [], []
+            for face in group:
+                pos = len(vertices)
+                vertices.extend(face)
+                polygons.append((pos,pos+1,pos+2))
+            mesh = bpy.data.meshes.new("CBDK_R21_Synthetic")
+            mesh.from_pydata(vertices, [], polygons)
+            mesh.update()
+            idx = len(groups)-i if reverse_names else i
+            obj = bpy.data.objects.new(f"CBDK_R21_{idx:03d}", mesh)
+            bpy.context.collection.objects.link(obj)
+        path = output / ("r21_" + label + ".glb")
+        bpy.ops.export_scene.gltf(filepath=str(path), export_format="GLB")
+        return path
+
+    def compare(label, left, right, profile="expanded_2048_parts"):
+        hashes = [hashlib.sha256(p.read_bytes()).digest() for p in (left,right)]
+        start = perf_counter()
+        report = run_glb_surface_review(bpy.app.binary_path,left,right,
+            output / ("r21_" + label + ".json"),profile=profile)
+        ms = (perf_counter()-start)*1000
+        assert hashes == [hashlib.sha256(p.read_bytes()).digest() for p in (left,right)]
+        return report,ms
+
+    def tetra(inverted):
+        v = [(0.,0.,0.),(1.,1.,0.),(1.,0.,1.),(0.,1.,1.)]
+        if inverted:
+            v = [tuple(1-x for x in p) for p in v]
+        return [tuple(v[i] for i in f) for f in ((0,1,2),(0,3,1),(0,2,3),(1,3,2))]
+
+    closed_a = export("closed_a",[tetra(False)])
+    closed_b = export("closed_b",[tetra(True)])
+    report,_ = compare("closed_diff",closed_a,closed_b)
+    row = report["part_review"]["reference_parts"][0]
+    assert row["spatial_status"] == "suggested",row
+    assert row["status"] == "ambiguous",row
+    assert row["observations"][0]["surface_difference_observed"] is True
+    tied = export("tied",[tetra(False),tetra(False)])
+    report,_ = compare("tie",closed_a,tied)
+    assert report["part_review"]["reference_parts"][0]["status"] == "ambiguous"
+
+    def panel(i, alternate=False):
+        ox,oy = (i%8)*10.,(i//8)*10.
+        result = []
+        for y in range(4):
+            for x in range(4):
+                a,b=(ox+x,oy+y,0.),(ox+x+1,oy+y,0.)
+                c,d=(ox+x+1,oy+y+1,0.),(ox+x,oy+y+1,0.)
+                result.extend(((a,b,d),(b,c,d)) if alternate else ((a,b,c),(a,c,d)))
+        return result
+
+    groups = [panel(i) for i in range(64)]
+    left = export("large_a",groups)
+    right = export("large_b",[panel(i,True) for i in range(64)],reverse_names=True)
+    times = []
+    for trial in range(4):
+        report,ms = compare("large_"+str(trial),left,right)
+        assert report["status"] == "review_only",report
+        assert report["reference_triangles"] == report["candidate_triangles"] == 2048
+        part = report["part_review"]
+        assert part["status"] == "review_only",part
+        assert part["reference_triangle_counts"] == part["candidate_triangle_counts"] == [32]*64
+        assert len(part["reference_parts"]) == 64
+        assert all(r["status"] == "suggested" for r in part["reference_parts"]),part
+        assert [r["candidate_part_ids"] for r in part["reference_parts"]] == [
+            [f"part_{64-i:03d}"] for i in range(64)]
+        assert all(not o["surface_difference_observed"] for r in part["reference_parts"] for o in r["observations"])
+        if trial:
+            times.append(ms)
+    stats = {"median_parent_ms":round(median(times),3),
+             "part_work":part["work_budget"]["used"],
+             "global_work":report["work_budget"]["used"],
+             "pairs":part["pair_attempts"],"bvh_builds":part["bvh_build_count"],
+             "boundary_reserved":part["boundary_comparison_reservation"],
+             "suggested":sum(r["status"]=="suggested" for r in part["reference_parts"]),
+             "closed_old_false_suggestion":1,"closed_remaining_false_suggestion":0,
+             "tie_ambiguous":1}
+    too_many = export("65",[[group[0]] for group in groups]+[[groups[0][1]]])
+    report,_ = compare("part_cap",too_many,too_many)
+    assert report["status"] == "review_only"
+    assert report["part_review"]["reason"] == "part_limit"
+    over = export("2049",groups+[[groups[0][0]]])
+    report,_ = compare("face_cap",left,over)
+    assert report["status"] == "skipped"
+    assert report["part_review"]["reason"] == "global_surface_not_measured"
+    dense_a = output / "r20_dense_ref.glb"
+    dense_b = output / "r20_dense_cand.glb"
+    dense, _ = compare("global_budget",dense_a,dense_b)
+    assert dense["status"] == "skipped" and dense["reason"] == "work_budget"
+    assert dense["part_review"]["reason"] == "global_surface_not_measured"
+    print("CBDK_R21_PART_REVIEW_PASS " + json.dumps(stats,sort_keys=True))
+
+
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     if len(args) != 1:
@@ -542,6 +645,7 @@ def main():
     _boundary_budget_roundtrip(output)
     _boundary_many_parts_roundtrip(output)
     _expanded_surface_roundtrip(output)
+    _expanded_part_review_roundtrip(output)
     print("CBDK_SURFACE_INVENTORY_PASS")
 
 

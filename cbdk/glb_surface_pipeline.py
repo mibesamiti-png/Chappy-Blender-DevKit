@@ -13,6 +13,7 @@ import subprocess
 
 from .glb_inspector import GLBInspectionError, inspect_glb
 from .glb_part_hints import count_based_part_hints
+from .glb_part_match import _part_review_header, PART_PAIR_LIMIT, PART_BOUNDARY_RESERVATION_LIMIT, PART_RELATIVE_REVIEW_THRESHOLD, MAX_PARTS, MAX_SCORE
 from .glb_surface_distance import MAX_TRIANGLES, EXPANDED_MAX_TRIANGLES, _SurfaceWorkBudget
 from .glb_multires_surface import COARSE_SAMPLES, FINE_SAMPLES, MAX_SUSPECT_FACES, EXPLORATION_FACES
 
@@ -77,9 +78,10 @@ def run_glb_surface_review(
     Returns status='review_only' for measured differences (including zero), or
     status='skipped' for triangle-count limits. Never interprets zero as proof.
     """
-    if profile not in ("legacy_512", "expanded_2048"):
+    if profile not in ("legacy_512", "expanded_2048", "expanded_2048_parts"):
         raise GLBSurfacePipelineError("Unknown surface review profile")
-    expanded = profile == "expanded_2048"
+    expanded = profile != "legacy_512"
+    parts = profile == "expanded_2048_parts"
     limit = EXPANDED_MAX_TRIANGLES if expanded else MAX_TRIANGLES
     if isinstance(timeout, bool) or not isinstance(timeout, int) or not 10 <= timeout <= 900:
         raise GLBSurfacePipelineError("timeout must be between 10 and 900 seconds")
@@ -139,7 +141,7 @@ def run_glb_surface_review(
             raise ValueError("invalid report kind")
         if (report.get("status") != payload["status"]
                 or type(report.get("schema_version")) is not int
-                or report["schema_version"] != (2 if expanded else 1)):
+                or report["schema_version"] != (3 if parts else 2 if expanded else 1)):
             raise ValueError("invalid report status or version")
         if report.get("source") != "local_blender_import_aggregate_only":
             raise ValueError("unexpected report source")
@@ -251,8 +253,19 @@ def run_glb_surface_review(
             if (report.get("reason") == "triangle_limit" and
                     max(report["reference_triangles"], report["candidate_triangles"]) <= limit):
                 raise ValueError("triangle-limit skip requires an over-limit scene")
-        if expanded:
+        if parts:
+            if report.get('profile') != profile:
+                raise ValueError('invalid part review profile')
+            global_report = dict(report, schema_version=2, profile='expanded_2048')
+            global_report.pop('part_review', None)
+            _validate_expanded_report(global_report)
+            _validate_part_review(report)
+        elif expanded:
+            if 'part_review' in report:
+                raise ValueError('unexpected part review')
             _validate_expanded_report(report)
+        elif 'part_review' in report:
+            raise ValueError('unexpected part review')
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError,
             OverflowError, RecursionError) as exc:
         if expanded:
@@ -396,3 +409,214 @@ def _validate_expanded_report(report):
     if (used["samples"] != samples or used["triangle_evaluations"] != evaluations
             or used["node_visits"] < samples):
         raise ValueError("work counters contradict measurements")
+
+
+def _validate_part_review(report):
+    """Validate schema-3 anonymous part evidence; no geometry in parent report."""
+    def integer(x, lo, hi):
+        return type(x) is int and lo <= x <= hi
+
+    def number(x, lo=0, hi=4_000_000):
+        return type(x) in (int, float) and lo <= x <= hi and math.isfinite(x)
+
+    def same_types(a, b):
+        return json.dumps(a, sort_keys=True, allow_nan=False) == json.dumps(
+            b, sort_keys=True, allow_nan=False)
+
+    header = _part_review_header()
+    part = report.get("part_review")
+    inventory = report.get("part_inventory")
+    if (not isinstance(part, dict) or not isinstance(inventory, dict) or
+            any(not same_types(part.get(k), v) for k, v in header.items())):
+        raise ValueError("invalid part review header")
+    if part.get("status") == "skipped":
+        if set(part) != set(header) | {"status", "reason"}:
+            raise ValueError("skipped part review contains unexpected evidence")
+        reason = part["reason"]
+        if report["status"] != "review_only":
+            if reason != "global_surface_not_measured":
+                raise ValueError("invalid global skip reason")
+        elif reason == "part_limit":
+            if max(inventory["reference_object_count"], inventory["candidate_object_count"]) <= MAX_PARTS:
+                raise ValueError("invalid part limit skip")
+        elif reason == "empty_part":
+            for side in ("reference", "candidate"):
+                if inventory[side + "_object_count"] <= 32 and 0 in inventory[side + "_triangle_counts"]:
+                    break
+                if inventory[side + "_object_count"] > 32 and (
+                        report[side + "_triangles"] < inventory[side + "_object_count"] or
+                        inventory[side + "_triangle_counts"][-1] == 0):
+                    break
+            else:
+                # Truncated inventory cannot always independently establish empty parts.
+                if max(inventory["reference_object_count"], inventory["candidate_object_count"]) <= 32:
+                    raise ValueError("invalid empty part skip")
+        elif reason not in ("invalid_geometry", "invalid_part_layout"):
+            raise ValueError("unknown part skip reason")
+        return
+    if part.get("status") != "review_only" or report["status"] != "review_only":
+        raise ValueError("part review requires measured global surface")
+    keys = {"status", "reference_triangle_counts", "candidate_triangle_counts",
+            "reference_parts", "unpaired_candidate_part_ids", "pair_attempts",
+            "bvh_build_count", "boundary_comparison_reservation", "work_budget"}
+    if set(part) != set(header) | keys:
+        raise ValueError("unexpected part review evidence")
+    counts = []
+    for side in ("reference", "candidate"):
+        values = part[side + "_triangle_counts"]
+        if (not isinstance(values, list) or not 1 <= len(values) <= MAX_PARTS
+                or len(values) != inventory[side + "_object_count"]
+                or any(not integer(x, 1, EXPANDED_MAX_TRIANGLES) for x in values)
+                or sum(values) != report[side + "_triangles"]
+                or sorted(values, reverse=True)[:32] != inventory[side + "_triangle_counts"]):
+            raise ValueError("part order inventory contradiction")
+        counts.append(values)
+    ref, cand = counts
+    candidate_ids = [f"part_{j+1:03d}" for j in range(len(cand))]
+    rows = part["reference_parts"]
+    limits = _SurfaceWorkBudget.LIMITS
+    budget = part["work_budget"]
+    if (not isinstance(budget, dict) or set(budget) != {"limits", "used"}
+            or not same_types(budget["limits"], limits)
+            or not isinstance(budget["used"], dict) or set(budget["used"]) != set(limits)
+            or any(not integer(budget["used"][k], 0, v) for k, v in limits.items())
+            or not integer(part["boundary_comparison_reservation"], 0, PART_BOUNDARY_RESERVATION_LIMIT)
+            or not integer(part["pair_attempts"], 0, PART_PAIR_LIMIT)
+            or not integer(part["bvh_build_count"], 0, len(ref)+len(cand))
+            or not isinstance(rows, list) or len(rows) != len(ref)):
+        raise ValueError("invalid part review budget or layout")
+    topology_reasons = {
+        "boundary_edge_count_mismatch", "nonmanifold_edge_count_mismatch",
+        "weld_collapsed_triangles_observed", "boundary_layout_budget_exceeded",
+        "boundary_spatial_layout_mismatch", "boundary_component_count_mismatch",
+        "cumulative_boundary_budget_exceeded",
+    }
+    used = set()
+    spatial_used = set()
+    expected_work = dict.fromkeys(limits, 0)
+    attempted = 0
+    exhausted = False
+    expected_trees = set()
+    for i, row in enumerate(rows):
+        if (not isinstance(row, dict) or set(row) != {
+                "reference_part_id", "status", "candidate_part_ids", "normalized_score",
+                "topology_review_required", "topology_review_reasons", "spatial_status",
+                "observations", "surface_review_reasons"}
+                or row["reference_part_id"] != f"part_{i+1:03d}"
+                or row["spatial_status"] not in ("suggested", "ambiguous", "unmatched")
+                or not number(row["normalized_score"], hi=2)):
+            raise ValueError("invalid part row")
+        ids = row["candidate_part_ids"]
+        observations = row["observations"]
+        topo = row["topology_review_reasons"]
+        if (not isinstance(ids, list) or len(ids) > 2 or
+                any(not isinstance(j, str) or j not in candidate_ids for j in ids)
+                or len(set(ids)) != len(ids)
+                or not isinstance(observations, list) or len(observations) != len(ids)
+                or not isinstance(topo, list) or
+                any(not isinstance(x, str) or x not in topology_reasons for x in topo)
+                or len(set(topo)) != len(topo)
+                or row["topology_review_required"] is not bool(topo)):
+            raise ValueError("invalid candidate or topology evidence")
+        if row["spatial_status"] == "suggested" and (
+                len(ids) != 1 or topo or row["normalized_score"] > MAX_SCORE):
+            raise ValueError("invalid spatial suggestion")
+        if row["spatial_status"] == "suggested":
+            if ids[0] in spatial_used:
+                raise ValueError("duplicate spatial suggestion")
+            spatial_used.add(ids[0])
+        if row["spatial_status"] == "unmatched" and ids:
+            raise ValueError("unmatched row cannot have candidates")
+        if row["spatial_status"] == "ambiguous" and not ids:
+            raise ValueError("ambiguous row requires candidate")
+        surface_reasons = []
+        difference = unmeasured = False
+        for cid, obs in zip(ids, observations):
+            if not isinstance(obs, dict) or obs.get("candidate_part_id") != cid:
+                raise ValueError("candidate observation order mismatch")
+            j = candidate_ids.index(cid)
+            n, m = ref[i], cand[j]
+            work = obs.get("work")
+            if obs.get("status") == "not_measured":
+                unmeasured = True
+                if obs.get("reason") != "cumulative_work_budget":
+                    raise ValueError("invalid missing measurement")
+                if work is None:
+                    if set(obs) != {"candidate_part_id", "status", "reason"} or not (
+                            exhausted or attempted >= PART_PAIR_LIMIT):
+                        raise ValueError("unexplained skipped pair")
+                    continue
+                if (set(obs) != {"candidate_part_id", "status", "reason", "exhausted_counter", "work"}
+                        or exhausted or obs.get("exhausted_counter") not in limits):
+                    raise ValueError("invalid exhausted pair")
+                exhausted = True
+            elif obs.get("status") == "measured":
+                if (set(obs) != {"candidate_part_id", "status", "local_scale",
+                                 "reference_to_candidate", "candidate_to_reference",
+                                 "relative_sampled_max", "surface_difference_observed", "work"}
+                        or exhausted or not number(obs["local_scale"]) or obs["local_scale"] <= 0):
+                    raise ValueError("invalid measured pair")
+                samples = evaluations = 0
+                worst = 0
+                for key, source, target in (("reference_to_candidate", n, m),
+                                            ("candidate_to_reference", m, n)):
+                    v = obs[key]
+                    count = 24*source
+                    if (not isinstance(v, dict) or set(v) != {"mean", "sampled_max",
+                            "sample_count", "triangle_distance_evaluations", "brute_force_evaluations"}
+                            or not number(v["mean"]) or not number(v["sampled_max"])
+                            or v["mean"] > v["sampled_max"]
+                            or not integer(v["sample_count"], count, count)
+                            or not integer(v["triangle_distance_evaluations"], count, count*target)
+                            or not integer(v["brute_force_evaluations"], count*target, count*target)):
+                        raise ValueError("invalid directed pair metrics")
+                    samples += count
+                    evaluations += v["triangle_distance_evaluations"]
+                    worst = max(worst, v["sampled_max"])
+                rel = worst / obs["local_scale"]
+                diff = worst > max(1e-6, obs["local_scale"] * PART_RELATIVE_REVIEW_THRESHOLD)
+                if (not number(obs["relative_sampled_max"], hi=1e15)
+                        or obs["relative_sampled_max"] != rel
+                        or obs["surface_difference_observed"] is not diff):
+                    raise ValueError("inconsistent local difference")
+                difference = difference or diff
+            else:
+                raise ValueError("unknown pair state")
+            if (not isinstance(work, dict) or set(work) != set(limits)
+                    or any(not integer(work[k], 0, limits[k]) for k in limits)
+                    or work["samples"] > 24*(n+m)
+                    or work["triangle_evaluations"] > work["samples"]*max(n,m)
+                    or work["node_visits"] > work["samples"]*(2*max(n,m)-1)):
+                raise ValueError("invalid pair work")
+            attempted += 1
+            expected_trees.add((1,j))
+            if obs["status"] == "measured":
+                expected_trees.add((0,i))
+                if (work["samples"] != samples or work["triangle_evaluations"] != evaluations
+                        or work["node_visits"] < samples):
+                    raise ValueError("measured pair work contradicts metrics")
+            for k in limits:
+                expected_work[k] += work[k]
+            if obs["status"] == "not_measured":
+                if expected_work[obs["exhausted_counter"]] != limits[obs["exhausted_counter"]]:
+                    raise ValueError("claimed exhaustion not at limit")
+                # Reverse target tree may or may not have been built.
+                if work["samples"] > 24*n:
+                    expected_trees.add((0,i))
+        if unmeasured:
+            surface_reasons.append("candidate_surface_not_measured")
+        if difference:
+            surface_reasons.append("candidate_surface_difference")
+        status = row["spatial_status"]
+        if status == "suggested" and surface_reasons:
+            status = "ambiguous"
+        if row["status"] != status or row["surface_review_reasons"] != surface_reasons:
+            raise ValueError("invalid part promotion or demotion")
+        if status == "suggested":
+            if ids[0] in used:
+                raise ValueError("duplicate suggested candidate")
+            used.add(ids[0])
+    if (part["pair_attempts"] != attempted or budget["used"] != expected_work
+            or not len(expected_trees) <= part["bvh_build_count"] <= len(expected_trees)+int(exhausted)
+            or part["unpaired_candidate_part_ids"] != [j for j in candidate_ids if j not in used]):
+        raise ValueError("part aggregate evidence contradiction")

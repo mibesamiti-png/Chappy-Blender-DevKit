@@ -11,14 +11,14 @@ from __future__ import annotations
 import math
 
 from .glb_diff_colors import MAX_PARTS
-from .glb_surface_distance import _validated_triangles
+from .glb_surface_distance import _validated_triangles, MAX_TRIANGLES, EXPANDED_MAX_TRIANGLES
 
 METHOD = "world_space_quantized_triangle_edge_incidence_v1"
 RELATIVE_WELD_EPSILON = 1e-7
 MIN_WELD_EPSILON = 1e-9
 
 
-def boundary_audit(faces, part_counts):
+def boundary_audit(faces, part_counts, *, _expanded=False):
     """Count edges appearing once/twice/3+ times, independently per input part.
 
     The input's original triangle/part order is retained for anonymous IDs.
@@ -26,7 +26,7 @@ def boundary_audit(faces, part_counts):
     A missing boundary does NOT establish a manifold, valid inside/outside,
     or the absence of tiny holes/sub-grid geometry.
     """
-    _validated_triangles(faces, "boundary_audit_faces")
+    _validated_triangles(faces, "boundary_audit_faces", expanded=_expanded)
     if (not isinstance(part_counts, list)
             or not 1 <= len(part_counts) <= MAX_PARTS
             or any(type(x) is not int or x < 1 for x in part_counts)
@@ -92,7 +92,7 @@ def boundary_audit(faces, part_counts):
         },
     }
 
-def local_boundary_segments(faces, part_counts):
+def local_boundary_segments(faces, part_counts, *, _expanded=False):
     """Return bounded private viewer-only line segments for observed open edges.
 
     Each segment is [1-based-anonymous-part-index, ax, ay, az, bx, by, bz].
@@ -103,7 +103,7 @@ def local_boundary_segments(faces, part_counts):
     defines edge incidence. The line location is approximate and does not
     prove a real hole (or that unmarked areas contain no hole).
     """
-    audited = boundary_audit(faces, part_counts)
+    audited = boundary_audit(faces, part_counts, _expanded=_expanded)
     vertices = [vertex for face in faces for vertex in face]
     extent = [
         max(float(vertex[k]) for vertex in vertices) -
@@ -139,6 +139,6 @@ def local_boundary_segments(faces, part_counts):
             if not all(math.isfinite(component) for component in coords):
                 raise ValueError("Nonfinite local boundary coordinates")
             result.append([part_index] + coords)
-    if len(result) > 3 * 512:
+    if len(result) > 3 * (EXPANDED_MAX_TRIANGLES if _expanded else MAX_TRIANGLES):
         raise ValueError("Local boundary overlay exceeds safe segment limit")
     return result
