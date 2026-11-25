@@ -132,6 +132,9 @@ class R7NativeRegressionContractTests(unittest.TestCase):
         self.assertTrue(all(
             not isinstance(node, ast.ImportFrom)
             or node.module in ("pathlib", "types", "zipfile", "__future__")
+            # Only the checked-in, C-owned R17 native fixture entrypoint.
+            or (node.level == 0 and node.module == "test_ui_recipe_r17"
+                and [(a.name, a.asname) for a in node.names] == [("run_native", None)])
             for node in ast.walk(tree)))
         self.assertFalse(any(
             isinstance(node, ast.Call)

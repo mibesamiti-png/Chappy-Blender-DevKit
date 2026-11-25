@@ -35,12 +35,18 @@ HELPERS = {
 MAX_DISPLAY_NAME = 72
 
 
-def validate_modular_recipe(recipe: object) -> tuple[str, tuple[str, ...]]:
-    if not isinstance(recipe, dict) or set(recipe) != {
-        "schema_version", "template", "package_id", "display_name",
-        "features", "purpose"
-    }:
+def validate_modular_recipe(recipe: object, *, allow_ui_layout=False) -> tuple[str, tuple[str, ...]]:
+    required = {"schema_version", "template", "package_id", "display_name",
+                "features", "purpose"}
+    if not isinstance(recipe, dict) or not required <= set(recipe) or set(recipe) - (required | {"ui_layout"}):
         raise ValueError("Only the declared modular-preview recipe keys are supported")
+    if "ui_layout" in recipe:
+        # Legacy feature-only consumers must not silently report the global
+        # catalog for a custom layout. Use plan_modular_recipe instead.
+        if not allow_ui_layout:
+            raise ValueError("Recipe-specific UI requires plan_modular_recipe")
+        if type(recipe["ui_layout"]) is not dict:
+            raise ValueError("Recipe-specific UI must be an inline layout object")
     if (recipe["schema_version"] != 2 or recipe["template"] != TEMPLATE
             or recipe["package_id"] != PACKAGE_ID
             or recipe["purpose"] != "local_development_preview"):
@@ -57,6 +63,21 @@ def validate_modular_recipe(recipe: object) -> tuple[str, tuple[str, ...]]:
     return name, tuple(sorted(features))
 
 
+def plan_modular_recipe(recipe: object, *, root: Path, target_blender=None,
+                        include_ui=False) -> dict:
+    """Static recipe plan shared by build; custom layouts are always validated."""
+    _, selected = validate_modular_recipe(recipe, allow_ui_layout=True)
+    plan = plan_features(selected, root=root, target_blender=target_blender)
+    if include_ui or "ui_layout" in recipe:
+        sections, options = plan_ui_layout(
+            plan["ordered_features"], root=root, include_options=True,
+            layout_data=recipe.get("ui_layout"))
+        if include_ui:
+            plan["ui_layout"] = {"sections": sections, "options": options,
+                                 "runtime_verified": False}
+    return plan
+
+
 def build_modular(
     recipe: object,
     output: str | Path,
@@ -67,12 +88,14 @@ def build_modular(
 ) -> dict:
     """Compose only exact CBDK-owned feature templates, no arbitrary imports."""
     root = root.resolve()
-    name, feature_ids = validate_modular_recipe(recipe)
+    name, feature_ids = validate_modular_recipe(recipe, allow_ui_layout=True)
     if not preview_unapproved:
         raise ValueError("Not approved for release: --preview-unapproved is required for LOCAL builds")
-    plan = plan_features(feature_ids, root=root, target_blender=target_blender)
+    plan = plan_modular_recipe(recipe, root=root, target_blender=target_blender,
+                               include_ui=True)
     resolved_features = tuple(plan["ordered_features"])
-    ui_sections, ui_options = plan_ui_layout(resolved_features, root=root, include_options=True)
+    ui_sections = plan["ui_layout"]["sections"]
+    ui_options = plan["ui_layout"]["options"]
     part_ids = plan["part_ids"]
     # Keep authored-part metadata separate from proof of approval.
     from .addon_builder import _read_catalog
@@ -120,7 +143,7 @@ def build_modular(
         "schema_version": 2, "template": TEMPLATE, "package_id": PACKAGE_ID,
         "display_name": name, "features": list(resolved_features),
         "requested_features": list(feature_ids), "part_ids": part_ids,
-        "ui_layout": "catalog/ui_layouts.json",
+        "ui_layout": "recipe.ui_layout" if "ui_layout" in recipe else "catalog/ui_layouts.json",
         "ui_section_titles": [section[0] for section in ui_sections],
         "ui_options": ui_options,
         "minimum_blender": plan["minimum_blender"], "maximum_blender": plan["maximum_blender"],

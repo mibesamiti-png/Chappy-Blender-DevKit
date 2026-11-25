@@ -71,8 +71,11 @@ def _label(value, *, limit=72):
     )
 
 
-def validate_ui_layout(data: object) -> tuple:
-    """Validate all five known feature placements before filtering a recipe."""
+def validate_ui_layout(data: object, *, expected_features=None) -> tuple:
+    """Validate exact feature coverage; default is the legacy five-feature catalog."""
+    expected = set(TRUSTED_FEATURES) if expected_features is None else set(expected_features)
+    if not expected or not expected <= set(TRUSTED_FEATURES):
+        raise ValueError("Invalid authored UI coverage")
     if (type(data) is not dict or set(data) != {
             "schema_version", "kind", "preview_only", "sections"}
             or type(data["schema_version"]) is not int
@@ -130,25 +133,34 @@ def validate_ui_layout(data: object) -> tuple:
                 validate_nudge_settings(parameters["offset"])
             entries.append((feature_id, control["label"]))
         output.append((title, tuple(entries)))
-    if seen_features != set(TRUSTED_FEATURES):
-        raise ValueError("Authored UI layout must cover exactly all allowed features")
+    if seen_features != expected:
+        raise ValueError("Authored UI layout must cover exactly all allowed features for this plan")
     return tuple(output)
 
 
-def plan_ui_layout(requested_features: object, *, root: Path, include_options=False) -> tuple:
-    """Return ordered visible sections for a validated preview feature subset."""
+def plan_ui_layout(requested_features: object, *, root: Path, include_options=False,
+                   layout_data=None) -> tuple:
+    """Return a legacy catalog or explicit recipe layout; no paths are accepted."""
     if (not isinstance(requested_features, (tuple, list))
             or not 1 <= len(requested_features) <= len(TRUSTED_FEATURES)
             or any(type(f) is not str or f not in TRUSTED_FEATURES
                    for f in requested_features)
             or len(set(requested_features)) != len(requested_features)):
         raise ValueError("Invalid authored UI feature selection")
-    source = _trusted_read(UI_CATALOG, root=root.resolve())
-    if len(source) > MAX_BYTES:
-        raise ValueError("Authored UI layout exceeds size limit")
-    data = json.loads(source.decode("utf-8"), object_pairs_hook=_strict_object)
-    layout = validate_ui_layout(data)
     chosen = set(requested_features)
+    if layout_data is None:
+        source = _trusted_read(UI_CATALOG, root=root.resolve())
+        if len(source) > MAX_BYTES:
+            raise ValueError("Authored UI layout exceeds size limit")
+        data = json.loads(source.decode("utf-8"), object_pairs_hook=_strict_object)
+        layout = validate_ui_layout(data)
+    else:
+        # The inline recipe is data only. Every resolved feature appears
+        # exactly once; no hidden/unselected operator or external path.
+        data = layout_data
+        layout = validate_ui_layout(data, expected_features=chosen)
+        if len(json.dumps(data, ensure_ascii=False, allow_nan=False).encode("utf-8")) > MAX_BYTES:
+            raise ValueError("Authored recipe UI layout exceeds size limit")
     visible = tuple(
         (title, tuple((feature_id, label) for feature_id, label in controls
                       if feature_id in chosen))

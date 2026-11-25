@@ -19,3 +19,8 @@ PR [#109](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/109) HEAD
 - キャッシュミス時の公式本体の403は残り得る。キャッシュ保持・取得成功・速度改善は未実測。PR merge refのキャッシュは兄弟PRに共有されないため、開発ブランチへ本workflowが統合されたpushに限り既存の全3版smokeでキャッシュを初期化する。通常のPRゲート、workflow_dispatch、権限contents:read、nativeテスト・タイムアウトを維持。pull_request_targetなどの高権限イベントは使わない。
 - [GitHub cache scope reference](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching#restrictions-for-accessing-a-cache)。初期化成功後は実際の別PRログで共有ヒットを確認する。初回ミス・キャッシュ不整合・外部取得エラー・新規/既存native検証の成否は区別する。
 - 既存R17候補#135の検証と別のA所有変更。R17候補を途中更新したり、旧#109をマージしたりしない。変更の統合時は最新devに基づく通常ゲートを確認し、main/正式公開/研究・私有データに触れない。
+
+## 2026-11-25 A追補（未受入）
+
+- R17 #135 は dev `84c9629b0db4707f43009fd819be9402f68580f7` へ統合済み。独立7系統中6成功、Blender 5.2.1 の公式取得段階で HTTP 403（[run 45530836361](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45530836361)）。4.4.3/4.5.15 は成功。R17の正式受入は保留。
+- #136旧HEAD `ecf7b7712548643e1b7e8554c0de8caf47f9f424` の [Blender run 45530757098](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45530757098) は3版成功。Python run 45530756986 は旧YAML表記を前提とする静的テスト2件で失敗。今回の修正はテストを新しい固定SHA行列と照合順序に合わせ、R17統合済みdevを取り込む。新HEADのCI、warm cache、共有ヒットは未確認。

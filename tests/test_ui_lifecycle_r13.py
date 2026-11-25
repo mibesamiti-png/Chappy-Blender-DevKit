@@ -191,6 +191,9 @@ class R13NativeContractTests(unittest.TestCase):
         self.assertFalse(any(isinstance(n, ast.ImportFrom)
                              and n.module not in
                              ("__future__", "pathlib", "types", "zipfile")
+                             and not (n.level == 0 and n.module == "test_ui_recipe_r17"
+                                      and [(a.name, a.asname) for a in n.names] ==
+                                      [("run_native", None)])
                              for n in ast.walk(tree)))
         # Marker presence in source does not mean the native job ran.
 

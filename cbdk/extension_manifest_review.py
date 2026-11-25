@@ -4,7 +4,7 @@ from pathlib import Path
 import tomllib
 
 from .addon_builder import ROOT
-from .extension_manifest import REQUIRED, manifest_field_diagnostics, review_manifest_fields
+from .extension_manifest import SUPPORTED, manifest_field_diagnostics, review_manifest_fields
 
 MAX_BYTES = 32 * 1024
 
@@ -30,7 +30,7 @@ def review_manifest_file(source):
     # Unknown key names may themselves be private. Keep only a count and a
     # generic placeholder; no original values or source path in the report.
     for error in structure["errors"]:
-        if error["field"] not in REQUIRED:
+        if error["field"] not in SUPPORTED:
             error["field"] = "unsupported_field"
     return {"schema_version": 1, "kind": "cbdk_extension_manifest_review",
             "status": "review_only", "structure": structure,
