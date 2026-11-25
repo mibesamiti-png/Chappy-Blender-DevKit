@@ -1,0 +1,9 @@
+# R24 D — dependency closure and fixed Extension compatibility
+
+Reproduction-only candidate ee560372781f780db9886d49220a1a4c5ef143e4: [Python CI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45704973518), Python 3.11/3.12/3.13 each showed exactly two failures (narrow min and max accepted), while closure and invalid graph tests passed. This is a synthetic metadata reproduction, not a claim that the unchanged production catalog currently has narrow ranges.
+
+Fix only the Extension boundary: before legacy generation, compare the resolved minimum to the fixed fixture manifest minimum and reject a finite resolved maximum. Do not infer Blender's maximum-bound semantics or emit dynamic metadata. Existing exact compatible output remains unchanged. The tests require rejection before the builder is called and no output.
+
+The internal test helper tests/extension_r24_dependency_fixture.py supplies a fixed in-memory catalog patch and grouped recipe requesting vertex_nudge only. Independent expected feature order: mesh_bounds, edit_selection, mesh_center, vertex_nudge; five unique parts and 13 root members. No production catalog edits, external root, installer, public fixture option or permission change. C/A may reuse this helper for the combined proof; A owns shared CLI/CI/STATE.
+
+The existing grouped native runtime checks are reused for the dependency case: identical generated root ZIP official validate, child regenerates before execution, exact resolved feature order, two panels and typed read/edit results, selected-only edit and invalid-state cancellation, native disable/cleanup. SHA checks preserve the actual ZIP and production catalog. No public executable artifacts. Manual local repository staging, not official installer or real GUI/Undo evidence. Separate C rollback/order verification and A integration remain required. Five workflows and all three Blender runtime markers pending.
