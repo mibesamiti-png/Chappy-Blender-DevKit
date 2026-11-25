@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project": "Chappy Blender DevKit (CBDK)",
   "repository": "mibesamiti-png/Chappy-Blender-DevKit",
-  "updated_on": "2026-11-11",
+  "updated_on": "2026-11-25",
   "release": {
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18: R15 B#120/C#121/D#119の11ファイルをA統合PR #122でdevへ一度だけ反映（08ddb3e3a51e526ddfe857268f31b2de443c0fec）。各担当5CI、結合5CI（Windows既存Nodeテスト一時timeout後の単独再試行成功）、dev独立7CI成功。R16はA節目同期後の新dev HEAD独立7CIを条件とする。実GLB/Windows GUI/権利/正式公開未検証、v0.19未有効。"
+    "milestone": "v0.18: R16 B#126/C#124/D#127をA統合PR #130で10パス一度だけ反映（b9936b35a17ec538c61e82622eabaf8bfcf3bc35）。個別各5CI、結合5CI、dev独立7CI全成功。機能挙動は変更なし。R17は完成条件に直結する実装を優先、節目同期後の新dev独立7CIとIssue #125更新を条件に開始。正式v0.17.0、実GLB/GUI/権利/正式公開未検証、v0.19未有効。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -1044,6 +1044,11 @@
       "id": "DEC-077",
       "decision": "R15のB/C/D限定成果をAのPR #122で一度だけ統合し、独立7CI成功後にR16を小さく割り当てる",
       "note": "B#120 70b27ab/C#121 54832e7/D#119 cae75c5は各最終HEADの5CI成功。A結合#122 25180ceの5CI成功。Windows Python3.13の既存dashboard Node 15秒timeoutは失敗ジョブ単独再試行でsuccess、原因未断定。dev squash 08ddb3e3a51e526ddfe857268f31b2de443c0fecの独立7CI全成功（Python42915099059、Windows42915098806、Blender42915099109、Chromium42915098872、Handoff42915098940、Kit42915098954、Skill42915098964）。Blender3版にnative R15各6項目。正式v0.17.0/44要件/24 NEXT/last_verified/next v0.19 active=false維持。実GLB/GUI/権利/研究コード採用は未承認。R16実装はA節目同期統合後の新dev独立7CI成功まで禁止。"
+    },
+    {
+      "id": "DEC-078",
+      "decision": "R16統合受入と完成優先R17への移行。DIL手順のみ限定利用し研究コードは導入しない",
+      "note": "B#126 f1f4fb1/C#124 ddd7cbe/D#127 477c1e2各5CI、結合#130 bb93d51の5CI、dev b9936b35の独立7CI全成功（Python45520525702、Windows45520525596、Blender45520525689、Chromium45520525694、Handoff45520525609、Kit45520525591、Skill45520525679）。結合Blender3版各63チェック、R16各6項目。10パス重複0、実装挙動変更なし、CI再試行0。段階取得/CI概要優先/短い引継ぎ/同種一括は既存ゲート内で使用、効率の定量効果未測定。新管理/研究なし。R17は節目同期後の独立7CIと正式dispatch更新まで実装不可。44要件/24 NEXT/last_verified/正式v0.17.0/v0.19 active=false維持。"
     }
   ],
   "last_verified": {

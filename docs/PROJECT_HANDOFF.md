@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.18: R15 B#120/C#121/D#119の11ファイルをA統合PR #122でdevへ一度だけ反映（08ddb3e3a51e526ddfe857268f31b2de443c0fec）。各担当5CI、結合5CI（Windows既存Nodeテスト一時timeout後の単独再試行成功）、dev独立7CI成功。R16はA節目同期後の新dev HEAD独立7CIを条件とする。実GLB/Windows GUI/権利/正式公開未検証、v0.19未有効。
+- 最新の節目: v0.18: R16 B#126/C#124/D#127をA統合PR #130で10パス一度だけ反映（b9936b35a17ec538c61e82622eabaf8bfcf3bc35）。個別各5CI、結合5CI、dev独立7CI全成功。機能挙動は変更なし。R17は完成条件に直結する実装を優先、節目同期後の新dev独立7CIとIssue #125更新を条件に開始。正式v0.17.0、実GLB/GUI/権利/正式公開未検証、v0.19未有効。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 5件 (edit_selection, mesh_bounds, modifier_summary, object_selection, vertex_nudge)
@@ -204,6 +204,7 @@
 - `DEC-075` CBDKの長期目標を「AI自律開発・3Dモデリング支援エンジン」とし現行ロードマップと区別して正式登録する。2026-11-11ユーザー決定。AI自律開発系と3Dモデリング支援系を独立発展させ、必要な知識・検証・状態だけ共有。自律/共同制作切替、対象単位の排他的操作権、検証済み保存・中断・差分確認付き再開、鮮度付き随時進捗、高度AI依存軽減を長期方針とする。LT-01〜LT-12は将来設計で未実装。v0.18のNEXT・要件・検証済みrelease、承認済みv0.19〜v0.22の非有効状態と移行条件、ABCD担当・Geometry Lab #114・Development Intelligence Lab #115の独立性、現行品質・公開・私有データ許可境界を維持する。
 - `DEC-076` R14のB/C/Dと長期ビジョンをAのPR #117で開発ブランチへ一度だけ統合し、独立7系統CI成功後にR15を従来ABCD担当で割り当てる。B#107/C#108/D#106の個別5CI、A結合fba1607の6CI成功。dev統合db255853で独立7CI成功（Python42905403010、Windows42905402793、Blender42905402730の3版、Chromium42905402841、Handoff42905402989、Kit42905402745、Skill42905402775）。R14 11パスとA長期文書5パスを重複0で統合。v0.17.0/44要件/24 NEXT/last_verified不変、次期計画active=false。実GLB/Windows GUI/ライセンス/公開/研究コード採用/自律実行は未検証。R15は節目同期PRがCI/開発統合/独立7CIを終えた後に着手。
 - `DEC-077` R15のB/C/D限定成果をAのPR #122で一度だけ統合し、独立7CI成功後にR16を小さく割り当てる。B#120 70b27ab/C#121 54832e7/D#119 cae75c5は各最終HEADの5CI成功。A結合#122 25180ceの5CI成功。Windows Python3.13の既存dashboard Node 15秒timeoutは失敗ジョブ単独再試行でsuccess、原因未断定。dev squash 08ddb3e3a51e526ddfe857268f31b2de443c0fecの独立7CI全成功（Python42915099059、Windows42915098806、Blender42915099109、Chromium42915098872、Handoff42915098940、Kit42915098954、Skill42915098964）。Blender3版にnative R15各6項目。正式v0.17.0/44要件/24 NEXT/last_verified/next v0.19 active=false維持。実GLB/GUI/権利/研究コード採用は未承認。R16実装はA節目同期統合後の新dev独立7CI成功まで禁止。
+- `DEC-078` R16統合受入と完成優先R17への移行。DIL手順のみ限定利用し研究コードは導入しない。B#126 f1f4fb1/C#124 ddd7cbe/D#127 477c1e2各5CI、結合#130 bb93d51の5CI、dev b9936b35の独立7CI全成功（Python45520525702、Windows45520525596、Blender45520525689、Chromium45520525694、Handoff45520525609、Kit45520525591、Skill45520525679）。結合Blender3版各63チェック、R16各6項目。10パス重複0、実装挙動変更なし、CI再試行0。段階取得/CI概要優先/短い引継ぎ/同種一括は既存ゲート内で使用、効率の定量効果未測定。新管理/研究なし。R17は節目同期後の独立7CIと正式dispatch更新まで実装不可。44要件/24 NEXT/last_verified/正式v0.17.0/v0.19 active=false維持。
 
 ## 更新・プライバシールール
 
