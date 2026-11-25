@@ -682,3 +682,32 @@ jobs:
           path: research/geometry_lab/runs/ci-r19.json
           if-no-files-found: error
           retention-days: 14
+
+  r20-joint-geometry-uv:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    needs: [r18-blender-roundtrip]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: research/geometry_lab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-oracle.txt shapely==2.1.2
+      - uses: actions/download-artifact@v4
+        with:
+          name: geometry-lab-r18-${{ github.sha }}
+          path: research/geometry_lab/runs/r20-input
+      - run: python -m cycles.r20.run --input runs/r20-input/ci-r18-raw.json --output runs/ci-r20.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: geometry-lab-r20-${{ github.sha }}
+          path: research/geometry_lab/runs/ci-r20.json
+          if-no-files-found: error
+          retention-days: 14
