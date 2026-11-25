@@ -766,7 +766,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  r22-visual-evidence:
+  r22-visual-evidence-corrected:
     if: startsWith(github.head_ref, 'research/geometry-lab-')
     needs: [r21-frozen-new-blender]
     runs-on: ubuntu-latest
@@ -808,12 +808,13 @@ jobs:
           path: research/geometry_lab/runs/r22-input
       - name: Render all frozen comparisons with Blender Cycles
         run: |
-          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r22/render.py -- --input-dir runs/r22-input --output-dir runs/r22
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python cycles/r22/render_v2.py -- --input-dir runs/r22-input --output-dir runs/r22
       - run: python -m cycles.r22.verify --dir runs/r22
+      - run: python -m cycles.r22.exposure --dir runs/r22
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: geometry-lab-r22-${{ github.sha }}
+          name: geometry-lab-r22-v2-${{ github.sha }}
           path: research/geometry_lab/runs/r22/
           if-no-files-found: warn
           retention-days: 14

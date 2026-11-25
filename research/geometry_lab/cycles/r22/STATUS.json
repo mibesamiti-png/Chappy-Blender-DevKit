@@ -1,0 +1,40 @@
+{
+  "cycle": "R22",
+  "status": "revision_1_integrity_passed_shading_clipped_revision_2_pending",
+  "approved": false,
+  "synthetic_only": true,
+  "blender": "4.4.3",
+  "first_run": 45523338686,
+  "first_job": 138900957649,
+  "first_artifact_id": 14980713505,
+  "first_artifact_bytes": 14123323,
+  "render_count": 96,
+  "pair_count": 48,
+  "fallback_pairs": 18,
+  "fallback_mae_max": 0,
+  "manifest_file_hashes_verified": 98,
+  "blend_files": 2,
+  "blend_reopened": false,
+  "visual_quality_assessed": false,
+  "exposure_proxy_revision_1": {
+    "flat": {
+      "count": 32,
+      "median_near_white_fraction": 0.6276014071970499,
+      "max": 0.8783612976777615,
+      "above_half": 22
+    },
+    "smooth": {
+      "count": 32,
+      "median_near_white_fraction": 0.6350480098256546,
+      "max": 0.9211987506816717,
+      "above_half": 24
+    }
+  },
+  "revision_2": {
+    "light_scale": 0.125,
+    "samples": 32,
+    "gate": "each flat/smooth panel <=.10 near-white fraction among max RGB>100 pixels and >=256 such pixels",
+    "status": "pending"
+  },
+  "next": "Inspect revision 2 actual render; no R23 automatic start"
+}
