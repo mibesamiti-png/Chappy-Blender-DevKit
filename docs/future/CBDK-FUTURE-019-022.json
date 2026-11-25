@@ -140,14 +140,16 @@
         "scope": "Explicit bounded schema2 two-panel UI; grouped/mixed four-feature fixtures with two typed inputs, placement, RNA, native operators, refusal, registration rollback and cleanup on Blender 4.4.3/4.5.15/5.2.1. Existing schema1 panel preserved; arbitrary UI/types and real GUI not verified."
       },
       "F020-02": {
-        "status": "assignment_candidate",
-        "scope": "R24 C fixed test-only nonempty feature dependency graph, generated legacy ZIP closure and native registration/rollback; D trusted local Extension closure and conservative manifest compatibility; A same-artifact integration. Existing six actual features retain production graph, no adoption/new features. Requires allocation merge, independent seven CI and dispatch."
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc",
+        "blender_run": 45708363884,
+        "scope": "Fixed test-only nonempty diamond: requested 1 -> ordered 4 features, 5 unique parts; legacy and Extension executable payload equal after legacy metadata removal; same ZIP official validate, actual native register/reverse and controlled midpoint rollback, typed read/edit, cleanup, unchanged SHA on 3 versions. Reproduced narrower min/max mismatch rejected before build. Actual catalog edges remain empty; no arbitrary graph/code execution or semantic dependencies claimed."
       },
       "F020-03": {
         "status": "scoped_implementation_accepted_partial",
         "verified_dev_sha": "7b16aed6dbdf422cbea069adb4b240b8de4dc2c1",
         "blender_run": 45698148477,
-        "scope": "Explicit local CLI and trusted recipe root ZIP read/edit/grouped; same four-feature two-panel ZIP official validate, isolated offline manual local repo bl_ext enable/draw/read/edit/disable/cleanup, SHA unchanged, all 3 versions. Official installer, GUI/Undo, arbitrary code, license/distribution and broader cases remain unverified."
+        "scope": "Explicit local CLI and trusted recipe root ZIP read/edit/grouped; same four-feature two-panel ZIP official validate, isolated offline manual local repo bl_ext enable/draw/read/edit/disable/cleanup, SHA unchanged, all 3 versions. Official installer, GUI/Undo, arbitrary code, license/distribution and broader cases remain unverified. R24 adds same validated Extension ZIP with test-only dependency closure and real ordered registration/reverse/rollback, conservative fixed manifest compatibility refusal. Undo and other remaining limits unchanged."
       }
     }
   },
@@ -206,5 +208,40 @@
         "skill": 45700815567
       }
     }
+  },
+  "v020_r24_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc",
+    "workflow_runs": {
+      "python": 45708363907,
+      "windows": 45708363838,
+      "blender": 45708363884,
+      "chromium": 45708363947,
+      "handoff": 45708363876,
+      "kit": 45708363916,
+      "skill": 45708364079
+    },
+    "specialist_prs": {
+      "C": 169,
+      "D": 168
+    },
+    "combined_pr": 170,
+    "final_workflow_families": 22,
+    "final_native_jobs": 12,
+    "final_retries": 0,
+    "initial_c_blender": "path filter omitted; meaningful UI regression added; final 5 succeeded",
+    "initial_d_reproduction": {
+      "head": "ee560372781f780db9886d49220a1a4c5ef143e4",
+      "python_run": 45704973518,
+      "expected_failures_per_python": 2,
+      "python_versions": 3
+    },
+    "native_jobs": [
+      139536058053,
+      139536058263,
+      139536058201
+    ],
+    "dispatch": "revision 17 paused; R25 not issued",
+    "notion": "pending milestone sync after verified docs integration"
   }
 }

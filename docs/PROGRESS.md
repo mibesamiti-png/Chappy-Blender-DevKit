@@ -1483,3 +1483,9 @@ C #164 `8b872c61040faadc404baa538745c1be0fba95ed`、D #163 `b1b15306b304013cee41
 R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI（Python45700815698、Windows45700815565、Blender45700815591、Chromium45700815541、Handoff45700815542、Kit45700815896、Skill45700815567）成功、3版R23 marker、Notion既存ページ追記成功。F020-02既存6機能のrequires_featuresは全空。既存plannerの推移/循環Python検査は再利用し、R24 Cはテスト専用の非空依存閉包・登録/逆順解除/rollbackの実機縦断、Dはroot ZIPの依存閉包とmanifest互換範囲の独立照合/過大表示拒否。A同一物縦断。正式割当統合・独立7CI・#125更新前は着手禁止。B待機、GL/DIL独立、44要件/24 NEXT/正式版/main/last_verified維持。
 
 既存plannerは非空依存のPython試験を持つが実カタログ6機能は全空。製品に意味のない依存を追加せず、テスト専用の固定合成グラフで共有閉包・順序・拒否・復旧を測る。DのR23固定manifest min4.4.0/maxなしは将来狭い閉包条件に対して過大表示しないことを検証し、再現した最小不具合のみ修正。両者の固定グラフはAが統合。同時インストール、外部root/metadata/Python、権利/配布、実GUI/Undoは対象外。[R24割当候補](R24_ABCD_START.md)。R25自動開始なし。
+
+## 2026-11-26 JST — R24限定受入 / F020-02
+
+R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI（Python45708363907、Windows45708363838、Blender45708363884、Chromium45708363947、Handoff45708363876、Kit45708363916、Skill45708364079）成功。C #169/D #168/A #170各5CI含む最終22/22、実Blender12/12、最終再試行0。C初回Blender未発火はUI回帰追加、D初回狭いmin/max各2件×3 Python版の再現後に固定manifest範囲外を生成前拒否。合成要求1→4機能/5部品、legacyとExtension実行payload一致、同一ZIP公式validate・実順序登録/逆順解除/途中rollback・read/edit・SHA不変。F020-02限定受入、F020-03 partial維持。#125 rev17 paused、実カタログ依存全空維持。Undo/実GUI/公式installer/権利/配布未確認、次は残条件調査。44要件/24 NEXT・正式版/main/last_verified維持。
+
+C/D専門PRはA結合済みのため個別マージせずclosed。C/D/A/統合後の最終22系統、3版×4段階=12 native jobs、最終再試行0。初回のD再現失敗を最終成功数から除外し、初回C未起動も別記録。R24 Aの実測ログは[統合Blender run](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45708363884)（jobs139536058053/139536058263/139536058201、artifact15066038396/15065549446/15066852296）。F020-03のUndo・実GUI・公式installer等は受入未拡大。v0.20はin_progressのまま。次は既存operator Undo契約・失敗理由/自動検証・複数レシピの既存証拠を読取調査し残りを限定判断。R25自動開始なし。Notionは文書統合後に同期。

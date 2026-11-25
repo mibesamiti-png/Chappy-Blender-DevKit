@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.20 R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI/Notion同期成功。F020-02 R24 C/D限定割当候補。実装は正式ゲート後、正式v0.17.0/main/last_verified維持。
+- 最新の節目: v0.20 R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI・3版縦断成功。F020-01/02限定受入、F020-03 partial。残条件評価、#125 rev17 paused。正式v0.17.0/main/last_verified維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
@@ -31,12 +31,12 @@
 | `AUD-001` | Blender API静的監査・契約 | 実装済 | Pythonテスト | 実機検査とは分離 |
 | `PART-001` | 再利用自作部品の台帳と実機スモーク | 実装済 | Blender CI | 7部品。実行証拠はPR #16のCI。台帳は承認を与えない |
 | `PLAN-001` | 機能依存閉包・Blender互換性チェック | 実装済 | Pythonテスト | 6自作機能・7部品。R18コード所有descriptor、旧5機能の互換性と追加mesh_centerを独立検証。許可リストにないコードは実行しない。 |
-| `BUILD-001` | レシピからのBlenderアドオン生成 | 一部実装 | Blender CI | 6自作機能/7部品の信頼済みレシピ生成。R17–R19のinline UI・2型・固定Extension縦断を維持。R23 #165/7b16aed6: 明示CLI build-extension-preview、限定レシピから2panel/4機能/2型の同一root ZIPを公式validate・隔離実機操作・解除、3版独立7CI成功。元SHA・上書き拒否・未承認フラグを保持。任意コード/正式採用/実GUI/配布未完、partial。詳細PROGRESS。 |
+| `BUILD-001` | レシピからのBlenderアドオン生成 | 一部実装 | Blender CI | 6自作機能/7部品の信頼済みレシピ生成、R17–R19 inline UI/2型、R23 CLI・2panel/4機能Extension縦断維持。R24 #170/3e447d19: 合成要求1→4機能/5部品、決定性・閉包・legacy/Extension実行payload一致、3版実登録/逆順解除/rollback/操作/SHA不変。実カタログ依存全空。任意コード/正式採用/実GUI/Undo/配布未完、partial。詳細PROGRESS。 |
 | `EDIT-001` | Edit Mode選択頂点の安全な移動 | 実装済 | Blender CI | 単一メッシュ/有限オフセット/Blender UNDOフラグ |
 | `EDIT-002` | 編集差分の監査とベストエフォート復元 | 一部実装 | Blender CI | 加工前不変スナップショット＋ライブ監査。XYZごとに変化を検証し、ゼロ指定軸・未選択頂点の変更は厳格拒否。異常時復元/再検査。PR #21のBlender 4.4.3/4.5.15/5.2.1 CIで実測成功 |
 | `TEST-001` | Python/Windows/Blender 3バージョンCI | 実装済 | Blender CI | リポジトリ公開化後、PR #21でPython 3.11/3.12/3.13、Windows PowerShell 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1が全成功。mainの正式last_verifiedは未更新 |
-| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 6自作機能の宣言UI（row/column・mode・助言/実行guard）、2型（float_vector/int）、衝突拒否・登録rollback、旧schema1維持。R23 #165/7b16aed6: schema2の固定2panel、最大4section、grouped/mixedの描画・型付き入力・実操作・解除を3版実測。同一Extension ZIPの4機能縦断も成功。任意UI/型/operator・実Windows GUI未完、partial。詳細PROGRESS。 |
-| `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | manifest/依存閉包/SPDX構文と権利分離、R18合成ZIP公式build/validate、R19固定2機能の隔離bl_ext実証を維持。R23 #165/7b16aed6: 信頼済み限定レシピのread/edit/grouped root ZIPを3版公式validate・offline手動stage・enable/操作/disable/cleanup。明示CLI、同一4機能/2panel ZIP、SHA不変。公式installer/実GUI/権利/配布/任意変換未確認、partial。詳細PROGRESS。 |
+| `UI-001` | 汎用アドオンUI組み立て | 一部実装 | Blender CI | 6自作機能の宣言UI（row/column・mode・助言/実行guard）、2型（float_vector/int）、旧schema1とR23 schema2固定2panel・grouped/mixed維持。R24 #170/3e447d19: 合成依存閉包4機能の表示・型付き入力・実操作、登録順/逆順解除・途中rollbackを3版実測。任意UI/型/operator・実Windows GUI/Undo未完、partial。詳細PROGRESS。 |
+| `EXT-001` | 正式Blender Extensions形式と公開パッケージ | 一部実装 | Blender CI | manifest/依存閉包/SPDX構文と権利分離、R18/R19/R23公式validate・隔離bl_extの既存縦断維持。R24 #170/3e447d19: 狭い互換範囲を固定manifestが過大表示する合成不具合を生成前拒否。合成閉包4機能/5部品の同一ZIP公式validate・実登録/逆順解除/rollback・操作・SHA不変、3版成功。公式installer/実GUI/Undo/権利/配布未確認、partial。詳細PROGRESS。 |
 | `INST-001` | GitHubからBlenderへの直接インストール・更新 | 保留 | 未検証 | ユーザー希望で保留。UI確認段階まで実装しない |
 | `PERF-001` | 巨大メッシュ向け監査・効率化 | 一部実装 | Blender CI | 20万要素の事前サイズ検査、加工後の座標・選択を2回目の全コピーなしで比較。実機70×70グリッドの測定をCIで実施、上限超は変更前に拒否 |
 | `GUI-001` | 実際のGUI Undo・操作感の自動検証 | 未実装 | 未検証 | ヘッドレスではUndoフラグと編集結果まで確認 |
@@ -215,6 +215,7 @@
 - `DEC-086` v0.19限定目標を区切り、既承認v0.20生成エンジンの最初の限定割当を候補化する。dev 1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791 独立7CI（Python45644535642、Windows45644535499、Blender45644535704、Chromium45644535823、Handoff45644535761、Kit45644535523、Skill45644535575）。実3版R22/R21 marker、#25同HEAD draft。既存Notion節目追記成功。F019限定3/3を区切るが実データ/一般精度/物理診断/native memory/viewer未完。既承認F020へ進む候補、R23はCの明示複数panelとDの既存レシピからの非配布Extension準備に限定。F020-02は統合後別判断。割当文書統合・独立7CI・#125更新前は実装禁止。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
 - `DEC-087` R23の限定複数パネル生成と同一Extension縦断を受入、F020-02の残範囲を次に判断する。R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI成功（Python45698148532、Windows45698148921、Blender45698148477、Chromium45698148381、Handoff45698148674、Kit45698148611、Skill45698148654）。C #164/D #163/A #165各5CIと合わせ22/22、再試行0。3版で同一CLI生成ZIP公式validate・隔離bl_ext登録・2panel/4機能/2型のdraw/操作/解除・SHA不変、artifact保存。F020-01限定受入、F020-03限定実装受入（全体partial）、F020-02残。#125 rev15 paused、B/C/D待機。実GUI/Undo/公式installer/任意コード/権利・正式配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
 - `DEC-088` F020-02の非空依存グラフ実機検証とExtension互換範囲をR24限定割当候補にする。R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI（Python45700815698、Windows45700815565、Blender45700815591、Chromium45700815541、Handoff45700815542、Kit45700815896、Skill45700815567）成功、3版R23 marker、Notion既存ページ追記成功。F020-02既存6機能のrequires_featuresは全空。既存plannerの推移/循環Python検査は再利用し、R24 Cはテスト専用の非空依存閉包・登録/逆順解除/rollbackの実機縦断、Dはroot ZIPの依存閉包とmanifest互換範囲の独立照合/過大表示拒否。A同一物縦断。正式割当統合・独立7CI・#125更新前は着手禁止。B待機、GL/DIL独立、44要件/24 NEXT/正式版/main/last_verified維持。
+- `DEC-089` R24の非空依存閉包を限定受入し、v0.20残条件を評価する。R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI（Python45708363907、Windows45708363838、Blender45708363884、Chromium45708363947、Handoff45708363876、Kit45708363916、Skill45708364079）成功。C #169/D #168/A #170各5CI含む最終22/22、実Blender12/12、最終再試行0。C初回Blender未発火はUI回帰追加、D初回狭いmin/max各2件×3 Python版の再現後に固定manifest範囲外を生成前拒否。合成要求1→4機能/5部品、legacyとExtension実行payload一致、同一ZIP公式validate・実順序登録/逆順解除/途中rollback・read/edit・SHA不変。F020-02限定受入、F020-03 partial維持。#125 rev17 paused、実カタログ依存全空維持。Undo/実GUI/公式installer/権利/配布未確認、次は残条件調査。44要件/24 NEXT・正式版/main/last_verified維持。
 
 ## 更新・プライバシールール
 
