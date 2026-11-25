@@ -65,8 +65,10 @@ class DependencyExtensionTests(unittest.TestCase):
                 plan = plan_modular_recipe(recipe, root=ROOT, include_ui=True)
                 self.assertEqual((plan["minimum_blender"], plan["maximum_blender"]), (minimum, maximum))
                 # A narrow but otherwise valid plan must not produce a broader manifest.
-                with self.assertRaisesRegex(ValueError, "compatibility"):
-                    write_recipe_extension(recipe, target, preview_unapproved=True)
+                with patch("cbdk.extension_recipe_preview.build_modular",
+                           side_effect=AssertionError("narrow range reached builder")):
+                    with self.assertRaisesRegex(ValueError, "compatibility"):
+                        write_recipe_extension(recipe, target, preview_unapproved=True)
                 self.assertFalse(target.exists())
 
     def test_invalid_graph_rejected_without_output(self):
