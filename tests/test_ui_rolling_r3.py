@@ -10,6 +10,7 @@ from math import isfinite
 from types import SimpleNamespace
 
 from cbdk.feature_catalog import feature_runtime_contract
+from cbdk.ui_layout import plan_input_registration
 
 from test_ui_readiness_r2 import (
     FEATURES, EDIT_FEATURES, IDS, RecordingLayout, mesh_context,
@@ -115,7 +116,8 @@ class PreviewRollingLifecycleTests(unittest.TestCase):
             "_OWNED_PROPERTY_TOKENS": {},
             "_PROPERTY_NAMES": ("cbdk_modular_result",
                                 "cbdk_modular_nudge_offset"),
-            "_UI_OPTIONS": {"nudge_offset": {
+            "_UI_OPTIONS": {"typed_inputs": (plan_input_registration("offset", (0., 0., .1)),),
+                            "nudge_offset": {
                 "size": 3, "min": -10.0, "max": 10.0,
                 "default": (0.0, 0.0, 0.1)}},
         }

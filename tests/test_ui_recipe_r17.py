@@ -249,6 +249,7 @@ def run_native():
                 spec = plan["options"]["nudge_offset"]
                 scene = bpy.context.scene
                 assert tuple(scene.cbdk_modular_nudge_offset) == spec["default"]
+                assert not hasattr(bpy.types.Scene, "cbdk_modular_center_precision")
                 rna = scene.bl_rna.properties["cbdk_modular_nudge_offset"]
                 assert rna.array_length == 3
                 assert rna.hard_min == spec["min"] and rna.hard_max == spec["max"]
@@ -335,10 +336,13 @@ def run_native():
                 sys.path.remove(directory)
     # R18 uses the same trusted build/import/draw/cleanup lane, separately
     # from the two unchanged five-feature R17 regression fixtures.
-    for inline in (False, True):
+    for inline, typed in ((False, False), (True, False), (False, True), (True, True)):
         purge_detached_preview()
         bpy.ops.wm.read_factory_settings(use_empty=True)
         recipe = make_r18_recipe(inline)
+        if typed and inline:
+            recipe["ui_layout"]["sections"][0]["controls"][0]["parameters"] = {
+                "precision": {"default": 1, "min": 1, "max": 4}}
         version = ".".join(map(str, bpy.app.version))
         plan = plan_modular_recipe(recipe, root=ROOT, target_blender=version,
                                    include_ui=True)
@@ -389,19 +393,52 @@ def run_native():
                 assert bpy.ops.cbdk.modular_mesh_center() == {"FINISHED"}
                 # Independent: local box [-2,0,1]..[4,3,5]; diagonal scale
                 # and translation yield world center (12,-0.5,10).
-                assert scene.cbdk_modular_result == "World bounds center (base): 12.000, -0.500, 10.000"
+                expected = "World bounds center (base): 12.0, -0.5, 10.0" if typed and inline else "World bounds center (base): 12.000, -0.500, 10.000"
+                assert scene.cbdk_modular_result == expected
+                if typed:
+                    rna = scene.bl_rna.properties["cbdk_modular_center_precision"]
+                    assert rna.type == "INT"
+                    assert scene.cbdk_modular_center_precision == (1 if inline else 3)
+                    assert (rna.hard_min, rna.hard_max) == ((1, 4) if inline else (0, 6))
+                    assert ("prop", "cbdk_modular_center_precision", True) in recorder.events
+                    scene.cbdk_modular_center_precision = 2
+                    assert bpy.ops.cbdk.modular_mesh_center() == {"FINISHED"}
+                    expected = "World bounds center (base): 12.00, -0.50, 10.00"
+                    assert scene.cbdk_modular_result == expected
                 assert tuple(tuple(v.co) for v in mesh.vertices) == before
                 assert bpy.context.view_layer.objects.active == obj and obj.select_get()
                 bpy.ops.object.mode_set(mode="EDIT")
                 assert bpy.ops.cbdk.modular_mesh_center() == {"CANCELLED"}
-                assert scene.cbdk_modular_result == "World bounds center (base): 12.000, -0.500, 10.000"
+                assert scene.cbdk_modular_result == expected
                 bpy.ops.object.mode_set(mode="OBJECT")
                 module.unregister()
                 registered = False
                 assert not module._REGISTERED and not module._OWNED_PROPERTIES
                 assert not module._OWNED_PROPERTY_TOKENS
                 assert not hasattr(bpy.types.Scene, "cbdk_modular_result")
-                markers.append("native_r18_center_" + ("inline" if inline else "global") +
+                assert not hasattr(bpy.types.Scene, "cbdk_modular_center_precision")
+                if typed:
+                    # Foreign property collision must be detected before any registration.
+                    bpy.types.Scene.cbdk_modular_center_precision = bpy.props.IntProperty(default=5)
+                    token = bpy.types.Scene.__dict__["cbdk_modular_center_precision"]
+                    try:
+                        try:
+                            module.register()
+                        except RuntimeError as exc:
+                            assert "conflict" in str(exc)
+                        else:
+                            raise AssertionError("Foreign precision property accepted")
+                        assert bpy.types.Scene.__dict__["cbdk_modular_center_precision"] is token
+                        assert not module._REGISTERED and not module._OWNED_PROPERTIES
+                    finally:
+                        del bpy.types.Scene.cbdk_modular_center_precision
+                    module.register()
+                    registered = True
+                    module.unregister()
+                    registered = False
+                    assert not hasattr(bpy.types.Scene, "cbdk_modular_center_precision")
+                markers.append(("native_r19_typed_" if typed else "native_r18_center_") +
+                               ("inline" if inline else "global") +
                                "_plan_draw_execute_cleanup")
             finally:
                 if bpy.context.mode == "EDIT_MESH":

@@ -31,12 +31,17 @@ def render_synthetic_manifest(fields: dict) -> bytes:
     JSON quoting with ensure_ascii=False is TOML basic-string compatible for
     the bounded printable subset. Parse and compare to detect any mismatch.
     """
+    return _render_fixture_manifest(fields, FIXTURE_ID)
+
+
+def _render_fixture_manifest(fields: dict, fixture_id: str) -> bytes:
+    """Shared internal renderer; callers supply a code-owned fixture ID."""
     if type(fields) is not dict or len(fields) > len(SUPPORTED):
         raise ValueError("Unsupported synthetic manifest structure")
     review = review_manifest_fields(fields)
     if review["status"] != "structurally_valid_subset":
         raise ValueError("Synthetic manifest incomplete or unsupported")
-    if fields["id"] != FIXTURE_ID or fields["type"] != "add-on":
+    if fields["id"] != fixture_id or fields["type"] != "add-on":
         raise ValueError("Only the reserved synthetic add-on fixture is supported")
 
     def quoted(value):

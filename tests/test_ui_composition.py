@@ -11,7 +11,7 @@ from types import SimpleNamespace
 from zipfile import ZipFile
 
 from cbdk.addon_builder import ROOT, build_addon
-from cbdk.ui_layout import plan_ui_layout, validate_ui_layout
+from cbdk.ui_layout import plan_input_registration, plan_ui_layout, validate_ui_layout
 
 
 SOURCES = (
@@ -156,7 +156,8 @@ class RecoveryTests(unittest.TestCase):
         self.first = type("CBDK_Test_One", (), {})
         self.second = type("CBDK_Test_Two", (), {})
         props = SimpleNamespace(StringProperty=lambda **kw: kw,
-                                FloatVectorProperty=lambda **kw: kw)
+                                FloatVectorProperty=lambda **kw: kw,
+                                IntProperty=lambda **kw: kw)
         bpy = SimpleNamespace(types=SimpleNamespace(Scene=Scene),
                               props=props, utils=self.utils)
         source = (ROOT / "templates/modular_preview/__init__.py").read_text()
@@ -169,12 +170,51 @@ class RecoveryTests(unittest.TestCase):
             "bpy": bpy, "_CLASSES": (self.first, self.second),
             "_REGISTERED": [], "_OWNED_PROPERTIES": [], "_OWNED_PROPERTY_TOKENS": {},
             "_PROPERTY_NAMES": ("cbdk_modular_result", "cbdk_modular_nudge_offset"),
-            "_UI_OPTIONS": {"nudge_offset": {
+            "_UI_OPTIONS": {"typed_inputs": (plan_input_registration("offset", (0., 0., .1)),),
+                            "nudge_offset": {
                 "size": 3, "default": (0., 0., .1), "min": -10., "max": 10.}},
         }
         compiled = compile(ast.fix_missing_locations(
             ast.Module(body=functions, type_ignores=[])), "<trusted-CBDK-template>", "exec")
         exec(compiled, self.namespace)
+
+    def configure_both_inputs(self):
+        self.namespace["_UI_OPTIONS"]["typed_inputs"] += (
+            plan_input_registration("precision", {"default": 2, "min": 1, "max": 4}),)
+        self.namespace["_PROPERTY_NAMES"] += ("cbdk_modular_center_precision",)
+
+    def test_integer_declaration_failure_rolls_back_prior_properties(self):
+        self.configure_both_inputs()
+        bpy = self.namespace["bpy"]
+        def refuse(**kwargs):
+            raise RuntimeError("controlled integer declaration failure")
+        bpy.props.IntProperty = refuse
+        with self.assertRaisesRegex(RuntimeError, "controlled integer declaration failure"):
+            self.namespace["register"]()
+        self.assertFalse(self.utils.active)
+        self.assertFalse(self.namespace["_REGISTERED"])
+        self.assertFalse(self.namespace["_OWNED_PROPERTIES"])
+        self.assertFalse(self.namespace["_OWNED_PROPERTY_TOKENS"])
+        for name in self.namespace["_PROPERTY_NAMES"]:
+            self.assertFalse(hasattr(bpy.types.Scene, name))
+        bpy.props.IntProperty = lambda **kw: kw
+        self.namespace["register"]()
+        self.assertEqual(bpy.types.Scene.cbdk_modular_center_precision["default"], 2)
+        self.namespace["unregister"]()
+        for name in self.namespace["_PROPERTY_NAMES"]:
+            self.assertFalse(hasattr(bpy.types.Scene, name))
+
+    def test_class_registration_failure_rolls_back_both_typed_inputs(self):
+        self.configure_both_inputs()
+        self.utils.fail_register = self.second
+        with self.assertRaisesRegex(RuntimeError, "controlled registration refusal"):
+            self.namespace["register"]()
+        self.assertFalse(self.utils.active)
+        self.assertFalse(self.namespace["_REGISTERED"])
+        self.assertFalse(self.namespace["_OWNED_PROPERTIES"])
+        self.assertFalse(self.namespace["_OWNED_PROPERTY_TOKENS"])
+        for name in self.namespace["_PROPERTY_NAMES"]:
+            self.assertFalse(hasattr(self.namespace["bpy"].types.Scene, name))
 
     def test_register_failure_cleans_own_classes_and_properties(self):
         self.utils.fail_register = self.second
