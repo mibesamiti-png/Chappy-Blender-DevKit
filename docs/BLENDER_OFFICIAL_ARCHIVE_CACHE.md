@@ -29,3 +29,13 @@ PR [#109](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/109) HEAD
 ## R17統合後の検証
 
 #136 `e4e2e3aa4fbda487b9619e0ba4bae2e69cbdf415` の run 45532395189 で全3版実ログのCACHE_HITとSHA256_PASS、nativeテスト成功を確認。旧run 45530757098の全3版MISS・SHA256_PASS・保存も確認。dev `236b9a3254928d7cb69d5c415fd8a3e792ee5de7` のrun 45533937378は全3版MISS・SHA256_PASS・保存・native成功、独立7CI成功。これはPR検証の証拠でありdev push初期化完了・別PR間HITを証明しない。速度改善未測定。
+
+
+## 2026-11-25 — 共有キャッシュの早期保存（候補）
+
+#137のrun 45534720498初回は4.4.3/5.2.1の別PR共有HIT・固定SHA・native成功、4.5.15はMISS→HTTP403。失敗ジョブ再実行138939879352はMISS→取得・SHA・native・保存成功。容量超過/正確なキャッシュ作成元/速度は未確認。
+
+- キーと保存対象は変更せず、restore/saveを分離。初回取得→固定SHA成功直後に明示保存し、後続native検証失敗・取消で正常アーカイブを失う可能性を減らす。展開直前も同じ固定SHAを照合。HIT時は保存しない。PR内のcold再試行用保存を残し、dev push/手動実行で親スコープを初期化する。キャッシュ保存成功はnative検証成功とは別。
+- 公式配布元の転送失敗時のみ、Blender公式ミラーホスト `mirror.blender.org` への一度の代替取得（各URLはcurl retry 2、HTTPSのみ）。転送成功後のSHA不一致はfail closed、代替取得やSHA変更をしない。公式ミラーホストの出典 https://mirror.blender.org/ 。該当3ファイルのミラー実取得は未確認。
+- GL #114のhead c7a9b33には旧checksum＋archive取得方式が残る。研究ブランチを勝手に変更せず、Aの候補受入後に担当へ最新dev取り込みを依頼。B/C/Dも次の許可済み作業開始時に最新devを使用。独立native3版、既存gate、権限、研究境界は維持。
+- キャッシュ一覧/削除/手動dispatchの接続APIは利用不能。容量増額・削除・定期実行・研究統合は実施しない。GitHub Actionsのキャッシュ画面でスコープ/サイズ/最終利用日を確認可能。別PR 3/3 HITと代替取得の実動作は今後の観測で区別する。
