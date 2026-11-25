@@ -1409,3 +1409,8 @@ C#140 be0f777、D#141 bbda166各5CI、A#142 79acfdc 5CI成功。C17+D4パス重�
 ## 2026-11-25 JST — R19完成直結の限定割当候補
 
 #143節目同期dev `2696a9b8e171a218b67865ba5caf47f1786164bf` 独立7CI全成功（Blender45549944774の3版成功）。[R19正式割当候補](R19_ABCD_START.md)：Cは既存6機能で型付き入力の共通化、Dは固定自作生成物の隔離Extension実行経路、Aは同一生成物の縦断統合検証。B待機。割当文書統合・独立7CI・Issue #125更新まで着手禁止。R20自動発行なし。次期active=false/正式版/状態数維持。
+
+
+## 2026-11-25 JST — R19限定受入、v0.18基盤の区切り候補
+
+C#145 18de007 / D#146 355daa2 各5CI、A#147 393ee4e 5CI（再試行0）。12+6パス重複0。C初回は旧合成fixture/文字列期待値に失敗しテスト修正、D Windows初回1失敗は同HEAD再実行成功（原因未確定）。dev `538e0b58a9d4c05fce49de617a7d84342e5290cd` 独立7CI成功：Python45557832731、Windows45557832812、Blender45557833046、Chromium45557832787、Handoff45557832733、Kit45557832758、Skill45557832820。3版各69 lifecycle、両R19 UI、R18合成ZIP/build、実ZIP validate/runtime、同一ZIP typed vertical（default2→1, range1..4, 独立表示期待値とcleanup）、HIT/SHA実測。実Extension local repoへの手動stage、公式installerなし。一般変換・正式権利・GUI・実GLB未達。#25同HEAD draft。R19限定受入、B/C/D停止、R20自動発行なし。44要件26実装/16一部/1未実装/1保留、24 NEXT 18完了/5継続/1保留を維持。[完成ゲート](V018_COMPLETION_GATES.md)で残条件と既存将来計画の対応を明示、次期active=false・正式v0.17.0維持、節目同期後に移行最終判断。
