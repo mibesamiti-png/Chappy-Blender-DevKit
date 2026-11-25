@@ -230,6 +230,9 @@ def main(argv=None) -> int:
     glb_surface_cmd.add_argument('--blender', required=True, help='Trusted local Blender executable path')
     glb_surface_cmd.add_argument('--output', default='reports/latest/glb_surface_review.json')
     glb_surface_cmd.add_argument('--timeout', type=int, default=180)
+    glb_surface_cmd.add_argument('--profile', choices=('legacy_512', 'expanded_2048'),
+                                 default='legacy_512',
+                                 help='Explicit opt-in expanded surface review (bounded 2048 triangles per GLB); default legacy_512')
 
     glb_diff_cmd = sub.add_parser(
         'glb-diff-visualize',
@@ -460,9 +463,12 @@ def main(argv=None) -> int:
             print(json.dumps(report, ensure_ascii=False, indent=2))
             return 0 if report['passed'] else 1
         if args.command == 'glb-surface-review':
+            options = {'timeout': args.timeout}
+            if args.profile == 'expanded_2048':
+                options['profile'] = args.profile
             report = run_glb_surface_review(
                 args.blender, args.reference, args.candidate, args.output,
-                timeout=args.timeout,
+                **options,
             )
             print(json.dumps({
                 'kind': report['kind'],
@@ -472,6 +478,8 @@ def main(argv=None) -> int:
                 'candidate_triangles': report['candidate_triangles'],
                 'output': str(Path(args.output)),
                 'complete_surface_equivalence_proven': False,
+                **({'profile': args.profile, 'reason': report.get('reason')}
+                   if args.profile == 'expanded_2048' else {}),
             }, ensure_ascii=False, indent=2))
             return 0 if report['status'] == 'review_only' else 2
         if args.command == 'glb-diff-visualize':

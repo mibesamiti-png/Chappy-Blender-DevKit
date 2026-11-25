@@ -555,6 +555,60 @@ jobs:
             --python-exit-code 7 --python scripts/blender_surface_inventory_smoke.py \
             -- reports/ci/surface_inventory
 
+      - name: R20 explicit CLI profile on actual synthetic GLBs
+        shell: bash
+        run: |
+          set -euo pipefail
+          root=reports/ci/surface_inventory
+          sha256sum "$root/r20_2048_base.glb" "$root/r20_2048_raised.glb" "$root/r20_dense_ref.glb" "$root/r20_dense_cand.glb" > "$root/r20_cli_inputs.sha256"
+          python -m cbdk glb-surface-review \
+            "$root/r20_2048_base.glb" "$root/r20_2048_raised.glb" \
+            --blender "$BLENDER_PATH" --output "$root/r20_cli_expanded.json" \
+            --profile expanded_2048 > "$root/r20_cli_expanded_stdout.json"
+          set +e
+          python -m cbdk glb-surface-review \
+            "$root/r20_2048_base.glb" "$root/r20_2048_raised.glb" \
+            --blender "$BLENDER_PATH" --output "$root/r20_cli_default.json" \
+            > "$root/r20_cli_default_stdout.json"
+          default_rc=$?
+          python -m cbdk glb-surface-review \
+            "$root/r20_dense_ref.glb" "$root/r20_dense_cand.glb" \
+            --blender "$BLENDER_PATH" --output "$root/r20_cli_dense.json" \
+            --profile expanded_2048 > "$root/r20_cli_dense_stdout.json"
+          dense_rc=$?
+          set -e
+          test "$default_rc" -eq 2
+          test "$dense_rc" -eq 2
+          sha256sum -c "$root/r20_cli_inputs.sha256"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('reports/ci/surface_inventory')
+          def read(name):
+              return json.loads((root / ('r20_cli_' + name + '.json')).read_text())
+          expanded, default, dense = read('expanded'), read('default'), read('dense')
+          assert expanded['schema_version'] == 2 and expanded['profile'] == 'expanded_2048'
+          assert expanded['status'] == 'review_only'
+          assert expanded['reference_triangles'] == expanded['candidate_triangles'] == 2048
+          assert abs(expanded['fixed_surface']['symmetric_mean'] - .25) < 1e-6
+          assert abs(expanded['adaptive_surface']['refined_symmetric_mean'] - .25) < 1e-6
+          assert expanded['work_budget']['used']['samples'] == 131872
+          assert expanded['bvh_build_count'] == 2
+          assert read('expanded_stdout')['profile'] == 'expanded_2048'
+          assert default['schema_version'] == 1 and default['status'] == 'skipped'
+          assert default['reason'] == 'triangle_limit' and default['surface_observation'] == 'not_measured'
+          assert 'profile' not in read('default_stdout')
+          assert dense['schema_version'] == 2 and dense['status'] == 'skipped'
+          assert dense['reason'] == 'work_budget' and dense['surface_observation'] == 'not_measured'
+          assert dense['work_budget']['used']['triangle_evaluations'] == 4000000
+          assert read('dense_stdout')['reason'] == 'work_budget'
+          for row in (default, dense):
+              assert 'fixed_surface' not in row and 'adaptive_surface' not in row
+          assert all(row['auto_apply'] is False and row['complete_surface_equivalence_proven'] is False
+                     for row in (expanded, default, dense))
+          print('CBDK_R20_CLI_PROFILE_PASS: explicit 2048 measured, default and dense skip exit 2, source SHA unchanged')
+          PY
+
       - name: GLB-020 review-only colored 3D difference exports and reimport
         shell: bash
         run: |

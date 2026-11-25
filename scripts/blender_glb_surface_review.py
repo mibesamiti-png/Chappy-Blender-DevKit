@@ -17,10 +17,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from cbdk.glb_surface_distance import (  # noqa: E402
-    MAX_TRIANGLES, compare_triangle_surfaces,
+    MAX_TRIANGLES, EXPANDED_MAX_TRIANGLES, compare_triangle_surfaces,
 )
 from cbdk.glb_multires_surface import (  # noqa: E402
-    compare_multires_triangle_surfaces,
+    compare_multires_triangle_surfaces, compare_expanded_triangle_surfaces,
 )
 
 from cbdk.glb_part_hints import count_based_part_hints  # noqa: E402
@@ -28,7 +28,7 @@ from cbdk.glb_part_hints import count_based_part_hints  # noqa: E402
 MARKER = "CBDK_GLB_SURFACE_REVIEW_PASS "
 
 
-def _read_world_triangles(source: Path):
+def _read_world_triangles(source: Path, *, limit=MAX_TRIANGLES):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=str(source))
     mesh_objects = sorted(
@@ -46,7 +46,7 @@ def _read_world_triangles(source: Path):
         count = len(mesh.loop_triangles)
         part_counts.append(count)
         face_total += count
-    if face_total > MAX_TRIANGLES:
+    if face_total > limit:
         return None, face_total, part_counts
 
     triangles = []
@@ -61,15 +61,16 @@ def _read_world_triangles(source: Path):
     return triangles, face_total, part_counts
 
 
-def _safe_report(ref_faces, cand_faces, *, ref_count, cand_count, ref_parts=None, cand_parts=None):
+def _safe_report(ref_faces, cand_faces, *, ref_count, cand_count, ref_parts=None, cand_parts=None,
+                 expanded=False):
     report = {
-        "schema_version": 1,
+        "schema_version": 2 if expanded else 1,
         "kind": "cbdk_glb_surface_review",
         "source": "local_blender_import_aggregate_only",
         "blender_version": bpy.app.version_string,
         "reference_triangles": ref_count,
         "candidate_triangles": cand_count,
-        "triangle_limit_per_scene": MAX_TRIANGLES,
+        "triangle_limit_per_scene": EXPANDED_MAX_TRIANGLES if expanded else MAX_TRIANGLES,
         "complete_surface_equivalence_proven": False,
         "auto_apply": False,
         "safety": {
@@ -86,6 +87,8 @@ def _safe_report(ref_faces, cand_faces, *, ref_count, cand_count, ref_parts=None
             "No automatic source changes or parameter approvals",
         ],
     }
+    if expanded:
+        report["profile"] = "expanded_2048"
     # Anonymous counts preserve a useful inventory without leaking mesh names.
     # Sorted counts are not a correspondence proof between GLB objects.
     if ref_parts is not None and cand_parts is not None:
@@ -111,6 +114,17 @@ def _safe_report(ref_faces, cand_faces, *, ref_count, cand_count, ref_parts=None
             "surface_observation": "not_measured",
         })
         return report
+    if expanded:
+        evidence = compare_expanded_triangle_surfaces(ref_faces, cand_faces)
+        if (evidence["reference_triangles"] != ref_count or
+                evidence["candidate_triangles"] != cand_count):
+            raise RuntimeError("Surface counts contradict imported geometry")
+        for key in ("status", "surface_observation", "bvh_build_count", "work_budget",
+                    "reason", "exhausted_counter", "stopped_stage", "fixed_surface",
+                    "adaptive_surface"):
+            if key in evidence:
+                report[key] = evidence[key]
+        return report
     fixed = compare_triangle_surfaces(ref_faces, cand_faces)
     adaptive = compare_multires_triangle_surfaces(ref_faces, cand_faces)
     observed = max(
@@ -133,15 +147,17 @@ def main():
     if "--" not in sys.argv:
         raise RuntimeError("Missing -- separator for trusted GLB surface arguments")
     args = sys.argv[sys.argv.index("--") + 1:]
-    if len(args) != 3:
-        raise RuntimeError("Provide reference.glb, candidate.glb, output.json")
-    ref, cand, output = (Path(value).resolve() for value in args)
+    if len(args) not in (3, 4) or (len(args) == 4 and args[3] != "expanded_2048"):
+        raise RuntimeError("Provide reference.glb, candidate.glb, output.json [expanded_2048]")
+    expanded = len(args) == 4
+    limit = EXPANDED_MAX_TRIANGLES if expanded else MAX_TRIANGLES
+    ref, cand, output = (Path(value).resolve() for value in args[:3])
     # No user source scripts are imported or executed in this runner.
-    reference, ref_count, ref_parts = _read_world_triangles(ref)
-    candidate, cand_count, cand_parts = _read_world_triangles(cand)
+    reference, ref_count, ref_parts = _read_world_triangles(ref, limit=limit)
+    candidate, cand_count, cand_parts = _read_world_triangles(cand, limit=limit)
     report = _safe_report(
         reference, candidate, ref_count=ref_count, cand_count=cand_count,
-        ref_parts=ref_parts, cand_parts=cand_parts,
+        ref_parts=ref_parts, cand_parts=cand_parts, expanded=expanded,
     )
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(

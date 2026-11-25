@@ -13,6 +13,8 @@ import subprocess
 
 from .glb_inspector import GLBInspectionError, inspect_glb
 from .glb_part_hints import count_based_part_hints
+from .glb_surface_distance import MAX_TRIANGLES, EXPANDED_MAX_TRIANGLES, _SurfaceWorkBudget
+from .glb_multires_surface import COARSE_SAMPLES, FINE_SAMPLES, MAX_SUSPECT_FACES, EXPLORATION_FACES
 
 MAX_INPUT_BYTES = 24 * 1024 * 1024
 MAX_VERTEX_REFERENCES = 100_000
@@ -68,12 +70,17 @@ def run_glb_surface_review(
     output: str | Path,
     *,
     timeout: int = 180,
+    profile: str = "legacy_512",
 ) -> dict:
     """Load two local GLBs in factory-startup Blender and save aggregate-only JSON.
 
     Returns status='review_only' for measured differences (including zero), or
     status='skipped' for triangle-count limits. Never interprets zero as proof.
     """
+    if profile not in ("legacy_512", "expanded_2048"):
+        raise GLBSurfacePipelineError("Unknown surface review profile")
+    expanded = profile == "expanded_2048"
+    limit = EXPANDED_MAX_TRIANGLES if expanded else MAX_TRIANGLES
     if isinstance(timeout, bool) or not isinstance(timeout, int) or not 10 <= timeout <= 900:
         raise GLBSurfacePipelineError("timeout must be between 10 and 900 seconds")
     executable = Path(blender).resolve()
@@ -97,12 +104,16 @@ def run_glb_surface_review(
         "--python-exit-code", "7", "--python", str(script),
         "--", str(ref), str(cand), str(target),
     ]
+    if expanded:
+        cmd.append(profile)
     try:
         result = subprocess.run(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
             encoding="utf-8", errors="replace", timeout=timeout, check=False,
         )
     except subprocess.TimeoutExpired as exc:
+        if expanded:
+            target.unlink(missing_ok=True)
         raise GLBSurfacePipelineError("Trusted Blender surface review timed out") from exc
     except OSError as exc:
         raise GLBSurfacePipelineError("Could not start Blender for GLB review") from exc
@@ -110,6 +121,8 @@ def run_glb_surface_review(
     payloads = [line.split(MARKER, 1)[1] for line in result.stdout.splitlines()
                 if line.startswith(MARKER)]
     if result.returncode != 0 or len(payloads) != 1:
+        if expanded:
+            target.unlink(missing_ok=True)
         raise GLBSurfacePipelineError("Blender surface review failed; no report was accepted")
     try:
         payload = _strict_json(payloads[0])
@@ -126,7 +139,7 @@ def run_glb_surface_review(
             raise ValueError("invalid report kind")
         if (report.get("status") != payload["status"]
                 or type(report.get("schema_version")) is not int
-                or report["schema_version"] != 1):
+                or report["schema_version"] != (2 if expanded else 1)):
             raise ValueError("invalid report status or version")
         if report.get("source") != "local_blender_import_aggregate_only":
             raise ValueError("unexpected report source")
@@ -145,7 +158,9 @@ def run_glb_surface_review(
             or not isinstance(report.get("adaptive_surface"), dict)
         ):
             raise ValueError("missing surface evidence")
-        if payload["status"] == "skipped" and report.get("reason") != "triangle_limit":
+        if payload["status"] == "skipped" and report.get("reason") not in (
+            ("triangle_limit", "work_budget") if expanded else ("triangle_limit",)
+        ):
             raise ValueError("unknown skip reason")
         # A Blender process is an external evidence producer, not an authority.
         # Reject malformed aggregate metrics instead of passing through NaN,
@@ -177,7 +192,7 @@ def run_glb_surface_review(
                         or total < 1 or not isinstance(counts, list)
                         or len(counts) != min(total, 32)
                         or any(isinstance(v, bool) or not isinstance(v, int)
-                               or v < 0 or (payload["status"] == "review_only" and v > 512)
+                               or v < 0 or (payload["status"] == "review_only" and v > limit)
                                for v in counts)
                         or counts != sorted(counts, reverse=True)):
                     raise ValueError("invalid anonymous part counts")
@@ -224,7 +239,7 @@ def run_glb_surface_review(
             ) > 1e-6
             if measured_difference != (observation == "sampled_difference_detected"):
                 raise ValueError("surface observation contradicts metrics")
-            if any(not 1 <= report[name] <= 512 for name in (
+            if any(not 1 <= report[name] <= limit for name in (
                 "reference_triangles", "candidate_triangles"
             )):
                 raise ValueError("measured triangle count is outside the safe range")
@@ -233,8 +248,151 @@ def run_glb_surface_review(
                 "fixed_surface" in report or "adaptive_surface" in report
             ):
                 raise ValueError("skipped evidence must not contain measurements")
-            if max(report["reference_triangles"], report["candidate_triangles"]) <= 512:
+            if (report.get("reason") == "triangle_limit" and
+                    max(report["reference_triangles"], report["candidate_triangles"]) <= limit):
                 raise ValueError("triangle-limit skip requires an over-limit scene")
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        if expanded:
+            _validate_expanded_report(report)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError,
+            OverflowError, RecursionError) as exc:
+        if expanded:
+            target.unlink(missing_ok=True)
         raise GLBSurfacePipelineError("Untrusted or corrupt Blender surface report") from exc
     return report
+
+
+def _validate_expanded_report(report):
+    """Check the explicitly selected schema-2 work evidence independently."""
+    def integer(value, lo, hi):
+        return type(value) is int and lo <= value <= hi
+
+    def metric(value):
+        return (type(value) in (int, float) and 0 <= value <= 4_000_000
+                and math.isfinite(value))
+
+    if (type(report.get("schema_version")) is not int or report["schema_version"] != 2
+            or report.get("profile") != "expanded_2048" or
+            type(report.get("triangle_limit_per_scene")) is not int or
+            report["triangle_limit_per_scene"] != EXPANDED_MAX_TRIANGLES):
+        raise ValueError("invalid expanded profile")
+    ref, cand = report["reference_triangles"], report["candidate_triangles"]
+    reason = report.get("reason")
+    if report["status"] == "skipped" and reason == "triangle_limit":
+        if any(k in report for k in ("work_budget", "bvh_build_count",
+                                     "exhausted_counter", "stopped_stage")):
+            raise ValueError("triangle limit cannot contain query evidence")
+        return
+    if not all(integer(n, 1, EXPANDED_MAX_TRIANGLES) for n in (ref, cand)):
+        raise ValueError("expanded input count outside bounds")
+    if type(report.get("bvh_build_count")) is not int or report["bvh_build_count"] != 2:
+        raise ValueError("invalid BVH build count")
+    def finite_tree(value):
+        if isinstance(value, dict):
+            return all(finite_tree(v) for v in value.values())
+        if isinstance(value, list):
+            return all(finite_tree(v) for v in value)
+        return not isinstance(value, float) or math.isfinite(value)
+
+    if not finite_tree(report):
+        raise ValueError("nonfinite expanded report")
+    budget = report.get("work_budget")
+    limits = _SurfaceWorkBudget.LIMITS
+    if (not isinstance(budget, dict) or set(budget) != {"limits", "used"}
+            or not isinstance(budget["limits"], dict)
+            or not isinstance(budget["used"], dict)
+            or set(budget["limits"]) != set(limits)
+            or set(budget["used"]) != set(limits)
+            or any(type(budget["limits"][k]) is not int or budget["limits"][k] != v
+                   or not integer(budget["used"][k], 0, v)
+                   for k, v in limits.items())):
+        raise ValueError("invalid work counters")
+    used = budget["used"]
+    fixed_samples = 24 * (ref + cand)
+    maximum_samples = fixed_samples + COARSE_SAMPLES * (ref + cand) + (
+        FINE_SAMPLES - COARSE_SAMPLES) * (
+        min(ref, MAX_SUSPECT_FACES + EXPLORATION_FACES) +
+        min(cand, MAX_SUSPECT_FACES + EXPLORATION_FACES))
+    if (used["samples"] > maximum_samples or
+            used["triangle_evaluations"] > used["samples"] * max(ref, cand) or
+            used["node_visits"] > used["samples"] * (2 * max(ref, cand) - 1)):
+        raise ValueError("work counters contradict geometry")
+    if report["status"] == "skipped":
+        key = report.get("exhausted_counter")
+        stage = report.get("stopped_stage")
+        if (reason != "work_budget" or type(key) is not str or key not in limits
+                or used[key] != limits[key] or stage not in ("fixed", "adaptive")
+                or (stage == "fixed" and used["samples"] > fixed_samples)
+                or (stage == "adaptive" and used["samples"] < fixed_samples)):
+            raise ValueError("invalid exhausted work evidence")
+        return
+    if any(k in report for k in ("reason", "exhausted_counter", "stopped_stage")):
+        raise ValueError("completed work cannot claim exhaustion")
+    samples = evaluations = 0
+    directions = (("reference_to_candidate", ref, cand),
+                  ("candidate_to_reference", cand, ref))
+    for name in ("fixed_surface", "adaptive_surface"):
+        group = report[name]
+        fixed = name == "fixed_surface"
+        if (type(group.get("schema_version")) is not int or group["schema_version"] != 2
+                or group.get("status") != "review_only"
+                or type(group.get("reference_triangles")) is not int
+                or type(group.get("candidate_triangles")) is not int
+                or group["reference_triangles"] != ref or group["candidate_triangles"] != cand):
+            raise ValueError("invalid nested expanded schema")
+        safety = group.get("safety")
+        required = (("executes_addon", "modifies_source", "auto_approves",
+                     "auto_applies_parameters", "uploads_private_geometry") if fixed else
+                    ("user_addon_executed", "private_glb_uploaded", "source_modified",
+                     "automatic_parameter_changes"))
+        if not isinstance(safety, dict) or set(safety) != set(required) or any(
+                safety[k] is not False for k in required):
+            raise ValueError("invalid nested safety")
+        flags = (("exact_surface_equivalence_verified", "watertight_solid_equivalence_verified",
+                  "enclosed_cavities_verified") if fixed else
+                 ("complete_surface_coverage", "exact_hausdorff_verified",
+                  "enclosed_cavities_verified", "auto_approve"))
+        if any(group.get(k) is not False for k in flags):
+            raise ValueError("invalid nested proof flags")
+        for direction, n, target in directions:
+            row = group.get(direction)
+            if not isinstance(row, dict):
+                raise ValueError("invalid direction")
+            if fixed:
+                count = row.get("sample_count")
+                if (not integer(count, 24*n, 24*n)
+                        or not integer(row.get("brute_force_evaluations"), count*target, count*target)):
+                    raise ValueError("invalid fixed samples")
+                pairs = (("mean", "sampled_max"),)
+            else:
+                refined = row.get("refined_face_count")
+                coarse = row.get("coarse_sample_count")
+                extra = row.get("additional_sample_count")
+                count = row.get("total_sample_count")
+                if (not integer(refined, 0, min(n, MAX_SUSPECT_FACES+EXPLORATION_FACES))
+                        or not integer(coarse, COARSE_SAMPLES*n, COARSE_SAMPLES*n)
+                        or not integer(extra, refined*(FINE_SAMPLES-COARSE_SAMPLES),
+                                       refined*(FINE_SAMPLES-COARSE_SAMPLES))
+                        or not integer(count, coarse+extra, coarse+extra)):
+                    raise ValueError("invalid adaptive samples")
+                pairs = (("coarse_mean", "coarse_sampled_max"),
+                         ("refined_mean", "refined_sampled_max"))
+            for mean, worst in pairs:
+                if (not metric(row.get(mean)) or not metric(row.get(worst))
+                        or row[mean] > row[worst]):
+                    raise ValueError("invalid directional distance")
+            performed = row.get("triangle_distance_evaluations")
+            if not integer(performed, count, count*target):
+                raise ValueError("invalid precise evaluation count")
+            samples += count
+            evaluations += performed
+        for mean, worst in pairs:
+            rows = [group[direction] for direction, _, _ in directions]
+            prefix = "" if fixed else mean.split("_")[0] + "_"
+            sm, sx = prefix+"symmetric_mean", prefix+"symmetric_sampled_max"
+            if (not metric(group.get(sm)) or not metric(group.get(sx))
+                    or group[sm] != round((rows[0][mean]+rows[1][mean])*0.5, 7)
+                    or group[sx] != max(row[worst] for row in rows)):
+                raise ValueError("invalid symmetric distances")
+    if (used["samples"] != samples or used["triangle_evaluations"] != evaluations
+            or used["node_visits"] < samples):
+        raise ValueError("work counters contradict measurements")
