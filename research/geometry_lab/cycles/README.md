@@ -47,3 +47,5 @@ R17: r17/RESEARCH.md、RESULTS.md、STATUS.json。R16境界・シーム固定、
 R18: r18/RESEARCH.md、RESULTS.md、STATUS.json。Blender4.4.3実機で既知12形状×2方式=24/24。全体UV重なり0、境界差0、シームフラグ一致、元面保持、CGAL0。レンダリング・実モデル未検証。R19自動開始なし。
 
 R19: r19/RESEARCH.md、RESULTS.md、STATUS.json。境界法線改善は1/12のみ、11件baseline、安全条件12/12、改善ゲート未達。固定UVの異方性悪化が主な拒否理由。不採用、R20自動開始なし。
+
+R20: r20/RESEARCH.md、RESULTS.md、STATUS.json。R19とR17連携、既知12形状で安全12/12・改善9/12、UV救済68/133（予備審査）、限定ゲート達成。未承認、R21自動開始なし。
