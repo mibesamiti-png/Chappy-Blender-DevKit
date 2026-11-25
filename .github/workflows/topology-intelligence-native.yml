@@ -1645,3 +1645,85 @@ jobs:
           path: ti44-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase44 run 45629134537: 20/20 controls, 31 both clear, 9 both flagged.
+      # Phase45: fixed 5-degree discrete sweep, compare prior sampled anchor poses.
+      # No continuous collision claim, and incident triangles remain excluded.
+      - name: Phase45 sample bend and twist contact transitions
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti45.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti44.py').read_text().split('\nA=np.array([[0.,0.,0.]',1)[0])
+          # Frozen nonincident contact detector, unchanged tolerance.
+          # Discrete sweep only: no continuous collision guarantee between samples.
+          ANGLES=list(range(0,121,5))
+          def classify(a,b):
+              x=bool(a['contact_pairs'] or a['degenerate'])
+              y=bool(b['contact_pairs'] or b['degenerate'])
+              return ('both_flagged' if y else 'source_only') if x else ('result_only' if y else 'both_clear')
+          def compact(a):
+              return dict(face_pairs=len(a['face_pairs']),triangle_pairs=len(a['contact_pairs']),degenerate=len(a['degenerate']),tested=a['tested'],excluded=a['excluded_incident'])
+          def runs(rows,field):
+              out=[];start=None;last=None
+              for row in rows:
+                  hit=row[field]['triangle_pairs']>0 or row[field]['degenerate']>0
+                  if hit and start is None:start=row['angle']
+                  if not hit and start is not None:out.append([start,last]);start=None
+                  last=row['angle']
+              if start is not None:out.append([start,last])
+              return out
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          prior=json.loads(Path('ti44-results/results.json').read_text())
+          req(prior['gate'],'Phase44 gate not met')
+          lookup={(r['case'],r['pose']):r['classification'] for r in prior['rows']}
+          rows=[];summaries=[];failures=[];evidence=[]
+          for spec in specs:
+              o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  rig=rig_for(data,spec[0]);attach(o,rig);attach(new,rig)
+                  for kind in ('bend','twist'):
+                      group=[]
+                      for deg in ANGLES:
+                          a,b=((0,0,deg),(0,0,-deg)) if kind=='bend' else ((0,deg,0),(0,-deg,0))
+                          set_pose(rig,data,('sweep',a,b,False))
+                          s=evaluated_contacts(o,data);t=evaluated_contacts(new,data)
+                          state=classify(s,t)
+                          anchor='rest' if deg==0 else 'stress_bend'+str(deg) if kind=='bend' and deg in (45,90,120) else 'stress_twist90' if kind=='twist' and deg==90 else None
+                          anchor_same=state==lookup[(spec[0],anchor)] if anchor else None
+                          row=dict(case=spec[0],motion=kind,angle=deg,classification=state,source=compact(s),result=compact(t),anchor=anchor,anchor_same=anchor_same,source_unchanged=all_snapshot(o)==before)
+                          group.append(row);rows.append(row)
+                          if state!='both_clear':
+                              evidence.append(dict(case=spec[0],motion=kind,angle=deg,source=s,result=t))
+                      summaries.append(dict(case=spec[0],motion=kind,source_runs=runs(group,'source'),result_runs=runs(group,'result'),result_only=[r['angle'] for r in group if r['classification']=='result_only'],source_only=[r['angle'] for r in group if r['classification']=='source_only'],both_flagged=[r['angle'] for r in group if r['classification']=='both_flagged']))
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=spec[0],reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti45-results');d.mkdir(exist_ok=True)
+          complete=len(rows)==200 and len(summaries)==8 and not failures and all(r['source_unchanged'] for r in rows)
+          anchors=[r for r in rows if r['anchor'] is not None]
+          anchor_gate=len(anchors)==24 and all(r['anchor_same'] for r in anchors)
+          risk=[r for r in rows if r['classification']=='result_only']
+          # Integrity is separate from the research improvement gate; preserve all risk cases.
+          gate=complete and anchor_gate and not risk
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,complete=complete,anchor_gate=anchor_gate,rows=rows,summaries=summaries,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'contact_evidence.json').write_text(json.dumps(evidence,indent=2))
+          print('TI45_SUMMARY',json.dumps(dict(gate=gate,complete=complete,anchor_gate=anchor_gate,anchors=len(anchors),counts=dict(Counter(r['classification'] for r in rows)),summaries=summaries,failures=failures)),flush=True)
+          assert complete and anchor_gate,'sweep execution or prior anchor regression'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti45.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti45-contact-sweep-${{ github.sha }}
+          path: ti45-results/
+          if-no-files-found: warn
+          retention-days: 14
