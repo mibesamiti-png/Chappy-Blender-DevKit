@@ -349,3 +349,8 @@ A統合PR [#117](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/11
 ## 2026-11-25 JST — R16受入、R17完成優先（開始ゲート前は設計限定）
 
 A統合[#130](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/130)の10パスを一度だけdev `b9936b35a17ec538c61e82622eabaf8bfcf3bc35` へ統合。専門3PR各5CI、結合5CI、独立7CI全成功、再試行0。証拠は[PROGRESS](PROGRESS.md)。旧専門PRの重複採用禁止。R17は[正式割当](R17_ABCD_START.md)へ。B: GLB改善レビューの実用的な次アクション、C: 既存機能の安全なレシピ別宣言UI、D: optional manifest構造/公式診断。新規研究や反復安全負例を増やさず、受入成立または権限/実環境ブロッカーの特定で停止。A: 完成条件と人間確認項目を区別して統合。**節目同期PRのdev統合、新dev独立7CI成功、Issue #125 R17更新までは実装禁止。**
+
+
+## 2026-11-25 JST — R17限定受入、追加ラウンド自動発行停止
+
+#135/#136統合dev `236b9a3254928d7cb69d5c415fd8a3e792ee5de7` 独立7CI成功。B/C/DのR17限定成果を受入、旧専門PRの二重統合禁止。次の正式割当はなし。Aが[V018_COMPLETION_GATES](V018_COMPLETION_GATES.md)の既存残条件を確認し、実環境/権利待ちを自動化と区別する。B/C/Dは新規実装/PRを開始せず、Aの正式割当を優先。次期active=false、main/研究変更なし。
