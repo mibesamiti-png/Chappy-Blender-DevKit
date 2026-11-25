@@ -18,6 +18,10 @@
         {
           "feature_id": "modifier_summary",
           "label": "Modifier Stack"
+        },
+        {
+          "feature_id": "mesh_center",
+          "label": "Bounds Center"
         }
       ]
     },

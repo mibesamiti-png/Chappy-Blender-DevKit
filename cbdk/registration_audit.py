@@ -14,7 +14,8 @@ import tempfile
 from pathlib import Path
 
 
-def validate_registration_assets(assets: dict[str, bytes], features: tuple[str, ...]) -> dict:
+def validate_registration_assets(assets: dict[str, bytes], features: tuple[str, ...], *,
+                                 descriptors=None) -> dict:
     trees = {}
     for path, data in assets.items():
         if path.endswith(".py"):
@@ -61,6 +62,8 @@ def validate_registration_assets(assets: dict[str, bytes], features: tuple[str, 
                         raise ValueError("Unresolved static helper export: " + path + " -> " + target)
                 imports += 1
 
+    if descriptors is not None and set(descriptors) != set(features):
+        raise ValueError("Registration descriptor coverage mismatch")
     identifiers = set()
     classes = set()
     for feature in features:
@@ -84,6 +87,8 @@ def validate_registration_assets(assets: dict[str, bytes], features: tuple[str, 
                 or not isinstance(ids[0].value, str)
                 or not ids[0].value.startswith("cbdk.")):
             raise ValueError("Operator needs an explicit CBDK bl_idname: " + feature)
+        if descriptors is not None and ids[0].value != descriptors[feature]["operator"]:
+            raise ValueError("Authored operator ID disagrees with descriptor: " + feature)
         if ids[0].value in identifiers or cls.name in classes:
             raise ValueError("Duplicate operator registration: " + feature)
         identifiers.add(ids[0].value)
@@ -95,7 +100,7 @@ def validate_registration_assets(assets: dict[str, bytes], features: tuple[str, 
 def audit_registration(*, root: Path) -> dict:
     """Cross-check the independent runtime/CI inventory and six real builds."""
     from .addon_builder import _trusted_read
-    from .feature_catalog import TRUSTED_FEATURES
+    from .feature_catalog import LEGACY_FEATURE_IDS
     from .recipe_matrix import EXPECTED_RECIPES, audit_recipe_matrix
     from .modular_builder import build_modular
 
@@ -110,7 +115,7 @@ def audit_registration(*, root: Path) -> dict:
         inventory = ast.literal_eval(known[0])
     except (ValueError, TypeError) as exc:
         raise ValueError("Runtime feature inventory must be literal") from exc
-    if not isinstance(inventory, set) or inventory != set(TRUSTED_FEATURES):
+    if not isinstance(inventory, set) or inventory != set(LEGACY_FEATURE_IDS):
         raise ValueError("Runtime feature inventory disagrees with trusted catalog")
     workflow = _trusted_read(".github/workflows/blender-smoke.yml", root=root).decode("utf-8")
     loops = re.findall(r"^\s*for recipe in ([a-z0-9_ ]+); do\s*$", workflow, re.MULTILINE)
