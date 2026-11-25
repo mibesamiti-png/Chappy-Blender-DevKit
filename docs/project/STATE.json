@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.19 R22 F019-03測定限定受入: #160 dev a816d5ec0f08456c469af134b4b7dc1b69987258 独立7CI成功（Blender attempt2）。3版16合成ケース固定8/10・適応9/10、誤警告0/5、情報欠落1。限定3目標受入、一般精度・実データ・viewer・物理診断は未完。B/C/D待機、正式v0.17.0/main/last_verified不変。"
+    "milestone": "v0.19限定3/3・#161 dev 1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791 独立7CI確認、v0.20移行/R23割当候補。実GLB/物理診断・実GUI/権利未確認。専門実装は正式ゲート後、正式v0.17.0/main/last_verified不変。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -1084,6 +1084,11 @@
       "id": "DEC-085",
       "decision": "F019-03をR22で測定限定受入し、v0.19限定3目標の区切りを記録する",
       "note": "#159 B dfe61bee 5CI、#160 A d11839ec 5CI、dev a816d5ec0f08456c469af134b4b7dc1b69987258 独立7CI（Python45636769946、Windows45636769714、Blender45636769495 attempt2、Chromium45636769899、Handoff45636769741、Kit45636769989、Skill45636769864）。3版16ケース固定8/10・適応9/10、誤警告0/5、情報欠落1。小穴見逃し、境界ヒントは物理証明でない。旧profile・入力SHA維持。初回4.4.3 artifact確定失敗は同一HEAD失敗job再試行成功。測定のみ、製品変更・GL採用なし。限定3目標受入、実データ/一般精度/物理診断/native memory/viewer未確認。#125 rev13 paused、R23/v0.20自動開始なし、正式版/44要件/24 NEXT/last_verified維持。"
+    },
+    {
+      "id": "DEC-086",
+      "decision": "v0.19限定目標を区切り、既承認v0.20生成エンジンの最初の限定割当を候補化する",
+      "note": "dev 1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791 独立7CI（Python45644535642、Windows45644535499、Blender45644535704、Chromium45644535823、Handoff45644535761、Kit45644535523、Skill45644535575）。実3版R22/R21 marker、#25同HEAD draft。既存Notion節目追記成功。F019限定3/3を区切るが実データ/一般精度/物理診断/native memory/viewer未完。既承認F020へ進む候補、R23はCの明示複数panelとDの既存レシピからの非配布Extension準備に限定。F020-02は統合後別判断。割当文書統合・独立7CI・#125更新前は実装禁止。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。"
     }
   ],
   "last_verified": {
