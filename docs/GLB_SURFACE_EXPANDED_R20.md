@@ -31,3 +31,14 @@ the public CLI hook; no shared CLI or CI change in this PR.
   are separate; a sampled zero is never exact geometry identity.
 - No GL research adoption, private inputs, part matcher/viewer expansion,
   automatic source changes, or formal release. All existing gates remain.
+
+
+## A integration candidate — explicit CLI
+
+B exact HEAD `0ab8defe358c6928f6df00da03836a9638c82eb7` verified 5CI: Python45564719612, Windows45564719807, Chromium45564719637, Handoff45564719797, Blender45564719666 (jobs139036639223/139036639521/139036639695 actual R20 markers). At 2048 each scene, warmup+3 median parent roundtrip 3.965/4.152/6.659s respectively, 131872 samples/2241824 node visits/1054976 triangle evaluations each. Dense adversarial input stops at 4000000 evaluations, no measurements. These are scoped synthetic measurements, not universal capacity or measured speedup from sharing. The default remains 512/schema 1. A adds only explicit CLI selection plus native and mocked CLI checks:
+
+```powershell
+python -m cbdk glb-surface-review reference.glb candidate.glb --blender "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" --profile expanded_2048 --output reports/latest/glb_surface_review.json
+```
+
+Only this standalone command is expanded; glb-regression and GLB-020 viewer/matcher remain unchanged. Exit 0 means review-only measurement; exit 2 for skip or error, not equivalence. No data upload, auto-apply or research code adoption. Native CLI fixtures reuse B's generated 2048/dense files, verify opt-in/default/skip exit codes, analytic value and source SHA. A candidate CI pending. Not an accepted or released feature.

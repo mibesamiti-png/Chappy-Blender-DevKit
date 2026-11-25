@@ -1,5 +1,8 @@
 """R20 expanded-profile core checks; native GLB integration is separate."""
 import copy
+import io
+import json
+from contextlib import redirect_stdout, redirect_stderr
 import unittest
 from unittest.mock import patch
 
@@ -89,6 +92,34 @@ class ExpandedSurfaceTests(unittest.TestCase):
                 self.assertNotIn("fixed_surface", new)
                 self.assertNotIn("adaptive_surface", new)
                 self.assertEqual(new["work_budget"]["used"][key], 1)
+
+
+class ExpandedSurfaceCLITests(unittest.TestCase):
+    def test_explicit_profile_and_legacy_default_forwarding(self):
+        from cbdk.__main__ import main
+        args = ["glb-surface-review", "ref.glb", "cand.glb", "--blender", "blender",
+                "--output", "out.json", "--timeout", "42"]
+        evidence = {"kind": "cbdk_glb_surface_review", "status": "review_only",
+                    "reference_triangles": 2048, "candidate_triangles": 2048,
+                    "surface_observation": "sampled_difference_detected"}
+        with patch("cbdk.__main__.run_glb_surface_review", return_value=evidence) as run:
+            with redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(main(args + ["--profile", "expanded_2048"]), 0)
+            run.assert_called_once_with("blender", "ref.glb", "cand.glb", "out.json",
+                                        timeout=42, profile="expanded_2048")
+            self.assertEqual(json.loads(stdout.getvalue())["profile"], "expanded_2048")
+            run.reset_mock()
+            evidence.update(status="skipped", reason="triangle_limit",
+                            surface_observation="not_measured")
+            with redirect_stdout(io.StringIO()) as stdout:
+                self.assertEqual(main(args), 2)
+            run.assert_called_once_with("blender", "ref.glb", "cand.glb", "out.json", timeout=42)
+            self.assertNotIn("profile", json.loads(stdout.getvalue()))
+            run.reset_mock()
+            with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as exc:
+                main(args + ["--profile", "unbounded"])
+            self.assertEqual(exc.exception.code, 2)
+            run.assert_not_called()
 
 
 if __name__ == "__main__":
