@@ -274,3 +274,116 @@ jobs:
           path: ti33-results/
           if-no-files-found: warn
           retention-days: 14
+      - name: Phase35 native extrusion collar and Grid Fill
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti35.py" <<'PY'
+          from pathlib import Path
+          import os,bmesh
+          # Reuse the exact Phase32/33 fixtures, evaluator and pinned-boundary modifier routine.
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti32.py').read_text().split('\nassert bpy.app.background',1)[0])
+          exec('MODES='+ (root/'ti33.py').read_text().split('MODES=',1)[1].split('\nrows=[];',1)[0])
+          previous=json.loads(Path('ti32-results/results.json').read_text())
+          prev33=json.loads(Path('ti33-results/results.json').read_text())
+          assert previous['valid']==144 and prev33['valid']==240
+          SQUARE=np.array([[-1+2*i/4,-1] for i in range(4)]+[[1,-1+2*i/4] for i in range(4)]+[[1-2*i/4,1] for i in range(4)]+[[-1,1-2*i/4] for i in range(4)])
+          def collar(c,width,blend,offset):
+              outer=target(B,c)
+              inner=target(width*((1-blend)*np.sqrt(2)*B+blend*SQUARE),c)
+              m=bpy.data.meshes.new('TI35_boundary');o=bpy.data.objects.new('TI35_boundary',m)
+              bpy.context.collection.objects.link(o)
+              bm=bmesh.new()
+              try:
+                  old=[bm.verts.new(tuple(v)) for v in outer]
+                  edges=[bm.edges.new((old[i],old[(i+1)%16])) for i in range(16)]
+                  lookup={v:i for i,v in enumerate(old)}
+                  res=bmesh.ops.extrude_edge_only(bm,edges=edges,use_normal_flip=False)
+                  new=[v for v in res['geom'] if isinstance(v,bmesh.types.BMVert) and v not in lookup]
+                  req(len(new)==16,'extrusion vertex count')
+                  used=[]
+                  for v in new:
+                      ids=[lookup[e.other_vert(v)] for e in v.link_edges if e.other_vert(v) in lookup]
+                      req(len(ids)==1,'extrusion correspondence')
+                      v.co=tuple(inner[ids[0]]);used.append(ids[0])
+                  req(len(set(used))==16 and len(bm.faces)==16,'extrusion collar topology')
+                  bm.verts.index_update();inner_ids={v.index for v in new}
+                  bm.to_mesh(m);m.update()
+                  bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+                  for face in m.polygons:face.select=False
+                  for v in m.vertices:v.select=v.index in inner_ids
+                  for e in m.edges:e.select=all(i in inner_ids for i in e.vertices)
+                  bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+                  bpy.ops.object.mode_set(mode='EDIT')
+                  status=bpy.ops.mesh.fill_grid(span=4,offset=offset,use_interp_simple=False)
+                  bpy.ops.object.mode_set(mode='OBJECT')
+                  req('FINISHED' in status,'grid fill status '+str(status))
+                  V=[tuple(v.co) for v in m.vertices];F=[list(f.vertices) for f in m.polygons]
+                  req(len(V)==41 and len(F)==32,'unexpected collar budget')
+                  return V,F
+              finally:
+                  bm.free()
+                  if o.mode!='OBJECT':bpy.ops.object.mode_set(mode='OBJECT')
+                  remove(o)
+          rows=[];raw=[];selected=[]
+          for k,c in enumerate(CASES):
+              g=guide(c)
+              try:
+                  for width in (.38,.48,.58):
+                      for blend in (.5,1.):
+                          for offset in range(4):
+                              try:
+                                  v,f=collar(c,width,blend,offset)
+                                  generation_error=None
+                              except Exception as exc:generation_error=str(exc)
+                              for smooth in (0,3):
+                                  row=dict(case=k,width=width,blend=blend,offset=offset,smooth=smooth)
+                                  try:
+                                      req(generation_error is None,'generation: '+str(generation_error))
+                                      V,F,extra=patch(v,f,g,smooth,1,c)
+                                      a=assess(V,F,c)
+                                      row.update(**a,**extra,status='valid')
+                                      row['shape_pass']=a['p95_worst']<=1.10*previous['matched_comparison'][k]['reference']['p95_worst']
+                                      row['joint_pass']=row['shape_pass'] and a['gate_angle15']
+                                      raw.append(dict(case=k,width=width,blend=blend,offset=offset,smooth=smooth,vertices=V,faces=F))
+                                  except Exception as exc:row.update(status='rejected',reason=str(exc))
+                                  rows.append(row)
+              finally:remove(g)
+              v=[r for r in rows if r['case']==k and r['status']=='valid']
+              passed=[r for r in v if r['joint_pass']]
+              keys=('case','width','blend','offset','smooth')
+              best=min(passed,key=lambda r:(r['p95_worst'],-r['min_angle'])) if passed else None
+              if best:
+                  m=next(x for x in raw if all(x[q]==best[q] for q in keys))
+                  selected.append(m)
+          summary=[]
+          for k in range(len(CASES)):
+              valid=[r for r in rows if r['case']==k and r['status']=='valid']
+              passed=[r for r in valid if r['joint_pass']]
+              summary.append(dict(case=k,valid=len(valid),shape_pass=sum(r['shape_pass'] for r in valid),joint_pass=len(passed),baseline_best_angle=max(r['min_angle'] for r in prev33['rows'] if r['case']==k and r['status']=='valid'),baseline_best_p95=min(r['p95_worst'] for r in prev33['rows'] if r['case']==k and r['status']=='valid'),best_angle=max(valid,key=lambda r:r['min_angle']) if valid else None,best_joint=min(passed,key=lambda r:r['p95_worst']) if passed else None))
+          d=Path('ti35-results');d.mkdir(exist_ok=True)
+          out=dict(blender=bpy.app.version_string,approved=False,rows=rows,summary=summary)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          (d/'raw.json').write_text(json.dumps(raw))
+          # Save editable selected results only; no private or user-provided assets.
+          if selected:
+              bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+              for m in selected:
+                  o=make_obj('Case_%d_native_collar'%m['case'],m['vertices'],m['faces'])
+                  o.location.x=m['case']*.6
+                  o.show_wire=True;o.show_all_edges=True
+              bpy.ops.wm.save_as_mainfile(filepath=str((d/'selected.blend').resolve()))
+          print('TI35_SUMMARY',json.dumps(dict(calls=len(rows),valid=sum(r['status']=='valid' for r in rows),joint_pass=sum(r.get('joint_pass',False) for r in rows),summary=summary,rejections=dict(Counter(r.get('reason','') for r in rows if r['status']=='rejected')))),flush=True)
+          assert len(rows)==144 and all(s['valid']>0 for s in summary),'incomplete collar comparison'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti35.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti35-native-collar-${{ github.sha }}
+          path: ti35-results/
+          if-no-files-found: warn
+          retention-days: 14
