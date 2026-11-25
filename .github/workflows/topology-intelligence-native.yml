@@ -1,0 +1,167 @@
+name: Topology Intelligence native Grid Fill
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/topology-intelligence-native.yml'
+permissions:
+  contents: read
+concurrency:
+  group: ti-native-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  phase32-native-grid-fill:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Verify pinned Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Native 144-call benchmark on synthetic boundaries
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti32.py" <<'PY'
+          import bpy, numpy as np, json, time
+          from pathlib import Path
+          from collections import Counter, defaultdict
+          CASES=[(.19,.15,.12,.02),(.23,.12,.16,.045),(.15,.19,.09,-.035)]
+          ANGLES=np.arange(16)*np.pi/8-3*np.pi/4
+          B=np.column_stack((np.cos(ANGLES),np.sin(ANGLES)))
+          X,Y=np.meshgrid(np.linspace(-.99,.99,201),np.linspace(-.99,.99,201))
+          S=np.column_stack((X.ravel(),Y.ravel()))
+          S=S[np.all(S@np.column_stack((np.cos(ANGLES+np.pi/16),np.sin(ANGLES+np.pi/16))).T<np.cos(np.pi/16)-1e-8,axis=1)]
+          def target(p,c):
+              x,y=p.T;w,h,b,t=c
+              return np.column_stack((w*x,h*y,b*(1-.60*x*x-.85*y*y)+t*x*y+.04*x))
+          def coons(shift,c):
+              border=[(i,0) for i in range(4)]+[(4,j) for j in range(4)]+[(i,4) for i in range(4,0,-1)]+[(0,j) for j in range(4,0,-1)]
+              G=np.zeros((5,5,2));ids=np.zeros((5,5),int);P=list(B)
+              for k,(i,j) in enumerate(border): G[i,j]=B[(k+shift)%16];ids[i,j]=(k+shift)%16
+              for i in range(1,4):
+                  for j in range(1,4):
+                      u,v=i/4,j/4
+                      g=(1-v)*G[i,0]+v*G[i,4]+(1-u)*G[0,j]+u*G[4,j]-((1-u)*(1-v)*G[0,0]+u*(1-v)*G[4,0]+u*v*G[4,4]+(1-u)*v*G[0,4])
+                      G[i,j]=g;ids[i,j]=len(P);P.append(g)
+              return target(np.array(P),c),[[int(ids[i,j]),int(ids[i+1,j]),int(ids[i+1,j+1]),int(ids[i,j+1])] for i in range(4) for j in range(4)]
+          def req(ok,msg):
+              if not ok: raise ValueError(msg)
+          def assess(V,F,c):
+              V=np.asarray(V,float);F=[list(map(int,f)) for f in F]
+              req(V.ndim==2 and V.shape[1]==3 and np.isfinite(V).all(),'coordinates')
+              req(len(F)>0 and all(len(f)==4 and len(set(f))==4 and min(f)>=0 and max(f)<len(V) for f in F),'invalid quad')
+              req(len({tuple(sorted(f)) for f in F})==len(F),'duplicate face')
+              E=Counter(tuple(sorted((a,b))) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              req(max(E.values())<=2 and len({i for f in F for i in f})==len(V) and len(V)-len(E)+len(F)==1,'edge incidence/Euler')
+              boundary=[e for e,n in E.items() if n==1];bids=sorted({i for e in boundary for i in e})
+              req(len(bids)==16 and len(boundary)==16,'boundary count')
+              d=np.linalg.norm(V[bids,None,:]-target(B,c)[None,:,:],axis=2);match=d.argmin(axis=1)
+              req(len(set(match))==16 and d.min(axis=1).max()<1e-6,'boundary moved')
+              mapping=dict(zip(bids,match));req({tuple(sorted((mapping[a],mapping[b]))) for a,b in boundary}=={tuple(sorted((i,(i+1)%16))) for i in range(16)},'boundary cycle')
+              adj=defaultdict(set);links=defaultdict(list)
+              for f in F:
+                  for i,v in enumerate(f):
+                      a,b=f[i-1],f[(i+1)%4];links[v].append((a,b));adj[v].update((a,b))
+              def reach(graph,start):
+                  seen={start};todo=[start]
+                  while todo:
+                      for j in graph[todo.pop()]:
+                          if j not in seen:seen.add(j);todo.append(j)
+                  return seen
+              req(len(reach(adj,0))==len(V),'disconnected mesh')
+              for v,ls in links.items():
+                  graph=defaultdict(set)
+                  for a,b in ls:graph[a].add(b);graph[b].add(a)
+                  deg=[len(x) for x in graph.values()]
+                  req(len(reach(graph,next(iter(graph))))==len(graph) and all(x in (1,2) for x in deg) and deg.count(1)==(2 if v in bids else 0),'nonmanifold vertex')
+              P=V[:,:2]/np.array(c[:2]);F2=[]
+              for f in F:
+                  q=P[f];area=np.sum(q[:,0]*np.roll(q[:,1],-1)-q[:,1]*np.roll(q[:,0],-1))
+                  req(abs(area)>1e-10,'zero projected area')
+                  F2.append(f if area>0 else f[::-1])
+              directed=Counter((a,b) for f in F2 for a,b in zip(f,f[1:]+f[:1]))
+              req(all(n==1 for n in directed.values()),'orientation')
+              tris=[[],[]]
+              for f in F2:
+                  i=min(range(4),key=lambda k:tuple(P[f[k]]));a,b,c0,d0=f[i:]+f[:i]
+                  tris[0].extend(((a,b,c0),(a,c0,d0)));tris[1].extend(((a,b,d0),(b,c0,d0)))
+              errors=[];angles=[]
+              for ts in tris:
+                  T=np.array(ts);Q=V[T];U=np.roll(Q,-1,axis=1)-Q;L=np.linalg.norm(U,axis=2)
+                  req(np.min(L)>1e-12,'zero edge')
+                  A=np.degrees(np.arccos(np.clip(-np.sum(U*np.roll(U,1,axis=1),axis=2)/(L*np.roll(L,1,axis=1)),-1,1)));angles.append(float(A.min()))
+                  Z=np.zeros(len(S));hits=np.zeros(len(S),int);strict=np.zeros(len(S),int);q=P[T]
+                  det=(q[:,1,0]-q[:,0,0])*(q[:,2,1]-q[:,0,1])-(q[:,1,1]-q[:,0,1])*(q[:,2,0]-q[:,0,0])
+                  req(np.min(det)>1e-10,'folded projection')
+                  req(abs(det.sum()/2-8*np.sin(np.pi/8))<1e-5,'projected area mismatch')
+                  for ti,(a,b,d0) in enumerate(q):
+                      M=np.column_stack((b-a,d0-a));W=(S-a)@np.linalg.inv(M).T;W=np.column_stack((1-W.sum(axis=1),W));mask=(W>=-1e-9).all(axis=1);strict+=((W>1e-9).all(axis=1));Z[mask]+=W[mask]@Q[ti,:,2];hits[mask]+=1
+                  req(hits.min()>0 and strict.max()<=1,'missing or overlapping samples')
+                  errors.append(float(np.quantile(np.abs(Z/hits-target(S,c)[:,2]),.95)))
+              return dict(vertices=len(V),quads=len(F),boundary=16,samples=len(S),p95_both=errors,p95_worst=max(errors),min_angle=min(angles),gate_angle15=min(angles)>=15)
+          def fill(c,span,offset,simple):
+              m=bpy.data.meshes.new('TI32_boundary');o=bpy.data.objects.new('TI32_boundary',m)
+              bpy.context.collection.objects.link(o)
+              try:
+                  bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+                  m.from_pydata(target(B,c).tolist(),[(i,(i+1)%16) for i in range(16)],[]);m.update()
+                  bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+                  bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
+                  t=time.perf_counter();status=bpy.ops.mesh.fill_grid(span=span,offset=offset,use_interp_simple=simple);elapsed=time.perf_counter()-t
+                  bpy.ops.object.mode_set(mode='OBJECT')
+                  if 'FINISHED' not in status:raise RuntimeError(str(status))
+                  return [tuple(v.co) for v in m.vertices],[list(f.vertices) for f in m.polygons],elapsed
+              finally:
+                  if o.mode!='OBJECT':bpy.ops.object.mode_set(mode='OBJECT')
+                  bpy.data.objects.remove(o,do_unlink=True);bpy.data.meshes.remove(m)
+          assert bpy.app.background
+          rows=[];baseline=[];raw=[]
+          for k,c in enumerate(CASES):
+              for shift in range(4):
+                  v,f=coons(shift,c);baseline.append(dict(case=k,shift=shift,**assess(v,f,c)))
+              for span in (3,4,5):
+                  for offset in range(8):
+                      for simple in (False,True):
+                          row=dict(case=k,span=span,offset=offset,simple=simple)
+                          try:
+                              v,f,elapsed=fill(c,span,offset,simple)
+                              raw.append(dict(**row,vertices=v,faces=f))
+                              row.update(operator_seconds=elapsed,**assess(v,f,c),status='valid')
+                          except Exception as exc:row.update(status='rejected',reason=str(exc))
+                          rows.append(row)
+          comparison=[]
+          for k in range(len(CASES)):
+              ref=min((r for r in baseline if r['case']==k),key=lambda r:r['p95_worst'])
+              matched=[r for r in rows if r['case']==k and r['status']=='valid' and r['vertices']==ref['vertices'] and r['quads']==ref['quads']]
+              passed=[r for r in matched if r['gate_angle15'] and r['p95_worst']<=1.10*ref['p95_worst']]
+              comparison.append(dict(case=k,reference=ref,matched_valid=len(matched),matched_pass=len(passed),best_native=min(matched,key=lambda r:r['p95_worst']) if matched else None))
+          out=dict(blender=bpy.app.version_string,approved=False,baseline=baseline,native=rows,valid=sum(r['status']=='valid' for r in rows),matched_comparison=comparison)
+          Path('ti32-results').mkdir(exist_ok=True)
+          Path('ti32-results/results.json').write_text(json.dumps(out,indent=2))
+          Path('ti32-results/raw.json').write_text(json.dumps(raw))
+          print('TI32_SUMMARY',json.dumps(dict(blender=out['blender'],valid=out['valid'],calls=len(rows),comparison=comparison,rejections=dict(Counter(r.get('reason','') for r in rows if r['status']=='rejected')))),flush=True)
+          assert len(rows)==144 and out['valid']>0, 'native benchmark did not complete valid cases'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti32.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti32-grid-fill-${{ github.sha }}
+          path: ti32-results/
+          if-no-files-found: warn
+          retention-days: 14
