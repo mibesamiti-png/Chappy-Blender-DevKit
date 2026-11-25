@@ -19,10 +19,14 @@ from cbdk.extension_preflight import MAX_ARCHIVE_BYTES
 
 def verify():
     case = os.environ["CBDK_R23_CASE"]
-    if case == "grouped":
+    if case in ("grouped", "dependency"):
         sys.path.insert(0, str(ROOT / "tests"))
         from test_ui_recipe_r17 import make_r23_recipe
         recipe = make_r23_recipe("grouped")
+        if case == "dependency":
+            from extension_r24_dependency_fixture import dependency_recipe, dependency_catalog, ORDER
+            from test_ui_recipe_r17 import R24_REGISTRATION
+            recipe = dependency_recipe()
     else:
         recipe = ci_recipe(case)
     root = Path(os.environ["CBDK_R19_TEMP"]).resolve()
@@ -36,7 +40,12 @@ def verify():
         blob = stream.read(MAX_ARCHIVE_BYTES + 1)
     # A supplied path or hash cannot authorize code execution. Rebuild the
     # fixed authored recipe inside this trusted checkout and compare bytes.
-    if blob != build_recipe_extension_bytes(recipe, preview_unapproved=True):
+    if case == "dependency":
+        with dependency_catalog():
+            regenerated = build_recipe_extension_bytes(recipe, preview_unapproved=True)
+    else:
+        regenerated = build_recipe_extension_bytes(recipe, preview_unapproved=True)
+    if blob != regenerated:
         raise AssertionError("R23 runtime input differs from fixed authored generation")
     directory = root / "local_repo"
     directory.mkdir()
@@ -67,7 +76,23 @@ def verify():
     if addon_utils.check(namespace)[1] or hasattr(bpy.types.Scene, "cbdk_modular_result"):
         raise AssertionError("R23 preexisting fixture registration")
     addon_utils.modules_refresh()
-    module = addon_utils.enable(namespace, default_set=True, persistent=False)
+    trace = []
+    real_register, real_unregister = bpy.utils.register_class, bpy.utils.unregister_class
+    def observed_register(cls):
+        real_register(cls)
+        if cls.__module__.startswith(namespace):
+            trace.append(("register", cls.bl_idname))
+    def observed_unregister(cls):
+        real_unregister(cls)
+        if cls.__module__.startswith(namespace):
+            trace.append(("unregister", cls.bl_idname))
+    if case == "dependency":
+        bpy.utils.register_class = observed_register
+    try:
+        module = addon_utils.enable(namespace, default_set=True, persistent=False)
+    finally:
+        if case == "dependency":
+            bpy.utils.register_class = real_register
     if module is None:
         raise AssertionError("R23 Extension enable failed")
     classes = tuple(module._CLASSES)
@@ -76,9 +101,12 @@ def verify():
                 Path(module.__file__).resolve() != package / "__init__.py" or
                 not addon_utils.check(namespace)[1] or
                 bpy.context.preferences.addons.get(namespace) is None or
-                set(module._FEATURE_IDS) != set(recipe["features"]) or
+                (tuple(module._FEATURE_IDS) != ORDER if case == "dependency"
+                 else set(module._FEATURE_IDS) != set(recipe["features"])) or
                 any(not c.is_registered for c in classes)):
             raise AssertionError("R23 native Extension registration mismatch")
+        if case == "dependency" and trace != [("register", name) for name in R24_REGISTRATION]:
+            raise AssertionError("R24 A actual Extension registration order mismatch")
         mesh = bpy.data.meshes.new("CBDK R23 asymmetric")
         mesh.from_pydata([(-2,-1,-3), (4,3,5), (1,0,0)], [], [(0,1,2)])
         mesh.update()
@@ -92,7 +120,7 @@ def verify():
         bpy.context.view_layer.update()
         scene = bpy.context.scene
         before = [tuple(v.co) for v in mesh.vertices]
-        if case == "grouped":
+        if case in ("grouped", "dependency"):
             panels = module._PANEL_CLASSES
             if [(cls.bl_idname, cls.bl_label) for cls in panels] != [
                     ("VIEW3D_PT_cbdk_modular_primary", "Geometry"),
@@ -229,7 +257,13 @@ def verify():
             if [tuple(v.co) for v in mesh.vertices] != [(-1.75,-1.5,-2.875), *before[1:]]:
                 raise AssertionError("R23 committed mesh mismatch")
     finally:
-        addon_utils.disable(namespace, default_set=True)
+        if case == "dependency":
+            bpy.utils.unregister_class = observed_unregister
+        try:
+            addon_utils.disable(namespace, default_set=True)
+        finally:
+            if case == "dependency":
+                bpy.utils.unregister_class = real_unregister
     if (addon_utils.check(namespace)[1] or
             bpy.context.preferences.addons.get(namespace) is not None or
             any(c.is_registered for c in classes) or module._REGISTERED or
@@ -237,11 +271,48 @@ def verify():
             any(hasattr(bpy.types.Scene, n) for n in
                 ("cbdk_modular_result", "cbdk_modular_nudge_offset", "cbdk_modular_center_precision"))):
         raise AssertionError("R23 registration cleanup incomplete")
-    if case == "grouped":
+    if case in ("grouped", "dependency"):
         if any(hasattr(bpy.types, cls.bl_idname) for cls in panels):
             raise AssertionError("R23 combined panel registration leaked")
-        print("CBDK_R23_A_MULTIPANEL_EXTENSION_VERTICAL_PASS: two panels, four features, typed read/edit and cleanup")
-    print("CBDK_R23_RECIPE_EXTENSION_RUNTIME_PASS: " + case)
+        if case == "dependency":
+            if trace != ([("register", n) for n in R24_REGISTRATION] +
+                         [("unregister", n) for n in reversed(R24_REGISTRATION)]):
+                raise AssertionError("R24 A actual Extension reverse order mismatch")
+            trace.clear()
+            def refuse_midpoint(cls):
+                if cls.bl_idname == "cbdk.modular_mesh_center":
+                    raise RuntimeError("controlled R24 A midpoint refusal")
+                observed_register(cls)
+            module.bpy = SimpleNamespace(types=bpy.types, props=bpy.props,
+                utils=SimpleNamespace(register_class=refuse_midpoint,
+                                      unregister_class=observed_unregister))
+            try:
+                try:
+                    module.register()
+                except RuntimeError as exc:
+                    if "controlled R24 A midpoint refusal" not in str(exc):
+                        raise
+                else:
+                    raise AssertionError("R24 A midpoint refusal not raised")
+                if (trace != [("register", "cbdk.modular_mesh_bounds"),
+                              ("register", "cbdk.modular_edit_selection"),
+                              ("unregister", "cbdk.modular_edit_selection"),
+                              ("unregister", "cbdk.modular_mesh_bounds")]
+                        or module._REGISTERED or module._OWNED_PROPERTIES
+                        or module._OWNED_PROPERTY_TOKENS
+                        or any(c.is_registered for c in classes)
+                        or any(hasattr(bpy.types.Scene, n) for n in module._PROPERTY_NAMES)):
+                    raise AssertionError("R24 A Extension midpoint rollback incomplete")
+            finally:
+                module.bpy = bpy
+                if module._REGISTERED or module._OWNED_PROPERTIES:
+                    module.unregister()
+            print("CBDK_R24_A_EXTENSION_ORDER_ROLLBACK_PASS: actual register/reverse, midpoint rollback")
+            print("CBDK_R24_DEPENDENCY_EXTENSION_RUNTIME_PASS: requested 1, resolved 4, typed read/edit and cleanup")
+        else:
+            print("CBDK_R23_A_MULTIPANEL_EXTENSION_VERTICAL_PASS: two panels, four features, typed read/edit and cleanup")
+    if case != "dependency":
+        print("CBDK_R23_RECIPE_EXTENSION_RUNTIME_PASS: " + case)
 
 
 if __name__ == "__main__":

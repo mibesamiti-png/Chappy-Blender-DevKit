@@ -225,6 +225,103 @@ def verify_recipe_packages(blender):
     return results
 
 
+def verify_dependency_package(blender):
+    """Fixed internal graph only; same artifact is validated and executed."""
+    import hashlib
+    sys.path.insert(0, str(ROOT / "tests"))
+    from extension_r24_dependency_fixture import dependency_catalog, dependency_recipe, MEMBERS, ORDER, PARTS
+    from test_ui_recipe_r17 import (prepare_r24_root, make_r24_recipe, r24_source_hashes,
+                                   R24_ORDER, R24_PARTS, R24_MEMBERS)
+    from cbdk.modular_builder import build_modular, PACKAGE_ID
+    from cbdk.extension_authored_fixture import _without_legacy_info
+    from zipfile import ZipFile
+    with tempfile.TemporaryDirectory(prefix="cbdk-r24-runtime-") as folder:
+        root = Path(folder).resolve()
+        archive = root / "authored.zip"
+        source_hashes = r24_source_hashes()
+        recipe = make_r24_recipe()
+        if recipe != dependency_recipe() or ORDER != R24_ORDER or PARTS != R24_PARTS:
+            raise AssertionError("R24 A specialist fixture disagreement")
+        c_root = prepare_r24_root(root / "c_fixture")
+        legacy = root / "c_preview.zip"
+        built = build_modular(recipe, legacy, preview_unapproved=True, root=c_root)
+        if (tuple(built["features"]) != R24_ORDER or tuple(built["part_ids"]) != R24_PARTS
+                or built["approved"] is not False):
+            raise AssertionError("R24 A legacy build closure mismatch")
+        legacy_sha = hashlib.sha256(legacy.read_bytes()).hexdigest()
+        with dependency_catalog() as catalog_sha:
+            report = write_recipe_extension(dependency_recipe(), archive, preview_unapproved=True)
+        with ZipFile(archive) as z:
+            if len(z.infolist()) != len(MEMBERS) or set(z.namelist()) != MEMBERS:
+                raise AssertionError("R24 dependency Extension inventory mismatch")
+        prefix = PACKAGE_ID + "/"
+        with ZipFile(legacy) as old, ZipFile(archive) as new:
+            if (len(old.infolist()) != len(R24_MEMBERS)
+                    or set(old.namelist()) != {prefix+n for n in R24_MEMBERS}
+                    or MEMBERS != (set(R24_MEMBERS) - {"README.txt", "CBDK_BUILD_INFO.json"}
+                                   | {"blender_manifest.toml"})):
+                raise AssertionError("R24 A cross-format inventory mismatch")
+            meta = json.loads(old.read(prefix+"CBDK_BUILD_INFO.json"))
+            if (meta["requested_features"] != ["vertex_nudge"]
+                    or tuple(meta["features"]) != R24_ORDER
+                    or tuple(meta["part_ids"]) != R24_PARTS):
+                raise AssertionError("R24 A requested/resolved provenance mismatch")
+            for name in sorted(MEMBERS - {"blender_manifest.toml"}):
+                payload = old.read(prefix+name)
+                if name == "__init__.py":
+                    payload = _without_legacy_info(payload)
+                if new.read(name) != payload:
+                    raise AssertionError("R24 A cross-format executable bytes mismatch")
+        print("CBDK_R24_A_CROSS_FORMAT_PAYLOAD_PASS: requested 1, resolved 4, shared 5 parts")
+        if (report["feature_count"] != 4 or report["approved"] is not False
+                or report["release_authorized"] is not False or report["install_authorized"] is not False
+                or report["original_preview_unchanged"] is not True):
+            raise AssertionError("R24 dependency Extension report mismatch")
+        archive_sha = hashlib.sha256(archive.read_bytes()).hexdigest()
+        env = dict(os.environ)
+        for name in ("RESOURCES", "CONFIG", "SCRIPTS", "EXTENSIONS", "DATAFILES"):
+            target = root / name.lower()
+            target.mkdir()
+            env["BLENDER_USER_" + name] = str(target)
+        env["CBDK_R19_TEMP"] = str(root)
+        env["CBDK_R23_CASE"] = "dependency"
+        prefix = [blender, "--background", "--factory-startup", "--disable-autoexec", "--offline-mode"]
+        proc = subprocess.run([*prefix, "--command", "extension", "validate", str(archive)],
+                              env=env, capture_output=True, text=True, timeout=90)
+        checked = compare_official_validation(fixture_metadata(), proc.returncode,
+                                              proc.stdout + "\n" + proc.stderr)
+        if proc.returncode != 0 or not checked["complete_diagnostic_agreement"]:
+            raise AssertionError("R24 dependency Extension official validation failed")
+        print("CBDK_R24_DEPENDENCY_EXTENSION_VALIDATE_PASS: fixed graph root ZIP")
+        proc = subprocess.run([*prefix, "--python-exit-code", "1", "--python",
+                               str(ROOT / "scripts/verify_recipe_extension_runtime.py")],
+                              env=env, capture_output=True, text=True, timeout=120)
+        marker = "CBDK_R24_DEPENDENCY_EXTENSION_RUNTIME_PASS: requested 1, resolved 4, typed read/edit and cleanup"
+        vertical = "CBDK_R24_A_EXTENSION_ORDER_ROLLBACK_PASS: actual register/reverse, midpoint rollback"
+        if (proc.returncode != 0 or marker not in proc.stdout.splitlines()
+                or vertical not in proc.stdout.splitlines()):
+            for line in (proc.stdout + "\n" + proc.stderr).splitlines():
+                if line.startswith(("AssertionError: R24 ", "AssertionError: R23 ")):
+                    print(line[:200])
+            raise AssertionError("R24 isolated dependency runtime failed")
+        if (hashlib.sha256(archive.read_bytes()).hexdigest() != archive_sha
+                or hashlib.sha256((ROOT / "catalog/addon_features.json").read_bytes()).hexdigest() != catalog_sha
+                or hashlib.sha256(legacy.read_bytes()).hexdigest() != legacy_sha
+                or r24_source_hashes() != source_hashes):
+            raise AssertionError("R24 archive or real catalog changed")
+        print(marker)
+        print("CBDK_R24_DEPENDENCY_EXTENSION_SAME_ZIP_PASS: SHA unchanged")
+        print(vertical)
+        print("CBDK_R24_A_COMBINED_VERTICAL_PASS: C payload, D official validate, same ZIP runtime and rollback")
+        return {**report, "requested_feature_count": 1, "official_validation": checked,
+                "extension_sha256": archive_sha, "catalog_sha_unchanged": True,
+                 "legacy_sha256": legacy_sha, "legacy_sha_unchanged": True,
+                 "cross_format_payload_equal": True, "native_actual_order_and_rollback_verified": True,
+                "same_archive_sha_unchanged": True, "native_namespace_runtime_verified": True,
+                "official_install_exercised": False, "manual_local_repository_staging": True,
+                "temporary_archive_retained": False}
+
+
 def verify(blender, output):
     root = Path(output)
     if not root.parent.resolve().is_relative_to(ROOT / "reports/ci") or root.exists():
@@ -291,10 +388,12 @@ def verify(blender, output):
     package = verify_synthetic_package(blender, root)
     authored = verify_authored_package(blender)
     recipes = verify_recipe_packages(blender)
+    dependency = verify_dependency_package(blender)
     report = {"kind": "cbdk_synthetic_official_manifest_validation", "cases": results,
               "synthetic_package": package,
               "authored_runtime_fixture": authored,
               "r23_recipe_runtime_fixtures": recipes,
+              "r24_dependency_runtime_fixture": dependency,
               "top_level_source_executed_scope": "synthetic_fixture_only",
               "real_component_license_chosen": False, "real_extension_validated": False,
               "source_executed": False, "extension_zip_created": True,

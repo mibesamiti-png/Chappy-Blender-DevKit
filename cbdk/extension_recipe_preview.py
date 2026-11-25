@@ -99,6 +99,13 @@ def _expected_sources(recipe, plan):
 def _assemble(recipe):
     recipe = _snapshot_recipe(recipe)
     plan = plan_modular_recipe(recipe, root=ROOT, include_ui=True)
+    # The test manifest is fixed, not derived from the selected features.
+    # Reject narrower closures before any build or output: do not advertise
+    # compatibility that the authored feature catalog does not declare.
+    fields = fixture_metadata()
+    if (plan["minimum_blender"] != fields["blender_version_min"]
+            or plan["maximum_blender"] is not None):
+        raise ValueError("Recipe compatibility does not match fixed Extension fixture range")
     expected, mapping, template = _expected_sources(recipe, plan)
     prefix = PACKAGE_ID + "/"
     inventory = set(expected) | {"README.txt", "CBDK_BUILD_INFO.json"}
@@ -132,7 +139,7 @@ def _assemble(recipe):
         raise ValueError("Trusted source changed during assembly")
     members = dict(expected)
     members["__init__.py"] = _without_legacy_info(members["__init__.py"])
-    members["blender_manifest.toml"] = _render_fixture_manifest(fixture_metadata(), FIXTURE_ID)
+    members["blender_manifest.toml"] = _render_fixture_manifest(fields, FIXTURE_ID)
     if (len(members) > MAX_MEMBERS or any(len(b) > MAX_ENTRY_BYTES for b in members.values())
             or sum(map(len, members.values())) > MAX_ARCHIVE_BYTES):
         raise ValueError("Extension inventory exceeds budget")
