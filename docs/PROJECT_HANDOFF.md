@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.20 R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI・3版縦断成功。F020-01/02限定受入、F020-03 partial。残条件評価、#125 rev17 paused。正式v0.17.0/main/last_verified維持。
+- 最新の節目: v0.20 R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI・3版縦断成功。F020-01/02限定受入、F020-03 partial。R24節目#171独立7CI/Notion同期成功、R25限定割当候補（F020-03）。#125 rev17 paused、正式ゲート前実装禁止。正式v0.17.0/main/last_verified維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)

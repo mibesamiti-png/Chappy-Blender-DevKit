@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.20 R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI・3版縦断成功。F020-01/02限定受入、F020-03 partial。残条件評価、#125 rev17 paused。正式v0.17.0/main/last_verified維持。"
+    "milestone": "v0.20 R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI・3版縦断成功。F020-01/02限定受入、F020-03 partial。R24節目#171独立7CI/Notion同期成功、R25限定割当候補（F020-03）。#125 rev17 paused、正式ゲート前実装禁止。正式v0.17.0/main/last_verified維持。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
