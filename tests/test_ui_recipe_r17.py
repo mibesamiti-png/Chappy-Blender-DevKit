@@ -22,6 +22,9 @@ def make_recipe(variant):
     recipe = json.loads((ROOT / "recipes/modular_all.json").read_text(encoding="utf-8"))
     data = json.loads((ROOT / "catalog/ui_layouts.json").read_text(encoding="utf-8"))
     objects, edit = data["sections"]
+    # The R17 fixtures continue to cover exactly their original five features.
+    objects["controls"] = [c for c in objects["controls"]
+                           if c["feature_id"] in recipe["features"]]
     if variant == "compact":
         recipe["display_name"] = "CBDK Compact Preview"
         objects.update(title="Quick inspection", layout="row", boxed=False,
@@ -330,7 +333,137 @@ def run_native():
                     module.unregister()
                 purge_detached_preview()
                 sys.path.remove(directory)
+    # R18 uses the same trusted build/import/draw/cleanup lane, separately
+    # from the two unchanged five-feature R17 regression fixtures.
+    for inline in (False, True):
+        purge_detached_preview()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        recipe = make_r18_recipe(inline)
+        version = ".".join(map(str, bpy.app.version))
+        plan = plan_modular_recipe(recipe, root=ROOT, target_blender=version,
+                                   include_ui=True)
+        with tempfile.TemporaryDirectory(prefix="cbdk-r18-") as directory:
+            root = Path(directory)
+            target = root / "preview.zip"
+            build_modular(recipe, target, root=ROOT, preview_unapproved=True,
+                          target_blender=version)
+            with ZipFile(target) as archive:
+                assert all(n.startswith(PACKAGE_ID + "/") and
+                           not any(p in ("", ".", "..") for p in n.split("/"))
+                           for n in archive.namelist())
+                archive.extractall(root)
+            sys.path.insert(0, directory)
+            module = None
+            registered = False
+            try:
+                importlib.invalidate_caches()
+                module = importlib.import_module(PACKAGE_ID)
+                assert Path(module.__file__).resolve().is_relative_to(root.resolve())
+                assert module._UI_SECTIONS == plan["ui_layout"]["sections"]
+                assert module._UI_OPTIONS == plan["ui_layout"]["options"]
+                assert set(module._FEATURE_IDS) == {"mesh_bounds", "mesh_center"}
+                module.register()
+                registered = True
+                mesh = bpy.data.meshes.new("CBDK_R18_asymmetric")
+                mesh.from_pydata([(-2, 0, 1), (4, 1, 5), (0, 3, 2)], [], [(0, 1, 2)])
+                mesh.update()
+                scene = bpy.context.scene
+                obj = bpy.data.objects.new("CBDK_R18_object", mesh)
+                scene.collection.objects.link(obj)
+                obj.location = (10, -2, 1)
+                obj.scale = (2, 1, 3)
+                obj.select_set(True)
+                bpy.context.view_layer.objects.active = obj
+                bpy.context.view_layer.update()
+                before = tuple(tuple(v.co) for v in mesh.vertices)
+                recorder = RecordingLayout()
+                module.VIEW3D_PT_cbdk_modular_preview.draw(
+                    SimpleNamespace(layout=recorder), bpy.context)
+                events = [e for e in recorder.events if e[0] == "operator"]
+                assert {e[1] for e in events} == {"cbdk.modular_mesh_bounds", "cbdk.modular_mesh_center"}
+                assert all(e[4] for e in events)
+                assert [e[2] for e in events] == [
+                    label for _, controls in plan["ui_layout"]["sections"]
+                    for _, label in controls]
+                assert bpy.ops.cbdk.modular_mesh_bounds() == {"FINISHED"}
+                assert bpy.ops.cbdk.modular_mesh_center() == {"FINISHED"}
+                # Independent: local box [-2,0,1]..[4,3,5]; diagonal scale
+                # and translation yield world center (12,-0.5,10).
+                assert scene.cbdk_modular_result == "World bounds center (base): 12.000, -0.500, 10.000"
+                assert tuple(tuple(v.co) for v in mesh.vertices) == before
+                assert bpy.context.view_layer.objects.active == obj and obj.select_get()
+                bpy.ops.object.mode_set(mode="EDIT")
+                assert bpy.ops.cbdk.modular_mesh_center() == {"CANCELLED"}
+                assert scene.cbdk_modular_result == "World bounds center (base): 12.000, -0.500, 10.000"
+                bpy.ops.object.mode_set(mode="OBJECT")
+                module.unregister()
+                registered = False
+                assert not module._REGISTERED and not module._OWNED_PROPERTIES
+                assert not module._OWNED_PROPERTY_TOKENS
+                assert not hasattr(bpy.types.Scene, "cbdk_modular_result")
+                markers.append("native_r18_center_" + ("inline" if inline else "global") +
+                               "_plan_draw_execute_cleanup")
+            finally:
+                if bpy.context.mode == "EDIT_MESH":
+                    bpy.ops.object.mode_set(mode="OBJECT")
+                if registered:
+                    module.unregister()
+                purge_detached_preview()
+                sys.path.remove(directory)
     return markers
+
+
+def make_r18_recipe(inline=False):
+    recipe = json.loads((ROOT / "recipes/modular_geometry.json").read_text(encoding="utf-8"))
+    recipe["features"] = ["mesh_bounds", "mesh_center"]
+    if inline:
+        recipe["ui_layout"] = {"schema_version": 1,
+            "kind": "cbdk_authored_preview_ui_layout", "preview_only": True,
+            "sections": [{"id": "center", "title": "Center", "visible_in": "object",
+                "layout": "row", "controls": [
+                    {"feature_id": "mesh_center", "label": "Find center"},
+                    {"feature_id": "mesh_bounds", "label": "Read bounds"}]}]}
+    return recipe
+
+
+class DescriptorR18Tests(unittest.TestCase):
+    def test_new_feature_global_and_inline_and_legacy(self):
+        legacy = json.loads((ROOT / "recipes/modular_all.json").read_text(encoding="utf-8"))
+        self.assertEqual(set(plan_modular_recipe(legacy, root=ROOT)["ordered_features"]),
+                         {"mesh_bounds", "modifier_summary", "vertex_nudge",
+                          "edit_selection", "object_selection"})
+        with tempfile.TemporaryDirectory() as directory:
+            for inline in (False, True):
+                recipe = make_r18_recipe(inline)
+                plan = plan_modular_recipe(recipe, root=ROOT, include_ui=True)
+                self.assertEqual(set(plan["ordered_features"]), {"mesh_center", "mesh_bounds"})
+                self.assertEqual(plan["part_ids"], ["BLCTX-001", "BLGEO-001"])
+                target = Path(directory) / (str(inline) + ".zip")
+                build_modular(recipe, target, root=ROOT, preview_unapproved=True)
+                with ZipFile(target) as archive:
+                    tree = ast.parse(archive.read(PACKAGE_ID + "/__init__.py"))
+                    assignments = {n.targets[0].id: n.value for n in tree.body
+                                   if isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name)}
+                    contract = ast.literal_eval(assignments["_FEATURE_CONTRACT"])
+                    self.assertEqual(set(contract), {"mesh_bounds", "mesh_center"})
+                    self.assertEqual(contract["mesh_center"]["operator"], "cbdk.modular_mesh_center")
+                    self.assertEqual(contract["mesh_center"]["mode"], "OBJECT")
+                    self.assertIn(PACKAGE_ID + "/features/mesh_center.py", archive.namelist())
+                    self.assertNotIn(PACKAGE_ID + "/features/vertex_nudge.py", archive.namelist())
+                    self.assertEqual(ast.literal_eval(assignments["_UI_SECTIONS"]),
+                                     plan["ui_layout"]["sections"])
+
+    def test_unknown_and_unselected_features_and_injected_descriptor_rejected(self):
+        for mutate in ("unknown", "unselected", "operator"):
+            recipe = make_r18_recipe(True)
+            if mutate == "unknown":
+                recipe["features"].append("unknown")
+            elif mutate == "unselected":
+                recipe["features"].remove("mesh_center")
+            else:
+                recipe["ui_layout"]["sections"][0]["controls"][0]["operator"] = "wm.open_mainfile"
+            with self.assertRaises(ValueError):
+                plan_modular_recipe(recipe, root=ROOT, include_ui=True)
 
 
 if __name__ == "__main__":

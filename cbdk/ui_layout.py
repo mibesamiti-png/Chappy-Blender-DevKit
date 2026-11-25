@@ -1,4 +1,4 @@
-"""Safe declarative panel layout for the five CBDK-authored preview features.
+"""Safe declarative panel layout for CBDK-authored preview features.
 
 UI JSON controls labels, grouping, fixed visibility and bounded defaults.
 It NEVER selects Python modules,
@@ -72,7 +72,7 @@ def _label(value, *, limit=72):
 
 
 def validate_ui_layout(data: object, *, expected_features=None) -> tuple:
-    """Validate exact feature coverage; default is the legacy five-feature catalog."""
+    """Validate exact feature coverage; default is the complete authored catalog."""
     expected = set(TRUSTED_FEATURES) if expected_features is None else set(expected_features)
     if not expected or not expected <= set(TRUSTED_FEATURES):
         raise ValueError("Invalid authored UI coverage")
@@ -120,7 +120,7 @@ def validate_ui_layout(data: object, *, expected_features=None) -> tuple:
                     or not _label(control["label"])):
                 raise ValueError("Unknown, repeated or invalid authored UI control")
             seen_features.add(feature_id)
-            required_mode = "edit_mesh" if feature_id in {"edit_selection", "vertex_nudge"} else "object"
+            required_mode = TRUSTED_FEATURES[feature_id]["mode"].lower()
             control_mode = control.get("visible_in", "always")
             if type(control_mode) is not str or control_mode not in ("always", required_mode):
                 raise ValueError("Control visibility must be always or its authored operator mode")
@@ -128,7 +128,7 @@ def validate_ui_layout(data: object, *, expected_features=None) -> tuple:
                 raise ValueError("Section visibility would make an authored control unreachable")
             if "parameters" in control:
                 parameters = control["parameters"]
-                if feature_id != "vertex_nudge" or type(parameters) is not dict or set(parameters) != {"offset"}:
+                if TRUSTED_FEATURES[feature_id]["input"] != "offset" or type(parameters) is not dict or set(parameters) != {"offset"}:
                     raise ValueError("Only the authored nudge offset parameter is configurable")
                 validate_nudge_settings(parameters["offset"])
             entries.append((feature_id, control["label"]))
