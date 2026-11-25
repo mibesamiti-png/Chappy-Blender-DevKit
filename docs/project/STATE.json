@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.19 R20 F019-01限定受入: #152 dev 7e8bd21994a3b12dc1282fedc3ceceb4230e6860 独立7CI成功。既定512面を維持、明示expanded_2048で実GLB各2048面と有限予算停止を3版実測。F019-02/03・大規模matcher/viewer・実データは残る。専門チーム待機。正式v0.17.0/main/last_verified不変。"
+    "milestone": "v0.19 R21 F019-02限定受入: #156 dev b45549ca8e502d6e9ba22365f4dfd28e791a4d41 独立7CI成功。明示expanded_2048_partsで各2048面/64部品の匿名候補・局所表面差・有限予算を3版実測。F019-03、大規模viewer・実データは残る。専門チーム待機、正式v0.17.0/main/last_verified不変。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -340,7 +340,7 @@
       "status": "implemented",
       "verification": "blender_ci",
       "source": "cbdk/glb_surface_pipeline.py",
-      "note": "既存静的preflight/固定Blender・匿名inventory/弱い候補・既定512/schema1を保持。R20 #152 dev 7e8bd21994a3b12dc1282fedc3ceceb4230e6860 独立7CI、Blender45566806341の3版で明示CLI expanded_2048/schema2各2048面比較、Z=.25/別三角分割/開口、2049/密集4M評価停止・exit2・元SHA不変を実測。2 BVH共有、131872 sample/8M node/4M eval上限。大規模matcher/viewer・実GLB一般・完全同一性・native memory未保証。旧証拠はGLB_SURFACE_PIPELINE/EXPANDED_R20参照。"
+      "note": "既存静的preflight/固定Blender・匿名inventory/弱い候補・既定512/schema1を保持。R20 #152 dev 7e8bd21994a3b12dc1282fedc3ceceb4230e6860 独立7CI、Blender45566806341の3版で明示CLI expanded_2048/schema2各2048面比較、Z=.25/別三角分割/開口、2049/密集4M評価停止・exit2・元SHA不変を実測。2 BVH共有、131872 sample/8M node/4M eval上限。大規模matcher/viewer・実GLB一般・完全同一性・native memory未保証。旧証拠はGLB_SURFACE_PIPELINE/EXPANDED_R20参照。 R21 #156 dev b45549ca8e502d6e9ba22365f4dfd28e791a4d41 独立7CI、Blender45577551663で明示schema3/expanded_2048_parts各2048面/64部品、順序反転64候補、旧誤suggestion 1→0、競合曖昧、65部品skip/exit2・元SHA不変を3版実証。局所表面差は降格のみ。旧schema/viewer維持、任意identity・native memory・実モデル未保証。"
     },
     {
       "id": "GLB-020",
@@ -1074,6 +1074,11 @@
       "id": "DEC-083",
       "decision": "F019-01の限定拡張をR20で受入、既定512面を維持し明示2048面比較のみ有効にする",
       "note": "#151 B 5CI、#152統合候補910ada89 5CI、dev 7e8bd21994a3b12dc1282fedc3ceceb4230e6860 独立7CI（Python45566806276、Windows45566806261、Blender45566806341、Chromium45566806269、Handoff45566806324、Kit45566806376、Skill45566806258）。3版69 lifecycle/R19/R20 CLI実測。2048面中央値3.904/4.057/4.303秒、密集4M eval停止。#125 rev9 paused。F019-02/03残、任意大規模・実データ・GL採用・公開未承認。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。"
+    },
+    {
+      "id": "DEC-084",
+      "decision": "F019-02をR21で限定受入し、匿名部品候補の局所表面証拠を明示profileに限定する",
+      "note": "#155 B 96b3bf3 5CI、#156 A 946de66 5CI、dev b45549ca8e502d6e9ba22365f4dfd28e791a4d41 独立7CI（Python45577551917、Windows45577551636、Blender45577551663、Chromium45577551853、Handoff45577551821、Kit45577551711、Skill45577551854）。実3版2048面/64部品、64候補、旧誤suggestion 1→0、競合曖昧、65部品skip/exit2、SHA不変。親中央値5.615/5.812/7.349秒。全体+局所上限263744 samples/16M node/8M eval、130 BVH、精密128 pairs、境界予約2M。未測定/曖昧を保持、近小/遠大対照未独立実証、移動/split/merge Pythonのみ、native局所予算枯渇・任意identity・実データ・viewer拡張・GL採用未確認。F019-03残、R22自動発行なし。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。"
     }
   ],
   "last_verified": {
