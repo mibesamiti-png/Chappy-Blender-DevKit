@@ -1,0 +1,28 @@
+name: DIL09 context adapter isolated replay
+on:
+  push:
+    branches: [research/dil09-context-once-20261125]
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Obtain pinned original checker from candidate PR 109
+        run: |
+          git fetch --no-tags origin refs/pull/109/head
+          git cat-file -e 5dc20802ddc8f8f7e1ec6df2ed8d05d9ab4362c4:scripts/ci_cycle_metrics.py
+          git show 5dc20802ddc8f8f7e1ec6df2ed8d05d9ab4362c4:scripts/ci_cycle_metrics.py > /tmp/dil09_ci_metrics.py
+          test "$(git hash-object /tmp/dil09_ci_metrics.py)" = "1eac925e9483eb3cbe24a2cb26e2159760475768"
+      - name: Replay frozen observed snapshot and derived tests
+        env:
+          DIL_CHECKER: /tmp/dil09_ci_metrics.py
+        run: |
+          python --version
+          python -m unittest discover -s research/development_intelligence/dil09/phase2/ -p 'test_adapter.py' -v
+          python research/development_intelligence/dil09/phase2/adapter.py --checker "$DIL_CHECKER" --fixture research/development_intelligence/dil09/phase2/OBSERVED.json
