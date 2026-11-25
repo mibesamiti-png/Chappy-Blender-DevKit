@@ -67,6 +67,76 @@ class ExperimentTriageTests(unittest.TestCase):
             self.assertEqual(report["next_action"], "review_failed_or_incomplete_prefix")
             self.assertEqual(len(report["trial_observations"]), trials)
 
+    def test_r17_private_review_connects_focus_declarations_and_trial_decisions(self):
+        from cbdk.glb_synthetic_adaptive import build_adaptive_checkpoint
+        from cbdk.glb_synthetic_run_review import build_run_review
+        from test_glb_synthetic_adaptive import review
+        self.fixture.source.write_text(
+            "from bpy.props import FloatProperty\n"
+            "class First:\n    socket_opening_diameter: FloatProperty()\n"
+            "class Second:\n    socket_opening_diameter: FloatProperty()\n",
+            encoding="utf-8")
+        original = self.fixture.experiment()
+        checkpoint = build_adaptive_checkpoint(
+            self.fixture.visual, {
+                "adaptive_124": self.fixture.candidate,
+                "adaptive_147": review(distance=.30, socket_faces=24),
+                "adaptive_158": review(distance=.10, socket_faces=12),
+            }, budget=3)
+        run = build_run_review(checkpoint, budget=3, stage="completed",
+                               status="completed", integrity="verified",
+                               conditions=original["conditions"])
+        report = self.build(experiment=run)
+        before = copy.deepcopy(report)
+        text = render_experiment_triage(report)
+        for fragment in (
+            "candidate / part_003", "socket_opening_diameter",
+            "First", "Second", "同名宣言の実体を区別",
+            "adaptive_124", "adaptive_147", "adaptive_158",
+            "観測進捗あり", "観測進捗として棄却",
+            "no_meaningful_sampled_max_improvement",
+            "attempt_budget_exhausted", "合成目標内: adaptive_158",
+            "検証済み試行: 3/3", "実設定値の推薦はしない",
+        ):
+            self.assertIn(fragment, text)
+        self.assertNotIn(str(self.fixture.root), text)
+        self.assertFalse(self.fixture.marker.exists())
+        self.assertEqual(report, before)
+        self.assertFalse(any(report["safety"].values()))
+
+    def test_r17_interrupted_prefix_distinguishes_unmeasured_and_failure(self):
+        from cbdk.glb_synthetic_run_review import build_run_review
+        for trials in (0, 1):
+            failed = self.fixture.experiment(budget=2, trials=trials, failed=True)
+            for status in ("failed", "incomplete"):
+                run = build_run_review(
+                    failed["checkpoint"], budget=2, stage=failed["stage"],
+                    status=status, active_trial=failed["active_trial_id"],
+                    failure_code=failed["failure_code"] if status == "failed" else None,
+                    integrity="verified", conditions=failed["conditions"])
+                text = render_experiment_triage(self.build(experiment=run))
+                with self.subTest(trials=trials, status=status):
+                    self.assertIn(f"実行状態: {status}", text)
+                    self.assertIn(f"検証済み試行: {trials}/2", text)
+                    self.assertIn(f"未検証枠: {2-trials}", text)
+                    self.assertIn("incomplete_trace", text)
+                    self.assertIn("処理対象: " + run["active_trial_id"], text)
+                    self.assertIn("比較処理の負荷" if status == "failed" else
+                                  "終了証拠を確認する", text)
+                    self.assertIn("自動実行・自動再開・設定値適用なし", text)
+                    if not trials:
+                        self.assertIn("初期観測以外は未測定", text)
+                    self.assertNotIn("試行予算は完了", text)
+
+    def test_r17_single_candidate_is_not_a_runtime_binding(self):
+        text = render_experiment_triage(self.build())
+        self.assertIn("宣言位置:", text)
+        self.assertIn("実行時に登録・参照される設定か別途確認", text)
+        self.assertIn("人の役割ラベルと名称による照合候補のみ", text)
+        self.assertIn("実ユーザーGLB・元アドオンの使用や実行は別の明示許可", text)
+        self.assertNotIn(str(self.fixture.root), text)
+        self.assertNotIn("987654321", text)
+
     def test_different_baseline_and_conflicting_summaries_rejected(self):
         linked = self.fixture.build()
         other = copy.deepcopy(self.fixture.visual); other["candidate_sampled_max"] = .47
