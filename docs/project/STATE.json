@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18: R19と節目同期#148のdev d4aa43016ad85159584a0d88b33e7cbb58368b97 独立7CI成功。限定自動化基盤の区切りを認定し承認済みv0.19への移行を決定。残るpartial/実データ/GUI/権利は維持、次期独立計画のみ有効化。専門割当は移行CI後。正式v0.17.0/main/last_verified不変。"
+    "milestone": "v0.19 R20 F019-01限定受入: #152 dev 7e8bd21994a3b12dc1282fedc3ceceb4230e6860 独立7CI成功。既定512面を維持、明示expanded_2048で実GLB各2048面と有限予算停止を3版実測。F019-02/03・大規模matcher/viewer・実データは残る。専門チーム待機。正式v0.17.0/main/last_verified不変。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -340,7 +340,7 @@
       "status": "implemented",
       "verification": "blender_ci",
       "source": "cbdk/glb_surface_pipeline.py",
-      "note": "静的preflight後に固定Blenderで2GLBを読込しBVH/特徴優先距離、匿名上位32部品一覧と弱い面数候補を集計。型付き候補再計算、完全/省略/skip総面数整合性、1〜512面測定/実超過skipを検証。コード31bf3de18c357d796194dcac369c66e55b3973bfでPython707件×3版/Windows2版/Blender4.4.3/4.5.15/5.2.1合成4ケース（ユニーク/曖昧/33部品/561面skip）成功。6CI: Python42359722780、Windows42359722774、Blender42359722777、Kit42359722842、Handoff42359722778、Chromium42359722853。実ユーザー・完全幾何一致・部品同一性は未保証。"
+      "note": "既存静的preflight/固定Blender・匿名inventory/弱い候補・既定512/schema1を保持。R20 #152 dev 7e8bd21994a3b12dc1282fedc3ceceb4230e6860 独立7CI、Blender45566806341の3版で明示CLI expanded_2048/schema2各2048面比較、Z=.25/別三角分割/開口、2049/密集4M評価停止・exit2・元SHA不変を実測。2 BVH共有、131872 sample/8M node/4M eval上限。大規模matcher/viewer・実GLB一般・完全同一性・native memory未保証。旧証拠はGLB_SURFACE_PIPELINE/EXPANDED_R20参照。"
     },
     {
       "id": "GLB-020",
@@ -1069,6 +1069,11 @@
       "id": "DEC-082",
       "decision": "R19でv0.18の限定自動化基盤を区切り、承認済み独立計画v0.19へ移行する",
       "note": "#148修正候補012758c 6CI成功、dev d4aa43016ad85159584a0d88b33e7cbb58368b97 独立7CI成功（Python45560603306、Windows45560603301、Blender45560603365、Chromium45560603489、Handoff45560603287、Kit45560603398、Skill45560603308）。3版69 lifecycle・R19同一ZIP縦断・HIT/SHA、#25同HEAD draft。汎用化・大規模形状・因果・GUIは既承認F019〜022の範囲。現行44要件/24 NEXTの状態・正式v0.17.0/last_verified/main/別承認は不変。future JSON有効化候補、専門作業は移行PR統合後のCIと正式割当待ち。R20自動発行なし。"
+    },
+    {
+      "id": "DEC-083",
+      "decision": "F019-01の限定拡張をR20で受入、既定512面を維持し明示2048面比較のみ有効にする",
+      "note": "#151 B 5CI、#152統合候補910ada89 5CI、dev 7e8bd21994a3b12dc1282fedc3ceceb4230e6860 独立7CI（Python45566806276、Windows45566806261、Blender45566806341、Chromium45566806269、Handoff45566806324、Kit45566806376、Skill45566806258）。3版69 lifecycle/R19/R20 CLI実測。2048面中央値3.904/4.057/4.303秒、密集4M eval停止。#125 rev9 paused。F019-02/03残、任意大規模・実データ・GL採用・公開未承認。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。"
     }
   ],
   "last_verified": {
