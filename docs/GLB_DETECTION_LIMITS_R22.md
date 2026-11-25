@@ -47,3 +47,11 @@ GL exact static research reference #114 HEAD 6ddda0c84d3fce1ed4a538c148e8e773cb7
 is independent review_only/approved=false; no adoption/import here.
 If evidence fails or lacks demonstrated safe improvement, retain current
 product and submit measured limitations to A. Actual observations pending CI.
+
+## A integration candidate — 2026-11-25 JST
+
+B #159 exact `dfe61beef611ee8865c101a4dcbf92b6d0ce66b8` independent five workflow success: Python45632969201, Windows45632969208, Blender45632969087, Chromium45632968978, Handoff45632969052. Native jobs139270801616/139270801073/139270801521 actual R22 markers: 16 rows each, fixed 8/10 detected, 2 missed; adaptive 9/10 detected, 1 missed; both 0/5 false warnings, 1 information absent, no global unmeasured rows. R21 CLI regression, input SHA and legacy profiles unchanged. Physical proof and native memory flags false. These are sampled surface differences, not physical defect detection rates.
+
+Wide aperture width .5: analytic max .25, fixed 0, adaptive .0957466; narrow .02: analytic .01, both 0. Both boundary count 4->16 and interior hint faces 0->4. Outer border retessellation 4->12 but interior hint 0, surface difference 0, so neither boundary count nor ambiguous match alone proves hole. Parallel sheet spacing .02/.002, translated boxes +/- .2/.02 and explicit inner surfaces .5/.75 measured at report precision; physical thickness, touch/penetration and void topology not established. Coincident copy gives zero sampled distance with ambiguous correspondence. Hidden unencoded interior is information absent. Degenerate control Python only. Representative wide-aperture median parent 600.590/430.076/772.954 ms; different runners, no speed guarantee. Fixed artificial corpus only, no held-out generalization or minimum detectable dimension guarantee.
+
+A accepts measurement-only integration candidate: no production reinforcement justified by this corpus, no research adoption, no CLI/profile/schema/viewer change, no new dependency. Preserve preregistration and failed detection rows. Future targeted opening probes require separate independent controls; not authorized here. Candidate five CI then merged-dev independent seven CI before scoped acceptance; no automatic R23/v0.20 or release. Notion sync outstanding.
