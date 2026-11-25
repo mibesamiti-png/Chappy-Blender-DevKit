@@ -393,6 +393,33 @@
       ],
       "status": "research_R13_seam_count_length_gate_passed_not_product_approved",
       "approved": false
+    },
+    {
+      "id": "cut-disk-harmonic-uv-r16",
+      "version": "0.16.0",
+      "api": "cycles.r16.cut_uv.solve",
+      "purpose": "元の境界UVを固定し、接合帯を一つのシームで開いて調和UV展開する限定研究",
+      "preconditions": [
+        "R10 annular strip <=600 faces",
+        "compatible rectangular source chart with explicit 0/1 seam anchors",
+        "source UVs authored before geometry generation"
+      ],
+      "input": "strip XYZ and triangular faces, lower/upper independent edge-corner UV pins",
+      "output": "new corner UVs, cut path and boundary diagnostics; approved=false",
+      "parameters": {
+        "path": "shortest restricted interior graph path",
+        "solver": "uniform graph Laplacian"
+      },
+      "success": "R16 12/12 gate, fresh overlap3710->0, seams666->32, boundary error0, CGAL0; four incompatible cases rejected",
+      "failure": "5/8 new p95 distortion worse; no Blender roundtrip, arbitrary source UVs unsupported",
+      "validation": "cycles/r16/run.py; frozen R14 UV audit and independent CGAL",
+      "performance": "cycles/r16/RESULTS.md",
+      "references": [
+        "cycles/r16/RESEARCH.md",
+        "cycles/r16/STATUS.json"
+      ],
+      "status": "research_scoped_detached_uv_gate_passed_not_product_approved",
+      "approved": false
     }
   ]
 }

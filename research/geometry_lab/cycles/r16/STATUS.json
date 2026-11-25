@@ -1,0 +1,45 @@
+{
+  "cycle": "R16",
+  "status": "scoped_detached_uv_gate_passed_not_approved",
+  "approved": false,
+  "synthetic_only": true,
+  "detached_only": true,
+  "prior_head": "ba75bc6edb7a9b89760730b3c6f4b2eaeeab5bac",
+  "first_frozen_head": "4161e9452440341964fd07d275896af8f4906a31",
+  "development_run": 45518546581,
+  "full_run": 45518626774,
+  "full_job": 138884601745,
+  "development_passed": 4,
+  "holdout_passed": 8,
+  "negative_controls_rejected": 4,
+  "candidate_boundary_error_max": 0,
+  "candidate_cgal_pairs": 0,
+  "r10_geometry_passed": 12,
+  "new_overlap_pairs": {
+    "baseline": 3710,
+    "candidate": 0
+  },
+  "new_seam_edges": {
+    "baseline": 666,
+    "candidate": 32
+  },
+  "seen_overlap_pairs": {
+    "baseline": 1910,
+    "candidate": 0
+  },
+  "seen_seam_edges": {
+    "baseline": 373,
+    "candidate": 16
+  },
+  "new_anisotropy_p95_worsened": 5,
+  "comparison": "naive modulo U seed with exact independently authored source UV corners, not frozen R13",
+  "limitations": [
+    "rectangular compatible source boundary only",
+    "detached Python, not Blender roundtrip",
+    "finite precision UV oracle",
+    "no independent exact boundary pin roundtrip",
+    "no real textures or normals",
+    "distortion still present"
+  ],
+  "next": "R17 not started; distortion-aware UV optimization under fixed boundary and seam"
+}
