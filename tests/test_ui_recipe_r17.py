@@ -382,6 +382,9 @@ def run_native():
                 events = [e for e in recorder.events if e[0] == "operator"]
                 assert {e[1] for e in events} == {"cbdk.modular_mesh_bounds", "cbdk.modular_mesh_center"}
                 assert all(e[4] for e in events)
+                assert [e[2] for e in events] == [
+                    label for _, controls in plan["ui_layout"]["sections"]
+                    for _, label in controls]
                 assert bpy.ops.cbdk.modular_mesh_bounds() == {"FINISHED"}
                 assert bpy.ops.cbdk.modular_mesh_center() == {"FINISHED"}
                 # Independent: local box [-2,0,1]..[4,3,5]; diagonal scale
@@ -391,6 +394,7 @@ def run_native():
                 assert bpy.context.view_layer.objects.active == obj and obj.select_get()
                 bpy.ops.object.mode_set(mode="EDIT")
                 assert bpy.ops.cbdk.modular_mesh_center() == {"CANCELLED"}
+                assert scene.cbdk_modular_result == "World bounds center (base): 12.000, -0.500, 10.000"
                 bpy.ops.object.mode_set(mode="OBJECT")
                 module.unregister()
                 registered = False
