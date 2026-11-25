@@ -13,3 +13,8 @@ Use a single synthetic garment modeling task: a basic sewn-panel bra with separa
 
 ## Scope
 Geometry Lab owns this note only. No DIL branch changes, no assignments to A/B/C/D, no shared STATE/HANDOFF, no product merge or rollout. Use private files locally only with user's explicit permission for any external sharing. Current evidence: R22 corrected job 138903546091, R21 first frozen gate 8/8 safe and 5/8 improved, R19 failure retained; see cycles/r22/RESULTS.md. DIL may read this note; it is not a task queue or a formal adoption request.
+
+
+## Applied 01 outcome — closed
+
+[Actual results](applied01/RESULTS.md) / [status](applied01/STATUS.json). Native Blender validation and metric UV correction passed (14/14); only expected two parts change. The default square chart was an identified planning error. Visual quality, budget and garment fit remain separate, unproven. No new task by default; no DIL workload or production adoption.

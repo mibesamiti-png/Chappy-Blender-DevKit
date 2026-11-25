@@ -1,0 +1,40 @@
+{
+  "cycle": "applied01",
+  "status": "closed_scoped_gate_passed",
+  "approved": false,
+  "synthetic_only": true,
+  "frozen_head": "5746fb3dae5cdd4d9d8d7776e63e55bfd3c40023",
+  "run": 45529514481,
+  "job": 138921043534,
+  "artifact_id": 14983454448,
+  "artifact_bytes": 1299627,
+  "archive_crc_pass": true,
+  "archive_files": 10,
+  "parts_per_state": 7,
+  "states": 2,
+  "base_vertices": 739,
+  "base_quads": 546,
+  "base_triangles": 1092,
+  "evaluated_triangles": 2928,
+  "part_states_passed": 14,
+  "uv_improved": 14,
+  "interface_checks": 22,
+  "max_interface_gap": 0,
+  "per_part_base_hits": 0,
+  "per_part_evaluated_hits": 0,
+  "per_panel_uv_overlap": 0,
+  "unexpected_base_pair_contacts": 0,
+  "changed_parts": [
+    "cup_R",
+    "strap_R"
+  ],
+  "unchanged_parts": 5,
+  "limitations": [
+    "no production fit or appearance pass",
+    "no vertex budget or LOD benchmark",
+    "no shared atlas or live dependency graph",
+    "cross-part thick seam clearance not established",
+    "no measured DIL benefit"
+  ],
+  "next": "Stop after this bounded task; choose further target only by owner decision."
+}
