@@ -1727,3 +1727,127 @@ jobs:
           path: ti45-results/
           if-no-files-found: warn
           retention-days: 14
+      # Phase45 run 45630079248: integrity passed, research gate failed;
+      # 3 result-only flags: round twist 85/95, rounded twist 95.
+      # Phase46 NumPy basis enumeration checked locally against LP on 400 controls.
+      # Numerical tolerances and uncertain classifications, not exact predicates.
+      - name: Phase46 audit overlap beyond shared vertices and edges
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti46.py" <<'PY'
+          from pathlib import Path
+          import os
+          from itertools import combinations
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti44.py').read_text().split('\nA=np.array([[0.,0.,0.]',1)[0])
+          def incident_probe(V,ia,ib):
+              ia=list(ia);ib=list(ib);shared=set(ia)&set(ib)
+              if len(shared)==3:return 'duplicate_face'
+              if len(shared) not in (1,2):return 'unsupported'
+              V=np.asarray(V,float);P=V[ia];Q=V[ib];o=V[min(shared)]
+              s=max(np.linalg.norm(P-o,axis=1).max(),np.linalg.norm(Q-o,axis=1).max())
+              if not np.isfinite(s) or s<=0:return 'invalid'
+              P=(P-o)/s;Q=(Q-o)/s
+              if min(np.linalg.norm(np.cross(X[1]-X[0],X[2]-X[0])) for X in (P,Q))<1e-10:return 'invalid'
+              E=np.vstack((np.hstack((P.T,-Q.T)),[1,1,1,0,0,0],[0,0,0,1,1,1]));rhs=np.array([0,0,0,1,1.])
+              sv=np.linalg.svd(E,compute_uv=False);rank=int(np.sum(sv>1e-11))
+              if np.any((sv>1e-13)&(sv<1e-9)):return 'uncertain'
+              subsets=np.array(list(combinations(range(6),rank)))
+              mat=E.T[subsets].transpose(0,2,1)
+              U,S,Vh=np.linalg.svd(mat,full_matrices=False)
+              good=S[:,-1]>1e-11
+              if not good.any():return 'uncertain'
+              mat=mat[good];subsets=subsets[good];U=U[good];S=S[good];Vh=Vh[good]
+              x=np.einsum('nki,nk->ni',Vh,np.einsum('nik,i->nk',U,rhs)/S)
+              residual=np.max(np.abs(np.einsum('nik,nk->ni',mat,x)-rhs),axis=1)
+              ok=(residual<1e-9)&(x.min(axis=1)>=-1e-9)
+              if not ok.any():return 'uncertain'
+              mask=np.array([int(i not in shared) for i in ia+ib])
+              maximum=float(np.max(np.sum(x[ok]*mask[subsets[ok]],axis=1)))
+              return 'beyond_shared' if maximum>1e-6 else 'uncertain' if maximum>1e-9 else 'shared_only'
+          A=[[0.,0,0],[1,0,0],[0,1,0]]
+          cases=[
+           ('edge_opposite_coplanar',A+[[.5,-1,0]],(0,1,2),(1,0,3),'shared_only'),
+           ('edge_same_side_coplanar',A+[[.5,.5,0]],(0,1,2),(1,0,3),'beyond_shared'),
+           ('edge_folded_nonplanar',A+[[.5,.5,1]],(0,1,2),(1,0,3),'shared_only'),
+           ('vertex_opposite_coplanar',A+[[-1,0,0],[0,-1,0]],(0,1,2),(0,3,4),'shared_only'),
+           ('vertex_overlap_coplanar',A+[[.8,.1,0],[.1,.8,0]],(0,1,2),(0,3,4),'beyond_shared'),
+           ('vertex_crossing_nonplanar',A+[[.5,.2,1],[.5,.2,-1]],(0,1,2),(0,3,4),'beyond_shared'),
+           ('vertex_only_nonplanar',A+[[-.5,-.2,1],[-.5,-.2,-1]],(0,1,2),(0,3,4),'shared_only'),
+           ('vertex_ray_overlap',A+[[.5,0,0],[.25,0,1]],(0,1,2),(0,3,4),'beyond_shared'),
+           ('duplicate_face',A,(0,1,2),(2,1,0),'duplicate_face'),
+           ('degenerate',A+[[2,0,0]],(0,1,2),(0,1,3),'invalid')]
+          rng=np.random.default_rng(4602);controls=[]
+          for name,verts,ia,ib,want in cases:
+              for trial in range(40):
+                  R,_=np.linalg.qr(rng.normal(size=(3,3)));s=10.**rng.uniform(-2,2)
+                  V=np.asarray(verts)@R.T*s+rng.uniform(-5,5,3)*s
+                  a=list(rng.permutation(ia));b=list(rng.permutation(ib))
+                  actual=incident_probe(V,a,b)
+                  controls.append(dict(case=name,trial=trial,expected=want,actual=actual,ok=actual==want))
+          def audit(o,data):
+              dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+              try:
+                  m.calc_loop_triangles()
+                  V=np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+                  V=(V-data['origin'])@data['Q']/data['scale']
+                  F=[tuple(t.vertices) for t in m.loop_triangles]
+                  ids=[t.polygon_index for t in m.loop_triangles]
+                  baseline=contacts(V,F,ids)
+                  incident=defaultdict(list)
+                  for i,tri in enumerate(F):
+                      for v in tri:incident[v].append(i)
+                  pairs={tuple(sorted((a,b))) for group in incident.values() for a,b in combinations(group,2)}
+                  counts=Counter();flags=[]
+                  for i,j in sorted(pairs):
+                      # Include internal triangulation of a single polygon too.
+                      state=incident_probe(V,F[i],F[j]);counts[state]+=1
+                      if state!='shared_only':
+                          flags.append(dict(triangles=[i,j],faces=[ids[i],ids[j]],state=state))
+                  return dict(nonincident_pairs=len(baseline['contact_pairs']),degenerate=len(baseline['degenerate']),incident_counts=dict(counts),incident_tested=len(pairs),flags=flags)
+              finally:ev.to_mesh_clear()
+          prior=json.loads(Path('ti45-results/results.json').read_text())
+          req(prior['complete'] and prior['anchor_gate'],'Phase45 integrity failed')
+          risks={(x['case'],x['motion'],x['angle']) for x in prior['rows'] if x['classification']=='result_only'}
+          req(risks=={('round','twist',85),('round','twist',95),('rounded','twist',95)},'Phase45 risk set changed')
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[]
+          for spec in specs:
+              o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  rig=rig_for(data,spec[0]);attach(o,rig);attach(new,rig)
+                  poses=list(POSES)+[('twist'+str(a),(0,a,0),(0,-a,0),False) for a in (85,90,95)]
+                  for pose in poses:
+                      set_pose(rig,data,pose)
+                      a=audit(o,data);b=audit(new,data)
+                      rows.append(dict(case=spec[0],pose=pose[0],source=a,result=b,source_unchanged=all_snapshot(o)==before))
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=spec[0],reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti46-results');d.mkdir(exist_ok=True)
+          complete=len(rows)==32 and not failures and all(r['source_unchanged'] for r in rows)
+          controls_gate=all(c['ok'] for c in controls)
+          def bad(x):
+              return bool(x['nonincident_pairs'] or x['degenerate'] or x['flags'])
+          risks=[dict(case=r['case'],pose=r['pose']) for r in rows if bad(r['result']) and not bad(r['source'])]
+          out=dict(approved=False,blender=bpy.app.version_string,complete=complete,controls_gate=controls_gate,gate=complete and controls_gate and not risks,risks=risks,rows=rows,controls=controls,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          compact=[dict(case=r['case'],pose=r['pose'],source={k:v for k,v in r['source'].items() if k!='flags'},result={k:v for k,v in r['result'].items() if k!='flags'}) for r in rows]
+          print('TI46_SUMMARY',json.dumps(dict(gate=out['gate'],complete=complete,controls_pass=sum(c['ok'] for c in controls),controls_total=len(controls),risks=risks,cases=compact,failures=failures)),flush=True)
+          assert complete and controls_gate,'incident audit integrity failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti46.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti46-incident-audit-${{ github.sha }}
+          path: ti46-results/
+          if-no-files-found: warn
+          retention-days: 14
