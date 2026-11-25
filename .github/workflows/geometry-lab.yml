@@ -909,6 +909,7 @@ jobs:
           mkdir -p runs/applied02
           "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python applied02/blender_run.py -- --output runs/applied02
       - run: python -m applied02.audit --dir runs/applied02
+      - run: python -m applied02.contact_diagnostic --dir runs/applied02
       - uses: actions/upload-artifact@v4
         if: always()
         with:
