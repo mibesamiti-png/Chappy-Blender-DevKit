@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from cbdk.glb_surface_distance import (
     SurfaceDistanceError, _SurfaceWorkBudget, compare_triangle_surfaces,
+    _directed, _validated_triangles,
 )
 from cbdk.glb_multires_surface import (
     _expanded_review, compare_expanded_triangle_surfaces,
@@ -34,6 +35,11 @@ class ExpandedSurfaceTests(unittest.TestCase):
         for key in ("reference_to_candidate", "candidate_to_reference"):
             self.assertEqual(new["fixed_surface"][key], old_fixed[key])
             self.assertEqual(new["adaptive_surface"][key], old_adaptive[key])
+        exhaustive = _directed(_validated_triangles(ref, "ref"),
+                               _validated_triangles(cand, "cand"), accelerated=False)
+        for key in ("mean", "sampled_max", "sample_count"):
+            self.assertEqual(new["fixed_surface"]["reference_to_candidate"][key],
+                             exhaustive[key])
         reports = (new["fixed_surface"], new["adaptive_surface"])
         directions = ("reference_to_candidate", "candidate_to_reference")
         self.assertEqual(new["work_budget"]["used"]["triangle_evaluations"],
