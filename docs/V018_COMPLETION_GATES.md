@@ -73,3 +73,18 @@ EXT-001に値なしTOMLレビュー/共有案内/公式6例の項目照合を追
 | 保留 | NEXT-004: GitHub直接インストール | 既存保留を維持 |
 
 移行ゲート：現行自動化完了=false、ブロッカー整理=true、最新PR独立7CI確認=true、ドラフト/別承認方針=true。R18は自動割当せず、Aが既存仕様から残作業を限定判断。次期active=false、正式v0.17.0/last_verified維持。
+
+
+## 2026-11-25 JST — R18限定受入後の残条件
+
+#142統合dev `36d4090402f66f49d5644fbef91f1c03d95a6b34` 独立7CI成功。[Blender実測](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45547798994) 3版各67 lifecycle、R18 global/inline center、合成Extension ZIP/公式build/validateを確認。既存7部品、6機能、旧6レシピの互換維持。実行を拒否する固定sentinel付き合成Extensionは実用アドオンではない。
+
+| 分類 | 現在の到達点 | 残る完成条件 |
+|---|---|---|
+| UI-001/BUILD-001 | コード所有descriptorで第6機能追加と安全なレシピ別UIを実証 | 汎用型付き設定・任意の新規機能の契約は未対応。固定機能を増やすだけの追加ラウンドは禁止。既存仕様との必要差を限定 |
+| EXT-001 | 明示metadataからTOML/合成ZIP生成と公式build/validate、実previewの6機能検査 | 実際に動くCBDK自作previewのExtension化、登録/解除/実operator検証は未実装。合成sentinelの合格を正式配布の承認と混同しない。実ライセンス/owner承認は別 |
+| NEXT-007/008/009 | 合成GLBとtriage | 許可済み実データと実因果のローカル確認 |
+| NEXT-002/024 | headless/合成ブラウザ | 実Windows GUI Undo/Redo、ライブボード実通信/音 |
+| NEXT-004 | 保留 | 明示指示まで維持 |
+
+次の判断はAが既存仕様の必要最小限の縦断経路（動作する自作preview→Extension形式→公式validate→隔離Blenderで登録・実行・解除）とUI設定契約を確認すること。権利のないコードや実ソースを勝手に変換・公開しない。追加の研究/負例/ラウンドを自動発行せず、既存の未達を一括で扱う。現行自動化完了=false、ブロッカー整理=true、独立7CI確認=true、ドラフト/別承認方針=true。次期active=false。44要件/24 NEXT/正式版/last_verified不変。

@@ -1399,3 +1399,8 @@ R13の担当枝・所有パス・負例・受け入れ条件・共通開始プ�
 ## 2026-11-25 JST — #138 CI保守受入・R18限定割当候補
 
 #137節目同期dev 922ad354 独立7CI成功。#138候補87e5b323 5CI成功、4.5.15 MISS→SHA→即時保存、4.4.3/5.2.1 HIT。dev 91d8cdcbf3950203b945afdbc84ede3beffd7c7a 独立7CI全成功、Blender45536736023全3版HIT・SHA・native成功。公式ミラー未実測、容量/速度未測定。GL #114へ確定方式通知、Issue #125 revision3 paused。R18は[限定割当](R18_ABCD_START.md)の開始条件成立まで設計のみ。状態数・正式版・研究・次期active=false不変。
+
+
+## 2026-11-25 JST — R18限定受入
+
+C#140 be0f777、D#141 bbda166各5CI、A#142 79acfdc 5CI成功。C17+D4パス重複0、A追加2パス（既存preview検査の固定5機能制約を解消し新規/全6/不正IDの回帰）。Python3.12 1249件実行、失敗0/skip7。dev `36d4090402f66f49d5644fbef91f1c03d95a6b34` 独立7CI成功：Python45547799016、Windows45547799085、Blender45547798994、Chromium45547799025、Handoff45547799094、Kit45547799014、Skill45547799182。Blender3版各67 lifecycle・R18 global/inline center、合成ZIP/公式build/validate、HIT/SHA確認。正式配布・実用Extension登録は未実装。Cの初期CI失敗→Aのmatrix限定編集許可→修正成功。統合候補は初回成功。44要件/24 NEXTの状態数維持。R19自動割当なし。[完成ゲート](V018_COMPLETION_GATES.md)。

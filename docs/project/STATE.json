@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.18: R17 B#132/C#134/D#133を#135で統合、#136で公式SHA固定キャッシュを導入。dev 236b9a3254928d7cb69d5c415fd8a3e792ee5de7 独立7CI全成功、R17限定受入成立。実GLB/GUI/権利・汎用UI/正式Extension経路は未完了。R18自動割当なし、正式v0.17.0・次期active=false維持。"
+    "milestone": "v0.18: R18 C#140/D#141を#142で統合、dev 36d4090402f66f49d5644fbef91f1c03d95a6b34 独立7CI成功。6自作機能の生成・検査、非インストール合成Extension ZIP/公式build/validateを3版実測。実機能のExtension化・汎用型付きUI・実GLB/GUI/権利は未完了。R19自動割当なし、正式v0.17.0・次期active=false維持。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -76,7 +76,7 @@
       "status": "implemented",
       "verification": "python",
       "source": "cbdk/feature_catalog.py",
-      "note": "5機能。許可リストにないコードは実行しない"
+      "note": "6自作機能・7部品。R18コード所有descriptor、旧5機能の互換性と追加mesh_centerを独立検証。許可リストにないコードは実行しない。"
     },
     {
       "id": "BUILD-001",
@@ -84,7 +84,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/modular_builder.py",
-      "note": "レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17 #135/#136: inline UIレシピ計画とA CLI連携、2種の生成/実操作/解除を3版で実測。236b9a3独立7CI成功。正式Extension経路/権利未完了。"
+      "note": "レガシー形式・固定の自作プレビューのみ 今回、StringProperty/FloatVectorProperty割当失敗の後片付け→再登録をネイティブテストへ追加。eac7453の全7CI/Blender3版成功、GUI/正式採用未確認でpartial維持。 今回addon-plan --with-ui、UI計画の生成物記録/実機照合、置換語を再解釈しない生成を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17 #135/#136: inline UIレシピ計画とA CLI連携、2種の生成/実操作/解除を3版で実測。236b9a3独立7CI成功。正式Extension経路/権利未完了。 R18 #142/36d40904 独立7CI: 第6自作機能を共通descriptorから生成・描画・実行・解除し、中心座標を独立照合。既存レシピ維持。実機能のExtension化・任意コード採用は未完了。"
     },
     {
       "id": "EDIT-001",
@@ -116,7 +116,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/ui_layout.py",
-      "note": "既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17: 既存5機能のレシピ別inline UIと2種のnative描画/操作/解除を236b9a3で3版確認。任意operator/汎用UI/GUIは未完了。"
+      "note": "既存5機能の宣言UIにrow/column・枠・型/値域付きXYZ初期値を追加。Scene衝突拒否、登録途中失敗の復旧/再登録を検査。任意operator/実Windows GUI未対応。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、操作不可理由と入力/実行の有効状態を分離。cached選択数による助言判定と構造ガードをexecuteと共通化。eac7453の全7CI/Blender3版で検証済み。全体partial維持。 今回、fixed visible_inと矛盾する配置の拒否、型付き設定の範囲縮小を追加。4b99068の全7CI/Blender3版で検証済み。全体partial維持。 R17: 既存5機能のレシピ別inline UIと2種のnative描画/操作/解除を236b9a3で3版確認。任意operator/汎用UI/GUIは未完了。 R18 #142/36d40904: mesh_centerをglobal/inline UIの両方で3版実測、67 lifecycleチェック各版成功。コード所有のmode/operator/input契約を追加。汎用型付きUI・任意operator・実Windows GUIは未完了。"
     },
     {
       "id": "EXT-001",
@@ -124,7 +124,7 @@
       "status": "partial",
       "verification": "blender_ci",
       "source": "cbdk/extension_preflight.py",
-      "note": "必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。 R17: max/permissionsのoptional構造と公式7例（4一致/1不一致/1未分類/1範囲外）を236b9a3の3版で確認。正式ZIP・残optional・権利未完了。"
+      "note": "必須manifest項目の未入力/構造不正と承認/配布待ちを分離。SPDXは構文のみでライセンス選択なし。依存/同梱閉包を照合。公式extension validateはデータ専用合成3例のみ、実部品/正式ZIP未検証。63bddb9の全7CI・Blender3版成功。全体partial維持。 今回、値/パス/未知キー名を出さないTOMLレビューと項目別案内、公式結果の項目照合を追加。未知/部分一致/不一致を成功にせず6合成例で確認。ede29deのBlender3版等5系統、パーサー修正1e18232のPython839件×3/Windows2成功。全体partial維持。 R17: max/permissionsのoptional構造と公式7例（4一致/1不一致/1未分類/1範囲外）を236b9a3の3版で確認。正式ZIP・残optional・権利未完了。 R18 #142/36d40904: 明示合成metadata→TOML→非インストール固定2member ZIP、公式build/validate双方を3版実測。Aが6機能の実preview検査を接続。実機能をExtensionへ変換・登録する経路、実権利・正式配布は未完了。"
     },
     {
       "id": "INST-001",
@@ -164,7 +164,7 @@
       "status": "partial",
       "verification": "python",
       "source": "cbdk/recipe_matrix.py",
-      "note": "6レシピ・5機能・7部品の依存/3版互換性に加え、生成前AST相対import/export・登録衝突・実機KNOWN/CI一覧を照合。NEXT-003の受け入れ完了。固定自作previewのみで一般の新規登録/承認は未対応、全体partialを維持。Python767件×3/Windows2/Blender3版確認。"
+      "note": "6レシピ・5機能・7部品の依存/3版互換性に加え、生成前AST相対import/export・登録衝突・実機KNOWN/CI一覧を照合。NEXT-003の受け入れ完了。固定自作previewのみで一般の新規登録/承認は未対応、全体partialを維持。Python767件×3/Windows2/Blender3版確認。 R18: 旧6レシピ/5機能/7部品を凍結し第6機能の独立合成coverageと登録監査を追加。36d40904独立7CI成功。新規任意部品の自動承認なし。"
     },
     {
       "id": "REG-001",
@@ -397,7 +397,7 @@
       "status": "open",
       "severity": "low",
       "title": "Blender公式アーカイブ取得で稀にHTTP 403",
-      "workaround": "固定公式SHAでアーカイブを毎回検証し同一PRキャッシュ再利用を確認。キャッシュミス時の403は残り得る。失敗ジョブのみ再実行。別PR共有ヒットは未確認。",
+      "workaround": "固定公式SHAで復元/取得後に毎回照合。#138以降のdevおよびR18候補・独立CIで別PR共有HITを確認。MISS時は検証直後保存、公式mirror fallbackあり（fallback実測なし）。403は残り得る。失敗ジョブのみ再実行。容量・速度効果未測定。",
       "related_requirement": "TEST-001"
     },
     {
@@ -1054,6 +1054,11 @@
       "id": "DEC-079",
       "decision": "R17限定受入と公式SHA固定キャッシュの統合。新規ラウンドの自動割当を止め、既存完成条件の残りを分離する",
       "note": "B#132/C#134/D#133各5CI、結合#135 c7609fa 5CI、dev 84c9629は5.2.1取得403で6/7。#136 e4e2e3a 5CI・3版cold/warm SHA一致、dev 236b9a3254928d7cb69d5c415fd8a3e792ee5de7 独立7CI成功（Python45533937263、Windows45533937251、Blender45533937378、Chromium45533937233、Handoff45533937238、Kit45533937212、Skill45533937244）。3版実行でB triage、C 2種UI、D optional 7例を確認。別PR共有ヒット未確認。44要件/24 NEXT/last_verified/正式v0.17.0/次期active=false維持。"
+    },
+    {
+      "id": "DEC-080",
+      "decision": "R18限定受入。6自作機能の生成と非インストール合成Extension経路を実証し、実機能のExtension化と汎用UIを残条件として分離する",
+      "note": "C#140 be0f777/D#141 bbda166各5CI、A#142 79acfdc 5CI成功。専門21パス重複0、A追加2パス（preview検査と回帰）。dev 36d4090402f66f49d5644fbef91f1c03d95a6b34 独立7CI成功（Python45547799016、Windows45547799085、Blender45547798994、Chromium45547799025、Handoff45547799094、Kit45547799014、Skill45547799182）。3版各67 lifecycle、R18 global/inline、合成ZIP/公式build/validate、HIT/SHA一致。44要件/24 NEXT/正式v0.17.0/last_verified/次期active=false維持。R19自動発行なし。"
     }
   ],
   "last_verified": {
