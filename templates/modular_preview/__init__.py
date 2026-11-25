@@ -31,14 +31,19 @@ if any(globals().get(key) for key in (
 _FEATURE_IDS = __CBDK_FEATURE_IDS__
 _UI_SECTIONS = __CBDK_UI_SECTIONS__
 _UI_OPTIONS = __CBDK_UI_OPTIONS__
+_FEATURE_CONTRACT = __CBDK_FEATURE_CONTRACT__
 _FEATURE_MODULES = {feature: importlib.import_module("." + feature, __name__ + ".features")
                     for feature in _FEATURE_IDS}
 _OPERATORS = [_FEATURE_MODULES[feature].OPERATOR_CLASS for feature in _FEATURE_IDS]
 _OPERATORS_BY_FEATURE = dict(zip(_FEATURE_IDS, _OPERATORS))
-# Fixed context map for the five reviewed CBDK-authored operators.
-# Recipes/JSON cannot inject a new context or an arbitrary operator.
-_OBJECT_MODE_FEATURES = frozenset(("object_selection", "mesh_bounds", "modifier_summary"))
-_EDIT_MODE_FEATURES = frozenset(("edit_selection", "vertex_nudge"))
+# Generated from code-owned descriptors, never from recipe JSON.
+if set(_FEATURE_CONTRACT) != set(_FEATURE_IDS):
+    raise RuntimeError("Feature contract does not match generated selection")
+for feature_id, operator in _OPERATORS_BY_FEATURE.items():
+    if operator.bl_idname != _FEATURE_CONTRACT[feature_id]["operator"]:
+        raise RuntimeError("Authored operator registration contract mismatch")
+_OBJECT_MODE_FEATURES = frozenset(f for f, d in _FEATURE_CONTRACT.items() if d["mode"] == "OBJECT")
+_EDIT_MODE_FEATURES = frozenset(f for f, d in _FEATURE_CONTRACT.items() if d["mode"] == "EDIT_MESH")
 assert set(_FEATURE_IDS) <= _OBJECT_MODE_FEATURES | _EDIT_MODE_FEATURES
 
 
@@ -59,12 +64,13 @@ def _preview_unavailable_reason(feature_id, context):
     if getattr(context, "mode", None) != required_mode:
         return "Switch to " + required_mode + " mode"
 
-    if feature_id == "object_selection":
+    hint = _FEATURE_CONTRACT[feature_id]["ui_hint"]
+    if hint == "selected_objects":
         # The matching read-only helper refuses a context with no selection
         # collection. This is a context hint, not a scan of selected objects.
         if getattr(context, "selected_objects", None) is None:
             return "Context does not expose selected_objects"
-    elif feature_id == "mesh_bounds":
+    elif hint == "bounds":
         vertices = getattr(mesh, "vertices", None)
         if vertices is None or len(vertices) == 0:
             return "Active mesh must contain vertices"
@@ -81,14 +87,16 @@ def _preview_unavailable_reason(feature_id, context):
                 return "Mesh bounding box contains non-finite coordinates"
         except (TypeError, ValueError, OverflowError):
             return "Mesh bounding box contains non-finite coordinates"
-    elif feature_id == "edit_selection":
+    elif hint == "single_edit":
         objects = getattr(context, "objects_in_mode_unique_data", None)
         if objects is None:
             return "Cannot verify multi-object Edit Mode state"
         if sum(1 for obj in objects if getattr(obj, "type", None) == "MESH") != 1:
             return "Exactly one unique mesh must be in Edit Mode"
-    elif feature_id == "vertex_nudge":
+    elif hint == "nudge":
         return _FEATURE_MODULES[feature_id].ui_unavailable_reason(context)
+    elif hint != "mesh":
+        return "Unsupported authored context contract"
     return None
 
 
@@ -123,7 +131,7 @@ class VIEW3D_PT_cbdk_modular_preview(bpy.types.Panel):
             for feature_id, label in visible_buttons:
                 button_row = body.row(align=True)
                 reason = _preview_unavailable_reason(feature_id, context)
-                if feature_id == "vertex_nudge":
+                if _FEATURE_CONTRACT[feature_id]["input"] == "offset":
                     # A disabled nudge action must not also disable its XYZ
                     # editor. Only disable the input for invalid mesh/mode.
                     active = getattr(context, "active_object", None)

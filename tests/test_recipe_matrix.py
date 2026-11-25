@@ -43,7 +43,18 @@ class RecipeMatrixTests(unittest.TestCase):
         result = audit_recipe_matrix(root=self.root)
         self.assertEqual(result["status"], "static_checks_passed")
         self.assertEqual(result["recipe_count"], 6)
-        self.assertEqual(set(result["covered_features"]), set(TRUSTED_FEATURES))
+        self.assertEqual(set(result["covered_features"]),
+                         {"object_selection", "edit_selection", "mesh_bounds",
+                          "modifier_summary", "vertex_nudge"})
+        self.assertEqual(set(result["all_covered_features"]),
+                         set(result["covered_features"]) | {"mesh_center"})
+        self.assertEqual(set(result["all_covered_features"]), set(TRUSTED_FEATURES))
+        extra = result["additional_authored_coverage"]
+        self.assertEqual(set(extra["requested_features"]), {"mesh_bounds", "mesh_center"})
+        self.assertEqual(extra["resolved_features"], extra["requested_features"])
+        self.assertEqual(set(extra["part_ids"]), {"BLCTX-001", "BLGEO-001"})
+        self.assertEqual(tuple(extra["target_versions_static_compatible"]), CHECKED_BLENDER_VERSIONS)
+        self.assertFalse(extra["runtime_verified"])
         self.assertEqual(set(result["covered_parts"]), set(TRUSTED_PART_SOURCES))
         self.assertEqual(tuple(result["checked_blender_target_versions"]),
                          CHECKED_BLENDER_VERSIONS)
@@ -56,9 +67,36 @@ class RecipeMatrixTests(unittest.TestCase):
 
     def test_all_recipe_resolves_every_trusted_dependency(self):
         rows = {r["recipe"]: r for r in audit_recipe_matrix(root=self.root)["recipes"]}
-        self.assertEqual(set(rows["modular_all"]["resolved_features"]), set(TRUSTED_FEATURES))
+        self.assertEqual(set(rows["modular_all"]["resolved_features"]),
+                         {"object_selection", "edit_selection", "mesh_bounds",
+                          "modifier_summary", "vertex_nudge"})
         self.assertEqual(set(rows["modular_all"]["part_ids"]), set(TRUSTED_PART_SOURCES))
         self.assertEqual(set(rows["modular_nudge"]["requested_features"]), {"vertex_nudge"})
+
+    def test_r18_missing_source_and_dependency_drift_refused(self):
+        source = self.root / "templates/modular_preview/features/mesh_center.py"
+        content = source.read_bytes()
+        source.unlink()
+        with self.assertRaisesRegex(ValueError, "Missing or unsafe"):
+            audit_recipe_matrix(root=self.root)
+        source.write_bytes(content)
+        self.modify("catalog/addon_features.json", lambda doc: next(
+            row for row in doc["features"] if row["id"] == "mesh_center"
+        ).update(requires_features=["modifier_summary"]))
+        with self.assertRaisesRegex(ValueError, "R18 recipe dependency closure drift"):
+            audit_recipe_matrix(root=self.root)
+
+    def test_r18_incompatible_version_refused(self):
+        self.modify("catalog/addon_features.json", lambda doc: next(
+            row for row in doc["features"] if row["id"] == "mesh_center"
+        ).update(min_blender="5.3.0"))
+        with self.assertRaisesRegex(ValueError, "outside"):
+            audit_recipe_matrix(root=self.root)
+
+    def test_legacy_all_cannot_silently_include_new_feature(self):
+        self.modify("recipes/modular_all.json", lambda doc: doc["features"].append("mesh_center"))
+        with self.assertRaisesRegex(ValueError, "drift"):
+            audit_recipe_matrix(root=self.root)
 
     def test_known_recipe_changes_fail_closed(self):
         self.modify("recipes/modular_objects.json",

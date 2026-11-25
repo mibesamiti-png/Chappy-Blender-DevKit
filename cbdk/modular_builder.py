@@ -13,7 +13,8 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 from .addon_builder import _sha, _trusted_read
-from .feature_catalog import TRUSTED_FEATURES, TRUSTED_PART_SOURCES, plan_features
+from .feature_catalog import (TRUSTED_FEATURES, TRUSTED_PART_SOURCES,
+                              feature_runtime_contract, plan_features)
 from .registration_audit import validate_registration_assets
 from .ui_layout import plan_ui_layout
 
@@ -102,13 +103,14 @@ def build_modular(
     catalog = _read_catalog(root=root)
 
     init_template = _trusted_read("templates/modular_preview/__init__.py", root=root).decode("utf-8")
-    for marker in ("__CBDK_DISPLAY_NAME__", "__CBDK_FEATURE_IDS__", "__CBDK_UI_SECTIONS__", "__CBDK_UI_OPTIONS__"):
+    for marker in ("__CBDK_DISPLAY_NAME__", "__CBDK_FEATURE_IDS__", "__CBDK_UI_SECTIONS__", "__CBDK_UI_OPTIONS__", "__CBDK_FEATURE_CONTRACT__"):
         if init_template.count(marker) != 1:
             raise ValueError("Modular template placeholder must occur exactly once: " + marker)
     replacements = {"__CBDK_DISPLAY_NAME__": repr(name),
                     "__CBDK_FEATURE_IDS__": repr(resolved_features),
                     "__CBDK_UI_SECTIONS__": repr(ui_sections),
-                    "__CBDK_UI_OPTIONS__": repr(ui_options)}
+                    "__CBDK_UI_OPTIONS__": repr(ui_options),
+                    "__CBDK_FEATURE_CONTRACT__": repr(feature_runtime_contract(resolved_features))}
     # Match the original template only. Never reinterpret sentinel-like text
     # introduced by a label/default in a previous substitution.
     init_code = re.sub("|".join(map(re.escape, replacements)),
@@ -137,7 +139,8 @@ def build_modular(
 
     # Reject broken authored imports and colliding registrations before any ZIP
     # is created. Metadata planning alone cannot see these source-level drifts.
-    validate_registration_assets(assets, resolved_features)
+    validate_registration_assets(assets, resolved_features,
+                                 descriptors=feature_runtime_contract(resolved_features))
 
     provenance = {
         "schema_version": 2, "template": TEMPLATE, "package_id": PACKAGE_ID,

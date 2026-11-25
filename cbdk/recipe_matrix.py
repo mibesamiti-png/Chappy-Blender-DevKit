@@ -1,4 +1,4 @@
-"""Fail-closed static matrix for CBDK's six trusted modular preview recipes.
+"""Fail-closed legacy recipe matrix and separate authored-feature coverage.
 
 This inspects only the repository's authored metadata and source files; it
 never imports Blender, executes scanned add-ons, builds a release package,
@@ -29,6 +29,28 @@ EXPECTED_RECIPES = {
         "modifier_summary", "vertex_nudge",
     }),
 }
+# Explicit independent policy: the six legacy recipe rows remain frozen.
+EXPECTED_R18_FEATURES = frozenset({"mesh_bounds", "mesh_center"})
+EXPECTED_R18_PARTS = frozenset({"BLCTX-001", "BLGEO-001"})
+EXPECTED_AUTHORED_FEATURES = frozenset({
+    "object_selection", "edit_selection", "mesh_bounds",
+    "modifier_summary", "vertex_nudge", "mesh_center",
+})
+EXPECTED_PARTS = frozenset({
+    "BLCTX-001", "BLCTX-002", "BLGEO-001", "BLMOD-001",
+    "BME-001", "BME-002", "BME-003",
+})
+
+
+def r18_center_recipe() -> dict:
+    """Fixed synthetic authored example, separate from the six legacy files."""
+    return {"schema_version": 2, "template": "modular_preview",
+            "package_id": "cbdk_modular_preview",
+            "display_name": "CBDK R18 Bounds Center",
+            "features": ["mesh_bounds", "mesh_center"],
+            "purpose": "local_development_preview"}
+
+
 CHECKED_BLENDER_VERSIONS = ("4.4.3", "4.5.15", "5.2.1")
 MAX_RECIPE_BYTES = 20_000
 
@@ -37,10 +59,13 @@ def audit_recipe_matrix(*, root: Path = ROOT) -> dict:
     """Audit all known recipes and exact helper closure without executing code."""
     project = root.resolve()
     catalog = load_feature_catalog(root=project)
-    if set(catalog) != set(TRUSTED_FEATURES):
+    if set(catalog) != set(TRUSTED_FEATURES) or set(catalog) != EXPECTED_AUTHORED_FEATURES:
         raise ValueError("Trusted feature catalog coverage mismatch")
-    if EXPECTED_RECIPES["modular_all"] != set(TRUSTED_FEATURES):
-        raise ValueError("modular_all policy no longer covers every trusted feature")
+    if set(TRUSTED_PART_SOURCES) != EXPECTED_PARTS:
+        raise ValueError("Trusted helper inventory mismatch")
+    legacy = EXPECTED_RECIPES["modular_all"]
+    if legacy != EXPECTED_AUTHORED_FEATURES - {"mesh_center"}:
+        raise ValueError("Legacy modular_all feature policy drift")
 
     rows = []
     all_features: set[str] = set()
@@ -62,6 +87,8 @@ def audit_recipe_matrix(*, root: Path = ROOT) -> dict:
             for version in CHECKED_BLENDER_VERSIONS
         ]
         plan = plans[0]
+        if frozenset(plan["ordered_features"]) != expected:
+            raise ValueError("Legacy recipe resolved feature drift: " + name)
         for other in plans[1:]:
             if (other["part_ids"] != plan["part_ids"]
                     or other["ordered_features"] != plan["ordered_features"]):
@@ -85,10 +112,30 @@ def audit_recipe_matrix(*, root: Path = ROOT) -> dict:
         all_features.update(plan["ordered_features"])
         all_parts.update(plan["part_ids"])
 
-    if all_features != set(TRUSTED_FEATURES):
-        raise ValueError("Registered feature is missing from recipe coverage")
-    if all_parts != set(TRUSTED_PART_SOURCES):
+    if all_features != legacy:
+        raise ValueError("Legacy feature is missing from recipe coverage")
+    if all_parts != EXPECTED_PARTS:
         raise ValueError("Registered part is missing from recipe coverage")
+
+    # Independently require the new feature, not just whatever the catalog
+    # happens to contain. Keep legacy report counts/rows unchanged.
+    _, requested = validate_modular_recipe(r18_center_recipe())
+    if frozenset(requested) != EXPECTED_R18_FEATURES:
+        raise ValueError("R18 recipe feature drift")
+    for version in CHECKED_BLENDER_VERSIONS:
+        plan = plan_features(requested, root=project, target_blender=version)
+        if (frozenset(plan["ordered_features"]) != EXPECTED_R18_FEATURES
+                or frozenset(plan["part_ids"]) != EXPECTED_R18_PARTS):
+            raise ValueError("R18 recipe dependency closure drift")
+        if (plan["approved"] is not False or plan["redistribution_cleared"] is not False
+                or plan["preview_only"] is not True or plan["runtime_verified"] is not False):
+            raise ValueError("Unexpected approval or verification claim in R18 plan")
+        for feature in plan["ordered_features"]:
+            _trusted_read(TRUSTED_FEATURES[feature]["source"], root=project)
+        for source in plan["part_sources"]:
+            _trusted_read(source, root=project)
+    if all_features | EXPECTED_R18_FEATURES != EXPECTED_AUTHORED_FEATURES:
+        raise ValueError("Authored feature is missing from combined coverage")
     return {
         "schema_version": 1,
         "kind": "cbdk_recipe_static_matrix",
@@ -96,6 +143,15 @@ def audit_recipe_matrix(*, root: Path = ROOT) -> dict:
         "recipe_count": len(rows),
         "covered_features": sorted(all_features),
         "covered_parts": sorted(all_parts),
+        "all_covered_features": sorted(all_features | EXPECTED_R18_FEATURES),
+        "additional_authored_coverage": {
+            "recipe": "r18_center_synthetic",
+            "requested_features": sorted(EXPECTED_R18_FEATURES),
+            "resolved_features": sorted(EXPECTED_R18_FEATURES),
+            "part_ids": sorted(EXPECTED_R18_PARTS),
+            "target_versions_static_compatible": list(CHECKED_BLENDER_VERSIONS),
+            "runtime_verified": False,
+        },
         "checked_blender_target_versions": list(CHECKED_BLENDER_VERSIONS),
         "recipes": rows,
         "preview_only": True,

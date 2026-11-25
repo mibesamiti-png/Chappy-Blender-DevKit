@@ -25,12 +25,26 @@ class RegistrationAuditTests(unittest.TestCase):
     def test_current_six_builds_and_ci_match(self):
         result = audit_registration(root=ROOT)
         self.assertEqual(result["recipe_count"], 6)
+        self.assertEqual(set(result["features"]), {"object_selection", "edit_selection",
+                         "mesh_bounds", "modifier_summary", "vertex_nudge"})
+        self.assertEqual(set(result["all_covered_features"]),
+                         set(result["features"]) | {"mesh_center"})
+        self.assertEqual(set(result["additional_authored_coverage"]["resolved_features"]),
+                         {"mesh_bounds", "mesh_center"})
         self.assertFalse(result["runtime_verified"])
         self.assertFalse(result["approved"])
 
     def assets(self):
         return {"features/a.py": b'from ..helpers.tool import run\nclass A:\n bl_idname="cbdk.a"\nOPERATOR_CLASS=A\n',
                 "helpers/tool.py": b'def run(): pass\n'}
+
+    def test_descriptor_operator_mismatch_is_refused(self):
+        assets = self.assets()
+        with self.assertRaisesRegex(ValueError, "disagrees with descriptor"):
+            validate_registration_assets(assets, ("a",),
+                                         descriptors={"a": {"operator": "cbdk.other"}})
+        with self.assertRaisesRegex(ValueError, "coverage mismatch"):
+            validate_registration_assets(assets, ("a",), descriptors={})
 
     def test_missing_transitive_helper_rejected(self):
         assets = self.assets()

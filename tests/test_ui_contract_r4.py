@@ -51,9 +51,13 @@ def _generated_panel_namespace(source):
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
             target = node.targets[0]
             if isinstance(target, ast.Name) and target.id in (
-                "_FEATURE_IDS", "_UI_SECTIONS", "_UI_OPTIONS"):
+                "_FEATURE_IDS", "_UI_SECTIONS", "_UI_OPTIONS", "_FEATURE_CONTRACT"):
                 assignments[target.id] = ast.literal_eval(node.value)
-    assert set(assignments) == {"_FEATURE_IDS", "_UI_SECTIONS", "_UI_OPTIONS"}
+    assert set(assignments) == {"_FEATURE_IDS", "_UI_SECTIONS", "_UI_OPTIONS", "_FEATURE_CONTRACT"}
+    assert set(assignments["_FEATURE_CONTRACT"]) == set(assignments["_FEATURE_IDS"])
+    assert all(d["operator"] == AUTHORED_OPS[f]
+               and d["mode"] == ("EDIT_MESH" if f in EDIT_FEATURES else "OBJECT")
+               for f, d in assignments["_FEATURE_CONTRACT"].items())
     callback = next(node for node in tree.body
                     if isinstance(node, ast.FunctionDef)
                     and node.name == "_preview_unavailable_reason")

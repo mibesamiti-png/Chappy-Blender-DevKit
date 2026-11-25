@@ -9,6 +9,8 @@ import unittest
 from math import isfinite
 from types import SimpleNamespace
 
+from cbdk.feature_catalog import feature_runtime_contract
+
 from test_ui_readiness_r2 import (
     FEATURES, EDIT_FEATURES, IDS, RecordingLayout, mesh_context,
     _FakeUtils, _SceneMeta, _trusted_functions,
@@ -20,6 +22,7 @@ class PreviewRollingModeTests(unittest.TestCase):
         self.namespace = {
             "isfinite": isfinite,
             "_EDIT_MODE_FEATURES": EDIT_FEATURES,
+            "_FEATURE_CONTRACT": feature_runtime_contract(FEATURES),
             "_FEATURE_MODULES": {"vertex_nudge": SimpleNamespace(
                 ui_unavailable_reason=lambda ctx:
                     ("Select at least one vertex before translating"
