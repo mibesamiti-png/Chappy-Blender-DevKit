@@ -5,6 +5,7 @@ The private source helper is used only by synthetic AST regression tests.
 """
 from __future__ import annotations
 
+import ast
 import hashlib
 from pathlib import Path
 import re
@@ -53,6 +54,14 @@ def _fixture_plan(comparison=None):
 
 def _observe_source(source):
     """AST-only observation using existing inventory, usage, and flow reports."""
+    # The generic tracer groups by class name; repeated names are not unique
+    # lexical classes. Reject that ambiguity instead of joining their paths.
+    from .glb_property_usage import _source_ast
+    tree = _source_ast(source)
+    classes = [node for node in ast.walk(tree)
+               if isinstance(node, ast.ClassDef) and node.name == EXPECTED_CLASS]
+    if len(classes) > 1:
+        raise ValueError("fixed_fixture_ambiguous_class")
     plan = _fixture_plan()
     mapping = map_repair_plan_properties(plan, [source])
     rows = []
