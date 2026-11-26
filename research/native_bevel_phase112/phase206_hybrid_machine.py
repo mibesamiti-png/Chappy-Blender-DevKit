@@ -75,14 +75,30 @@ def retry(name,fs):
 def polygon_area(xy):
     return .5*sum(x*y1-y*x1 for (x,y),(x1,y1) in zip(xy,xy[1:]+xy[:1]))
 def ring(name,outer,inner,h=THICK):
-    n=len(outer);v=[(x,y,z) for z in (-h/2,h/2) for xy in (outer,inner) for x,y in xy]
+    # Radial tooth-root transitions can project two outer vertices onto
+    # the same square-bore point. Preserve every outer vertex; collapse
+    # only consecutive coincident inner points, with triangular end caps
+    # at those transitions and no zero-width inner wall.
+    n=len(outer);unique=[];idx=[]
+    def same(a,b):return math.hypot(a[0]-b[0],a[1]-b[1])<1e-10
+    for p in inner:
+        if not unique or not same(p,unique[-1]):unique.append(p)
+        idx.append(len(unique)-1)
+    if len(unique)>1 and same(unique[0],unique[-1]):
+        last=len(unique)-1;unique.pop();idx=[0 if i==last else i for i in idx]
+    stride=n+len(unique)
+    v=[(x,y,z) for z in (-h/2,h/2) for xy in (outer,unique) for x,y in xy]
     f=[]
     for i in range(n):
-        j=(i+1)%n
-        f.extend(((i,j,j+2*n,i+2*n),(i+n,i+3*n,j+3*n,j+n),
-                  (i,i+n,j+n,j),(i+2*n,j+2*n,j+3*n,i+3*n)))
+        j=(i+1)%n;a=n+idx[i];b=n+idx[j]
+        f.append((i,j,j+stride,i+stride))
+        if a!=b:f.append((a,a+stride,b+stride,b))
+        f.append(tuple(dict.fromkeys((i,a,b,j))))
+        f.append(tuple(dict.fromkeys((i+stride,j+stride,b+stride,a+stride))))
     m=mesh(name,v,f)
-    return m,closed(m,1,(polygon_area(outer)-polygon_area(inner))*h)
+    audit=closed(m,1,(polygon_area(outer)-polygon_area(inner))*h)
+    audit['collapsed_inner_vertices_per_layer']=n-len(unique)
+    return m,audit
 def gear(n):
     # 20-degree involute flank, finite polygon approximations and backlash.
     pa=math.pi/9;r=.1*n/2;b=r*math.cos(pa);root=r-.125;tip=r+.1;start=max(root,b);pitch=2*math.pi/n
