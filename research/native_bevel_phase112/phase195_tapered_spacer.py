@@ -54,7 +54,7 @@ def write_obj(m,path):
     path.write_text('# Phase 195 synthetic research candidate; not manufacturing certified\n'+
         ''.join('v %.9g %.9g %.9g\n'%tuple(v) for v in V)+
         ''.join('f '+' '.join(str(i+1) for i in f)+'\n' for f in F))
-def fabricate(m,role,radius,width,minimum,output=None,probe='normal'):
+def fabricate(m,role,radius,width,minimum,output=None,probe='normal',observer=None):
     before=signature(*arrays(m));rounded=None;final=None;prepared=None
     def finish(reason,**kw):
         return dict(reason=reason,accepted=reason=='complete',source_unchanged=signature(*arrays(m))==before,
@@ -122,6 +122,7 @@ def fabricate(m,role,radius,width,minimum,output=None,probe='normal'):
             intermediate_unchanged=signature(*arrays(rounded))==rh)
         accepted=all(checks.values())
         if accepted and output is not None:write_obj(final,output)
+        if accepted and observer is not None:observer(final)
         return finish('complete' if accepted else 'discarded',checks=checks,
             clearance=clearance,min_wall_sample=min(walls) if walls else None,wall_samples=len(walls),
             raw_audit=raw_audit,final_audit=out,preparation=preparation,ray_disagreements=disagreements,
