@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 168
+name: Geometry Lab isolated operations Phase 169
 on:
   pull_request:
     paths:
@@ -366,6 +366,22 @@ jobs:
           assert len(d["rows"])==7 and all(r["source_unchanged"] for r in d["rows"])
           assert all(not r["passed"] for r in d["rows"] if r["name"] not in ("bevel_then_hole","hole_then_bevel"))
           print("Selected",d["selected"])
+          PY
+      - name: Verify completion of partially machined protected parts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase169_combined_state_planner.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase169_combined_state_planner.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==11 and all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert sum(r["status"]=="goal_met" for r in d["rows"])==7
+          assert sum(t["rollback_exact"] for r in d["rows"] for t in r["trace"])==2
           PY
       - uses: actions/upload-artifact@v4
         if: always()
