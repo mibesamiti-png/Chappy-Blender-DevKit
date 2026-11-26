@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 171
+name: Geometry Lab isolated operations Phase 172
 on:
   pull_request:
     paths:
@@ -416,6 +416,23 @@ jobs:
           assert len(d["rows"])==12 and all(r["input_unchanged"] for r in d["rows"])
           print("Equivalent inputs",sum(r["equivalent"] for r in d["rows"]),"/12")
           print("Matched decisions",sum(r["matched"] for r in d["rows"]),"/12")
+          PY
+      - name: Compare exact tessellation identity and sharp-edge-only bevel
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase172_sharp_edge_and_triangle_audit.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase172_sharp_edge_and_triangle_audit.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==12 and all(r["input_unchanged"] for r in d["rows"])
+          print("Exact triangle identity",sum(r["triangles"]["exact"] for r in d["rows"]),"/12")
+          print("Original method",sum(r["old_matched"] for r in d["rows"]),"/12")
+          print("Sharp-only method",sum(r["sharp_matched"] for r in d["rows"]),"/12")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
