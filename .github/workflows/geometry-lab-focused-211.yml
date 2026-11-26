@@ -298,3 +298,63 @@ jobs:
             research/native_bevel_phase112/results/phase211_groove*
           if-no-files-found: warn
           retention-days: 14
+
+  phase211-backed:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Verify connected groove solids and positive drive
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_backed_drive.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_backed_drive.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["independent_wall_constraint"] and not d["manufacturing_certified"] and not d["physical_walk_certified"]
+          assert d["ideal_shaft_coupling"] and not d["spring"] and d["duty"]==.77
+          assert [q["kind"] for q in d["geometry"]]==["stride","lift"]
+          assert d["geometry_gate"]==all(q["passed"] for q in d["geometry"])
+          c=d["cases"]
+          assert [v["name"] for v in c]==(["engaged","separated","motor_off"] if d["geometry_gate"] else [])
+          for v in c:
+              assert len(v["rows"])==601 and v["passed"]==all(v["checks"].values())
+              assert v["backed"] and v["groove"] and v["spring"]==0.
+              assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+              if not v["separated"]:
+                  assert v["checks"]["backplate_clearance"]==all(min(r[k+"_back_gap"] for r in v["rows"])>=.02 for k in ("stride","lift"))
+              assert (p/"phase211_backed"/("phase210_xy_"+v["name"]+".blend")).stat().st_size>0
+          assert d["backed_drive_gate"]==(len(c)==3 and all(v["passed"] for v in c))
+          print("Connected groove solid drive gate:",d["backed_drive_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-backed-${{ github.sha }}
+          path: |
+            research/native_bevel_phase112/results/phase211_backed*
+          if-no-files-found: warn
+          retention-days: 14
