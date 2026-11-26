@@ -16,15 +16,16 @@ from phase208_single_leg import Z
 from phase207_walking_machine import motion
 CENTER_Y=1.75
 LIMITS=dict(min_forward=1.,max_sideways=.75,max_tilt_deg=35.,min_drive=math.tau,max_phase_error=.20,max_foot_error=.08,max_joint=.025,near_ground=.035,max_nonfoot_near_frames=0,min_contact_frames=10,min_swing_clearance=.15)
-def run_case(name,friction,enabled,dest):
-    scene,gears,legs=setup_case(False,enabled,free=True,friction=friction)
+def run_case(name,friction,enabled,dest,center_y=CENTER_Y,save_name=None):
+    scene,gears,legs=setup_case(False,enabled,free=True,friction=friction,center_y=center_y)
     frame=bpy.data.objects['free chassis'];floor=bpy.data.objects['floor']
     moving=gears+[ob for leg in legs for ob in leg['obs']]
     obs=[frame]+moving
     assert all(ob.rigid_body.type=='ACTIVE' and not ob.rigid_body.kinematic and ob.animation_data is None for ob in obs)
     assert [ob.name for ob in scene.objects if ob.rigid_body and ob.rigid_body.type=='PASSIVE']==['floor']
     assert abs(floor.rigid_body.friction-friction)<1e-6 and all(abs(ob.rigid_body.friction-friction)<1e-6 for ob in obs)
-    if name=='driven':bpy.ops.wm.save_as_mainfile(filepath=str(dest/'phase208_free_walk.blend'))
+    if name=='driven' and save_name is None:save_name='phase208_free_walk.blend'
+    if save_name is not None:bpy.ops.wm.save_as_mainfile(filepath=str(dest/save_name))
     masses=np.array([ob.rigid_body.mass for ob in obs])
     vertices=[np.array([tuple(v.co) for v in ob.data.vertices]) for ob in obs]
     r,d,l,m,u,v=Z;rows=[];last=None;travel=[0.]*len(moving)
@@ -35,7 +36,7 @@ def run_case(name,friction,enabled,dest):
         W=[ob.evaluated_get(dg).matrix_world.copy() for ob in obs]
         # Remove chassis pose so angular and loop measurements do not mistake
         # free-body rolling or translation for input-shaft rotation.
-        ref=Matrix.Translation((0,CENTER_Y,0))@W[0].inverted()
+        ref=Matrix.Translation((0,center_y,0))@W[0].inverted()
         M=[ref@q for q in W[1:]]
         ang=[math.atan2(q[1][0],q[0][0]) for q in M]
         if last is not None:
@@ -43,7 +44,7 @@ def run_case(name,friction,enabled,dest):
         last=ang
         up=W[0].to_3x3()@Vector((0,1,0))
         tilt=math.degrees(math.acos(max(-1.,min(1.,up.normalized().z))))
-        origin=W[0]@Vector((0,-CENTER_Y,0))
+        origin=W[0]@Vector((0,-center_y,0))
         com=np.average(np.array([tuple(q.translation) for q in W]),axis=0,weights=masses)
         if initial is None:initial=origin.copy();start_com=com.copy()
         delta=origin-initial;cd=com-start_com
@@ -93,7 +94,7 @@ def run_case(name,friction,enabled,dest):
         no_nonfoot_ground=nonfoot<=LIMITS['max_nonfoot_near_frames'],
         foot_cycles=all(f['near_floor_frames']>=LIMITS['min_contact_frames'] and f['max_z']>=LIMITS['min_swing_clearance'] for f in feet.values()),
         diagonal_support=all(v>=LIMITS['min_contact_frames'] for v in pair_support.values()))
-    result=dict(name=name,friction=friction,motor_enabled=enabled,forward=forward,sideways=sideways,
+    result=dict(name=name,chassis_center_y=center_y,initial_com_proxy_z=float(start_com[2]),friction=friction,motor_enabled=enabled,forward=forward,sideways=sideways,
         com_proxy_forward=com_forward,com_proxy_xy=com_xy,max_tilt_deg=tilt,input=inp,outputs=outs,max_gear_phase_error=max_phase,
         max_foot_error=max_error,max_joint_error=max_joint,max_crank_phase=max_crank_phase,nonfoot_near_floor_frames=nonfoot,
         feet=feet,pair_support=pair_support,checks=checks,walk_candidate=all(checks.values()),rows=rows)
