@@ -16,14 +16,13 @@ from phase207_walking_machine import motion
 from phase204_four_bar import make_link_attempt,LINK_R
 from phase206_hybrid_machine import gear,capsule,retry
 FRAMES=601
-def setup_case(separated,enabled,free=False,friction=.8):
+def setup_case(separated,enabled,free=False,friction=.8,center_y=1.75):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene=bpy.context.scene;scene.gravity=(0,0,0);scene.render.fps=60
     scene.frame_start=1;scene.frame_end=FRAMES
     # Local XY is the mechanism plane, local +Y is up in the free experiment.
     # The body is an explicit ideal rigid chassis surrogate, not a manufactured frame.
     R=Matrix.Rotation(math.pi/2,3,'X')
-    center_y=1.75
     if free:
         assert not separated
         scene.gravity=(0,0,-9.81)
