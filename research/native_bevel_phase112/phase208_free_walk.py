@@ -23,7 +23,7 @@ def run_case(name,friction,enabled,dest):
     obs=[frame]+moving
     assert all(ob.rigid_body.type=='ACTIVE' and not ob.rigid_body.kinematic and ob.animation_data is None for ob in obs)
     assert [ob.name for ob in scene.objects if ob.rigid_body and ob.rigid_body.type=='PASSIVE']==['floor']
-    assert floor.rigid_body.friction==friction and all(abs(ob.rigid_body.friction-friction)<1e-6 for ob in obs)
+    assert abs(floor.rigid_body.friction-friction)<1e-6 and all(abs(ob.rigid_body.friction-friction)<1e-6 for ob in obs)
     if name=='driven':bpy.ops.wm.save_as_mainfile(filepath=str(dest/'phase208_free_walk.blend'))
     masses=np.array([ob.rigid_body.mass for ob in obs])
     vertices=[np.array([tuple(v.co) for v in ob.data.vertices]) for ob in obs]
