@@ -28,3 +28,18 @@ token, wrong constructor, extra edits, wrong offset and invalid reverse.
 Original source, seven variants, public API, shared CI, C/D unchanged.
 Specialist CI pending; existing native 7-variant regression is not the new
 isolated-copy execution or restoration proof.
+
+## Windows checkout evidence and isolated unit-test copy
+Initial HEAD 5504109b: Windows 45764885697 failed four R27 setUp checks
+in each Python version, observed actual checkout SHA
+eec6968b7cb5208e0af92279b7b32dc0c8d617ebad6d1cdbb5ca39cc64d1918f
+(artifact 15090724909). Reproduced by translating the 2321-byte canonical
+LF fixture to CRLF (2388 bytes). Strict helper must reject this checkout;
+never normalize production bytes. B tests now explicitly reject the known
+CRLF checkout and use a separate exact-SHA test copy via scoped mocks of
+the two fixture paths, without changing checkout bytes; also reject an
+explicit CRLF negative control on every OS. Unexpected digest fails.
+A owns shared checkout configuration: recommend a targeted .gitattributes
+entry `fixtures/cbdk_parameter_experiment.py text eol=lf` and confirm real
+checkout SHA in the integrated Windows job. B does not edit shared settings.
+Native execution/restoration remains C/A scope. New CI pending.
