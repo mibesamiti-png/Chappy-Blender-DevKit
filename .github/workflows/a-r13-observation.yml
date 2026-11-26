@@ -8,13 +8,13 @@ permissions:
   contents: read
 
 jobs:
-  observe:
+  native-clocks:
     runs-on: windows-2022
-    timeout-minutes: 10
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.13']
+        python-version: ['3.11.9', '3.13.17']
     env:
       PYTHONIOENCODING: utf-8
     steps:
@@ -24,8 +24,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: One instrumented full suite
-        run: python experiments/r13_observation/observe.py full
-      - name: Twenty focused repetitions in a fresh process
-        if: always()
-        run: python experiments/r13_observation/observe.py focused
+      - name: Compare stat fstat and Win32 FileBasicInfo clocks
+        run: python experiments/r13_observation/native_clocks.py
