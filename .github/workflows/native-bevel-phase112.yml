@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 172
+name: Geometry Lab isolated operations Phase 173
 on:
   pull_request:
     paths:
@@ -433,6 +433,23 @@ jobs:
           print("Exact triangle identity",sum(r["triangles"]["exact"] for r in d["rows"]),"/12")
           print("Original method",sum(r["old_matched"] for r in d["rows"]),"/12")
           print("Sharp-only method",sum(r["sharp_matched"] for r in d["rows"]),"/12")
+          PY
+      - name: Verify alternate planar diagonals and strict protection
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase173_alternate_diagonal.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase173_alternate_diagonal.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==12 and all(r["input_unchanged"] for r in d["rows"])
+          assert len(d["controls"])==3 and all(r["rejected"] and not r["planner_invoked"] for r in d["controls"])
+          print("Certified coverage",sum(r["certificate"]["passed"] for r in d["rows"]),"/12")
+          print("Matched decisions",sum(r["matched"] for r in d["rows"]),"/12")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
