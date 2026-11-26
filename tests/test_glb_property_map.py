@@ -316,5 +316,107 @@ class GLBPropertyMapTests(unittest.TestCase):
         self.assertIn("cbdk_glb_property_mapping", output.getvalue())
 
 
+
+
+class R26FixedParameterStaticTests(unittest.TestCase):
+    def setUp(self):
+        import hashlib
+        from cbdk.glb_parameter_static_r26 import FIXTURE
+        self.fixture = FIXTURE
+        self.digest = hashlib.sha256(FIXTURE.read_bytes()).hexdigest()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+
+    def observe(self, text):
+        from cbdk.glb_parameter_static_r26 import _observe_source
+        path = Path(self.tmp.name) / "synthetic.py"
+        path.write_text(text, encoding="utf-8")
+        return {row["property"]: row for row in _observe_source(path)}
+
+    def test_r26_fixed_identity_and_exact_observations(self):
+        from cbdk.glb_parameter_static_r26 import observe_fixed_parameter_fixture
+        for version in ("4.4.3", "4.5.15", "5.2.1"):
+            result = observe_fixed_parameter_fixture(run_id="a"*32,
+                source_sha256=self.digest, blender_version=version)
+            self.assertEqual(result, {
+                "case_id": "parameter_fixture_r26", "run_id": "a"*32,
+                "source_sha256": self.digest, "blender_version": version,
+                "properties": [
+                    dict(property=prop, declaration_count=1,
+                         same_class_self_count=1, geometry_path_count=1,
+                         expected_api_observed=True)
+                    for prop in ("sphere_radius", "bevel_width")
+                ],
+            })
+            self.assertNotIn(str(self.fixture), json.dumps(result))
+
+    def test_r26_fixed_identity_rejects_mismatch(self):
+        from cbdk.glb_parameter_static_r26 import observe_fixed_parameter_fixture
+        base = dict(run_id="a"*32, source_sha256=self.digest, blender_version="4.4.3")
+        for patch_values in (dict(run_id=True), dict(run_id="A"*32),
+                             dict(source_sha256="0"*64), dict(blender_version="5.2")):
+            with self.subTest(patch_values=patch_values), self.assertRaises(ValueError):
+                observe_fixed_parameter_fixture(**dict(base, **patch_values))
+
+    def test_r26_duplicate_receiver_class_and_missing_path_controls(self):
+        source = self.fixture.read_text(encoding="utf-8")
+        original = "radius=self.sphere_radius"
+        self.assertIn(original, source)
+        for replacement in ("radius=other.sphere_radius", "radius=0.75"):
+            observed = self.observe(source.replace(original,replacement))["sphere_radius"]
+            self.assertEqual(observed["declaration_count"],1)
+            self.assertEqual(observed["same_class_self_count"],0)
+            self.assertEqual(observed["geometry_path_count"],0)
+            self.assertIs(observed["expected_api_observed"],False)
+        other = source.replace(original,"radius=0.75") + (
+            "\nclass Unrelated:\n"
+            "    sphere_radius: bpy.props.FloatProperty()\n"
+            "    def build_geometry(self):\n"
+            "        bpy.ops.mesh.primitive_uv_sphere_add(radius=self.sphere_radius)\n")
+        observed = self.observe(other)["sphere_radius"]
+        self.assertEqual(observed["declaration_count"],2)
+        self.assertEqual(observed["same_class_self_count"],0)
+        self.assertEqual(observed["geometry_path_count"],0)
+        self.assertIs(observed["expected_api_observed"],False)
+        duplicate = source.replace("    def build_geometry(self):",
+            "    sphere_radius: bpy.props.FloatProperty()\n\n    def build_geometry(self):",1)
+        observed = self.observe(duplicate)["sphere_radius"]
+        self.assertEqual(observed["declaration_count"],2)
+        self.assertIs(observed["expected_api_observed"],False)
+        with self.assertRaisesRegex(ValueError,"ambiguous_class"):
+            self.observe(source + "\nclass CBDKParameterExperimentSettings:\n    pass\n")
+
+    def test_r26_declaration_and_reference_are_not_geometry_paths(self):
+        source = self.fixture.read_text(encoding="utf-8")
+        source = source.replace("radius=self.sphere_radius","radius=0.75")
+        source = source.replace("        sphere = bpy.context.object",
+                                "        observed = self.sphere_radius\n        sphere = bpy.context.object")
+        row = self.observe(source)["sphere_radius"]
+        self.assertEqual(row["declaration_count"],1)
+        self.assertEqual(row["same_class_self_count"],1)
+        self.assertEqual(row["geometry_path_count"],0)
+        self.assertIs(row["expected_api_observed"],False)
+
+    def test_r26_diagnostic_candidates_do_not_invent_absent_category(self):
+        from cbdk.glb_parameter_static_r26 import fixed_diagnostic_candidates
+        def comparison(diffs):
+            return {"kind":"cbdk_glb_scene_comparison","schema_version":1,
+                    "passed":not diffs,"summary":{"errors":len(diffs)},
+                    "differences":diffs}
+        sphere = {"code":"object_dimensions","severity":"error",
+                  "metrics":{"reference_object":"CBDK_Param_Sphere"}}
+        unrelated = {"code":"object_dimensions","severity":"error",
+                     "metrics":{"reference_object":"CBDK_Param_BevelCube"}}
+        self.assertEqual(fixed_diagnostic_candidates(comparison([])),[])
+        self.assertEqual(fixed_diagnostic_candidates(comparison([sphere,unrelated])),
+                         [{"property":"sphere_radius","target":"CBDK_Param_Sphere",
+                           "category":"part_size_parameter"}])
+        # Even a fixed synthetic topology category is only a review candidate.
+        bevel = dict(unrelated,code="object_topology")
+        self.assertEqual(fixed_diagnostic_candidates(comparison([bevel])),
+                         [{"property":"bevel_width","target":"CBDK_Param_BevelCube",
+                           "category":"topology_or_modifier_difference"}])
+
+
 if __name__ == "__main__":
     unittest.main()
