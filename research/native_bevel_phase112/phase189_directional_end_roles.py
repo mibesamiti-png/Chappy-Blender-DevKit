@@ -20,9 +20,9 @@ FRESH=[
  ('fresh_cylinder',12,.9,.9,1.3,(1,-2,4),(1,2,-1),None,'cylinder'),
  ('fresh_offset',12,.65,1.1,2.3,(2,1,-1),(-2,1,2),'offset','unknown'),
 ]
-def bind(m):
+def bind(m,classifier=classify):
     V,F=arrays(m); before=signature(V,F)
-    base=classify(m)['result']; kind=base['kind']
+    base=classifier(m)['result']; kind=base['kind']
     result=dict(kind=kind,directed_axis=None,small_end=None,large_end=None,
                 axis_projector=None,reason='not_recognized')
     if kind in ('cylinder','frustum'):
