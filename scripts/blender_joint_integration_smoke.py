@@ -69,6 +69,26 @@ if args.cjm_zip and args.gl_root:
     assert bpy.ops.cbdk_a.joint_action(action='RESTORE')=={'FINISHED'}
     assert s.diameter==5.
     rows.append(dict(case='native_adopt_and_restore',status='passed'))
+    steps=ui.iter_run(bpy.context,s)
+    s.cancel_requested=True
+    try:next(steps);raise AssertionError('early cancellation ignored')
+    except InterruptedError:pass
+    s.cancel_requested=False
+    steps=ui.iter_run(bpy.context,s)
+    assert next(steps)=='baseline_measured'
+    s.cancel_requested=True
+    try:next(steps);raise AssertionError('between-trial cancellation ignored')
+    except InterruptedError:pass
+    s.cancel_requested=False;s.status='IDLE'
+    assert ui.scene_signature(bpy.context)==origin
+    rows.append(dict(case='native_early_and_between_trial_cancel',status='passed'))
+    from cbdk.joint_integration import verified_write
+    try:
+        verified_write(lambda:float(s.diameter),lambda v:setattr(s,'diameter',v),5.,4.0000001,lambda:None)
+        raise AssertionError('native RNA rounding accepted')
+    except RuntimeError as e:assert str(e)=='rna_readback_mismatch'
+    assert s.diameter==5.
+    rows.append(dict(case='native_float32_rounding_restored',status='passed'))
     for fault in ('generation','boolean','interrupt','cleanup'):
         try:ui.trial(bpy.context,4.,fault=fault);raise AssertionError('fault accepted')
         except (RuntimeError,InterruptedError):pass

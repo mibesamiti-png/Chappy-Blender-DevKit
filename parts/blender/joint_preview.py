@@ -142,25 +142,40 @@ def corrected(diameter, policy):
     return float(result.values['outer_diameter'])
 
 
-def run(context, settings):
+def iter_run(context, settings):
     if settings.status == 'BLOCKED': raise RuntimeError('restoration_blocked')
     original = float(settings.diameter)
+    target, policy = float(settings.target), settings.policy
+    settings.status = 'RUNNING'
+    if settings.cancel_requested: raise InterruptedError('cancelled_between_trials')
     baseline = trial(context, corrected(original,settings.policy))
-    best_score = score(baseline,settings.target); best = None; rows = []
-    for name, proposal in proposals(original,settings.target,settings.policy):
+    best_score = score(baseline,target); best = None; rows = []
+    yield 'baseline_measured'
+    for name, proposal in proposals(original,target,policy):
+        if settings.cancel_requested: raise InterruptedError('cancelled_between_trials')
+        if (float(settings.diameter),float(settings.target),settings.policy)!=(original,target,policy):
+            raise ValueError('stale_inputs')
         diameter = corrected(proposal,settings.policy)
         measured = trial(context,diameter)
-        result = review(baseline,measured,settings.target,best_score)
+        result = review(baseline,measured,target,best_score)
         rows.append(dict(id=name,diameter=diameter,measurement=measured,review=result))
         if result['accepted_for_review']:
             best_score = result['score']; best = len(rows)-1
+        settings.result_json=json.dumps(dict(rows=rows,status='incomplete'))
+        yield name
         if result['decision']=='target_reached': break
-    payload = dict(original=original,target=float(settings.target),policy=settings.policy,
+    if settings.cancel_requested: raise InterruptedError('cancelled_between_trials')
+    payload = dict(original=original,target=target,policy=policy,
                    signature=scene_signature(context),baseline=baseline,rows=rows,best=best)
     RUNS[context.scene.as_pointer()] = payload
     settings.result_json = json.dumps(payload)
     settings.status = 'READY' if best is not None else 'NO_CANDIDATE'
-    return payload
+
+
+def run(context, settings):
+    settings.cancel_requested=False
+    for stage in iter_run(context,settings): pass
+    return RUNS[context.scene.as_pointer()]
 
 
 class CBDK_A_Settings(PropertyGroup):
@@ -174,6 +189,54 @@ class CBDK_A_Settings(PropertyGroup):
     result_json: StringProperty()
     candidate: IntProperty(name='候補行',default=0,min=0,max=2)
     restore_diameter: FloatProperty(default=5.)
+    cancel_requested: bpy.props.BoolProperty(default=False)
+
+
+class CBDK_A_OT_start(Operator):
+    bl_idname='cbdk_a.joint_start'
+    bl_label='人工関節の検証開始'
+    _timer=None
+    _steps=None
+    _scene=None
+
+    def invoke(self, context, event):
+        s=context.scene.cbdk_a_joint
+        if s.status in ('BLOCKED','RUNNING'): return {'CANCELLED'}
+        try:
+            configure(bpy.path.abspath(s.provider_zip),bpy.path.abspath(s.geometry_root))
+            s.restore_diameter=s.diameter
+            s.cancel_requested=False;s.status='RUNNING'
+            self._scene=context.scene
+            self._steps=iter_run(context,s)
+            self._timer=context.window_manager.event_timer_add(.1,window=context.window)
+            context.window_manager.modal_handler_add(self)
+            return {'RUNNING_MODAL'}
+        except Exception:
+            s.status='FAILED';s.reason='provider_configuration_failed';return {'CANCELLED'}
+
+    def modal(self, context, event):
+        s=self._scene.cbdk_a_joint
+        if context.scene!=self._scene:
+            context.window_manager.event_timer_remove(self._timer)
+            s.status='FAILED';s.reason='context_scene_changed'
+            return {'CANCELLED'}
+        if event.type=='ESC': s.cancel_requested=True
+        if event.type!='TIMER': return {'PASS_THROUGH'}
+        try:
+            next(self._steps)
+            if context.area: context.area.tag_redraw()
+            return {'RUNNING_MODAL'}
+        except StopIteration:
+            context.window_manager.event_timer_remove(self._timer)
+            return {'FINISHED'}
+        except Exception as error:
+            context.window_manager.event_timer_remove(self._timer)
+            reason=str(error)
+            s.reason=reason if reason.isascii() and len(reason)<80 and '/' not in reason and '\\' not in reason else 'provider_or_geometry_failure'
+            s.status=('BLOCKED' if any(x in reason for x in ('cleanup','rollback','source_changed'))
+                      else 'CANCELLED' if isinstance(error,InterruptedError) else 'FAILED')
+            RUNS.pop(context.scene.as_pointer(),None)
+            return {'CANCELLED'}
 
 
 class CBDK_A_OT_action(Operator):
@@ -209,6 +272,7 @@ class CBDK_A_OT_action(Operator):
                 s.status = 'RESTORED'
                 RUNS.pop(context.scene.as_pointer(),None)
             else:
+                s.cancel_requested=True
                 RUNS.pop(context.scene.as_pointer(),None)
                 s.status = 'CANCELLED' if self.action=='CANCEL' else 'REJECTED'
             s.reason = ''
@@ -229,8 +293,7 @@ class CBDK_A_PT_joint(Panel):
         layout.label(text='合成単体関節専用 製品採用未承認')
         for key in ('provider_zip','geometry_root','diameter','target','policy'): layout.prop(s,key)
         layout.label(text='軸Z 原点 単位scale=1 軸径2 隙間0.4固定')
-        for text,action in [('候補生成と形状検査','RUN'),('明示的に再試行','RETRY')]:
-            layout.operator('cbdk_a.joint_action',text=text).action = action
+        layout.operator('cbdk_a.joint_start',text='候補生成と形状検査 または再試行')
         p = RUNS.get(context.scene.as_pointer())
         if p:
             for i,row in enumerate(p['rows']):
@@ -240,10 +303,10 @@ class CBDK_A_PT_joint(Panel):
             layout.operator('cbdk_a.joint_action',text=text).action = action
         layout.label(text=s.status)
         if s.reason: layout.label(text=s.reason,icon='ERROR')
-        layout.label(text='同期検査中の強制中断は別プロセス終了で行う')
+        layout.label(text='中断とEscは候補の境界で停止 検査中は待機')
 
 
-CLASSES = (CBDK_A_Settings,CBDK_A_OT_action,CBDK_A_PT_joint)
+CLASSES = (CBDK_A_Settings,CBDK_A_OT_action,CBDK_A_OT_start,CBDK_A_PT_joint)
 
 
 def register():
