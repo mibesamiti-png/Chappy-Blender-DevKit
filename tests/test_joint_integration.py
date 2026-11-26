@@ -49,3 +49,13 @@ class IntegrationReviewTests(unittest.TestCase):
         with self.assertRaises(KeyboardInterrupt):
             verified_write(lambda:box[0],lambda v:box.__setitem__(0,v),5.,4.,stop)
         self.assertEqual(box,[5.])
+
+    def test_invalid_history_score_does_not_authorize_acceptance(self):
+        for invalid in (True,False,float('nan'),float('inf'),-1):
+            with self.assertRaises(ValueError): review(measure(),measure(4),4,invalid)
+        base,candidate=measure(),measure(4)
+        before=copy.deepcopy((base,candidate))
+        result=review(base,candidate,4,1.)
+        self.assertEqual((base,candidate),before)
+        self.assertFalse(result['approved'])
+        self.assertFalse(result['auto_apply'])

@@ -21,6 +21,7 @@ ZIP_SHA = '91700f02210e03940eee38f1939f6a7d9778ed9406f902e9359f73bf5f4a88c1'
 PROVIDERS = None
 TEMP = None
 RUNS = {}
+OWNED = False
 
 
 def digest(value):
@@ -246,6 +247,8 @@ class CBDK_A_OT_action(Operator):
 
     def execute(self, context):
         s = context.scene.cbdk_a_joint
+        if s.status=='RUNNING' and self.action in ('RUN','RETRY','ADOPT'):
+            return {'CANCELLED'}
         try:
             if s.status == 'BLOCKED': raise RuntimeError('restoration_blocked')
             if self.action in ('RUN','RETRY'):
@@ -266,6 +269,7 @@ class CBDK_A_OT_action(Operator):
                                original,row['diameter'],lambda:None)
                 s.status = 'ADOPTED_DIMENSION_ONLY'
             elif self.action == 'RESTORE':
+                if s.status=='RUNNING': s.cancel_requested=True
                 original = float(s.diameter)
                 verified_write(lambda:float(s.diameter),lambda x:setattr(s,'diameter',x),
                                original,float(s.restore_diameter),lambda:None)
@@ -310,17 +314,25 @@ CLASSES = (CBDK_A_Settings,CBDK_A_OT_action,CBDK_A_OT_start,CBDK_A_PT_joint)
 
 
 def register():
+    global OWNED
     if hasattr(bpy.types.Scene,'cbdk_a_joint'): raise RuntimeError('foreign_scene_property')
     done = []
     try:
         for cls in CLASSES: bpy.utils.register_class(cls); done.append(cls)
         bpy.types.Scene.cbdk_a_joint = PointerProperty(type=CBDK_A_Settings)
+        OWNED=True
     except Exception:
         for cls in reversed(done): bpy.utils.unregister_class(cls)
         raise
 
 
 def unregister():
+    global OWNED
+    if not OWNED: raise RuntimeError('registration_not_owned')
+    prop=bpy.types.Scene.bl_rna.properties.get('cbdk_a_joint')
+    if prop is None or prop.fixed_type != CBDK_A_Settings.bl_rna:
+        raise RuntimeError('foreign_scene_property')
     if hasattr(bpy.types.Scene,'cbdk_a_joint'): del bpy.types.Scene.cbdk_a_joint
     for cls in reversed(CLASSES): bpy.utils.unregister_class(cls)
     RUNS.clear()
+    OWNED=False

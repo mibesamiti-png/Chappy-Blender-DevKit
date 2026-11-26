@@ -11,11 +11,11 @@ Dedicated branch only; no merge, release, shared STATE/HANDOFF or dispatch chang
 |---|---|---|
 | 1 audit | API, units, ownership, dependencies, rollback and approval conflicts recorded | Previous local audit retained; public summary below |
 | 2 isolation | Frozen read-only GL and local CJM tests | Previous GL 46/46 conditions; CJM 352/352 offline tests, 61 syntax checks; not rerun |
-| 3 native chain | Numeric repair, synthetic native generation, frozen GL, candidate measurements | Pending |
-| 4 candidates | Locks/preferences, protected parts, regression veto, bounded correction | Pending |
-| 5 safety | Faults, cleanup, rounding and failed rollback halt | Pending |
-| 6 limited CBDK candidate | Validated adapter, no private code redistribution | Pending |
-| 7 bounded UI | Conditions, inspect, compare, adopt/reject, cancel, restore/retry | Pending |
+| 3 native chain | Numeric repair, synthetic native generation, frozen GL, candidate measurements | Local chain passed on all three requested Blender versions |
+| 4 candidates | Locks/preferences, protected parts, regression veto, bounded correction | Negative control rejected, midpoint improved, measured target reached and stopped |
+| 5 safety | Faults, cleanup, rounding and failed rollback halt | 16 native cases per version, including sticky stop regression; controlled fault injections only |
+| 6 limited CBDK candidate | Validated adapter, no private code redistribution | Implemented as opt-in pure reducer and external-provider preview connector |
+| 7 bounded UI | Conditions, inspect, compare, adopt/reject, cancel, restore/retry | Native panel/operators and boundary cancellation implemented; Windows mouse/keyboard and normal Undo remain unverified |
 
 ## Inherited audit and evidence boundary
 
@@ -37,6 +37,11 @@ submitted as its measured geometry. Reuse bounded trials, independent provenance
 protected-part veto and verified restoration, not its fixture identities/thresholds.
 GL CGAL CI evidence is independent validation only, not a runtime dependency.
 GL research aggregate CI contains failures/skips despite exact-oracle success.
+
+Detailed implementation, failures and evidence: [RESULTS](RESULTS.md),
+[local native observations](native_evidence.json), [usage](USAGE.md).
+The local full regression suite has an unresolved R13 observation discrepancy;
+it is not claimed green. Final commit CI is recorded in the Draft PR.
 
 The v0.22 plan calls for an integrated Blender UI, candidate confirmation,
 interrupt/failure/rerun support and real Windows GUI/Undo verification. This branch

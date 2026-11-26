@@ -1,0 +1,944 @@
+{
+  "recorded_after_execution": true,
+  "environment": "local Windows factory startup, not CJM execution in GitHub CI",
+  "source_sha256": {
+    "cbdk/joint_integration.py": "dd1718d272a0d4fc087fb901c12471d8c9b63533cea387b71c054f76c3511966",
+    "parts/blender/joint_preview.py": "70ecd80807a4049cf93cad96df43de18631cb0521071c9b7fed785da2ec27a25",
+    "scripts/blender_joint_integration_smoke.py": "33c99da8b0cd865f9c5802e7444ff1a0cfdb67ce66699143fdbd83b510ff5e83"
+  },
+  "native": {
+    "443": {
+      "blender": "4.4.3",
+      "rows": [
+        {
+          "case": "missing_provider_refused",
+          "status": "passed",
+          "seconds": 0.0003715999991982244
+        },
+        {
+          "case": "panel_draw",
+          "status": "passed",
+          "seconds": 3.149999974993989e-05
+        },
+        {
+          "case": "blocked_state_cannot_be_cleared_by_actions",
+          "status": "passed",
+          "seconds": 0.00010789999942062423
+        },
+        {
+          "case": "duplicate_registration_busy_and_restore_stop",
+          "status": "passed",
+          "seconds": 0.00014680000094813295
+        },
+        {
+          "case": "numeric_correction_and_lock_conflict",
+          "status": "passed"
+        },
+        {
+          "case": "actual_cjm_gl_cbdk_chain",
+          "status": "passed",
+          "seconds": 28.845857699998305,
+          "measurements": [
+            {
+              "id": "negative_control",
+              "diameter": 5.5,
+              "measurement": {
+                "dimensions": [
+                  [
+                    5.5,
+                    5.5,
+                    3.5
+                  ],
+                  [
+                    5.5,
+                    5.5,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "b44293e034f29231ddd960a4de38a96075220d6165c2f69bccf66fd8e118363f",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4245,
+                    "paths": {
+                      "clip": 2269,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4170,
+                    "paths": {
+                      "clip": 2194,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "regression",
+                "score": 1.5,
+                "accepted_for_review": false,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            },
+            {
+              "id": "midpoint",
+              "diameter": 4.5,
+              "measurement": {
+                "dimensions": [
+                  [
+                    4.5,
+                    4.5,
+                    3.5
+                  ],
+                  [
+                    4.5,
+                    4.5,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "b44293e034f29231ddd960a4de38a96075220d6165c2f69bccf66fd8e118363f",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4141,
+                    "paths": {
+                      "clip": 2164,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1407,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4522,
+                    "paths": {
+                      "clip": 2546,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "observed_improvement",
+                "score": 0.5,
+                "accepted_for_review": true,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            },
+            {
+              "id": "declared_target",
+              "diameter": 4.0,
+              "measurement": {
+                "dimensions": [
+                  [
+                    4.0,
+                    4.0,
+                    3.5
+                  ],
+                  [
+                    4.0,
+                    4.0,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "b44293e034f29231ddd960a4de38a96075220d6165c2f69bccf66fd8e118363f",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4179,
+                    "paths": {
+                      "clip": 2202,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1407,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4105,
+                    "paths": {
+                      "clip": 2129,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "target_reached",
+                "score": 0.0,
+                "accepted_for_review": true,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            }
+          ],
+          "baseline": {
+            "dimensions": [
+              [
+                5.0,
+                5.0,
+                3.5
+              ],
+              [
+                5.0,
+                5.0,
+                6.200000047683716
+              ]
+            ],
+            "protected_sha": "b44293e034f29231ddd960a4de38a96075220d6165c2f69bccf66fd8e118363f",
+            "gl": [
+              {
+                "status": "measured",
+                "pairs": [],
+                "reason": null,
+                "scanned": 72010,
+                "narrow_tests": 4125,
+                "paths": {
+                  "clip": 2148,
+                  "shared_edge_coplanar": 282,
+                  "shared_vertex_one_side": 1407,
+                  "shared_edge_nonplanar": 288
+                },
+                "certified": false,
+                "arithmetic": "exact_binary64_rational"
+              },
+              {
+                "status": "measured",
+                "pairs": [],
+                "reason": null,
+                "scanned": 72010,
+                "narrow_tests": 4578,
+                "paths": {
+                  "clip": 2603,
+                  "shared_edge_coplanar": 282,
+                  "shared_vertex_one_side": 1405,
+                  "shared_edge_nonplanar": 288
+                },
+                "certified": false,
+                "arithmetic": "exact_binary64_rational"
+              }
+            ],
+            "closed": true
+          }
+        },
+        {
+          "case": "native_adopt_and_restore",
+          "status": "passed"
+        },
+        {
+          "case": "native_early_and_between_trial_cancel",
+          "status": "passed"
+        },
+        {
+          "case": "native_float32_rounding_restored",
+          "status": "passed"
+        },
+        {
+          "case": "injected_generation",
+          "status": "passed"
+        },
+        {
+          "case": "injected_boolean",
+          "status": "passed"
+        },
+        {
+          "case": "injected_interrupt",
+          "status": "passed"
+        },
+        {
+          "case": "injected_cleanup",
+          "status": "passed"
+        },
+        {
+          "case": "pair_budget",
+          "status": "passed"
+        },
+        {
+          "case": "time_budget",
+          "status": "passed"
+        },
+        {
+          "case": "cleanup_failure_blocks_retry",
+          "status": "passed"
+        }
+      ],
+      "gui_mouse_keyboard": false,
+      "continuous_collision": false,
+      "printing": false,
+      "approved": false
+    },
+    "4515": {
+      "blender": "4.5.15 LTS",
+      "rows": [
+        {
+          "case": "missing_provider_refused",
+          "status": "passed",
+          "seconds": 0.0004931000003125519
+        },
+        {
+          "case": "panel_draw",
+          "status": "passed",
+          "seconds": 4.669999907491729e-05
+        },
+        {
+          "case": "blocked_state_cannot_be_cleared_by_actions",
+          "status": "passed",
+          "seconds": 0.00013799999942420982
+        },
+        {
+          "case": "duplicate_registration_busy_and_restore_stop",
+          "status": "passed",
+          "seconds": 0.0014970000011089724
+        },
+        {
+          "case": "numeric_correction_and_lock_conflict",
+          "status": "passed"
+        },
+        {
+          "case": "actual_cjm_gl_cbdk_chain",
+          "status": "passed",
+          "seconds": 30.228365799997846,
+          "measurements": [
+            {
+              "id": "negative_control",
+              "diameter": 5.5,
+              "measurement": {
+                "dimensions": [
+                  [
+                    5.5,
+                    5.5,
+                    3.5
+                  ],
+                  [
+                    5.5,
+                    5.5,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "85cb1c8cb8266df8c77f989cf23c04218082f05b8c276ee8e226831082f5b336",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4245,
+                    "paths": {
+                      "clip": 2269,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4170,
+                    "paths": {
+                      "clip": 2194,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "regression",
+                "score": 1.5,
+                "accepted_for_review": false,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            },
+            {
+              "id": "midpoint",
+              "diameter": 4.5,
+              "measurement": {
+                "dimensions": [
+                  [
+                    4.5,
+                    4.5,
+                    3.5
+                  ],
+                  [
+                    4.5,
+                    4.5,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "85cb1c8cb8266df8c77f989cf23c04218082f05b8c276ee8e226831082f5b336",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4141,
+                    "paths": {
+                      "clip": 2164,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1407,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4522,
+                    "paths": {
+                      "clip": 2546,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "observed_improvement",
+                "score": 0.5,
+                "accepted_for_review": true,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            },
+            {
+              "id": "declared_target",
+              "diameter": 4.0,
+              "measurement": {
+                "dimensions": [
+                  [
+                    4.0,
+                    4.0,
+                    3.5
+                  ],
+                  [
+                    4.0,
+                    4.0,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "85cb1c8cb8266df8c77f989cf23c04218082f05b8c276ee8e226831082f5b336",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4179,
+                    "paths": {
+                      "clip": 2202,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1407,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4105,
+                    "paths": {
+                      "clip": 2129,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "target_reached",
+                "score": 0.0,
+                "accepted_for_review": true,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            }
+          ],
+          "baseline": {
+            "dimensions": [
+              [
+                5.0,
+                5.0,
+                3.5
+              ],
+              [
+                5.0,
+                5.0,
+                6.200000047683716
+              ]
+            ],
+            "protected_sha": "85cb1c8cb8266df8c77f989cf23c04218082f05b8c276ee8e226831082f5b336",
+            "gl": [
+              {
+                "status": "measured",
+                "pairs": [],
+                "reason": null,
+                "scanned": 72010,
+                "narrow_tests": 4125,
+                "paths": {
+                  "clip": 2148,
+                  "shared_edge_coplanar": 282,
+                  "shared_vertex_one_side": 1407,
+                  "shared_edge_nonplanar": 288
+                },
+                "certified": false,
+                "arithmetic": "exact_binary64_rational"
+              },
+              {
+                "status": "measured",
+                "pairs": [],
+                "reason": null,
+                "scanned": 72010,
+                "narrow_tests": 4578,
+                "paths": {
+                  "clip": 2603,
+                  "shared_edge_coplanar": 282,
+                  "shared_vertex_one_side": 1405,
+                  "shared_edge_nonplanar": 288
+                },
+                "certified": false,
+                "arithmetic": "exact_binary64_rational"
+              }
+            ],
+            "closed": true
+          }
+        },
+        {
+          "case": "native_adopt_and_restore",
+          "status": "passed"
+        },
+        {
+          "case": "native_early_and_between_trial_cancel",
+          "status": "passed"
+        },
+        {
+          "case": "native_float32_rounding_restored",
+          "status": "passed"
+        },
+        {
+          "case": "injected_generation",
+          "status": "passed"
+        },
+        {
+          "case": "injected_boolean",
+          "status": "passed"
+        },
+        {
+          "case": "injected_interrupt",
+          "status": "passed"
+        },
+        {
+          "case": "injected_cleanup",
+          "status": "passed"
+        },
+        {
+          "case": "pair_budget",
+          "status": "passed"
+        },
+        {
+          "case": "time_budget",
+          "status": "passed"
+        },
+        {
+          "case": "cleanup_failure_blocks_retry",
+          "status": "passed"
+        }
+      ],
+      "gui_mouse_keyboard": false,
+      "continuous_collision": false,
+      "printing": false,
+      "approved": false
+    },
+    "521": {
+      "blender": "5.2.1 LTS",
+      "rows": [
+        {
+          "case": "missing_provider_refused",
+          "status": "passed",
+          "seconds": 0.0021713999994972255
+        },
+        {
+          "case": "panel_draw",
+          "status": "passed",
+          "seconds": 4.149999949731864e-05
+        },
+        {
+          "case": "blocked_state_cannot_be_cleared_by_actions",
+          "status": "passed",
+          "seconds": 0.00015299999722628854
+        },
+        {
+          "case": "duplicate_registration_busy_and_restore_stop",
+          "status": "passed",
+          "seconds": 0.00015460000213352032
+        },
+        {
+          "case": "numeric_correction_and_lock_conflict",
+          "status": "passed"
+        },
+        {
+          "case": "actual_cjm_gl_cbdk_chain",
+          "status": "passed",
+          "seconds": 21.662224399999104,
+          "measurements": [
+            {
+              "id": "negative_control",
+              "diameter": 5.5,
+              "measurement": {
+                "dimensions": [
+                  [
+                    5.5,
+                    5.5,
+                    3.5
+                  ],
+                  [
+                    5.5,
+                    5.5,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "7ee7490cbe7cfd914365e3847886d0d95827421c3683ada6c2a1991cd420b39a",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4245,
+                    "paths": {
+                      "clip": 2269,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4170,
+                    "paths": {
+                      "clip": 2194,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "regression",
+                "score": 1.5,
+                "accepted_for_review": false,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            },
+            {
+              "id": "midpoint",
+              "diameter": 4.5,
+              "measurement": {
+                "dimensions": [
+                  [
+                    4.5,
+                    4.5,
+                    3.5
+                  ],
+                  [
+                    4.5,
+                    4.5,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "7ee7490cbe7cfd914365e3847886d0d95827421c3683ada6c2a1991cd420b39a",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4141,
+                    "paths": {
+                      "clip": 2164,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1407,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4522,
+                    "paths": {
+                      "clip": 2546,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "observed_improvement",
+                "score": 0.5,
+                "accepted_for_review": true,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            },
+            {
+              "id": "declared_target",
+              "diameter": 4.0,
+              "measurement": {
+                "dimensions": [
+                  [
+                    4.0,
+                    4.0,
+                    3.5
+                  ],
+                  [
+                    4.0,
+                    4.0,
+                    6.200000047683716
+                  ]
+                ],
+                "protected_sha": "7ee7490cbe7cfd914365e3847886d0d95827421c3683ada6c2a1991cd420b39a",
+                "gl": [
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4179,
+                    "paths": {
+                      "clip": 2202,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1407,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  },
+                  {
+                    "status": "measured",
+                    "pairs": [],
+                    "reason": null,
+                    "scanned": 72010,
+                    "narrow_tests": 4105,
+                    "paths": {
+                      "clip": 2129,
+                      "shared_edge_coplanar": 282,
+                      "shared_vertex_one_side": 1406,
+                      "shared_edge_nonplanar": 288
+                    },
+                    "certified": false,
+                    "arithmetic": "exact_binary64_rational"
+                  }
+                ],
+                "closed": true
+              },
+              "review": {
+                "decision": "target_reached",
+                "score": 0.0,
+                "accepted_for_review": true,
+                "auto_apply": false,
+                "approved": false,
+                "printable": false,
+                "continuous_collision_checked": false
+              }
+            }
+          ],
+          "baseline": {
+            "dimensions": [
+              [
+                5.0,
+                5.0,
+                3.5
+              ],
+              [
+                5.0,
+                5.0,
+                6.200000047683716
+              ]
+            ],
+            "protected_sha": "7ee7490cbe7cfd914365e3847886d0d95827421c3683ada6c2a1991cd420b39a",
+            "gl": [
+              {
+                "status": "measured",
+                "pairs": [],
+                "reason": null,
+                "scanned": 72010,
+                "narrow_tests": 4125,
+                "paths": {
+                  "clip": 2148,
+                  "shared_edge_coplanar": 282,
+                  "shared_vertex_one_side": 1407,
+                  "shared_edge_nonplanar": 288
+                },
+                "certified": false,
+                "arithmetic": "exact_binary64_rational"
+              },
+              {
+                "status": "measured",
+                "pairs": [],
+                "reason": null,
+                "scanned": 72010,
+                "narrow_tests": 4578,
+                "paths": {
+                  "clip": 2603,
+                  "shared_edge_coplanar": 282,
+                  "shared_vertex_one_side": 1405,
+                  "shared_edge_nonplanar": 288
+                },
+                "certified": false,
+                "arithmetic": "exact_binary64_rational"
+              }
+            ],
+            "closed": true
+          }
+        },
+        {
+          "case": "native_adopt_and_restore",
+          "status": "passed"
+        },
+        {
+          "case": "native_early_and_between_trial_cancel",
+          "status": "passed"
+        },
+        {
+          "case": "native_float32_rounding_restored",
+          "status": "passed"
+        },
+        {
+          "case": "injected_generation",
+          "status": "passed"
+        },
+        {
+          "case": "injected_boolean",
+          "status": "passed"
+        },
+        {
+          "case": "injected_interrupt",
+          "status": "passed"
+        },
+        {
+          "case": "injected_cleanup",
+          "status": "passed"
+        },
+        {
+          "case": "pair_budget",
+          "status": "passed"
+        },
+        {
+          "case": "time_budget",
+          "status": "passed"
+        },
+        {
+          "case": "cleanup_failure_blocks_retry",
+          "status": "passed"
+        }
+      ],
+      "gui_mouse_keyboard": false,
+      "continuous_collision": false,
+      "printing": false,
+      "approved": false
+    }
+  }
+}

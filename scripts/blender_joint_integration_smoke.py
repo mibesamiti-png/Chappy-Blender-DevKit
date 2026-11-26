@@ -52,6 +52,18 @@ def sticky_block():
     s.status='IDLE'
 record('blocked_state_cannot_be_cleared_by_actions',sticky_block)
 
+def registration_and_busy():
+    try:ui.register();raise AssertionError('duplicate registration accepted')
+    except RuntimeError as e:assert str(e)=='foreign_scene_property'
+    s.status='RUNNING'
+    for action in ('RUN','RETRY','ADOPT'):
+        assert bpy.ops.cbdk_a.joint_action(action=action)=={'CANCELLED'}
+        assert s.status=='RUNNING'
+    assert bpy.ops.cbdk_a.joint_action(action='RESTORE')=={'FINISHED'}
+    assert s.cancel_requested
+    s.cancel_requested=False;s.status='IDLE'
+record('duplicate_registration_busy_and_restore_stop',registration_and_busy)
+
 if args.cjm_zip and args.gl_root:
     ui.configure(args.cjm_zip,args.gl_root)
     assert ui.corrected(3.,'FREE')>3.5
