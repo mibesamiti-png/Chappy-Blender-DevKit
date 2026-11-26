@@ -1053,10 +1053,27 @@ jobs:
           assert (p/"phase208_free_walk.blend").stat().st_size>0
           print("Walking gate (not CI integrity gate):",d["walk_gate"])
           PY
+      - name: Compare three free chassis heights with frozen walking metrics
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase209_chassis_height.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase209_chassis_height.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and not d["physical_walk_certified"]
+          assert [c["name"] for c in d["cases"]]==["baseline","lower","lowest"]
+          assert all(len(c["rows"])==601 and (p/("phase209_"+c["name"]+".blend")).stat().st_size>0 for c in d["cases"])
+          assert d["ranked_candidate"] in {c["name"] for c in d["cases"]}
+          print("Chassis experiment walk gate:",d["walk_gate"])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: phase208-dynamics-${{ github.sha }}
-          path: research/native_bevel_phase112/results/phase208_*
+          path: |
+            research/native_bevel_phase112/results/phase208_*
+            research/native_bevel_phase112/results/phase209_*
           if-no-files-found: warn
           retention-days: 14
