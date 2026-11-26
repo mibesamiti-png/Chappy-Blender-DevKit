@@ -34,7 +34,7 @@ def limits(c,linear,angular):
                 setattr(c,'limit_'+key+'_lower',lo)
                 setattr(c,'limit_'+key+'_upper',hi)
     return c
-def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None):
+def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload=0.):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene
     sc.gravity=(-9.81,-9.81,0.) if spring is None else (0.,-9.81,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES
@@ -46,6 +46,7 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None):
     motor=constraint('only shaft motor','MOTOR',anchor,shaft,(0.,0.,.5),(0.,-math.pi/2,0.))
     motor.use_motor_lin=False;motor.use_motor_ang=enabled
     motor.motor_ang_target_velocity=1.;motor.motor_ang_max_impulse=IMPULSE
+    assert preload>=0 and (preload==0 or (spring is not None and spring>0))
     items=[];zero={a:(0.,0.) for a in 'xyz'}
     for kind,axis,base,z,phi in [('stride','x',7.,0.,0.),('lift','y',2.5,1.,math.pi/2)]:
         c=profile(kind,base,duty=duty)
@@ -72,10 +73,19 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None):
         constraint(kind+' free roller bearing','HINGE',slide,roller,pos)
         lin=dict(zero);lin[axis]=(-.15,3. if axis=='x' else 1.)
         limits(constraint(kind+' prismatic guide','GENERIC',anchor,slide,spos),lin,zero)
+        weight=None;weight_origin=None
         if axis=='x' and spring is not None and spring>0:
-            c=limits(constraint('passive stride return spring','GENERIC_SPRING',anchor,slide,spos),{}, {})
+            spring_anchor=anchor
+            if preload>0:
+                # Gravity moves the initially relaxed spring anchor down and inward.
+                weight_origin=(0.,-1.,-3.)
+                weight=box('passive spring preload weight',weight_origin,(.4,.4,.4),3.)
+                guide=dict(zero);guide['x']=(-math.sqrt(2)*preload,0.)
+                limits(constraint('preload diagonal guide','GENERIC',anchor,weight,weight_origin,(0.,0.,math.pi/4)),guide,zero)
+                spring_anchor=weight
+            c=limits(constraint('passive stride return spring','GENERIC_SPRING',spring_anchor,slide,spos),{}, {})
             c.spring_type='SPRING2';c.use_spring_x=True;c.spring_stiffness_x=spring;c.spring_damping_x=.5
-        items.append(dict(kind=kind,axis=axis,base=base,z=z,rz=rz,initial=initial,cam=cam,roller=roller,slide=slide,xy=xy))
+        items.append(dict(kind=kind,axis=axis,base=base,z=z,rz=rz,initial=initial,cam=cam,roller=roller,slide=slide,xy=xy,weight=weight,weight_origin=weight_origin))
     outpos=(items[0]['initial'],items[1]['initial'],3.5)
     carriage=box('physical XY output carriage',outpos,(.32,.32,.25),.1);carriage.color=(.9,.3,.2,1)
     limits(constraint('output planar guide','GENERIC',anchor,carriage,outpos),{'z':(0.,0.)},zero)
@@ -88,14 +98,15 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None):
     world.point_cache.frame_start=1;world.point_cache.frame_end=FRAMES
     bpy.context.view_layer.update();sc.frame_set(1)
     objs=[shaft,carriage]+[it[k] for it in items for k in ('cam','roller','slide')]
+    objs.extend(it['weight'] for it in items if it['weight'] is not None)
     cs=[o.rigid_body_constraint for o in sc.objects if o.rigid_body_constraint]
-    assert len(cs)==11+int(spring is not None and spring>0) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
+    assert len(cs)==11+int(spring is not None and spring>0)+int(preload>0) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
     assert all(o.animation_data is None and not o.rigid_body.kinematic for o in objs)
     return sc,shaft,carriage,items
 def wrap(a):return math.atan2(math.sin(a),math.cos(a))
 def az(M):return math.atan2(M[1][0],M[0][0])
-def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None):
-    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring)
+def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None,preload=0.):
+    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring,preload)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/('phase210_xy_'+name+'.blend')))
     rows=[];last=None;travel=0.
     for f in range(1,FRAMES+1):
@@ -123,6 +134,13 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
                 kind+'_slide_displacement':float(D.translation[i]-it['initial']),
                 kind+'_roller_slide_error':float(B.translation[i]-D.translation[i]),
                 kind+'_slide_output_error':float(O.translation[i]-D.translation[i])})
+        it=items[0]
+        if it['weight'] is not None:
+            W=mat(it['weight']);dw=W.translation-Vector(it['weight_origin'])
+            row['preload_anchor_x']=float(dw.x)
+            row['preload_anchor_y']=float(dw.y)
+            row['spring_extension_x']=row['stride_slide_displacement']-float(dw.x)
+            row['spring_force_proxy']=spring*row['spring_extension_x']
         row['xy_error']=math.hypot(row['stride_error'],row['lift_error'])
         rows.append(row)
     peak=lambda k:max(abs(r[k]) for r in rows)
@@ -151,7 +169,7 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
         # brake is added; reject sustained rotation or large output motion.
         checks.update(no_sustained_drive=abs(travel)<=.4,
             no_large_output=amp['stride']<=.25 and amp['lift']<=.15)
-    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,travel=travel,amplitude=amp,
+    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,preload=preload,travel=travel,amplitude=amp,
         max_xy_error=peak('xy_error'),max_axis_error={k:peak(k+'_error') for k in amp},
         max_sync=sync,max_coupler_error=coupler,max_drift=drift,max_contact_gap=gaps,
         max_stance_height=dwell,checks=checks,passed=all(checks.values()),rows=rows)
