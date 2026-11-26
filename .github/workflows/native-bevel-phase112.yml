@@ -995,6 +995,19 @@ jobs:
           fi
           echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
           tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Evaluate bounded stance-duty search against actual foot outline
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase209_stance_search.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase209_stance_search.json").read_text())
+          assert d["complete"] and not d["approved"] and not d["physical_walk_certified"]
+          assert d["coarse_candidates"]==24000 and d["refinement_candidates"]==6000
+          assert d["target_met"] == (d["dense"]["duty"]>=d["target_duty"])
+          assert not d["global_infeasibility_proven"]
+          PY
       - name: Verify motor-only gear contact with separated and motor-off controls
         run: |
           set -euo pipefail
