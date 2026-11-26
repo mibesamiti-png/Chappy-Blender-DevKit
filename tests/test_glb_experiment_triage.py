@@ -147,6 +147,26 @@ class ExperimentTriageTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             render_experiment_triage(good)
 
+    def test_r26_weak_candidate_is_not_same_fixture_runtime_evidence(self):
+        from test_parameter_fixture_evidence import observations, reduce
+        report = self.build()
+        self.assertFalse(any(report["safety"].values()))
+        self.assertTrue(all(row["selected_declaration"] is None for row in report["candidate_reviews"]))
+        static, native = observations()
+        # A static candidate and independent native run cannot be joined,
+        # even if property names and fixed source digest happen to match.
+        self.assertEqual(reduce(static, None)["status"], "incomplete")
+        native["run_id"] = "2" * 32
+        self.assertEqual(reduce(static, native)["reason_codes"], ["identity_mismatch"])
+        native["run_id"] = static["run_id"]
+        native["source_sha256"] = "b" * 64
+        self.assertEqual(reduce(static, native)["reason_codes"], ["identity_mismatch"])
+        static, native = observations()
+        native["properties"][0]["causality_proven"] = True
+        rejected = reduce(static, native)
+        self.assertFalse(rejected["same_fixture_observations_verified"])
+        self.assertFalse(any(rejected["safety"].values()))
+
     def test_forged_candidate_selection_and_delta_rejected(self):
         for change in (
             lambda r: r["candidate_reviews"][0].update(selected_declaration="first"),
