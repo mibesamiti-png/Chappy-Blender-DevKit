@@ -1,0 +1,81 @@
+name: Geometry Lab focused Phase 211
+on:
+  pull_request:
+    paths:
+      - 'research/native_bevel_phase112/phase211_*.py'
+      - 'research/native_bevel_phase112/phase210_inverse_cam.py'
+      - '.github/workflows/geometry-lab-focused-211.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-focused-211-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  phase211-focused:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Reproduce inverse profiles and guarded support design
+        run: |
+          set -euo pipefail
+          B="$RUNNER_TEMP/blender-4.4.3-linux-x64/blender"
+          "$B" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_inverse_cam.py
+          "$B" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_support_design.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          a=json.loads((p/"phase210_inverse_cam.json").read_text())
+          b=json.loads((p/"phase211_support_design.json").read_text())
+          assert a["gate"] and b["static_gate"]
+          assert b["selected_duty"]==.77 and b["selected_phases"]==[0,270,180,90]
+          PY
+      - name: Build and audit stacked cam subassembly
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_cam_pack.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_cam_pack.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert (d["cam_count"],d["roller_count"],d["shaft_count"])==(8,8,1)
+          assert d["duty"]==.77 and d["phases"]==[0,270,180,90]
+          assert d["pack_gate"]==(all(d["checks"].values()) and all(d["controls"].values()))
+          assert not d["transmission_certified"] and not d["whole_machine_com_certified"] and not d["physical_walk_certified"]
+          assert len(d["rows"])==721
+          assert all(math.isfinite(v) for r in d["rows"] for k in ("com","cam_com") for v in r[k])
+          assert (p/"phase211_cam_pack.blend").stat().st_size>0
+          print("Cam pack gate (subassembly only):",d["pack_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-focused-${{ github.sha }}
+          path: |
+            research/native_bevel_phase112/results/phase210_inverse_cam.json
+            research/native_bevel_phase112/results/phase211_*
+          if-no-files-found: warn
+          retention-days: 14
