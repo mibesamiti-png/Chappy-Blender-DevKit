@@ -419,3 +419,63 @@ jobs:
             research/native_bevel_phase112/results/phase211_four_leg*
           if-no-files-found: warn
           retention-days: 14
+
+  phase211-diagnosis:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Locate first four-leg failure and compare bounded controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_four_leg_diagnosis.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_four_leg_diagnosis.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["diagnosis_only"]
+          assert not d["approved"] and not d["geometry_changed"] and not d["criteria_changed"] and not d["physical_walk_certified"]
+          assert d["frames"]==61
+          t=d["trials"]
+          assert [v["name"] for v in t]==["baseline","motor_off","separated","reduced_impulse","heavier_shaft"]
+          assert [v["impulse"] for v in t]==[240.,240.,240.,60.,240.]
+          assert [v["shaft_mass"] for v in t]==[.8,.8,.8,.8,8.]
+          for v in t:
+              assert [r["frame"] for r in v["rows"]]==list(range(1,62))
+              assert all(len(r["parts"])==8 for r in v["rows"])
+              assert all(math.isfinite(x) for r in v["rows"] for q in r["parts"] for k,x in q.items() if k!="part")
+              assert v["events"][0]["frame"]==1
+              for k,e in v["first"].items():
+                  limit={"sync":.015,"coupling":.015,"drift":.015,"error":.025,"axial":.05,"gap":.025,"outer_gap":.025,"tilt":.015}[k]
+                  assert e["value"]>limit
+                  assert all(q[k]<=limit for r in v["rows"][:e["frame"]-1] for q in r["parts"])
+                  assert any(q["part"]==e["part"] and q[k]==e["value"] for q in v["rows"][e["frame"]-1]["parts"])
+          print("Four-leg diagnostic evidence validated")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-diagnosis-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_four_leg_diagnosis.json
+          if-no-files-found: warn
+          retention-days: 14
