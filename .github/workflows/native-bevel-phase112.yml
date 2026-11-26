@@ -1,4 +1,4 @@
-name: Geometry Lab isolated LoopTools Phase 156
+name: Geometry Lab isolated LoopTools Phase 157
 on:
   pull_request:
     paths:
@@ -174,6 +174,22 @@ jobs:
           assert sum(r["edited"] is not None for r in d["rows"])==3
           assert all(len(x["levels"])==3 for r in d["rows"] for x in (r["baseline"],r["edited"]) if x is not None)
           print("Selected passed",sum(r["selected_passed"] for r in d["rows"]),"/ 4")
+          PY
+      - name: Test bounded tool selection on calibrated fixtures
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase157_bounded_selector.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase157_bounded_selector.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and not d["independent_holdout"]
+          assert len(d["rows"])==4 and d["controls"]==8
+          assert all(r["evaluations"]<=3 and not r["unknown_plan"] for r in d["rows"])
+          print("Selected passed",sum(r["selected"]["passed"] for r in d["rows"]),"/4")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
