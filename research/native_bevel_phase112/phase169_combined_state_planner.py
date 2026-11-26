@@ -112,7 +112,7 @@ def main():
         print('PHASE169_SUMMARY',json.dumps(dict(cases=len(rows),matched=sum(r['matched'] for r in rows),
             goal_met=sum(r['status']=='goal_met' for r in rows),attempts=sum(len(r['trace']) for r in rows),
             rollbacks=sum(t['rollback_exact'] for r in rows for t in r['trace']),
-            no_ops=sum(not r['trace'] for r in rows),elapsed=out['elapsed']),flush=True)
+            no_ops=sum(not r['trace'] for r in rows),elapsed=out['elapsed']),allow_nan=False),flush=True)
         assert len(rows)==11 and all(r['matched'] for r in rows)
     finally:bpy.data.meshes.remove(base)
 if __name__=='__main__':main()
