@@ -1030,6 +1030,26 @@ jobs:
           assert not d["walking_certified"]
           print("Cam physical gate (separate from evidence integrity):",d["physical_gate"])
           PY
+      - name: Measure independent stride cam and gravity-return roller with controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_stride_contact.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_stride_contact.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          for c in d["cases"]:
+              assert [r["frame"] for r in c["rows"]]==list(range(1,482))
+              assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+              assert c["passed"]==all(c["checks"].values())
+              assert (p/("phase210_stride_"+c["name"]+".blend")).stat().st_size>0
+          assert d["physical_gate"]==all(c["passed"] for c in d["cases"])
+          assert not d["combined_motion_certified"] and not d["walking_certified"]
+          print("Stride physical gate (separate from evidence integrity):",d["physical_gate"])
+          PY
       - name: Evaluate bounded stance-duty search against actual foot outline
         run: |
           set -euo pipefail
