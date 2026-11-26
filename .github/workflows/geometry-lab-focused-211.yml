@@ -4,6 +4,7 @@ on:
     paths:
       - 'research/native_bevel_phase112/phase211_*.py'
       - 'research/native_bevel_phase112/phase210_inverse_cam.py'
+      - 'research/native_bevel_phase112/phase210_xy_cam.py'
       - '.github/workflows/geometry-lab-focused-211.yml'
 permissions:
   contents: read
@@ -69,6 +70,35 @@ jobs:
           assert all(math.isfinite(v) for r in d["rows"] for k in ("com","cam_com") for v in r[k])
           assert (p/"phase211_cam_pack.blend").stat().st_size>0
           print("Cam pack gate (subassembly only):",d["pack_gate"])
+          PY
+      - name: Evaluate passive return spring under vertical gravity
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_spring_return.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_spring_return.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["gravity"]==[0.,-9.81,0.] and d["duty"]==.77
+          t=d["trials"]
+          assert [r["stiffness"] for r in t]==[3.,10.,30.][:len(t)]
+          chosen=next((r["stiffness"] for r in t if r["case"]["passed"]),None)
+          assert d["selected_stiffness"]==chosen
+          assert chosen is not None or len(t)==3
+          controls=d["controls"] or []
+          assert [c["name"] for c in controls]==(["separated","motor_off"] if chosen is not None else [])
+          n=d["spring_disabled"]
+          assert n["spring"]==0.
+          assert d["negative_control_detected"]==(not n["checks"]["axis_tracking"] or not n["checks"]["contact"])
+          assert d["spring_gate"]==(chosen is not None and all(c["passed"] for c in controls) and d["negative_control_detected"])
+          for c in [r["case"] for r in t]+controls+[n]:
+              assert c["passed"]==all(c["checks"].values())
+              assert len(c["rows"])==601 and c["substeps"]==32
+              assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+          assert not d["physical_walk_certified"] and not d["whole_machine_certified"]
+          print("Passive return physical gate:",d["spring_gate"])
           PY
       - uses: actions/upload-artifact@v4
         if: always()
