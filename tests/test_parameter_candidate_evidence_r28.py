@@ -191,6 +191,9 @@ class CandidateEvidenceTests(unittest.TestCase):
         for key in ("allowed_candidates","measured","references"):
             args=observations();args[2][key]=None;self.blocked(args,"premature_target")
             args[1].update(target_reached=False,stop_reason="incomplete")
+            self.blocked(args,"premature_target")  # forged row still says target
+            args[1]["rows"].pop()
+            args[1]["best_id"]="intermediate"
             self.blocked(args,status="incomplete")
         args=observations(budget=2);args[0][0]["stages"].pop()
         args[2]["measured"]["wrong_direction"]["stages"].pop()
