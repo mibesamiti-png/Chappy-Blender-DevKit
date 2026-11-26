@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 197
+name: Geometry Lab isolated operations Phase 198
 on:
   pull_request:
     paths:
@@ -817,6 +817,19 @@ jobs:
           assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
           assert len(d["rows"])==30
           assert len(list(Path("results").glob("phase197_*.obj")))==sum(r["accepted"] for r in d["rows"])
+          PY
+      - name: Fabricate three-hole mounting block using existing hole contracts
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase198_mounting_block.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase198_mounting_block.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==4 and sum(r["accepted"] for r in d["rows"])==1
+          assert all(r["native"] is None for r in d["rows"] if not r["expected"])
+          assert list(Path("results").glob("phase198_*.obj"))==[Path("results/phase198_mounting_block.obj")]
           PY
       - uses: actions/upload-artifact@v4
         if: always()
