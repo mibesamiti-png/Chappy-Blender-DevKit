@@ -13,11 +13,24 @@ RINGS={
 'low_wide':(177,[8,54,9,59,10,86,18,108,17,103,16,100],[40,153,41,158,42,162,43,166,44,170,45,174]),
 'corner_two':(177,[9,59,10,63,11,90,19,111,18,107,17,84],[40,153,41,158,42,162,43,166,44,170,45,174])}
 def load_extension():
-    root=Path(os.environ['LOOPTOOLS_DIR'])
-    spec=importlib.util.spec_from_file_location('phase154_looptools',root/'__init__.py',submodule_search_locations=[str(root)])
-    module=importlib.util.module_from_spec(spec);sys.modules[spec.name]=module;spec.loader.exec_module(module);module.register()
+    # A real addon preference entry must exist before register() updates its panels.
+    # Import via Blender's addon lifecycle, not a synthetic module name.
+    import addon_utils
+    root=Path(os.environ['LOOPTOOLS_DIR']).resolve()
+    assert root.name.isidentifier() and (root/'__init__.py').is_file()
+    sys.path.insert(0,str(root.parent))
+    name=root.name
+    module=addon_utils.enable(name,default_set=True,persistent=False)
+    assert module is not None and Path(module.__file__).resolve()==root/'__init__.py'
+    assert name in bpy.context.preferences.addons
     assert hasattr(bpy.ops.mesh,'looptools_space') and hasattr(bpy.ops.mesh,'looptools_relax')
     return module
+def unload_extension(module):
+    import addon_utils
+    errors=[]
+    addon_utils.disable(module.__name__,default_set=True,handle_error=lambda exc:errors.append(repr(exc)))
+    assert not errors,errors
+    assert module.__name__ not in bpy.context.preferences.addons
 def select_path(mesh,path,closed):
     bm=bmesh.from_edit_mesh(mesh);bm.verts.ensure_lookup_table()
     for f in bm.faces:f.select_set(False)
@@ -108,7 +121,7 @@ def main():
             best=min((r for r in records if r['passed']),key=lambda r:(r['max_edge_ratio'],r['max_turn']),default=None)
             row=dict(name=label,records=records,selected=best);rows.append(row)
             print('PHASE154_ROW',json.dumps(dict(name=label,measured=len(records),errors=sum('error'in r for r in records),baseline=records[0],best=best,passed={op:sum(r['passed'] for r in records if r['op']==op) for op in sorted({r['op'] for r in records})}),allow_nan=False),flush=True)
-    finally:module.unregister()
+    finally:unload_extension(module)
     out=dict(approved=False,native_executed=True,complete=True,version=bpy.app.version_string,extension=json.loads(Path(os.environ['LOOPTOOLS_PROVENANCE']).read_text()),rows=rows,elapsed=time.perf_counter()-start)
     p=ROOT/'results';p.mkdir(exist_ok=True);(p/'phase154_looptools.json').write_text(json.dumps(out,indent=2,allow_nan=False))
     print('PHASE154_SUMMARY',json.dumps(dict(cases=len(rows),candidates=sum(len(r['records']) for r in rows),errors=sum('error'in x for r in rows for x in r['records']),elapsed=out['elapsed'],extension=out['extension'])),flush=True)
