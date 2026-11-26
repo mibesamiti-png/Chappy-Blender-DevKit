@@ -160,8 +160,10 @@
         "scope": "Fixed repository-authored parameter fixture only: two FloatProperties, seven unchanged variants, static AST counts/API, actual RNA registration/readback, generated/reimported target changes and unrelated invariance, source/GLB/report digests, cleanup and parent run identity. Three Blender versions; actual sphere size diagnostic matched; bevel displacement does not prove a diagnostic cause. Nine A candidate/independent/push runs, 18 property matches, 63 GLB observations; specialist 9 native regressions separate. No general addon causality, authenticity, optimum, arbitrary execution, automatic application, adoption, or distribution."
       },
       "F021-02": {
-        "status": "allocation_candidate",
-        "scope": "R27 fixed authored source only, exact SHA e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3. Change sphere_radius FloatProperty default 0.75 to 1.15 on a temporary copy; unchanged bevel default 0.08. Existing seven R26 variants remain unchanged; reference is existing sphere_radius_changed, not an optimized value. B exact single-token candidate/diff/reverse, C default readback and actual native original/candidate/restored GLB generation/import and cleanup, D strict evidence/rollback checks, A independent parent identity and fixed artifacts. No arbitrary source/paths/patch execution or approval. Formal dispatch required."
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "ed7e2d828c4f4aee336d7129d9329c740c79b2f5",
+        "blender_run": 45768313332,
+        "scope": "Fixed repository-authored source fixture only; pinned original and candidate SHA, exact single-token sphere_radius default 0.75 to 1.15, isolated copy, actual three-stage RNA registration/readback, generated/reimported geometry, unrelated mesh invariance, exact reverse bytes, cleanup and same-job R26 references. A candidate/independent/push nine distinct runs, 27 new GLBs and 63 reference GLBs; three Blender versions. Windows actual checkout LF pinned; one unrelated R13 Windows failure passed unchanged retry, root cause unconfirmed. No general addon causality, optimum, arbitrary input or execution, auto-application, authenticity, legal approval, adoption or distribution."
       },
       "F021-03": {
         "status": "not_started"
@@ -379,5 +381,64 @@
     "prior_milestone": 183,
     "scope": "R27 fixed authored source only, exact SHA e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3. Change sphere_radius FloatProperty default 0.75 to 1.15 on a temporary copy; unchanged bevel default 0.08. Existing seven R26 variants remain unchanged; reference is existing sphere_radius_changed, not an optimized value. B exact single-token candidate/diff/reverse, C default readback and actual native original/candidate/restored GLB generation/import and cleanup, D strict evidence/rollback checks, A independent parent identity and fixed artifacts. No arbitrary source/paths/patch execution or approval. Formal dispatch required.",
     "dispatch": "candidate only, revision 21 paused; allocation merge + independent seven CI + revision 22 active before implementation"
+  },
+  "v021_r27_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "ed7e2d828c4f4aee336d7129d9329c740c79b2f5",
+    "pr": 188,
+    "workflow_runs": {
+      "python": 45768313422,
+      "windows": 45768313401,
+      "blender": 45768313332,
+      "chromium": 45768313535,
+      "handoff": 45768313368,
+      "kit": 45768313348,
+      "skill": 45768313484
+    },
+    "extra_push_blender": 45768307034,
+    "specialist_prs": {
+      "B": 186,
+      "C": 185,
+      "D": 187
+    },
+    "candidate_head": "a5e5fcef4948afaf56b561e3c1dcc4c77b0a5d3a",
+    "candidate_blender": 45767477252,
+    "native_jobs": {
+      "candidate": [
+        139731768829,
+        139731768455,
+        139731768695
+      ],
+      "independent": [
+        139734541335,
+        139734541453,
+        139734541550
+      ],
+      "push": [
+        139734520045,
+        139734519568,
+        139734519875
+      ]
+    },
+    "source_sha256": "e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3",
+    "candidate_sha256": "edde3abe885bf40830052068fcdd6cab57d3d945fdccbc5f3625cff4594c72d7",
+    "final_required_workflows": 27,
+    "extra_workflows": 1,
+    "native_jobs_total": 18,
+    "joined_runs": 9,
+    "joined_new_glb_observations": 27,
+    "joined_reference_glb_observations": 63,
+    "windows_retry": {
+      "attempt": 2,
+      "failed_job": 139734541050,
+      "passed_job": 139736211570,
+      "artifact": 15093221147,
+      "test": "test_r13_windows_root_case_alias_canonicalizes_but_source_case_denied",
+      "observed": "inconclusive_reference_changed",
+      "expected": "stable_repo_bytes",
+      "root_cause": "unconfirmed"
+    },
+    "dispatch": "revision 23 paused; no automatic R28",
+    "scope": "Fixed repository-authored source fixture only; pinned original and candidate SHA, exact single-token sphere_radius default 0.75 to 1.15, isolated copy, actual three-stage RNA registration/readback, generated/reimported geometry, unrelated mesh invariance, exact reverse bytes, cleanup and same-job R26 references. A candidate/independent/push nine distinct runs, 27 new GLBs and 63 reference GLBs; three Blender versions. Windows actual checkout LF pinned; one unrelated R13 Windows failure passed unchanged retry, root cause unconfirmed. No general addon causality, optimum, arbitrary input or execution, auto-application, authenticity, legal approval, adoption or distribution."
   }
 }
