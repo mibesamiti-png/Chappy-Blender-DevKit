@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 193
+name: Geometry Lab isolated operations Phase 194
 on:
   pull_request:
     paths:
@@ -770,6 +770,22 @@ jobs:
           assert all(r["qualified"] and r["input_unchanged"] and r["proxy_unchanged"] and r["target_correct"] and r["captured"] and not r["persistent_edit"] for r in d["rows"])
           assert all(p["measured"] and p["canonical_input_equal"] and p["screen_pass"] for p in d["pairs"])
           assert all(d["controls"].values())
+          PY
+      - name: Reevaluate original surface comparisons with calibrated independent triangle distances
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase194_independent_surface_distance.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase194_independent_surface_distance.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==72 and len(d["pairs"])==84
+          assert all(d["controls"].values())
+          assert all(p["measured"] and "legacy_bvh" in p for p in d["pairs"])
           PY
       - uses: actions/upload-artifact@v4
         if: always()
