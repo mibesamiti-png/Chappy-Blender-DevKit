@@ -2,6 +2,11 @@ name: CBDK Blender multi-version runtime smoke
 
 on:
   workflow_dispatch:
+    inputs:
+      team_a_gui_pilot:
+        description: 'Explicitly attempt Windows desktop input after native smoke (experimental)'
+        type: boolean
+        default: false
   # Prime the shared dev-branch cache after a reviewed cache-policy change.
   # PR merge-ref caches cannot be restored by sibling PRs.
   push:
@@ -1362,9 +1367,10 @@ jobs:
           if-no-files-found: warn
 
 
-  # One Windows GUI pilot. A failed/blocked experiment is not an accepted GUI gate.
-  team-a-windows-gui-pilot:
-    if: github.event_name == 'pull_request'
+  # Windows native provider check is separate from the Linux matrix.
+  # The experimental desktop test requires an explicit manual request.
+  team-a-windows-provider-native:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.team_a_gui_pilot)
     runs-on: windows-2022
     timeout-minutes: 18
     steps:
@@ -1377,6 +1383,7 @@ jobs:
       - name: Check pinned GUI probe syntax
         run: python -m py_compile scripts/blender_joint_gui_probe.py
       - name: Prepare exact Windows Blender and pinned provider snapshot
+        if: hashFiles('experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip') != ''
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -1422,7 +1429,23 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'GL raw snapshot verification failed' }
           "A_BLENDER=$($blender[0].FullName)" >> $env:GITHUB_ENV
           "A_GL_ROOT=$glRoot" >> $env:GITHUB_ENV
+      - name: Windows background actual CJM GL provider chain
+        if: hashFiles('experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip') != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = Join-Path $PWD 'reports/ci/team-a-windows-provider-native.json'
+          $zip = Join-Path $PWD 'experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip'
+          # Reuse the exact existing provider-backed test; no GUI or explicit Undo claim.
+          & $env:A_BLENDER --background --factory-startup --disable-autoexec --python-exit-code 7 --python scripts/blender_joint_integration_smoke.py -- --cjm-zip "$zip" --gl-root "$env:A_GL_ROOT" --output "$output"
+          if ($LASTEXITCODE -ne 0) { throw "Windows native Blender failed: $LASTEXITCODE" }
+          $report = Get-Content -LiteralPath $output -Raw | ConvertFrom-Json
+          $rows = @($report.rows)
+          if ($rows.Count -ne 17 -or @($rows | Where-Object { $_.status -ne 'passed' }).Count -ne 0) { throw 'Expected all 17 native provider observations passed' }
+          if (@($rows | Where-Object { $_.case -eq 'actual_cjm_gl_cbdk_chain' }).Count -ne 1 -or $report.gui_mouse_keyboard -ne $false -or $report.approved -ne $false) { throw 'Provider evidence scope mismatch' }
+          Write-Host "CBDK_A_WINDOWS_PROVIDER_CHAIN_PASS $($report.blender) $($rows.Count)"
       - name: Real Windows desktop input and ordinary Undo pilot
+        if: github.event_name == 'workflow_dispatch' && inputs.team_a_gui_pilot && hashFiles('experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip') != ''
         shell: pwsh
         run: |
           python scripts/blender_joint_gui_probe.py --blender "$env:A_BLENDER" --gl "$env:A_GL_ROOT" --zip "experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip" --output "reports/ci/team-a-windows-gui.json"
@@ -1430,7 +1453,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cbdk-team-a-windows-gui-pilot
+          name: cbdk-team-a-windows-provider-native
           path: reports/ci/
           if-no-files-found: warn
           retention-days: 14
