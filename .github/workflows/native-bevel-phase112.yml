@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 169
+name: Geometry Lab isolated operations Phase 170
 on:
   pull_request:
     paths:
@@ -21,6 +21,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Check research Python syntax before native experiments
+        run: python -m compileall -q .
       - name: Verify frozen synthetic inputs
         run: |
           set -euo pipefail
@@ -382,6 +384,22 @@ jobs:
           assert len(d["rows"])==11 and all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
           assert sum(r["status"]=="goal_met" for r in d["rows"])==7
           assert sum(t["rollback_exact"] for r in d["rows"] for t in r["trace"])==2
+          PY
+      - name: Compare state planner decisions after mesh reindexing
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase170_reindexed_state_planner.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase170_reindexed_state_planner.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==33 and all(r["reordered"] and r["oriented_connectivity_equal"] and r["input_unchanged"] for r in d["rows"])
+          print("Decision agreement:",sum(r["same_decision"] for r in d["rows"]),"/33")
+          print("Final contract agreement:",sum(r["same_final_contract"] for r in d["rows"]),"/33")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
