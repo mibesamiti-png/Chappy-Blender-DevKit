@@ -9,31 +9,31 @@ import numpy as np
 ROOT=Path(__file__).resolve().parent
 sys.path.insert(0,str(ROOT))
 N=720;CHECK=1440;ROLLER=.25;DUTY=.75
-def law(t,kind):
+def law(t,kind,duty=DUTY):
     u=np.mod(np.asarray(t)/math.tau,1.)
-    q=np.clip((u-DUTY)/(1-DUTY),0.,1.)
+    q=np.clip((u-duty)/(1-duty),0.,1.)
     if kind=='lift':
-        return np.where(u<=DUTY,0.,.6*64*q**3*(1-q)**3)
-    A=2.4;k=A*(1-DUTY)/DUTY
-    return np.where(u<=DUTY,A*u/DUTY,A+k*q-(A+k)*(10*q**3-15*q**4+6*q**5))
-def pitch(t,kind,R):
-    s=R+law(t,kind);h=1e-4
-    v=(law(t+h,kind)-law(t-h,kind))/(2*h)
-    a=(law(t+h,kind)-2*law(t,kind)+law(t-h,kind))/(h*h)
+        return np.where(u<=duty,0.,.6*64*q**3*(1-q)**3)
+    A=2.4;k=A*(1-duty)/duty
+    return np.where(u<=duty,A*u/duty,A+k*q-(A+k)*(10*q**3-15*q**4+6*q**5))
+def pitch(t,kind,R,duty=DUTY):
+    s=R+law(t,kind,duty);h=1e-4
+    v=(law(t+h,kind,duty)-law(t-h,kind,duty))/(2*h)
+    a=(law(t+h,kind,duty)-2*law(t,kind,duty)+law(t-h,kind,duty))/(h*h)
     e=np.stack((np.cos(t),np.sin(t)),axis=-1)
     tangent=np.stack((-np.sin(t),np.cos(t)),axis=-1)
     speed=np.hypot(s,v)
     normal=(s[:,None]*e-v[:,None]*tangent)/speed[:,None]
     curvature=(s*s+2*v*v-s*a)/speed**3
     return s[:,None]*e,normal,e,np.degrees(np.arctan2(abs(v),s)),1-ROLLER*curvature
-def profile(kind,R,naive=False):
+def profile(kind,R,naive=False,duty=DUTY):
     t=np.arange(N)*math.tau/N
-    p,n,e,_,_=pitch(t,kind,R)
+    p,n,e,_,_=pitch(t,kind,R,duty)
     return p-ROLLER*(e if naive else n)
-def audit(kind,R,naive=False):
-    c=profile(kind,R,naive);a=c;b=np.roll(c,-1,axis=0);edge=b-a
+def audit(kind,R,naive=False,duty=DUTY):
+    c=profile(kind,R,naive,duty);a=c;b=np.roll(c,-1,axis=0);edge=b-a
     t=(np.arange(CHECK)+.37)*math.tau/CHECK
-    p,normal,e,pressure,factor=pitch(t,kind,R)
+    p,normal,e,pressure,factor=pitch(t,kind,R,duty)
     # Every test roller center against every polygon edge, not its
     # construction vertex. A distant edge can cause an envelope collision.
     errors=[];inside=0
