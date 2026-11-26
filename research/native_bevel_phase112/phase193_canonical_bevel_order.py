@@ -6,7 +6,8 @@ import json,sys,time,math
 from pathlib import Path
 import bpy
 sys.path.insert(0,str(Path(__file__).resolve().parent))
-from phase192_bevel_surface_repeatability import snapshot,compare,MODES
+from phase192_bevel_surface_repeatability import snapshot,compare as legacy_compare,MODES
+from phase194_independent_surface_distance import compare,controls as distance_controls
 from phase191_semantic_rim_bevel import attempt
 from phase190_semantic_cap_selection import plan,oracle,CASES,FRESH
 from phase188_circular_frustum_recognition import build
@@ -44,6 +45,7 @@ def normalize(m):
 
 def main():
     assert bpy.app.version_string=='4.4.3';start=time.perf_counter();rows=[];pairs=[]
+    calibration=distance_controls()
     assert ordered([(0.,0.,0.)]*2,[]) is None
     assert ordered([(float('nan'),0.,0.)],[]) is None
     for name,n,r0,r1,h,axis,c,defect,expected in CASES+FRESH:
@@ -82,16 +84,17 @@ def main():
                         pair=dict(name=name,mode=mode,role=role,seed=seed,measured=SEEDS[0] in outputs and seed in outputs)
                         if pair['measured']:
                             x,y=outputs[SEEDS[0]],outputs[seed]
-                            pair.update(compare(x[1],y[1],width),canonical_input_equal=x[0]==y[0],
+                            legacy=legacy_compare(x[1],y[1],width)
+                            pair.update(compare(x[1],y[1],width),legacy_bvh=legacy,canonical_input_equal=x[0]==y[0],
                                 exact_output_order_equal=x[2]==y[2],exact_output_geometry_equal=x[3]==y[3])
                         pairs.append(pair);print('PHASE193_PAIR',json.dumps(pair,allow_nan=False),flush=True)
             finally:bpy.data.meshes.remove(m)
     gate=(len(rows)==108 and len(pairs)==72 and
           all(r['target_correct'] and r['qualified'] and r['input_unchanged'] and r['proxy_unchanged']
               and r['captured'] and not r['persistent_edit'] for r in rows)
-          and all(p['measured'] and p['canonical_input_equal'] and p['screen_pass'] for p in pairs))
+          and all(p['measured'] and p['canonical_input_equal'] and p['exact_output_geometry_equal'] and p['screen_pass'] for p in pairs))
     out=dict(complete=True,native_executed=True,approved=False,gate=gate,rows=rows,pairs=pairs,
-             controls=dict(duplicate_coordinates_rejected=True,nonfinite_rejected=True),elapsed=time.perf_counter()-start)
+             controls=dict(duplicate_coordinates_rejected=True,nonfinite_rejected=True,**calibration),elapsed=time.perf_counter()-start)
     p=ROOT/'results';p.mkdir(exist_ok=True)
     (p/'phase193_canonical_bevel_order.json').write_text(json.dumps(out,indent=2,allow_nan=False))
     print('PHASE193_SUMMARY',json.dumps(dict(cases=len(rows),pairs=len(pairs),gate=gate,
@@ -99,6 +102,8 @@ def main():
         new_seed_pair_pass=sum(p.get('screen_pass',False) for p in pairs if p['seed']==1933),
         exact_output_geometry=sum(p.get('exact_output_geometry_equal',False) for p in pairs),
         exact_output_order=sum(p.get('exact_output_order_equal',False) for p in pairs),
+        legacy_pass=sum(p.get('legacy_bvh',{}).get('screen_pass',False) for p in pairs),
+        triangle_geometry_equal=sum(p.get('triangle_geometry_equal',False) for p in pairs),
         elapsed=out['elapsed'])),flush=True)
     assert gate
 if __name__=='__main__':main()
