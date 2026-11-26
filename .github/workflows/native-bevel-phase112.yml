@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 162
+name: Geometry Lab isolated operations Phase 163
 on:
   pull_request:
     paths:
@@ -268,6 +268,22 @@ jobs:
           assert len(d["rows"])==7
           assert all(r["final_clean"] and len(r["trace"])<=r["budget"] for r in d["rows"])
           print("Goals met",sum(r["status"]=="goal_met" for r in d["rows"]))
+          PY
+      - name: Test native Boolean hole contracts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase163_hole_contracts.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase163_hole_contracts.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==3 and all(len(r["records"])==6 for r in d["rows"])
+          assert all(c["rollback_exact"] for r in d["rows"] for c in r["records"])
+          print("Selected",[(r["target"]["name"],r["selected"]) for r in d["rows"]])
           PY
       - uses: actions/upload-artifact@v4
         if: always()
