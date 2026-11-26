@@ -66,7 +66,13 @@ isolated background history experiment uses a single explicit baseline push,
 the actual ADOPT operator and native ed.undo/redo (no post-adopt manual push).
 It compares semantic scene content rather than RNA pointers after traversal.
 Its report may be passed, failed or unavailable; failure/unavailability does
-not count as success or release approval. The GUI gate remains separate.
+not count as success or release approval. The completed Windows and Linux
+background experiments both reached adoption but returned undo poll false;
+they are no longer repeated automatically. The separate Linux 4.5.15 pilot
+uses a private Xvfb display, software OpenGL, Openbox, XTEST keyboard input,
+and the existing GUI observer. It attempts ordinary Undo/Redo without
+explicit pushes and reports actual observations separately from provider CI.
+It is not production sidebar hit-testing or Windows interactive evidence.
 Native `Panel.draw` and operators are not Windows mouse/keyboard or Ctrl+Z proof.
 Continuous collision, arbitrary models, physical strength and printing remain
 unverified. No core registry/recipe catalog automatically enables this preview.
