@@ -9,6 +9,10 @@ on:
     paths: ['.github/workflows/blender-smoke.yml']
   pull_request:
     paths:
+      - 'cbdk/joint_integration.py'
+      - 'parts/blender/joint_preview.py'
+      - 'scripts/blender_joint_integration_smoke.py'
+      - 'tests/test_joint_integration.py'
       - 'pyproject.toml'
       - 'docs/project/STATE.json'
       - 'parts/blender/**'
@@ -1307,6 +1311,13 @@ jobs:
           print('CBDK_SYNTHETIC_GALLERY_INTEGRITY_PASS: 13 renders and distinct front comparison')
           PY
           echo "Synthetic Blender render gallery: 13 real PNGs (reference, drift, parts) in screenshot_gallery/index.html." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Bounded Team A joint preview native safety and UI
+        shell: bash
+        run: |
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec --python-exit-code 7 \
+            --python scripts/blender_joint_integration_smoke.py -- \
+            --output reports/ci/team-a-public-native.json
 
       - name: Upload evidence and log even when Blender fails
         if: always()
