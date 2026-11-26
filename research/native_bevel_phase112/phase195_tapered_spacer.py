@@ -20,6 +20,7 @@ from phase160_operation_contracts import measure
 from phase170_reindexed_state_planner import reindex
 from phase171_planar_topology_variants import arrays
 from phase167_protected_local_bevel import signature
+from phase196_spacer_verification import Rays,ray_controls,merge_caps
 ROOT=Path(__file__).resolve().parent
 CASES=[
     ('upright',16,1.6,1.0,2.,(0,0,1),(0,0,0),'small_end'),
@@ -54,7 +55,7 @@ def write_obj(m,path):
         ''.join('v %.9g %.9g %.9g\n'%tuple(v) for v in V)+
         ''.join('f '+' '.join(str(i+1) for i in f)+'\n' for f in F))
 def fabricate(m,role,radius,width,minimum,output=None,probe='normal'):
-    before=signature(*arrays(m));rounded=None;final=None
+    before=signature(*arrays(m));rounded=None;final=None;prepared=None
     def finish(reason,**kw):
         return dict(reason=reason,accepted=reason=='complete',source_unchanged=signature(*arrays(m))==before,
                     persistent_edit=False,**kw)
@@ -78,20 +79,33 @@ def fabricate(m,role,radius,width,minimum,output=None,probe='normal'):
     try:
         rb=measure(rounded,'cube');rh=signature(*arrays(rounded))
         final=rounded.copy() if probe=='skip_bore' else drill(rounded,c,M,h,radius*.8 if probe=='wrong_radius' else radius)
+        raw_audit=measure(final,'cube');preparation=dict(reason='not_needed')
+        # Only retry a failed Boolean mesh audit; do not waive its checks.
+        if not raw_audit['clean'] and probe!='skip_bore':
+            prepared,preparation=merge_caps(rounded,c,M[:,2],h)
+            if prepared is not None:
+                retry=drill(prepared,c,M,h,radius*.8 if probe=='wrong_radius' else radius)
+                bpy.data.meshes.remove(final);final=retry
         out=measure(final,'cube');q=out['metrics'];tb=tree(rounded);tf=tree(final)
+        db=Rays(rounded);df=Rays(final);disagreements=[]
+        def checked(t,ind,o,d,reach):
+            old=ray(t,o,d,reach);new=ind.cast(o,d,reach)
+            if (old is None)!=(new is None) or (old is not None and new is not None and abs(old-new)>tol):
+                disagreements.append(dict(origin=list(o),direction=list(d),legacy=old,independent=new))
+            return new
         reach=4*(h+rmax);tol=2e-5*max(1.,h,rmax)
         zdir=M[:,2];inside=[]
         for i in range(9):
             d=np.zeros(3) if i==0 else M@np.array([.5*radius*math.cos(i*math.pi/4),.5*radius*math.sin(i*math.pi/4),0.])
-            inside.extend(ray(tf,c+d+sign*zdir*h, -sign*zdir,reach) for sign in (-1,1))
+            inside.extend(checked(tf,df,c+d+sign*zdir*h, -sign*zdir,reach) for sign in (-1,1))
         radius_ok=[];outer_ok=[];walls=[]
         for z in (-.45*h,0.,.45*h):
             center=c+z*zdir
             for i in range(16):
                 d=M@np.array([math.cos(i*math.pi/8),math.sin(i*math.pi/8),0.])
                 start=center+d*reach*.5
-                inner=ray(tf,center,d,reach)
-                outer0=ray(tb,start,-d,reach);outer1=ray(tf,start,-d,reach)
+                inner=checked(tf,df,center,d,reach)
+                outer0=checked(tb,db,start,-d,reach);outer1=checked(tf,df,start,-d,reach)
                 radius_ok.append(inner is not None and abs(inner-radius)<=tol)
                 outer_ok.append(outer0 is not None and outer1 is not None and abs(outer0-outer1)<=tol)
                 if inner is not None and outer1 is not None:walls.append(reach*.5-outer1-inner)
@@ -110,13 +124,16 @@ def fabricate(m,role,radius,width,minimum,output=None,probe='normal'):
         if accepted and output is not None:write_obj(final,output)
         return finish('complete' if accepted else 'discarded',checks=checks,
             clearance=clearance,min_wall_sample=min(walls) if walls else None,wall_samples=len(walls),
+            raw_audit=raw_audit,final_audit=out,preparation=preparation,ray_disagreements=disagreements,
             expected_volume=expected_volume,volume=out['volume'],faces=q['faces'],vertices=q['vertices'],
             euler=q['euler'],bore_radius=radius,bevel_width=width,minimum_wall=minimum)
     finally:
         if final is not None:bpy.data.meshes.remove(final)
+        if prepared is not None:bpy.data.meshes.remove(prepared)
         if rounded is not None:bpy.data.meshes.remove(rounded)
 def main():
     assert bpy.app.version_string=='4.4.3';start=time.perf_counter();rows=[]
+    assert ray_controls()
     dest=ROOT/'results';dest.mkdir(exist_ok=True)
     for name,n,r0,r1,h,axis,c,role in CASES:
         for mode in ('quad','mixed'):
