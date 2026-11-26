@@ -197,6 +197,33 @@ jobs:
           assert d["preload_gate"]==(d["baseline_failed"] and chosen is not None)
           print("Gravity-loaded preload fixture gate:",d["preload_gate"])
           PY
+      - name: Isolate preload startup with held shaft and delayed drive
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_delayed_start.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_delayed_start.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["criteria_relaxed"] and not d["body_transform_keyframes"]
+          assert not d["portable_return_certified"] and not d["physical_walk_certified"]
+          assert d["delay_frames"]==120 and d["drive_frames"]==601 and d["motor_hold"]
+          assert d["preload"]==1. and d["stiffness"]==5.
+          c=d["cases"]
+          assert [v["name"] for v in c]==(["engaged","separated","motor_off"] if c[0]["passed"] and d["audit"]["passed"] else ["engaged"])
+          for v in c:
+              assert v["passed"]==all(v["checks"].values())
+              assert v["delay"]==120 and v["spring"]==5. and v["preload"]==1.
+              assert [r["frame"] for r in v["rows"]]==list(range(1,722))
+              assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+              assert all(k in v["checks"] for k in ("startup_hold","startup_coupling","startup_drift"))
+          assert all(k in c[0]["checks"] for k in ("startup_contact","startup_tracking","preload_ready"))
+          assert d["delayed_gate"]==(len(c)==3 and all(v["passed"] for v in c) and d["audit"]["passed"])
+          assert d["baseline_peaks"] and all(q["peak"]["frame"]>=1 for q in d["baseline_peaks"])
+          print("Delayed motor start fixture gate:",d["delayed_gate"])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -204,5 +231,6 @@ jobs:
           path: |
             research/native_bevel_phase112/results/phase211_spring_preload.json
             research/native_bevel_phase112/results/phase211_preload_*
+            research/native_bevel_phase112/results/phase211_delayed*
           if-no-files-found: warn
           retention-days: 14
