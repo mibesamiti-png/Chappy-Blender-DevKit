@@ -418,5 +418,129 @@ class R26FixedParameterStaticTests(unittest.TestCase):
                            "category":"topology_or_modifier_difference"}])
 
 
+
+
+class R27FixedSourceCandidateTests(unittest.TestCase):
+    def setUp(self):
+        import hashlib
+        from cbdk.parameter_source_candidate_r27 import FIXTURE, SOURCE_SHA256
+        self.checkout = FIXTURE
+        self.checkout_bytes = FIXTURE.read_bytes()
+        self.identity = dict(run_id="b"*32, source_sha256=SOURCE_SHA256,
+                             blender_version="4.4.3")
+        self.original = self.checkout_bytes
+        if hashlib.sha256(self.original).hexdigest() != SOURCE_SHA256:
+            # Windows Git checkout can translate LF to CRLF. This is NOT
+            # an accepted production input: prove the live helper rejects it.
+            # Only the test copy may recover the known canonical bytes.
+            from cbdk.parameter_source_candidate_r27 import build_fixed_source_candidate
+            self.assertEqual(hashlib.sha256(self.original).hexdigest(),
+                "eec6968b7cb5208e0af92279b7b32dc0c8d617ebad6d1cdbb5ca39cc64d1918f")
+            with self.assertRaisesRegex(ValueError,"fixed_source_sha_mismatch"):
+                build_fixed_source_candidate(**self.identity)
+            self.original = self.original.replace(b"\r\n", b"\n")
+        self.assertEqual(hashlib.sha256(self.original).hexdigest(), SOURCE_SHA256)
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.fixed_copy = Path(tmp.name) / "cbdk_parameter_experiment.py"
+        self.fixed_copy.write_bytes(self.original)
+        # Exercise unchanged strict code on an exact, isolated test fixture
+        # in both OS matrices; do not rewrite the checkout or weaken its SHA.
+        for target in ("cbdk.parameter_source_candidate_r27.FIXTURE",
+                       "cbdk.glb_parameter_static_r26.FIXTURE"):
+            guard = patch(target, self.fixed_copy)
+            guard.start()
+            self.addCleanup(guard.stop)
+
+    def test_r27_exact_candidate_and_reverse(self):
+        import hashlib
+        from cbdk.parameter_source_candidate_r27 import (
+            build_fixed_source_candidate, restore_fixed_source_candidate, FIXTURE)
+        needle = b"default=0.75"
+        self.assertEqual(self.original.count(needle),1)
+        offset = self.original.index(needle)+len(b"default=")
+        independently_expected = self.original.replace(needle,b"default=1.15",1)
+        for version in ("4.4.3","4.5.15","5.2.1"):
+            identity = dict(self.identity,blender_version=version)
+            candidate, report = build_fixed_source_candidate(**identity)
+            self.assertEqual(candidate,independently_expected)
+            self.assertEqual(len(candidate),len(self.original))
+            self.assertEqual(candidate[:offset],self.original[:offset])
+            self.assertEqual(candidate[offset+4:],self.original[offset+4:])
+            self.assertEqual(report,dict(identity,case_id="parameter_source_r27",
+                property="sphere_radius",before=0.75,after=1.15,
+                old_token="0.75",new_token="1.15",byte_offset=offset,
+                single_difference_verified=True,
+                candidate_sha256=hashlib.sha256(candidate).hexdigest(),
+                restored_sha256=identity["source_sha256"]))
+            self.assertEqual(restore_fixed_source_candidate(candidate),self.original)
+            self.assertEqual(FIXTURE.read_bytes(),self.original)
+            self.assertEqual(self.checkout.read_bytes(),self.checkout_bytes)
+
+    def test_r27_reject_wrong_identity_and_source_digest(self):
+        from cbdk.parameter_source_candidate_r27 import build_fixed_source_candidate
+        for bad in (dict(run_id=True),dict(run_id="B"*32),
+                    dict(source_sha256="0"*64),dict(blender_version="5.2")):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                build_fixed_source_candidate(**dict(self.identity,**bad))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)/"cbdk_parameter_experiment.py"
+            path.write_bytes(self.original+b"\n")
+            with patch("cbdk.parameter_source_candidate_r27.FIXTURE",path):
+                with self.assertRaisesRegex(ValueError,"fixed_source_sha_mismatch"):
+                    build_fixed_source_candidate(**self.identity)
+
+    def test_r27_crlf_copy_is_rejected_not_normalized(self):
+        from cbdk.parameter_source_candidate_r27 import (
+            build_fixed_source_candidate, restore_fixed_source_candidate)
+        crlf = self.original.replace(b"\n",b"\r\n")
+        self.fixed_copy.write_bytes(crlf)
+        with self.assertRaisesRegex(ValueError,"fixed_source_sha_mismatch"):
+            build_fixed_source_candidate(**self.identity)
+        with self.assertRaisesRegex(ValueError,"fixed_source_sha_mismatch"):
+            restore_fixed_source_candidate(crlf)
+        self.assertEqual(self.fixed_copy.read_bytes(),crlf)
+        self.assertEqual(self.checkout.read_bytes(),self.checkout_bytes)
+
+    def test_r27_reject_ambiguous_declaration_and_unknown_value(self):
+        from cbdk.parameter_source_candidate_r27 import _derive_candidate
+        variants = (
+            self.original+b"\n# unrelated 0.75\n",
+            self.original.replace(b"default=0.75",b"default=0.76"),
+            self.original.replace(b"default=0.75",b"default=.75"),
+            self.original.replace(b"default=0.75",b"default=True"),
+            self.original.replace(b"default=0.08",b"default=0.09"),
+            self.original.replace(b"    def build_geometry(self):",
+                b"    sphere_radius: bpy.props.FloatProperty(default=0.75)\n"
+                b"    def build_geometry(self):",1),
+            self.original+b"\nclass Other:\n    sphere_radius: bpy.props.FloatProperty(default=0.4)\n",
+            self.original+b"\nclass CBDKParameterExperimentSettings:\n    pass\n",
+            self.original.replace(b"bpy.props.FloatProperty(",b"fake.FloatProperty(",1),
+        )
+        for index, value in enumerate(variants):
+            with self.subTest(index=index), self.assertRaises(ValueError):
+                _derive_candidate(value)
+
+    def test_r27_reject_multiple_edits_and_invalid_reverse(self):
+        from cbdk.parameter_source_candidate_r27 import (
+            build_fixed_source_candidate, restore_fixed_source_candidate, _check_pair)
+        candidate, report = build_fixed_source_candidate(**self.identity)
+        offset = report["byte_offset"]
+        for bad in (candidate+b"\n", candidate.replace(b"default=0.08",b"default=0.09"),
+                    candidate.replace(b"default=1.15",b"default=1.16"),
+                    candidate.replace(b"segments=24",b"segments=25"),
+                    self.original):
+            with self.subTest(bad_sha=__import__("hashlib").sha256(bad).hexdigest()):
+                with self.assertRaises(ValueError):
+                    _check_pair(self.original,bad,offset)
+                with self.assertRaises(ValueError):
+                    restore_fixed_source_candidate(bad)
+        for wrong in (True,offset+1,-1):
+            with self.assertRaises(ValueError):
+                _check_pair(self.original,candidate,wrong)
+        with self.assertRaises(ValueError):
+            restore_fixed_source_candidate(bytearray(candidate))
+
+
 if __name__ == "__main__":
     unittest.main()
