@@ -1393,15 +1393,33 @@ jobs:
           $manifest = Get-Content 'experiments/team_a_staged/gl_manifest.json' -Raw | ConvertFrom-Json
           git fetch --no-tags --depth=1 origin $manifest.head
           if ($LASTEXITCODE -ne 0) { throw 'GL fetch failed' }
-          $glZip = Join-Path $env:RUNNER_TEMP 'team-a-gl.zip'
-          git archive --format=zip --output=$glZip FETCH_HEAD research/geometry_lab/cbdk_geometry
-          if ($LASTEXITCODE -ne 0) { throw 'GL snapshot failed' }
-          $glFolder = Join-Path $env:RUNNER_TEMP 'team-a-gl'
-          Expand-Archive -LiteralPath $glZip -DestinationPath $glFolder
-          $glRoot = Join-Path $glFolder 'research/geometry_lab'
-          foreach ($file in $manifest.files.PSObject.Properties) {
-            if ((Get-FileHash -Algorithm SHA256 (Join-Path $glRoot $file.Name)).Hash.ToLower() -ne $file.Value) { throw 'GL hash mismatch' }
-          }
+          $glRoot = Join-Path $env:RUNNER_TEMP 'team-a-gl/research/geometry_lab'
+          # Read Git blob bytes directly, avoiding platform archive/checkout conversions.
+          # Fail closed against the same frozen manifest; no normalization or new hashes.
+          $env:A_GL_ROOT = $glRoot
+          @'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          manifest = json.loads(Path("experiments/team_a_staged/gl_manifest.json").read_text(encoding="utf-8"))
+          root = Path(os.environ["A_GL_ROOT"])
+          actual = subprocess.check_output(["git", "rev-parse", "FETCH_HEAD"], text=True).strip()
+          assert actual == manifest["head"], "GL commit mismatch"
+          for name, expected in manifest["files"].items():
+              raw = subprocess.check_output(["git", "cat-file", "blob", actual + ":research/geometry_lab/" + name])
+              got = hashlib.sha256(raw).hexdigest()
+              if got != expected:
+                  raise RuntimeError(f"GL blob hash mismatch: {name}: {got} != {expected}")
+              path = root / name
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(raw)
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == expected
+              print("CBDK_A_GL_RAW_BLOB_PASS", name, got, flush=True)
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw 'GL raw snapshot verification failed' }
           "A_BLENDER=$($blender[0].FullName)" >> $env:GITHUB_ENV
           "A_GL_ROOT=$glRoot" >> $env:GITHUB_ENV
       - name: Real Windows desktop input and ordinary Undo pilot
