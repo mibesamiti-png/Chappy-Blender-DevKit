@@ -2,10 +2,11 @@
 Frozen Phase 188 classifier; read-only endpoint binding, not a machining tool.
 A cylinder has an undirected axis and no intrinsic small/large end.
 """
-import json,time,math
+import json,time,math,sys
 from pathlib import Path
 import numpy as np
 import bpy
+sys.path.insert(0,str(Path(__file__).resolve().parent))
 from phase188_circular_frustum_recognition import classify,build,CASES
 from phase182_cylinder_recognition import REL
 from phase171_planar_topology_variants import arrays
