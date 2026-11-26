@@ -3,7 +3,10 @@ No Blender BVH queries. Not an exact Hausdorff or intersection certificate.
 For nondegenerate triangles compare plane projection (if inside) and all
 three finite edges. Degenerate triangles reduce to their segments.
 """
+import sys
+from pathlib import Path
 import numpy as np
+sys.path.insert(0,str(Path(__file__).resolve().parent))
 from phase192_bevel_surface_repeatability import samples
 
 def nearest(source,target,chunk=64):
@@ -66,3 +69,63 @@ def controls():
         finite_edge=bool(np.max(np.abs(edge-1.))<1e-12))
     assert all(checks.values()),checks
     return checks
+
+def main():
+    import bpy,json,time
+    from pathlib import Path
+    from phase192_bevel_surface_repeatability import snapshot,compare as legacy_compare,MODES,SEEDS
+    from phase191_semantic_rim_bevel import attempt
+    from phase190_semantic_cap_selection import plan,CASES,FRESH
+    from phase188_circular_frustum_recognition import build
+    from phase170_reindexed_state_planner import reindex
+    from phase171_planar_topology_variants import arrays
+    from phase167_protected_local_bevel import signature
+    assert bpy.app.version_string=='4.4.3';start=time.perf_counter()
+    calibration=controls();rows=[];pairs=[]
+    for name,n,r0,r1,h,axis,c,defect,expected in CASES+FRESH:
+        if expected!='frustum':continue
+        width=.01*min(h,r0,r1)
+        for role in ('small_end','large_end'):
+            outputs={}
+            for mode in MODES:
+                m=build(n,r0,r1,h,axis,c,defect,mode)
+                try:
+                    for seed in SEEDS:
+                        q=reindex(m,seed)
+                        try:
+                            before=signature(*arrays(q));capture=[]
+                            def observe(z):capture.append((snapshot(z),signature(*arrays(z))))
+                            out=attempt(q,role,plan(q,role),width,observer=observe)
+                            row=dict(name=name,mode=mode,seed=seed,role=role,
+                                qualified=out['qualified'],captured=len(capture)==1,
+                                unchanged=out['input_unchanged'] and signature(*arrays(q))==before,
+                                persistent_edit=out['persistent_edit'])
+                            rows.append(row)
+                            if len(capture)==1:outputs[(mode,seed)]=capture[0]
+                        finally:bpy.data.meshes.remove(q)
+                finally:bpy.data.meshes.remove(m)
+            requests=[('reindex',(mode,SEEDS[0]),(mode,SEEDS[1])) for mode in MODES]
+            requests.extend(('tessellation',('quad',seed),(mode,seed)) for seed in SEEDS for mode in MODES[1:])
+            for kind,a,b in requests:
+                p=dict(name=name,role=role,kind=kind,a=list(a),b=list(b),width=width,
+                       measured=a in outputs and b in outputs)
+                if p['measured']:
+                    x,y=outputs[a],outputs[b]
+                    p.update(compare(x[0],y[0],width),legacy_bvh=legacy_compare(x[0],y[0],width),
+                             exact_output_order_equal=x[1]==y[1])
+                pairs.append(p);print('PHASE194_PAIR',json.dumps(p,allow_nan=False),flush=True)
+    gate=(len(rows)==72 and len(pairs)==84 and all(calibration.values())
+          and all(r['qualified'] and r['captured'] and r['unchanged'] and not r['persistent_edit'] for r in rows)
+          and all(p['measured'] for p in pairs))
+    d=dict(complete=True,native_executed=True,approved=False,gate=gate,rows=rows,pairs=pairs,
+           controls=calibration,elapsed=time.perf_counter()-start)
+    path=Path(__file__).resolve().parent/'results';path.mkdir(exist_ok=True)
+    (path/'phase194_independent_surface_distance.json').write_text(json.dumps(d,indent=2,allow_nan=False))
+    print('PHASE194_SUMMARY',json.dumps(dict(cases=len(rows),pairs=len(pairs),gate=gate,
+        reindex_pass=sum(p.get('screen_pass',False) for p in pairs if p['kind']=='reindex'),
+        tessellation_pass=sum(p.get('screen_pass',False) for p in pairs if p['kind']=='tessellation'),
+        legacy_reindex_pass=sum(p.get('legacy_bvh',{}).get('screen_pass',False) for p in pairs if p['kind']=='reindex'),
+        legacy_tessellation_pass=sum(p.get('legacy_bvh',{}).get('screen_pass',False) for p in pairs if p['kind']=='tessellation'),
+        elapsed=d['elapsed'])),flush=True)
+    assert gate
+if __name__=='__main__':main()
