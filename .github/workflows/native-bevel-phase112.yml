@@ -1,4 +1,4 @@
-name: Geometry Lab isolated LoopTools Phase 154
+name: Geometry Lab isolated LoopTools Phase 156
 on:
   pull_request:
     paths:
@@ -126,6 +126,7 @@ jobs:
           assert urllib.parse.urlparse(archive).scheme=='https' and urllib.parse.urlparse(archive).hostname=='extensions.blender.org'
           blob=fetch(archive,2*1024*1024); digest=hashlib.sha256(blob).hexdigest()
           assert len(blob)==a['archive_size'] and a['archive_hash']=='sha256:'+digest
+          assert digest=='ff1ca3b3fff73094379da8b1fa2c1acbc9d88d26b7dfc73bb9de5941a6b50108'
           dest=pathlib.Path(os.environ['LOOPTOOLS_DIR']);dest.mkdir(exist_ok=False)
           with zipfile.ZipFile(io.BytesIO(blob)) as z:
               entries=z.infolist()
@@ -156,6 +157,23 @@ jobs:
           assert d["complete"] and d["native_executed"] and not d["approved"]
           assert len(d["rows"])==4 and all(len(r["records"])==29 for r in d["rows"])
           assert sum('error' in x for r in d["rows"] for x in r["records"])==0
+          PY
+      - name: Replay frozen LoopTools settings and audit native subdivision
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase156_looptools_subdiv.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase156_looptools_subdiv.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==4 and all(r["reproducible"] for r in d["rows"])
+          assert sum(r["edited"] is not None for r in d["rows"])==3
+          assert all(len(x["levels"])==3 for r in d["rows"] for x in (r["baseline"],r["edited"]) if x is not None)
+          print("Selected passed",sum(r["selected_passed"] for r in d["rows"]),"/ 4")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
