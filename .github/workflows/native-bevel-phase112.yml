@@ -1037,6 +1037,22 @@ jobs:
           assert all(c["passed"] and len(c["rows"])==601 and set(c["legs"])=={"LF","LB","RF","RB"} for c in d["cases"])
           assert (p/"phase208_four_legs.blend").stat().st_size>0
           PY
+      - name: Measure free chassis locomotion under gravity and floor friction
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase208_free_walk.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase208_free_walk.json").read_text())
+          assert d["experiment_complete"] and d["native_executed"] and not d["approved"] and not d["physical_walk_certified"]
+          assert [c["name"] for c in d["cases"]]==["driven","frictionless","motor_off"]
+          assert all(len(c["rows"])==601 and set(c["feet"])=={"LF","LB","RF","RB"} for c in d["cases"])
+          assert d["walk_gate"] == (d["cases"][0]["walk_candidate"] and all(d["controls"].values()))
+          assert (p/"phase208_free_walk.blend").stat().st_size>0
+          print("Walking gate (not CI integrity gate):",d["walk_gate"])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
