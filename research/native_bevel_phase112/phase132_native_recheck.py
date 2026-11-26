@@ -4,6 +4,8 @@ from pathlib import Path
 import numpy as np
 import bpy
 from mathutils.bvhtree import BVHTree
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parent))
 from phase112_native_benchmark import metrics, topology_ok
 from phase120_native_sections import planes, evaluate
 from phase123_section_extent import measure, controls
