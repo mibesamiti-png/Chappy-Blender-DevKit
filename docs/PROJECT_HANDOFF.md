@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.20 R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI・3版縦断成功。F020-01/02限定受入、F020-03 partial。R24節目#171独立7CI/Notion同期成功、R25限定割当候補（F020-03）。#125 rev17 paused、正式ゲート前実装禁止。正式v0.17.0/main/last_verified維持。
+- 最新の節目: v0.20 R25 #175 dev 1f8235589363e7ddbee89b6fff3599402e1d6aec 独立7CI＋追加Blender成功。F020-01/02/03限定3/3受入、通常Undo/実GUI/公式installer/権利/配布未確認。#125 rev19 paused、節目同期中。正式v0.17.0/main/last_verified維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
@@ -216,6 +216,7 @@
 - `DEC-087` R23の限定複数パネル生成と同一Extension縦断を受入、F020-02の残範囲を次に判断する。R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI成功（Python45698148532、Windows45698148921、Blender45698148477、Chromium45698148381、Handoff45698148674、Kit45698148611、Skill45698148654）。C #164/D #163/A #165各5CIと合わせ22/22、再試行0。3版で同一CLI生成ZIP公式validate・隔離bl_ext登録・2panel/4機能/2型のdraw/操作/解除・SHA不変、artifact保存。F020-01限定受入、F020-03限定実装受入（全体partial）、F020-02残。#125 rev15 paused、B/C/D待機。実GUI/Undo/公式installer/任意コード/権利・正式配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
 - `DEC-088` F020-02の非空依存グラフ実機検証とExtension互換範囲をR24限定割当候補にする。R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI（Python45700815698、Windows45700815565、Blender45700815591、Chromium45700815541、Handoff45700815542、Kit45700815896、Skill45700815567）成功、3版R23 marker、Notion既存ページ追記成功。F020-02既存6機能のrequires_featuresは全空。既存plannerの推移/循環Python検査は再利用し、R24 Cはテスト専用の非空依存閉包・登録/逆順解除/rollbackの実機縦断、Dはroot ZIPの依存閉包とmanifest互換範囲の独立照合/過大表示拒否。A同一物縦断。正式割当統合・独立7CI・#125更新前は着手禁止。B待機、GL/DIL独立、44要件/24 NEXT/正式版/main/last_verified維持。
 - `DEC-089` R24の非空依存閉包を限定受入し、v0.20残条件を評価する。R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI（Python45708363907、Windows45708363838、Blender45708363884、Chromium45708363947、Handoff45708363876、Kit45708363916、Skill45708364079）成功。C #169/D #168/A #170各5CI含む最終22/22、実Blender12/12、最終再試行0。C初回Blender未発火はUI回帰追加、D初回狭いmin/max各2件×3 Python版の再現後に固定manifest範囲外を生成前拒否。合成要求1→4機能/5部品、legacyとExtension実行payload一致、同一ZIP公式validate・実順序登録/逆順解除/途中rollback・read/edit・SHA不変。F020-02限定受入、F020-03 partial維持。#125 rev17 paused、実カタログ依存全空維持。Undo/実GUI/公式installer/権利/配布未確認、次は残条件調査。44要件/24 NEXT・正式版/main/last_verified維持。
+- `DEC-090` R25の同一生成物の段階証拠と明示Undoを限定受入し、v0.20の限定3目標を区切る。R25 #175 dev 1f8235589363e7ddbee89b6fff3599402e1d6aec 独立7CI＋追加push Blender成功。C #174/D #173/A #175各5CI含む最終22/22＋追加1、15 native jobs、最終再試行0。C初回cleanup参照エラー修正、D初回CI未発火は回帰追加。固定read/edit/grouped 3版×6工程54/54、SHA一致。grouped明示Undo/Redo単一/複数・接続/選択復元・取消/解除成功。通常背景Undo unavailable/Redo not_attempted、GUI未検証。失敗/欠落/矛盾はPython負例。F020-03とv0.20限定3/3受入。#125 rev19 paused、B/C/D待機。公式installer/任意コード/権利/配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持、v0.21/R26自動開始なし。詳細はPROGRESS・future JSON参照。
 
 ## 更新・プライバシールール
 

@@ -40,7 +40,7 @@
     },
     {
       "version": "0.20",
-      "status": "in_progress",
+      "status": "scoped_milestones_accepted",
       "goal": "Blender addon generation engine",
       "candidates": [
         "Declarative panels, buttons, properties and operators",
@@ -146,10 +146,10 @@
         "scope": "Fixed test-only nonempty diamond: requested 1 -> ordered 4 features, 5 unique parts; legacy and Extension executable payload equal after legacy metadata removal; same ZIP official validate, actual native register/reverse and controlled midpoint rollback, typed read/edit, cleanup, unchanged SHA on 3 versions. Reproduced narrower min/max mismatch rejected before build. Actual catalog edges remain empty; no arbitrary graph/code execution or semantic dependencies claimed."
       },
       "F020-03": {
-        "status": "scoped_implementation_accepted_partial",
-        "verified_dev_sha": "7b16aed6dbdf422cbea069adb4b240b8de4dc2c1",
-        "blender_run": 45698148477,
-        "scope": "Explicit local CLI and trusted recipe root ZIP read/edit/grouped; same four-feature two-panel ZIP official validate, isolated offline manual local repo bl_ext enable/draw/read/edit/disable/cleanup, SHA unchanged, all 3 versions. Official installer, GUI/Undo, arbitrary code, license/distribution and broader cases remain unverified. R24 adds same validated Extension ZIP with test-only dependency closure and real ordered registration/reverse/rollback, conservative fixed manifest compatibility refusal. Undo and other remaining limits unchanged. R25 allocation candidate: reuse existing controlled Undo probe and extension diagnostics for same fixed grouped artifact stage evidence, explicit missing/failed/not_run and GUI/manual boundaries. No implementation before allocation merge, independent seven CI and dispatch; status remains partial."
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "1f8235589363e7ddbee89b6fff3599402e1d6aec",
+        "blender_run": 45722761515,
+        "scope": "R23 read/edit/grouped trusted generation and same ZIP official validate, isolated manual local repo bl_ext enable/draw/read/edit/disable; R24 fixed dependency closure/order/rollback and conservative manifest range rejection; R25 actual six-stage observations across three fixed recipes and Blender 4.4.3/4.5.15/5.2.1 (9 cases, 54 gates), strict case/version/run/SHA consistency and synthetic missing/failure/mismatch controls. Grouped same registered ZIP explicit ed.undo_push single/multi Undo/Redo, exact topology/selection/cancel and cleanup, unchanged SHA. Normal background Undo unavailable/Redo not_attempted; actual GUI, official installer, arbitrary inputs, authenticity, rights and distribution unverified. Scoped phase goals accepted, not full product completion."
       }
     }
   },
@@ -242,6 +242,45 @@
       139536058201
     ],
     "dispatch": "revision 17 paused; R25 not issued",
+    "notion": "pending milestone sync after verified docs integration"
+  },
+  "v020_r25_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "1f8235589363e7ddbee89b6fff3599402e1d6aec",
+    "workflow_runs": {
+      "python": 45722761380,
+      "windows": 45722761395,
+      "blender": 45722761515,
+      "chromium": 45722761433,
+      "handoff": 45722761411,
+      "kit": 45722761407,
+      "skill": 45722761464
+    },
+    "additional_push_blender": 45722754722,
+    "specialist_prs": {
+      "C": 174,
+      "D": 173
+    },
+    "combined_pr": 175,
+    "final_workflow_families": 22,
+    "additional_workflows": 1,
+    "final_native_jobs": 15,
+    "final_retries": 0,
+    "native_jobs": [
+      139584896572,
+      139584896865,
+      139584896896
+    ],
+    "push_native_jobs": [
+      139584871617,
+      139584872011,
+      139584872006
+    ],
+    "fixed_cases": 9,
+    "passed_stages": 54,
+    "initial_c": "all three legacy probe cleanup failed on transient None; corrected with view-layer update and fresh live objects",
+    "initial_d": "Blender path filter omitted; existing manifest diagnostic regression expanded",
+    "dispatch": "revision 19 paused; v0.21 and R26 not started",
     "notion": "pending milestone sync after verified docs integration"
   }
 }
