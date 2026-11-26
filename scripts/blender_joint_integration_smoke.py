@@ -108,8 +108,9 @@ def history_boundary():
     # Direct callback boundary test, not actual native Undo/Redo or GUI input.
     from types import SimpleNamespace as NS
     assert 'UNDO' in ui.CBDK_A_OT_dimension.bl_options
-    assert 'UNDO' not in ui.CBDK_A_OT_action.bl_options
-    assert 'UNDO' not in ui.CBDK_A_OT_start.bl_options
+    # An operator with no explicit options may not expose bl_options on its Python class.
+    assert 'UNDO' not in getattr(ui.CBDK_A_OT_action, 'bl_options', set())
+    assert 'UNDO' not in getattr(ui.CBDK_A_OT_start, 'bl_options', set())
     for name, callback in ui.HISTORY_HANDLERS:
         assert getattr(bpy.app.handlers, name).count(callback) == 1
     old_diameter = s.diameter
