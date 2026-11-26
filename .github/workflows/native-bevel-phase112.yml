@@ -995,6 +995,21 @@ jobs:
           fi
           echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
           tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Generate inverse roller cam profiles and check independent envelope distances
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_inverse_cam.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_inverse_cam.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert len(d["profiles"])==2 and all(x["passed"] for x in d["profiles"])
+          assert all(d["controls"].values()) and len(d["controls"])==3
+          assert d["independent_samples"]==1440 and not d["walking_certified"]
+          assert (p/"phase210_inverse_cam.blend").stat().st_size>0
+          PY
       - name: Evaluate bounded stance-duty search against actual foot outline
         run: |
           set -euo pipefail
@@ -1088,5 +1103,6 @@ jobs:
           path: |
             research/native_bevel_phase112/results/phase208_*
             research/native_bevel_phase112/results/phase209_*
+            research/native_bevel_phase112/results/phase210_*
           if-no-files-found: warn
           retention-days: 14
