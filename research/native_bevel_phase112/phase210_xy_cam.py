@@ -34,10 +34,10 @@ def limits(c,linear,angular):
                 setattr(c,'limit_'+key+'_lower',lo)
                 setattr(c,'limit_'+key+'_upper',hi)
     return c
-def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload=0.):
+def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene
-    sc.gravity=(-9.81,-9.81,0.) if spring is None else (0.,-9.81,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES
+    sc.gravity=(-9.81,-9.81,0.) if spring is None else (0.,-9.81,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES+delay
     bpy.ops.mesh.primitive_cube_add(size=.5,location=(0.,0.,-5.))
     anchor=body(bpy.context.object,True);anchor.name='ideal fixed guide reference';anchor.hide_render=True
     shaft=box('common keyed shaft',(0.,0.,.5),(.18,.18,1.5),.2)
@@ -46,6 +46,18 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
     motor=constraint('only shaft motor','MOTOR',anchor,shaft,(0.,0.,.5),(0.,-math.pi/2,0.))
     motor.use_motor_lin=False;motor.use_motor_ang=enabled
     motor.motor_ang_target_velocity=1.;motor.motor_ang_max_impulse=IMPULSE
+    if delay and enabled:
+        # Same motor holds zero velocity until preload has settled. Only the
+        # motor command is animated; no body transforms are prescribed.
+        motor.motor_ang_target_velocity=0.
+        assert motor.keyframe_insert(data_path='motor_ang_target_velocity',frame=1)
+        assert motor.keyframe_insert(data_path='motor_ang_target_velocity',frame=delay+1)
+        motor.motor_ang_target_velocity=1.
+        assert motor.keyframe_insert(data_path='motor_ang_target_velocity',frame=delay+2)
+        owner=motor.id_data
+        for fc in owner.animation_data.action.fcurves:
+            for kp in fc.keyframe_points:kp.interpolation='CONSTANT'
+        motor.motor_ang_target_velocity=0.
     assert preload>=0 and (preload==0 or (spring is not None and spring>0))
     items=[];zero={a:(0.,0.) for a in 'xyz'}
     for kind,axis,base,z,phi in [('stride','x',7.,0.,0.),('lift','y',2.5,1.,math.pi/2)]:
@@ -95,7 +107,7 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
         limits(constraint(it['kind']+' output cross-slide','GENERIC',it['slide'],carriage,outpos),
             {it['axis']:(0.,0.)},{})
     world=sc.rigidbody_world;world.substeps_per_frame=substeps;world.solver_iterations=100
-    world.point_cache.frame_start=1;world.point_cache.frame_end=FRAMES
+    world.point_cache.frame_start=1;world.point_cache.frame_end=FRAMES+delay
     bpy.context.view_layer.update();sc.frame_set(1)
     objs=[shaft,carriage]+[it[k] for it in items for k in ('cam','roller','slide')]
     objs.extend(it['weight'] for it in items if it['weight'] is not None)
@@ -105,11 +117,11 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
     return sc,shaft,carriage,items
 def wrap(a):return math.atan2(math.sin(a),math.cos(a))
 def az(M):return math.atan2(M[1][0],M[0][0])
-def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None,preload=0.):
-    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring,preload)
+def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0):
+    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring,preload,delay)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/('phase210_xy_'+name+'.blend')))
     rows=[];last=None;travel=0.
-    for f in range(1,FRAMES+1):
+    for f in range(1,FRAMES+delay+1):
         sc.frame_set(f);dg=bpy.context.evaluated_depsgraph_get()
         mat=lambda o:o.evaluated_get(dg).matrix_world.copy()
         S=mat(shaft);O=mat(carriage);a=az(S)
@@ -143,6 +155,11 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
             row['spring_force_proxy']=spring*row['spring_extension_x']
         row['xy_error']=math.hypot(row['stride_error'],row['lift_error'])
         rows.append(row)
+    startup=rows[:delay+1] if delay else []
+    all_rows=rows
+    if delay and enabled:
+        rows=rows[delay:]
+        travel=rows[-1]['travel']-rows[0]['travel']
     peak=lambda k:max(abs(r[k]) for r in rows)
     span=lambda k:max(r[k] for r in rows)-min(r[k] for r in rows)
     amp={k:span(k+'_output') for k in ('stride','lift')}
@@ -169,10 +186,22 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
         # brake is added; reject sustained rotation or large output motion.
         checks.update(no_sustained_drive=abs(travel)<=.4,
             no_large_output=amp['stride']<=.25 and amp['lift']<=.15)
-    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,preload=preload,travel=travel,amplitude=amp,
+    startup_checks={}
+    if delay:
+        # Do not waive the startup tracking or constraint gates. In separated
+        # controls contact is intentionally absent; motor-off covers all frames.
+        startup_checks=dict(startup_hold=max(abs(r['travel']) for r in startup)<=.05 if enabled else True,
+            startup_coupling=max(abs(r[k+'_coupler_error']) for r in startup for k in amp)<=.015,
+            startup_drift=max(abs(r[k]) for r in startup for k in ['shaft_drift','output_z_drift']+[a+b for a in amp for b in ('_cam_drift','_guide_drift','_slider_drift')])<=.015)
+        if name=='engaged':
+            startup_checks.update(startup_contact=max(abs(r[k+'_gap']) for r in startup for k in amp)<=.025,
+                startup_tracking=max(abs(r[k+'_error']) for r in startup for k in amp)<=.025,
+                preload_ready=-startup[-1]['preload_anchor_x']>=.9*preload and startup[-1]['spring_force_proxy']>=2.)
+        checks.update(startup_checks)
+    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,preload=preload,delay=delay,travel=travel,amplitude=amp,
         max_xy_error=peak('xy_error'),max_axis_error={k:peak(k+'_error') for k in amp},
         max_sync=sync,max_coupler_error=coupler,max_drift=drift,max_contact_gap=gaps,
-        max_stance_height=dwell,checks=checks,passed=all(checks.values()),rows=rows)
+        max_stance_height=dwell,checks=checks,passed=all(checks.values()),rows=all_rows)
     print('PHASE210C3_CASE',json.dumps({k:v for k,v in out.items() if k!='rows'},allow_nan=False),flush=True)
     return out
 def main():
