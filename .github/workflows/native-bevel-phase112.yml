@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 203
+name: Geometry Lab isolated operations Phase 204
 on:
   pull_request:
     paths:
@@ -896,6 +896,22 @@ jobs:
           assert len(d["rows"])==6 and all(r["matched"] and r["source_unchanged"] for r in d["rows"])
           assert sum(r["status"]=="complete" for r in d["rows"])==1
           assert {p.name for p in Path("results").glob("phase203_*.obj")}=={"phase203_ribbed.obj"}
+          PY
+      - name: Fabricate and animate full four-bar mechanism
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase204_four_bar.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase204_four_bar.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["parts"])==8 and all(x["passed"] for x in d["parts"].values())
+          assert len(d["samples"])==361 and all(x["passed"] for x in d["samples"])
+          assert len(d["mesh_collisions"])==73 and not any(x["pairs"] for x in d["mesh_collisions"])
+          assert all(d["controls"].values()) and all(x>0 for x in d["insertion_gaps"].values())
+          assert len(list(p.glob("phase204_*.obj")))==8 and (p/"phase204_four_bar.blend").stat().st_size>0
           PY
       - uses: actions/upload-artifact@v4
         if: always()
