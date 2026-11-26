@@ -1,0 +1,7 @@
+# DIL-10 current status — 2026-11-26 JST
+
+- Trigger: GL Phase 192–197 self-reflection supplied by user. Reported seven failure modes; original measurement data/Phase commits not independently validated here.
+- Starting DIL head 69dce01fa36b485dbaad6486c219157b665cd4c4, 3/3 workflows success. GL PR #114 observed 6cdb85f4c97bf4cdbb4693a7b1bc180149b4ca2b; no Phase 192–197 claims inferred from that head. Dev 24099ec3aea32302f30dbcefa935d5e8b2a54594; Issue #125 R28 rev25 normal, context only. No GL/ABCD assignment taken.
+- First action: reuse DIL-02/DIL-09 and make one short advisory protocol. Seven reported problems mapped retrospectively, eight synthetic comparison cases fixed, no new algorithm or workflow. First live self-application: choose documentation instead of building a decision engine; reason is method-choice behavior has not been shown to require code. No comparative effect claim.
+- [Protocol](PROTOCOL.md) / [Cases and source limits](CASES.md). Next: if needed, limited paired evaluation or one real owner-approved task; record quality and needless work including audit overhead. Do not grow a new framework by default. No actual A/B execution, no independent effectiveness measurement, no formal adoption. Existing CI does not verify behavioral changes.
+- DIL-09 remains historical [status](../dil09/STATUS.md). No changes to GL, ABCD, official rules, shared CI, dev/main or prior experiments.
