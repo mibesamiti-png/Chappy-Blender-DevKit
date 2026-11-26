@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 195
+name: Geometry Lab isolated operations Phase 196
 on:
   pull_request:
     paths:
@@ -787,7 +787,7 @@ jobs:
           assert all(d["controls"].values())
           assert all(p["measured"] and "legacy_bvh" in p for p in d["pairs"])
           PY
-      - name: Fabricate and audit synthetic tapered spacer using existing native operations
+      - name: Recheck tapered spacer with independent ray probes and guarded cap preparation
         env:
           OPENBLAS_NUM_THREADS: '1'
           OMP_NUM_THREADS: '1'
