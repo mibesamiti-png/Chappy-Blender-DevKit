@@ -542,5 +542,118 @@ class R27FixedSourceCandidateTests(unittest.TestCase):
             restore_fixed_source_candidate(bytearray(candidate))
 
 
+
+
+class R28FixedCandidateReviewTests(unittest.TestCase):
+    def setUp(self):
+        from cbdk.parameter_candidate_review_r28 import review_fixed_candidates, TRIAL_IDS
+        self.review = review_fixed_candidates
+        self.ids = TRIAL_IDS
+        self.baseline = self.measure(1.5, "a")
+        self.target = self.measure(2.3, "b")
+        self.trials = [
+            dict(trial_id=trial, measurement=measurement)
+            for trial, measurement in zip(self.ids, (
+                self.measure(1.1, "c"), self.measure(2.3, "b", cube="e"),
+                self.measure(1.9, "d"), copy.deepcopy(self.target)))
+        ]
+
+    @staticmethod
+    def measure(size, coord, *, cube="f", imported_size=None):
+        from cbdk.parameter_candidate_review_r28 import SPHERE, CUBE
+        def mesh(s):
+            return {
+                SPHERE: dict(mesh_vertex_count=242, mesh_polygon_count=264,
+                             mesh_coordinate_sha256=coord*64, world_dimensions=[s]*3),
+                CUBE: dict(mesh_vertex_count=96, mesh_polygon_count=98,
+                           mesh_coordinate_sha256=cube*64, world_dimensions=[2.0]*3),
+            }
+        return dict(glb_sha256="0"*64, generated_mesh=mesh(size),
+                    imported_glb_mesh=mesh(size if imported_size is None else imported_size))
+
+    def test_r28_fixed_expected_history_and_prefix_budgets(self):
+        expected = ["target_regression","protected_part_regression",
+                    "observed_improvement","observed_target_reached"]
+        for budget in range(1,5):
+            with self.subTest(budget=budget):
+                out = self.review(self.baseline,self.target,self.trials[:budget],budget=budget)
+                self.assertEqual([r["decision"] for r in out["trials"]],expected[:budget])
+                self.assertEqual([r["best_trial_after"] for r in out["trials"]],
+                                 ["baseline","baseline","intermediate","target"][:budget])
+                self.assertEqual(out["best_trial_id"],["baseline","baseline","intermediate","target"][budget-1])
+                self.assertEqual(out["stop_reason"],"observed_target_reached" if budget==4 else "budget_exhausted")
+                self.assertIs(out["observed_target_reached"],budget==4)
+                self.assertEqual(out["validated_attempts"],budget)
+                self.assertTrue(all(v is False for v in out["safety"].values()))
+                for row, expected_score in zip(out["trials"],[1.2,0,.4,0]):
+                    for score in row["scores"].values():
+                        self.assertAlmostEqual(score,expected_score)
+        self.assertNotEqual(self.baseline["generated_mesh"],self.target["generated_mesh"])
+
+    def test_r28_ties_one_phase_and_margin_are_uncertain(self):
+        for size, imported in ((1.5,1.5),(1.9,1.5),(1.9,1.1),(1.500001,1.500001)):
+            rows = [dict(trial_id=self.ids[0],measurement=self.measure(size,"c",imported_size=imported))]
+            out = self.review(self.baseline,self.target,rows,budget=1)
+            self.assertEqual(out["trials"][0]["decision"],"uncertain_no_strict_improvement")
+            self.assertEqual(out["best_trial_id"],"baseline")
+
+    def test_r28_target_dims_alone_and_early_target_do_not_pass(self):
+        rows = copy.deepcopy(self.trials)
+        rows[3]["measurement"] = self.measure(2.3,"c")
+        out = self.review(self.baseline,self.target,rows)
+        self.assertEqual(out["trials"][-1]["decision"],"uncertain_no_strict_improvement")
+        self.assertEqual(out["best_trial_id"],"intermediate")
+        self.assertFalse(out["observed_target_reached"])
+        early = [dict(trial_id=self.ids[0],measurement=self.target)]
+        out = self.review(self.baseline,self.target,early,budget=1)
+        self.assertFalse(out["observed_target_reached"])
+        self.assertEqual(out["best_trial_id"],"baseline")
+
+    def test_r28_protected_part_veto_in_either_phase(self):
+        from cbdk.parameter_candidate_review_r28 import CUBE
+        for phase in ("generated_mesh","imported_glb_mesh"):
+            rows = copy.deepcopy(self.trials)
+            rows[3]["measurement"][phase][CUBE]["mesh_coordinate_sha256"]="e"*64
+            out=self.review(self.baseline,self.target,rows)
+            self.assertEqual(out["trials"][-1]["decision"],"protected_part_regression")
+            self.assertEqual(out["best_trial_id"],"intermediate")
+            self.assertFalse(out["observed_target_reached"])
+
+    def test_r28_missing_prefix_and_failed_evidence_do_not_complete(self):
+        for rows in ([],self.trials[:3],self.trials[:3]+[dict(trial_id="target",measurement=None)]):
+            out=self.review(self.baseline,self.target,rows)
+            self.assertEqual(out["status"],"incomplete")
+            self.assertFalse(out["observed_target_reached"])
+        self.assertEqual(self.review(None,self.target,self.trials)["status"],"incomplete")
+
+    def test_r28_malformed_order_budget_types_and_forged_best(self):
+        from cbdk.parameter_candidate_review_r28 import SPHERE
+        cases = [list(reversed(self.trials)), [self.trials[0]]*2,
+                 [dict(self.trials[0],best_trial_after="target")],
+                 [dict(self.trials[0],trial_id="unknown")],
+                 [dict(trial_id=self.ids[0],measurement=None),self.trials[1]]]
+        for value in (True,float("nan"),float("inf"),0,-1,"1.5"):
+            rows=copy.deepcopy(self.trials)
+            rows[0]["measurement"]["generated_mesh"][SPHERE]["world_dimensions"][0]=value
+            cases.append(rows)
+        rows=copy.deepcopy(self.trials)
+        rows[0]["measurement"]["imported_glb_mesh"][SPHERE]["mesh_vertex_count"]=True
+        cases.append(rows)
+        for rows in cases:
+            out=self.review(self.baseline,self.target,rows)
+            self.assertEqual(out["status"],"rejected")
+            self.assertFalse(out["observed_target_reached"])
+            self.assertIsNone(out["best_trial_id"])
+        for budget in (True,0,5,2.0,1):
+            out=self.review(self.baseline,self.target,self.trials,budget=budget)
+            self.assertEqual(out["status"],"rejected")
+        self.assertEqual(self.review(self.baseline,self.baseline,self.trials)["status"],"rejected")
+
+    def test_r28_glb_byte_identity_is_not_geometry_identity(self):
+        rows=copy.deepcopy(self.trials)
+        rows[-1]["measurement"]["glb_sha256"]="1"*64
+        out=self.review(self.baseline,self.target,rows)
+        self.assertTrue(out["observed_target_reached"])
+
 if __name__ == "__main__":
     unittest.main()
