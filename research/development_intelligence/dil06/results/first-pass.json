@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "research": "DIL-06",
+  "rounds": [
+    {
+      "round": "R13",
+      "report_kind": "observed_publication_interval",
+      "team_evidence": [
+        {
+          "role": "B",
+          "pr": 100,
+          "head_sha": "f3e83449bb41512771a25010a02002bddf37ec20",
+          "ready_at": "2026-11-08T01:58:46Z",
+          "required_workflow_count": 5,
+          "required_job_count": 10,
+          "blockers": []
+        },
+        {
+          "role": "C",
+          "pr": 102,
+          "head_sha": "233738e8294fd7658d378611ba55ab73f5c923f5",
+          "ready_at": "2026-11-08T02:25:10Z",
+          "required_workflow_count": 5,
+          "required_job_count": 10,
+          "blockers": []
+        },
+        {
+          "role": "D",
+          "pr": 103,
+          "head_sha": "fa97caaee002b9c9959f5eb8cc75fbb93a9e6ec9",
+          "ready_at": "2026-11-08T02:35:37Z",
+          "required_workflow_count": 5,
+          "required_job_count": 10,
+          "blockers": []
+        }
+      ],
+      "blockers": [],
+      "last_required_ci_job_completed_at": "2026-11-08T02:35:37Z",
+      "integration_pr_created_at": "2026-11-08T02:44:01Z",
+      "ci_to_integration_pr_publication_gap_seconds": 504,
+      "unobservable": {
+        "a_review_start_at": null,
+        "a_review_minutes": null,
+        "bcd_actually_idle_seconds": null,
+        "user_instruction_wait_seconds": null,
+        "ai_compute_seconds": null,
+        "time_saved_seconds": null,
+        "duplicate_ci_cost_seconds": null,
+        "throughput_improvement_percent": null
+      },
+      "is_proof_of_speedup": false,
+      "can_authorize_merge": false,
+      "can_skip_ci": false
+    },
+    {
+      "round": "R14",
+      "report_kind": "observed_publication_interval",
+      "team_evidence": [
+        {
+          "role": "B",
+          "pr": 107,
+          "head_sha": "a58e070cf1a3516cb49f26558b66d0f494c1f318",
+          "ready_at": "2026-11-08T03:37:40Z",
+          "required_workflow_count": 5,
+          "required_job_count": 10,
+          "blockers": []
+        },
+        {
+          "role": "C",
+          "pr": 108,
+          "head_sha": "f6300b28d31dc14cc41f47d3d19eb2b14d76853f",
+          "ready_at": "2026-11-08T03:36:07Z",
+          "required_workflow_count": 5,
+          "required_job_count": 10,
+          "blockers": []
+        },
+        {
+          "role": "D",
+          "pr": 106,
+          "head_sha": "f8aea0d30ce7b3c06c6fc2a5ce5732341bb0ae8f",
+          "ready_at": "2026-11-08T03:36:54Z",
+          "required_workflow_count": 5,
+          "required_job_count": 10,
+          "blockers": []
+        }
+      ],
+      "blockers": [],
+      "last_required_ci_job_completed_at": "2026-11-08T03:37:40Z",
+      "integration_pr_created_at": "2026-11-10T21:24:36Z",
+      "ci_to_integration_pr_publication_gap_seconds": 236816,
+      "unobservable": {
+        "a_review_start_at": null,
+        "a_review_minutes": null,
+        "bcd_actually_idle_seconds": null,
+        "user_instruction_wait_seconds": null,
+        "ai_compute_seconds": null,
+        "time_saved_seconds": null,
+        "duplicate_ci_cost_seconds": null,
+        "throughput_improvement_percent": null
+      },
+      "is_proof_of_speedup": false,
+      "can_authorize_merge": false,
+      "can_skip_ci": false
+    },
+    {
+      "round": "R15",
+      "report_kind": "insufficient_evidence",
+      "team_evidence": [
+        {
+          "role": "B",
+          "pr": 120,
+          "head_sha": "70b27ab40b9c129d780fd26fdd177c9e67368b65",
+          "ready_at": null,
+          "required_workflow_count": 0,
+          "required_job_count": 0,
+          "blockers": [
+            "required_workflow_family_missing"
+          ]
+        },
+        {
+          "role": "C",
+          "pr": 121,
+          "head_sha": "54832e779c5cd26a10e392120bcb7bb2f514b874",
+          "ready_at": null,
+          "required_workflow_count": 0,
+          "required_job_count": 0,
+          "blockers": [
+            "required_workflow_family_missing"
+          ]
+        },
+        {
+          "role": "D",
+          "pr": 119,
+          "head_sha": "cae75c51c9004d8bbaecdce432761da3d981c31d",
+          "ready_at": null,
+          "required_workflow_count": 0,
+          "required_job_count": 0,
+          "blockers": [
+            "required_workflow_family_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "B:required_workflow_family_missing",
+        "C:required_workflow_family_missing",
+        "D:required_workflow_family_missing",
+        "integration_pr_not_observed"
+      ],
+      "last_required_ci_job_completed_at": null,
+      "integration_pr_created_at": null,
+      "ci_to_integration_pr_publication_gap_seconds": null,
+      "unobservable": {
+        "a_review_start_at": null,
+        "a_review_minutes": null,
+        "bcd_actually_idle_seconds": null,
+        "user_instruction_wait_seconds": null,
+        "ai_compute_seconds": null,
+        "time_saved_seconds": null,
+        "duplicate_ci_cost_seconds": null,
+        "throughput_improvement_percent": null
+      },
+      "is_proof_of_speedup": false,
+      "can_authorize_merge": false,
+      "can_skip_ci": false
+    }
+  ],
+  "observable_complete_rounds": 2,
+  "note": "Public GitHub publication gaps only; never infer A working minutes, AI execution, user idle, or causal speedup."
+}

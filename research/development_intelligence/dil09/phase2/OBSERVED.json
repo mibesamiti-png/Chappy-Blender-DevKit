@@ -1,0 +1,360 @@
+{
+  "repository": "mibesamiti-png/Chappy-Blender-DevKit",
+  "dev_start": "2b8220210c2475239a43354d544b5a6f176fba80",
+  "dev_end": "2b8220210c2475239a43354d544b5a6f176fba80",
+  "pr_start": {
+    "number": 25,
+    "state": "open",
+    "head": "feature/v0.18-shape-diagnostics",
+    "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+    "base": "main",
+    "base_sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+    "head_repo_id": 1444729344,
+    "head_repo_full_name": "mibesamiti-png/Chappy-Blender-DevKit"
+  },
+  "pr_end": {
+    "number": 25,
+    "state": "open",
+    "head": "feature/v0.18-shape-diagnostics",
+    "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+    "base": "main",
+    "base_sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+    "head_repo_id": 1444729344,
+    "head_repo_full_name": "mibesamiti-png/Chappy-Blender-DevKit"
+  },
+  "issue_start": {
+    "updated_at": "2026-11-10T23:55:41Z",
+    "dispatch": {
+      "schema": "cbdk-role-dispatch-v1",
+      "revision": 1,
+      "state": "active",
+      "round": "R16",
+      "phase": "normal",
+      "development_branch": "feature/v0.18-shape-diagnostics",
+      "official_assignment": "docs/R16_ABCD_START.md",
+      "team_roles": {
+        "B": "B",
+        "C": "C",
+        "D": "D"
+      },
+      "support_scope": {
+        "E": "差分・依存関係の読み取り専用分析。PRの編集・統合はしない",
+        "G": "次ラウンドの引き継ぎ下書き。STATE/HANDOFF/正式文書を変更しない",
+        "F": "既存PR #109の手法を参考に、HEADとCIの証拠を読み取り専用監査。CI発火・ゲート省略なし"
+      },
+      "issued_by": "A_pilot_activated_after_verified_dev_2b822021",
+      "note": "R16 normal dispatch: A確認済み。PR #128 dev統合SHA 2b8220210c2475239a43354d544b5a6f176fba80 の独立7系統CI全成功。R16 B/C/D各最終HEADの必須5系統CI成功。正式割当優先・権限拡大なし。次の役割切替はAが実際に必要と判断した場合のみ。"
+    }
+  },
+  "issue_end": {
+    "updated_at": "2026-11-10T23:55:41Z",
+    "dispatch": {
+      "schema": "cbdk-role-dispatch-v1",
+      "revision": 1,
+      "state": "active",
+      "round": "R16",
+      "phase": "normal",
+      "development_branch": "feature/v0.18-shape-diagnostics",
+      "official_assignment": "docs/R16_ABCD_START.md",
+      "team_roles": {
+        "B": "B",
+        "C": "C",
+        "D": "D"
+      },
+      "support_scope": {
+        "E": "差分・依存関係の読み取り専用分析。PRの編集・統合はしない",
+        "G": "次ラウンドの引き継ぎ下書き。STATE/HANDOFF/正式文書を変更しない",
+        "F": "既存PR #109の手法を参考に、HEADとCIの証拠を読み取り専用監査。CI発火・ゲート省略なし"
+      },
+      "issued_by": "A_pilot_activated_after_verified_dev_2b822021",
+      "note": "R16 normal dispatch: A確認済み。PR #128 dev統合SHA 2b8220210c2475239a43354d544b5a6f176fba80 の独立7系統CI全成功。R16 B/C/D各最終HEADの必須5系統CI成功。正式割当優先・権限拡大なし。次の役割切替はAが実際に必要と判断した場合のみ。"
+    }
+  },
+  "round": "R16",
+  "team": "B",
+  "assignment": "docs/R16_ABCD_START.md",
+  "source_refs": [
+    {
+      "path": "AGENTS.md",
+      "blob_sha": "b36e5bb815bf3a1a6af3642bbb1cdca3ce5fb02e"
+    },
+    {
+      "path": "docs/R16_ABCD_START.md",
+      "blob_sha": "fd6a107ad87bac61ef9ca6a4c1192462ac16a286"
+    },
+    {
+      "path": "docs/PARALLEL_DEVELOPMENT.md",
+      "blob_sha": "6f7a8b1bd7d1aaa6024c245afe063e31dd095505"
+    }
+  ],
+  "minimum_revision": 1,
+  "total_count": 7,
+  "workflow_runs": [
+    {
+      "id": 42926775783,
+      "name": "CBDK Blender multi-version runtime smoke",
+      "event": "pull_request",
+      "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "head_branch": "feature/v0.18-shape-diagnostics",
+      "created_at": "2026-11-10T23:51:40Z",
+      "updated_at": "2026-11-10T23:55:03Z",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775783",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit/pulls/25",
+          "id": 5185988465,
+          "number": 25,
+          "head": {
+            "ref": "feature/v0.18-shape-diagnostics",
+            "sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 42926775790,
+      "name": "CBDK offline 3D browser interaction smoke",
+      "event": "pull_request",
+      "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "head_branch": "feature/v0.18-shape-diagnostics",
+      "created_at": "2026-11-10T23:51:40Z",
+      "updated_at": "2026-11-10T23:52:35Z",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775790",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit/pulls/25",
+          "id": 5185988465,
+          "number": 25,
+          "head": {
+            "ref": "feature/v0.18-shape-diagnostics",
+            "sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 42926775811,
+      "name": "CBDK Windows kit package",
+      "event": "pull_request",
+      "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "head_branch": "feature/v0.18-shape-diagnostics",
+      "created_at": "2026-11-10T23:51:40Z",
+      "updated_at": "2026-11-10T23:51:51Z",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775811",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit/pulls/25",
+          "id": 5185988465,
+          "number": 25,
+          "head": {
+            "ref": "feature/v0.18-shape-diagnostics",
+            "sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 42926776044,
+      "name": "CBDK Agent Skill package",
+      "event": "pull_request",
+      "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "head_branch": "feature/v0.18-shape-diagnostics",
+      "created_at": "2026-11-10T23:51:40Z",
+      "updated_at": "2026-11-10T23:51:51Z",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926776044",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit/pulls/25",
+          "id": 5185988465,
+          "number": 25,
+          "head": {
+            "ref": "feature/v0.18-shape-diagnostics",
+            "sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 42926775780,
+      "name": "CBDK durable handoff",
+      "event": "pull_request",
+      "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "head_branch": "feature/v0.18-shape-diagnostics",
+      "created_at": "2026-11-10T23:51:40Z",
+      "updated_at": "2026-11-10T23:51:52Z",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775780",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit/pulls/25",
+          "id": 5185988465,
+          "number": 25,
+          "head": {
+            "ref": "feature/v0.18-shape-diagnostics",
+            "sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 42926775882,
+      "name": "CBDK Python tests",
+      "event": "pull_request",
+      "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "head_branch": "feature/v0.18-shape-diagnostics",
+      "created_at": "2026-11-10T23:51:40Z",
+      "updated_at": "2026-11-10T23:52:43Z",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775882",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit/pulls/25",
+          "id": 5185988465,
+          "number": 25,
+          "head": {
+            "ref": "feature/v0.18-shape-diagnostics",
+            "sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 42926775997,
+      "name": "CBDK Windows PowerShell launcher regression",
+      "event": "pull_request",
+      "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "head_branch": "feature/v0.18-shape-diagnostics",
+      "created_at": "2026-11-10T23:51:40Z",
+      "updated_at": "2026-11-10T23:53:03Z",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775997",
+      "pull_requests": [
+        {
+          "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit/pulls/25",
+          "id": 5185988465,
+          "number": 25,
+          "head": {
+            "ref": "feature/v0.18-shape-diagnostics",
+            "sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          },
+          "base": {
+            "ref": "main",
+            "sha": "c5b63ba50f4f53e22dea3ddc72486a17aa9dd939",
+            "repo": {
+              "id": 1444729344,
+              "url": "https://api.github.com/repos/mibesamiti-png/Chappy-Blender-DevKit",
+              "name": "Chappy-Blender-DevKit"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

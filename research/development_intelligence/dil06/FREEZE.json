@@ -1,0 +1,15 @@
+{
+  "research": "DIL-06",
+  "frozen_before_first_full_evaluation": true,
+  "data_kind": "historical_public_metadata_snapshot_not_holdout",
+  "accepted_max_evaluations": 1,
+  "expected_focused_tests": 15,
+  "sha256": {
+    "METHOD.md": "bdd0d3a75bed0f6132a705ff70cdfe1d6217be12b64236a5d5d1fac217bd708b",
+    "measure.py": "3b2a710fc5e762f75defd80c320c791b026332b965fdfe0c4201a8ea6c076df5",
+    "test_measure.py": "8b09d3491b02651bc43a8cd394e45737a649dbe11d80ee29deec06d6d61afee5",
+    "evaluate.py": "5e2c31b389b7877109e2f26fe36eae86719310dd97a829987cfd51b4c571ceb2",
+    "observed.json": "211772eb7a60c785690e0a5043f501af96647914c8621920cea9122fccfc854e",
+    "construct_snapshot_local.py": "1dcc6210a84cdc3f1dd787d994a83e5134a08e39f5a991b1f572819ed05b17db"
+  }
+}

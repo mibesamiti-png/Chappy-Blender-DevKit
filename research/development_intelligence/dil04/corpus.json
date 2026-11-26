@@ -1,0 +1,594 @@
+[
+  {
+    "id": "model-handoff-r2",
+    "source": "synthetic/model/handoff.md",
+    "project": "model",
+    "topic": "handoff",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "モデル 引き継ぎ",
+    "aliases": [
+      "中断再開",
+      "handoff"
+    ],
+    "text": "モデルプロジェクトの引き継ぎ基準。引き継ぎ先は差分を確認し未保存の変更を上書きしない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "model-privacy-r2",
+    "source": "synthetic/model/privacy.md",
+    "project": "model",
+    "topic": "privacy",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "モデル 非公開データ",
+    "aliases": [
+      "私有ファイル",
+      "privacy"
+    ],
+    "text": "モデルプロジェクトの非公開データ基準。個人所有のモデルや画像を公開CIに送らない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "model-ci-r2",
+    "source": "synthetic/model/ci.md",
+    "project": "model",
+    "topic": "ci",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "モデル 継続検証",
+    "aliases": [
+      "CI結果",
+      "ci"
+    ],
+    "text": "モデルプロジェクトの継続検証基準。検証結果は対象コミットSHAと結び付けて報告する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "model-geometry-r2",
+    "source": "synthetic/model/geometry.md",
+    "project": "model",
+    "topic": "geometry",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "モデル 形状品質",
+    "aliases": [
+      "自己交差",
+      "geometry"
+    ],
+    "text": "モデルプロジェクトの形状品質基準。メッシュ変更は対象以外の形状退行を検査する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "viewer-handoff-r2",
+    "source": "synthetic/viewer/handoff.md",
+    "project": "viewer",
+    "topic": "handoff",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "ビューア 引き継ぎ",
+    "aliases": [
+      "中断再開",
+      "handoff"
+    ],
+    "text": "ビューアプロジェクトの引き継ぎ基準。引き継ぎ先は差分を確認し未保存の変更を上書きしない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "viewer-privacy-r2",
+    "source": "synthetic/viewer/privacy.md",
+    "project": "viewer",
+    "topic": "privacy",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "ビューア 非公開データ",
+    "aliases": [
+      "私有ファイル",
+      "privacy"
+    ],
+    "text": "ビューアプロジェクトの非公開データ基準。個人所有のモデルや画像を公開CIに送らない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "viewer-ci-r2",
+    "source": "synthetic/viewer/ci.md",
+    "project": "viewer",
+    "topic": "ci",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "ビューア 継続検証",
+    "aliases": [
+      "CI結果",
+      "ci"
+    ],
+    "text": "ビューアプロジェクトの継続検証基準。検証結果は対象コミットSHAと結び付けて報告する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "viewer-geometry-r2",
+    "source": "synthetic/viewer/geometry.md",
+    "project": "viewer",
+    "topic": "geometry",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "ビューア 形状品質",
+    "aliases": [
+      "自己交差",
+      "geometry"
+    ],
+    "text": "ビューアプロジェクトの形状品質基準。メッシュ変更は対象以外の形状退行を検査する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "build-handoff-r2",
+    "source": "synthetic/build/handoff.md",
+    "project": "build",
+    "topic": "handoff",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "ビルド 引き継ぎ",
+    "aliases": [
+      "中断再開",
+      "handoff"
+    ],
+    "text": "ビルドプロジェクトの引き継ぎ基準。引き継ぎ先は差分を確認し未保存の変更を上書きしない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "build-privacy-r2",
+    "source": "synthetic/build/privacy.md",
+    "project": "build",
+    "topic": "privacy",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "ビルド 非公開データ",
+    "aliases": [
+      "私有ファイル",
+      "privacy"
+    ],
+    "text": "ビルドプロジェクトの非公開データ基準。個人所有のモデルや画像を公開CIに送らない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "build-ci-r2",
+    "source": "synthetic/build/ci.md",
+    "project": "build",
+    "topic": "ci",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "ビルド 継続検証",
+    "aliases": [
+      "CI結果",
+      "ci"
+    ],
+    "text": "ビルドプロジェクトの継続検証基準。検証結果は対象コミットSHAと結び付けて報告する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "build-geometry-r2",
+    "source": "synthetic/build/geometry.md",
+    "project": "build",
+    "topic": "geometry",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "ビルド 形状品質",
+    "aliases": [
+      "自己交差",
+      "geometry"
+    ],
+    "text": "ビルドプロジェクトの形状品質基準。メッシュ変更は対象以外の形状退行を検査する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "player-handoff-r2",
+    "source": "synthetic/player/handoff.md",
+    "project": "player",
+    "topic": "handoff",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "プレイヤー 引き継ぎ",
+    "aliases": [
+      "中断再開",
+      "handoff"
+    ],
+    "text": "プレイヤープロジェクトの引き継ぎ基準。引き継ぎ先は差分を確認し未保存の変更を上書きしない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "player-privacy-r2",
+    "source": "synthetic/player/privacy.md",
+    "project": "player",
+    "topic": "privacy",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "プレイヤー 非公開データ",
+    "aliases": [
+      "私有ファイル",
+      "privacy"
+    ],
+    "text": "プレイヤープロジェクトの非公開データ基準。個人所有のモデルや画像を公開CIに送らない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "player-ci-r2",
+    "source": "synthetic/player/ci.md",
+    "project": "player",
+    "topic": "ci",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "プレイヤー 継続検証",
+    "aliases": [
+      "CI結果",
+      "ci"
+    ],
+    "text": "プレイヤープロジェクトの継続検証基準。検証結果は対象コミットSHAと結び付けて報告する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "player-geometry-r2",
+    "source": "synthetic/player/geometry.md",
+    "project": "player",
+    "topic": "geometry",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "プレイヤー 形状品質",
+    "aliases": [
+      "自己交差",
+      "geometry"
+    ],
+    "text": "プレイヤープロジェクトの形状品質基準。メッシュ変更は対象以外の形状退行を検査する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "stamp-handoff-r2",
+    "source": "synthetic/stamp/handoff.md",
+    "project": "stamp",
+    "topic": "handoff",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "転写 引き継ぎ",
+    "aliases": [
+      "中断再開",
+      "handoff"
+    ],
+    "text": "転写プロジェクトの引き継ぎ基準。引き継ぎ先は差分を確認し未保存の変更を上書きしない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "stamp-privacy-r2",
+    "source": "synthetic/stamp/privacy.md",
+    "project": "stamp",
+    "topic": "privacy",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "転写 非公開データ",
+    "aliases": [
+      "私有ファイル",
+      "privacy"
+    ],
+    "text": "転写プロジェクトの非公開データ基準。個人所有のモデルや画像を公開CIに送らない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "stamp-ci-r2",
+    "source": "synthetic/stamp/ci.md",
+    "project": "stamp",
+    "topic": "ci",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "転写 継続検証",
+    "aliases": [
+      "CI結果",
+      "ci"
+    ],
+    "text": "転写プロジェクトの継続検証基準。検証結果は対象コミットSHAと結び付けて報告する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "stamp-geometry-r2",
+    "source": "synthetic/stamp/geometry.md",
+    "project": "stamp",
+    "topic": "geometry",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "転写 形状品質",
+    "aliases": [
+      "自己交差",
+      "geometry"
+    ],
+    "text": "転写プロジェクトの形状品質基準。メッシュ変更は対象以外の形状退行を検査する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "shape-handoff-r2",
+    "source": "synthetic/shape/handoff.md",
+    "project": "shape",
+    "topic": "handoff",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "診断 引き継ぎ",
+    "aliases": [
+      "中断再開",
+      "handoff"
+    ],
+    "text": "診断プロジェクトの引き継ぎ基準。引き継ぎ先は差分を確認し未保存の変更を上書きしない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "shape-privacy-r2",
+    "source": "synthetic/shape/privacy.md",
+    "project": "shape",
+    "topic": "privacy",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "診断 非公開データ",
+    "aliases": [
+      "私有ファイル",
+      "privacy"
+    ],
+    "text": "診断プロジェクトの非公開データ基準。個人所有のモデルや画像を公開CIに送らない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "shape-ci-r2",
+    "source": "synthetic/shape/ci.md",
+    "project": "shape",
+    "topic": "ci",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "診断 継続検証",
+    "aliases": [
+      "CI結果",
+      "ci"
+    ],
+    "text": "診断プロジェクトの継続検証基準。検証結果は対象コミットSHAと結び付けて報告する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "shape-geometry-r2",
+    "source": "synthetic/shape/geometry.md",
+    "project": "shape",
+    "topic": "geometry",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "診断 形状品質",
+    "aliases": [
+      "自己交差",
+      "geometry"
+    ],
+    "text": "診断プロジェクトの形状品質基準。メッシュ変更は対象以外の形状退行を検査する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "joint-handoff-r2",
+    "source": "synthetic/joint/handoff.md",
+    "project": "joint",
+    "topic": "handoff",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "関節 引き継ぎ",
+    "aliases": [
+      "中断再開",
+      "handoff"
+    ],
+    "text": "関節プロジェクトの引き継ぎ基準。引き継ぎ先は差分を確認し未保存の変更を上書きしない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "joint-privacy-r2",
+    "source": "synthetic/joint/privacy.md",
+    "project": "joint",
+    "topic": "privacy",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "関節 非公開データ",
+    "aliases": [
+      "私有ファイル",
+      "privacy"
+    ],
+    "text": "関節プロジェクトの非公開データ基準。個人所有のモデルや画像を公開CIに送らない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "joint-ci-r2",
+    "source": "synthetic/joint/ci.md",
+    "project": "joint",
+    "topic": "ci",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "関節 継続検証",
+    "aliases": [
+      "CI結果",
+      "ci"
+    ],
+    "text": "関節プロジェクトの継続検証基準。検証結果は対象コミットSHAと結び付けて報告する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "joint-geometry-r2",
+    "source": "synthetic/joint/geometry.md",
+    "project": "joint",
+    "topic": "geometry",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "関節 形状品質",
+    "aliases": [
+      "自己交差",
+      "geometry"
+    ],
+    "text": "関節プロジェクトの形状品質基準。メッシュ変更は対象以外の形状退行を検査する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "laser-handoff-r2",
+    "source": "synthetic/laser/handoff.md",
+    "project": "laser",
+    "topic": "handoff",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "レーザー 引き継ぎ",
+    "aliases": [
+      "中断再開",
+      "handoff"
+    ],
+    "text": "レーザープロジェクトの引き継ぎ基準。引き継ぎ先は差分を確認し未保存の変更を上書きしない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "laser-privacy-r2",
+    "source": "synthetic/laser/privacy.md",
+    "project": "laser",
+    "topic": "privacy",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "レーザー 非公開データ",
+    "aliases": [
+      "私有ファイル",
+      "privacy"
+    ],
+    "text": "レーザープロジェクトの非公開データ基準。個人所有のモデルや画像を公開CIに送らない。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "laser-ci-r2",
+    "source": "synthetic/laser/ci.md",
+    "project": "laser",
+    "topic": "ci",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "レーザー 継続検証",
+    "aliases": [
+      "CI結果",
+      "ci"
+    ],
+    "text": "レーザープロジェクトの継続検証基準。検証結果は対象コミットSHAと結び付けて報告する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "laser-geometry-r2",
+    "source": "synthetic/laser/geometry.md",
+    "project": "laser",
+    "topic": "geometry",
+    "revision": "current",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "レーザー 形状品質",
+    "aliases": [
+      "自己交差",
+      "geometry"
+    ],
+    "text": "レーザープロジェクトの形状品質基準。メッシュ変更は対象以外の形状退行を検査する。 固定の評価担当と出典情報を保持する。版差異と環境が不明なら未検証として報告する。作業条件を確かめ、必要十分な品質条件が達成されたら追加最適化を停止する。"
+  },
+  {
+    "id": "model-handoff-r1",
+    "source": "synthetic/old/model.md",
+    "project": "model",
+    "topic": "handoff",
+    "revision": "retired",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "引き継ぎ旧版",
+    "aliases": [
+      "中断再開"
+    ],
+    "text": "旧基準: 中断後は過去ファイルを確認せず再開してよい。これは廃止された人工例。"
+  },
+  {
+    "id": "viewer-handoff-r1",
+    "source": "synthetic/old/viewer.md",
+    "project": "viewer",
+    "topic": "handoff",
+    "revision": "retired",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "引き継ぎ旧版",
+    "aliases": [
+      "中断再開"
+    ],
+    "text": "旧基準: 中断後は過去ファイルを確認せず再開してよい。これは廃止された人工例。"
+  },
+  {
+    "id": "player-handoff-r1",
+    "source": "synthetic/old/player.md",
+    "project": "player",
+    "topic": "handoff",
+    "revision": "retired",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "引き継ぎ旧版",
+    "aliases": [
+      "中断再開"
+    ],
+    "text": "旧基準: 中断後は過去ファイルを確認せず再開してよい。これは廃止された人工例。"
+  },
+  {
+    "id": "shape-handoff-r1",
+    "source": "synthetic/old/shape.md",
+    "project": "shape",
+    "topic": "handoff",
+    "revision": "retired",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "引き継ぎ旧版",
+    "aliases": [
+      "中断再開"
+    ],
+    "text": "旧基準: 中断後は過去ファイルを確認せず再開してよい。これは廃止された人工例。"
+  },
+  {
+    "id": "joint-handoff-r1",
+    "source": "synthetic/old/joint.md",
+    "project": "joint",
+    "topic": "handoff",
+    "revision": "retired",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "引き継ぎ旧版",
+    "aliases": [
+      "中断再開"
+    ],
+    "text": "旧基準: 中断後は過去ファイルを確認せず再開してよい。これは廃止された人工例。"
+  },
+  {
+    "id": "laser-handoff-r1",
+    "source": "synthetic/old/laser.md",
+    "project": "laser",
+    "topic": "handoff",
+    "revision": "retired",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "引き継ぎ旧版",
+    "aliases": [
+      "中断再開"
+    ],
+    "text": "旧基準: 中断後は過去ファイルを確認せず再開してよい。これは廃止された人工例。"
+  },
+  {
+    "id": "stamp-handoff-r1",
+    "source": "synthetic/old/stamp.md",
+    "project": "stamp",
+    "topic": "handoff",
+    "revision": "retired",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "引き継ぎ旧版",
+    "aliases": [
+      "中断再開"
+    ],
+    "text": "旧基準: 中断後は過去ファイルを確認せず再開してよい。これは廃止された人工例。"
+  },
+  {
+    "id": "build-handoff-r1",
+    "source": "synthetic/old/build.md",
+    "project": "build",
+    "topic": "handoff",
+    "revision": "retired",
+    "status": "approved",
+    "visibility": "public_synthetic",
+    "title": "引き継ぎ旧版",
+    "aliases": [
+      "中断再開"
+    ],
+    "text": "旧基準: 中断後は過去ファイルを確認せず再開してよい。これは廃止された人工例。"
+  }
+]

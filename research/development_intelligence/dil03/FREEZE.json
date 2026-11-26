@@ -1,0 +1,21 @@
+{
+  "stage": "before_first_holdout_execution",
+  "research": "DIL-03",
+  "budget": {
+    "development_cases": 12,
+    "holdout_cases": 12,
+    "unit_tests": 14,
+    "benchmark_runs": 1,
+    "max_benchmark_seconds": 60,
+    "post_holdout_tuning": 0
+  },
+  "sha256": {
+    "handoff.py": "27ffb0f796a6b18741fa59457913a9032238816a612dc911d1d791a5cc70b494",
+    "test_handoff.py": "f1aaff26424d12151949749b0fda7f434aba16769941d46611ef1a1bd763204e",
+    "benchmark.py": "f8f9385185920a29a0418fa001d82dce51f6843263be995be1deb5552b24db77",
+    "build_fixtures.py": "e89a89fb30bc77fe0a591c8288589960eac187de907cda5c88107215b3ae3f3a",
+    "fixtures/development.json": "00b4f9781a058e040bfe0f6e64b9b46664d4951c70bf005b62e002690cc858bb",
+    "fixtures/holdout.json": "de375fc7357c4cc74d01decc41ddb400fd94278a248d3eeaf643510b89045325",
+    "METHOD.md": "9369d5fe347be3693d9a0db4bd324588b9028f6c0fd5d16845f22d1c13b4c99b"
+  }
+}

@@ -1,0 +1,304 @@
+{
+  "python": "3.12.14",
+  "platform": "Linux",
+  "synthetic_only": true,
+  "trials": 7,
+  "iterations_per_trial": 100,
+  "source_sha256": {
+    "benchmark.py": "4f4b827d19602018cd5c4ff2678f1cc7b673a2ab5af97c90dadb9b48b2801fc8",
+    "prototype/status_view.py": "5545ee7ed8b42792979c46428fd22b145bc9251509992ba11b71d407c7296242",
+    "tests/test_status_view.py": "e6e384d4205cd4b32a520691d4f3153991b26542a22db3875640333c672eb839"
+  },
+  "splits": {
+    "development": {
+      "status_only": {
+        "false_positive": 7,
+        "false_negative": 0,
+        "total": 12,
+        "median_seconds_per_record": 9.15916674178637e-08,
+        "samples": [
+          9.80641683175539e-08,
+          9.814833295725597e-08,
+          2.624758326419396e-07,
+          9.142583318559142e-08,
+          9.15916674178637e-08,
+          9.151166523224674e-08,
+          9.045416845765431e-08
+        ],
+        "python_peak_bytes": 48
+      },
+      "ttl_only": {
+        "false_positive": 5,
+        "false_negative": 0,
+        "total": 12,
+        "median_seconds_per_record": 1.704800009368531e-07,
+        "samples": [
+          1.7120416790324573e-07,
+          1.704800009368531e-07,
+          1.699491652592163e-07,
+          5.063883327238727e-07,
+          1.689883356448263e-07,
+          1.6725416571716777e-07,
+          7.861958329158369e-07
+        ],
+        "python_peak_bytes": 80
+      },
+      "bound_evidence": {
+        "false_positive": 0,
+        "false_negative": 0,
+        "total": 12,
+        "median_seconds_per_record": 6.738165833060824e-06,
+        "samples": [
+          6.354287500774565e-06,
+          6.483242498992089e-06,
+          6.994641668522187e-06,
+          6.968677498662146e-06,
+          7.106167498326006e-06,
+          6.3747775008475095e-06,
+          6.738165833060824e-06
+        ],
+        "python_peak_bytes": 1966
+      }
+    },
+    "holdout": {
+      "status_only": {
+        "false_positive": 8,
+        "false_negative": 0,
+        "total": 12,
+        "median_seconds_per_record": 8.64308337137724e-08,
+        "samples": [
+          8.754583177505993e-08,
+          8.64308337137724e-08,
+          8.609666717044699e-08,
+          1.0635416401783004e-07,
+          8.236083279674251e-08,
+          8.183083385423137e-08,
+          9.849416528595611e-08
+        ],
+        "python_peak_bytes": 48
+      },
+      "ttl_only": {
+        "false_positive": 7,
+        "false_negative": 0,
+        "total": 12,
+        "median_seconds_per_record": 1.624816680608395e-07,
+        "samples": [
+          1.6348583206611996e-07,
+          1.6229000114738787e-07,
+          1.6183999832719564e-07,
+          1.6261250190533853e-07,
+          1.8209249901701697e-07,
+          1.6236166629823857e-07,
+          1.624816680608395e-07
+        ],
+        "python_peak_bytes": 48
+      },
+      "bound_evidence": {
+        "false_positive": 0,
+        "false_negative": 0,
+        "total": 12,
+        "median_seconds_per_record": 7.179838333589335e-06,
+        "samples": [
+          6.207130833596845e-06,
+          6.608929167365811e-06,
+          7.179838333589335e-06,
+          9.355440834042384e-06,
+          8.515478333113909e-06,
+          7.406202500230089e-06,
+          6.855065000005804e-06
+        ],
+        "python_peak_bytes": 1966
+      }
+    }
+  },
+  "holdout_details": [
+    {
+      "id": "exact_heartbeat_boundary",
+      "expected": true,
+      "result": {
+        "state": "running_observed",
+        "reason": "recent_heartbeat",
+        "age_seconds": 30,
+        "recently_observed": true,
+        "step_counts": {
+          "declared_verified": 1,
+          "total": 4
+        },
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "one_second_expired",
+      "expected": false,
+      "result": {
+        "state": "unknown",
+        "reason": "heartbeat_expired",
+        "age_seconds": 31,
+        "recently_observed": false,
+        "step_counts": {
+          "declared_verified": 1,
+          "total": 4
+        },
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "fresh_status_old_heartbeat",
+      "expected": false,
+      "result": {
+        "state": "unknown",
+        "reason": "heartbeat_expired",
+        "age_seconds": 0,
+        "recently_observed": false,
+        "step_counts": {
+          "declared_verified": 1,
+          "total": 4
+        },
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "other_target",
+      "expected": false,
+      "result": {
+        "state": "conflict",
+        "reason": "identity_changed",
+        "age_seconds": null,
+        "recently_observed": false,
+        "step_counts": null,
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "other_work",
+      "expected": false,
+      "result": {
+        "state": "conflict",
+        "reason": "identity_changed",
+        "age_seconds": null,
+        "recently_observed": false,
+        "step_counts": null,
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "old_attempt_record",
+      "expected": false,
+      "result": {
+        "state": "conflict",
+        "reason": "identity_changed",
+        "age_seconds": null,
+        "recently_observed": false,
+        "step_counts": null,
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "boolean_time",
+      "expected": false,
+      "result": {
+        "state": "invalid",
+        "reason": "timestamp",
+        "age_seconds": null,
+        "recently_observed": false,
+        "step_counts": null,
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "heartbeat_after_snapshot",
+      "expected": false,
+      "result": {
+        "state": "unknown",
+        "reason": "heartbeat_ahead",
+        "age_seconds": 10,
+        "recently_observed": false,
+        "step_counts": null,
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "overflow_counts",
+      "expected": false,
+      "result": {
+        "state": "invalid",
+        "reason": "counts",
+        "age_seconds": null,
+        "recently_observed": false,
+        "step_counts": null,
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "confirmation",
+      "expected": false,
+      "result": {
+        "state": "reported_awaiting_confirmation",
+        "reason": "record_only",
+        "age_seconds": 10,
+        "recently_observed": false,
+        "step_counts": {
+          "declared_verified": 1,
+          "total": 4
+        },
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "stopped",
+      "expected": false,
+      "result": {
+        "state": "reported_stopped",
+        "reason": "record_only",
+        "age_seconds": 10,
+        "recently_observed": false,
+        "step_counts": {
+          "declared_verified": 1,
+          "total": 4
+        },
+        "edit_authorized": false,
+        "eta": null
+      }
+    },
+    {
+      "id": "recent_zero_progress",
+      "expected": true,
+      "result": {
+        "state": "running_observed",
+        "reason": "recent_heartbeat",
+        "age_seconds": 0,
+        "recently_observed": true,
+        "step_counts": {
+          "declared_verified": 0,
+          "total": 4
+        },
+        "edit_authorized": false,
+        "eta": null
+      }
+    }
+  ],
+  "record_bytes": [
+    204,
+    204,
+    205,
+    204,
+    204,
+    204,
+    205,
+    204,
+    204,
+    218,
+    204,
+    206
+  ]
+}

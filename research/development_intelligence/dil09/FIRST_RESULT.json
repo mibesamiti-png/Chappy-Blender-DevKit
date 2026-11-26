@@ -1,0 +1,659 @@
+{
+  "frozenCommit": "18f62f0035c451865cdbe0ad48a08e9f5d76f4a4",
+  "environment": "isolated JavaScript V8 tool runtime; functions serialized verbatim, not Node CLI or GitHub Actions test",
+  "evaluation": {
+    "routing": [
+      {
+        "id": "green",
+        "pass": true,
+        "result": {
+          "state": "summary_ready",
+          "reason": "family_summaries_green_not_execution_authority",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 7,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [],
+          "roleHint": "B",
+          "next": [
+            "independently validate formal assignment and required jobs via existing A rules/preflight",
+            "confirm owned PR and exact head before any edit",
+            "fetch relevant source and tests; optional tags only for technical references"
+          ]
+        }
+      },
+      {
+        "id": "red",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "ci_not_all_verified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [
+            {
+              "runId": 1,
+              "request": "failed_job_summary_then_failed_step_log_if_needed"
+            }
+          ],
+          "ci": {
+            "success": 6,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [
+            {
+              "name": "CBDK Python tests",
+              "why": "failure"
+            }
+          ]
+        }
+      },
+      {
+        "id": "running",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "ci_not_all_verified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 6,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [
+            {
+              "name": "CBDK Python tests",
+              "why": "in_progress"
+            }
+          ]
+        }
+      },
+      {
+        "id": "cancelled",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "ci_not_all_verified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 6,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [
+            {
+              "name": "CBDK Python tests",
+              "why": "cancelled"
+            }
+          ]
+        }
+      },
+      {
+        "id": "missing",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "ci_not_all_verified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 6,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [
+            {
+              "name": "CBDK Agent Skill package",
+              "why": "missing_exact_head"
+            }
+          ]
+        }
+      },
+      {
+        "id": "stale",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "ci_not_all_verified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 6,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [
+            {
+              "name": "CBDK Python tests",
+              "why": "missing_exact_head"
+            }
+          ]
+        }
+      },
+      {
+        "id": "wrong_event",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "ci_not_all_verified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 6,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [
+            {
+              "name": "CBDK Python tests",
+              "why": "missing_exact_head"
+            }
+          ]
+        }
+      },
+      {
+        "id": "duplicate",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "ci_not_all_verified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 6,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [
+            {
+              "name": "CBDK Python tests",
+              "why": "ambiguous_attempt"
+            }
+          ]
+        }
+      },
+      {
+        "id": "head_moved",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "head_missing_or_changed",
+          "mandatoryReads": [],
+          "detailRequests": [],
+          "ci": {
+            "success": 0,
+            "required": 0
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false
+        }
+      },
+      {
+        "id": "wrong_round",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "dispatch_unverified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 0,
+            "required": 0
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false
+        }
+      },
+      {
+        "id": "revision_rollback",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "dispatch_unverified",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 0,
+            "required": 0
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false
+        }
+      },
+      {
+        "id": "role_conflict",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "dispatch_conflict",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 0,
+            "required": 0
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false
+        }
+      },
+      {
+        "id": "unknown_ci_contract",
+        "pass": true,
+        "result": {
+          "state": "blocked",
+          "reason": "ci_contract_unknown",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 0,
+            "required": 0
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false
+        }
+      },
+      {
+        "id": "dynamic_round",
+        "pass": true,
+        "result": {
+          "state": "summary_ready",
+          "reason": "family_summaries_green_not_execution_authority",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R17_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 7,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [],
+          "roleHint": "B",
+          "next": [
+            "independently validate formal assignment and required jobs via existing A rules/preflight",
+            "confirm owned PR and exact head before any edit",
+            "fetch relevant source and tests; optional tags only for technical references"
+          ]
+        }
+      },
+      {
+        "id": "support_hint",
+        "pass": true,
+        "result": {
+          "state": "summary_ready",
+          "reason": "family_summaries_green_not_execution_authority",
+          "mandatoryReads": [
+            "AGENTS.md",
+            "docs/PARALLEL_DEVELOPMENT.md",
+            "docs/R16_ABCD_START.md",
+            "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+            "docs/PROJECT_SPEC.md",
+            "pyproject.toml",
+            "assigned code and tests"
+          ],
+          "detailRequests": [],
+          "ci": {
+            "success": 7,
+            "required": 7
+          },
+          "mayExecute": false,
+          "mayMerge": false,
+          "maySkipCI": false,
+          "unresolved": [],
+          "roleHint": "E",
+          "next": [
+            "independently validate formal assignment and required jobs via existing A rules/preflight",
+            "confirm owned PR and exact head before any edit",
+            "fetch relevant source and tests; optional tags only for technical references"
+          ]
+        }
+      }
+    ],
+    "batching": [
+      {
+        "id": "same_family",
+        "pass": true,
+        "result": {
+          "eligible": true,
+          "ids": [
+            "a",
+            "b"
+          ],
+          "stages": [
+            "scope",
+            "freeze",
+            "implement_minimum",
+            "compare_each_case",
+            "close_with_exact_head_ci"
+          ],
+          "permission": false
+        }
+      },
+      {
+        "id": "mixed_owner",
+        "pass": true,
+        "result": {
+          "eligible": false,
+          "reason": "different_scope_or_invalid"
+        }
+      },
+      {
+        "id": "mixed_fixture",
+        "pass": true,
+        "result": {
+          "eligible": false,
+          "reason": "different_scope_or_invalid"
+        }
+      },
+      {
+        "id": "duplicate",
+        "pass": true,
+        "result": {
+          "eligible": false,
+          "reason": "different_scope_or_invalid"
+        }
+      },
+      {
+        "id": "over_budget",
+        "pass": true,
+        "result": {
+          "eligible": false,
+          "reason": "empty_or_budget"
+        }
+      }
+    ],
+    "passed": 20,
+    "total": 20
+  },
+  "live": {
+    "input": {
+      "devHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "finalReadHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "officialRound": "R16",
+      "officialAssignment": "docs/R16_ABCD_START.md",
+      "team": "B",
+      "dispatch": {
+        "schema": "cbdk-role-dispatch-v1",
+        "revision": 1,
+        "state": "active",
+        "round": "R16",
+        "phase": "normal",
+        "development_branch": "feature/v0.18-shape-diagnostics",
+        "official_assignment": "docs/R16_ABCD_START.md",
+        "team_roles": {
+          "B": "B",
+          "C": "C",
+          "D": "D"
+        },
+        "support_scope": {
+          "E": "差分・依存関係の読み取り専用分析。PRの編集・統合はしない",
+          "G": "次ラウンドの引き継ぎ下書き。STATE/HANDOFF/正式文書を変更しない",
+          "F": "既存PR #109の手法を参考に、HEADとCIの証拠を読み取り専用監査。CI発火・ゲート省略なし"
+        },
+        "issued_by": "A_pilot_activated_after_verified_dev_2b822021",
+        "note": "R16 normal dispatch: A確認済み。PR #128 dev統合SHA 2b8220210c2475239a43354d544b5a6f176fba80 の独立7系統CI全成功。R16 B/C/D各最終HEADの必須5系統CI成功。正式割当優先・権限拡大なし。次の役割切替はAが実際に必要と判断した場合のみ。"
+      },
+      "minimumRevision": 1,
+      "requiredFamilies": [
+        "CBDK Python tests",
+        "CBDK Windows PowerShell launcher regression",
+        "CBDK Blender multi-version runtime smoke",
+        "CBDK offline 3D browser interaction smoke",
+        "CBDK durable handoff",
+        "CBDK Windows kit package",
+        "CBDK Agent Skill package"
+      ],
+      "expectedCIHead": "2b8220210c2475239a43354d544b5a6f176fba80",
+      "expectedEvent": "push",
+      "runs": [
+        {
+          "id": 42926775783,
+          "name": "CBDK Blender multi-version runtime smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775783"
+        },
+        {
+          "id": 42926775790,
+          "name": "CBDK offline 3D browser interaction smoke",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775790"
+        },
+        {
+          "id": 42926775811,
+          "name": "CBDK Windows kit package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775811"
+        },
+        {
+          "id": 42926776044,
+          "name": "CBDK Agent Skill package",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926776044"
+        },
+        {
+          "id": 42926775780,
+          "name": "CBDK durable handoff",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775780"
+        },
+        {
+          "id": 42926775882,
+          "name": "CBDK Python tests",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775882"
+        },
+        {
+          "id": 42926775997,
+          "name": "CBDK Windows PowerShell launcher regression",
+          "head_sha": "2b8220210c2475239a43354d544b5a6f176fba80",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42926775997"
+        }
+      ]
+    },
+    "result": {
+      "state": "blocked",
+      "reason": "ci_not_all_verified",
+      "mandatoryReads": [
+        "AGENTS.md",
+        "docs/PARALLEL_DEVELOPMENT.md",
+        "docs/R16_ABCD_START.md",
+        "docs/PROJECT_HANDOFF.md (or docs/project/STATE.json if absent)",
+        "docs/PROJECT_SPEC.md",
+        "pyproject.toml",
+        "assigned code and tests"
+      ],
+      "detailRequests": [],
+      "ci": {
+        "success": 0,
+        "required": 7
+      },
+      "mayExecute": false,
+      "mayMerge": false,
+      "maySkipCI": false,
+      "unresolved": [
+        {
+          "name": "CBDK Python tests",
+          "why": "missing_exact_head"
+        },
+        {
+          "name": "CBDK Windows PowerShell launcher regression",
+          "why": "missing_exact_head"
+        },
+        {
+          "name": "CBDK Blender multi-version runtime smoke",
+          "why": "missing_exact_head"
+        },
+        {
+          "name": "CBDK offline 3D browser interaction smoke",
+          "why": "missing_exact_head"
+        },
+        {
+          "name": "CBDK durable handoff",
+          "why": "missing_exact_head"
+        },
+        {
+          "name": "CBDK Windows kit package",
+          "why": "missing_exact_head"
+        },
+        {
+          "name": "CBDK Agent Skill package",
+          "why": "missing_exact_head"
+        }
+      ]
+    },
+    "assignmentBlob": "fd6a107ad87bac61ef9ca6a4c1192462ac16a286",
+    "logCalls": 0,
+    "scope": "read-only dev push family summaries; no job-level verification or action authority"
+  }
+}

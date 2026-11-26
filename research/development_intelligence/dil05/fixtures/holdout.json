@@ -1,0 +1,553 @@
+[
+  {
+    "id": "h01",
+    "description": "B 7 minutes before C, D",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 0,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 420,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 450,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "id": "h02",
+    "description": "D first, C last",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 0,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 50,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 90,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "id": "h03",
+    "description": "all green instant",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 20,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 20,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 20,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "id": "h04",
+    "description": "B new head after prior pre-review",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 5,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 10,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 11,
+        "team": "B",
+        "head": "B2",
+        "ci": "pending",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 15,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 30,
+        "team": "B",
+        "head": "B2",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B2",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "id": "h05",
+    "description": "D never green",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 2,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 3,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 4,
+        "team": "D",
+        "head": "D1",
+        "ci": "failed",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C"
+    ]
+  },
+  {
+    "id": "h06",
+    "description": "C mistakenly stamped old base",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 2,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 3,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "old"
+      },
+      {
+        "time": 4,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "id": "h07",
+    "description": "B is missing exact final head",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 2,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 3,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 4,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B3",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "C",
+      "D"
+    ]
+  },
+  {
+    "id": "h08",
+    "description": "B green -> failed -> green same head",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 2,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 3,
+        "team": "B",
+        "head": "B1",
+        "ci": "failed",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 4,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 5,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 6,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "id": "h09",
+    "description": "wrong D path authority",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 2,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": false,
+        "base_sha": "d0"
+      },
+      {
+        "time": 4,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 10,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C"
+    ]
+  },
+  {
+    "id": "h10",
+    "description": "C changes HEAD twice",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 2,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 3,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 4,
+        "team": "C",
+        "head": "C2",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 8,
+        "team": "C",
+        "head": "C3",
+        "ci": "pending",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 11,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 20,
+        "team": "C",
+        "head": "C3",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C3",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "id": "h11",
+    "description": "a review can be staged before final all green",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 0,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 100,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 200,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D1"
+    },
+    "gold_valid": [
+      "B",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "id": "h12",
+    "description": "new D HEAD has no matching CI",
+    "dev_sha": "d0",
+    "events": [
+      {
+        "time": 0,
+        "team": "D",
+        "head": "D1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 10,
+        "team": "B",
+        "head": "B1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 20,
+        "team": "C",
+        "head": "C1",
+        "ci": "success",
+        "scope_ok": true,
+        "base_sha": "d0"
+      },
+      {
+        "time": 21,
+        "team": "D",
+        "head": "D2",
+        "ci": "missing",
+        "scope_ok": true,
+        "base_sha": "d0"
+      }
+    ],
+    "final_heads": {
+      "B": "B1",
+      "C": "C1",
+      "D": "D2"
+    },
+    "gold_valid": [
+      "B",
+      "C"
+    ]
+  }
+]

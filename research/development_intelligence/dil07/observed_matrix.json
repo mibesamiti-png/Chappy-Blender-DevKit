@@ -1,0 +1,18 @@
+{
+ "source_commit":"2b8220210c2475239a43354d544b5a6f176fba80",
+ "method":"GitHub connector pinned source bodies; metadata/term-presence probe compatible with DIL04 regex/trigram phrase sets at max_docs=12; not a local real-corpus SQLite execution",
+ "entries":[
+  {"id":"agents","topic":"policy","current":true,"blob_ok":true,"bytes":64528,"match":["Q11"],"anchors_ok":true},
+  {"id":"parallel","topic":"workflow","current":true,"blob_ok":true,"bytes":15843,"match":[],"anchors_ok":true},
+  {"id":"r16","topic":"round","current":true,"blob_ok":true,"bytes":5830,"match":["Q11"],"anchors_ok":true},
+  {"id":"r15","topic":"round","current":false,"blob_ok":true,"bytes":4839,"match":[],"anchors_ok":true},
+  {"id":"roles","topic":"roles","current":true,"blob_ok":true,"bytes":5505,"match":[],"anchors_ok":true},
+  {"id":"release","topic":"release","current":true,"blob_ok":true,"bytes":8455,"match":[],"anchors_ok":true},
+  {"id":"future","topic":"future","current":true,"blob_ok":true,"bytes":9156,"match":[],"anchors_ok":true},
+  {"id":"vision","topic":"vision","current":true,"blob_ok":true,"bytes":7785,"match":[],"anchors_ok":true},
+  {"id":"extension","topic":"extension","current":true,"blob_ok":true,"bytes":7936,"match":[],"anchors_ok":true},
+  {"id":"ui","topic":"ui","current":true,"blob_ok":true,"bytes":7198,"match":["Q11"],"anchors_ok":true},
+  {"id":"glb","topic":"glb","current":true,"blob_ok":true,"bytes":8759,"match":[],"anchors_ok":true},
+  {"id":"state","topic":"state","current":true,"blob_ok":true,"bytes":117925,"match":["Q11"],"anchors_ok":true}
+ ]
+}
