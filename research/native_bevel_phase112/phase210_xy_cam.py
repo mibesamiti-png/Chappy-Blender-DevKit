@@ -34,21 +34,21 @@ def limits(c,linear,angular):
                 setattr(c,'limit_'+key+'_lower',lo)
                 setattr(c,'limit_'+key+'_upper',hi)
     return c
-def setup(separated,enabled,substeps=16):
+def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene
-    sc.gravity=(-9.81,-9.81,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES
+    sc.gravity=(-9.81,-9.81,0.) if spring is None else (0.,-9.81,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES
     bpy.ops.mesh.primitive_cube_add(size=.5,location=(0.,0.,-5.))
     anchor=body(bpy.context.object,True);anchor.name='ideal fixed guide reference';anchor.hide_render=True
     shaft=box('common keyed shaft',(0.,0.,.5),(.18,.18,1.5),.2)
-    shaft.rotation_euler.z=-START;shaft.color=(.5,.5,.55,1)
+    shaft.rotation_euler.z=-start;shaft.color=(.5,.5,.55,1)
     constraint('shaft bearing','HINGE',anchor,shaft,(0.,0.,.5))
     motor=constraint('only shaft motor','MOTOR',anchor,shaft,(0.,0.,.5),(0.,-math.pi/2,0.))
     motor.use_motor_lin=False;motor.use_motor_ang=enabled
     motor.motor_ang_target_velocity=1.;motor.motor_ang_max_impulse=IMPULSE
     items=[];zero={a:(0.,0.) for a in 'xyz'}
     for kind,axis,base,z,phi in [('stride','x',7.,0.,0.),('lift','y',2.5,1.,math.pi/2)]:
-        c=profile(kind,base)
+        c=profile(kind,base,duty=duty)
         # Rotate the actual keyed profile relative to the shaft for the Y
         # follower; the square bore is invariant under this 90-degree index.
         rot=np.array([[math.cos(phi),-math.sin(phi)],[math.sin(phi),math.cos(phi)]])
@@ -56,10 +56,10 @@ def setup(separated,enabled,substeps=16):
         m,a=ring(kind+' cam',[tuple(v) for v in xy],[tuple(v*BORE/max(abs(v))) for v in xy])
         assert a['passed'] and key_check(m)
         cam=bpy.data.objects.new(kind+' keyed cam',m);sc.collection.objects.link(cam)
-        cam.location=(0.,0.,z);cam.rotation_euler.z=-START
+        cam.location=(0.,0.,z);cam.rotation_euler.z=-start
         body(cam);cam.rigid_body.mass=3.;cam.color=(.8,.55,.15,1) if axis=='y' else (.25,.55,.8,1)
         constraint(kind+' rigid shaft coupling','FIXED',shaft,cam,(0.,0.,z))
-        initial=base+float(law(START,kind));rz=z+((-1. if axis=='x' else 1.) if separated else 0.)
+        initial=base+float(law(start,kind,duty));rz=z+((-1. if axis=='x' else 1.) if separated else 0.)
         side=-1. if axis=='x' else 1.
         pos=(initial,0.,rz) if axis=='x' else (0.,initial,rz)
         bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=ROLLER,depth=.24,location=pos)
@@ -72,6 +72,9 @@ def setup(separated,enabled,substeps=16):
         constraint(kind+' free roller bearing','HINGE',slide,roller,pos)
         lin=dict(zero);lin[axis]=(-.15,3. if axis=='x' else 1.)
         limits(constraint(kind+' prismatic guide','GENERIC',anchor,slide,spos),lin,zero)
+        if axis=='x' and spring is not None and spring>0:
+            c=limits(constraint('passive stride return spring','GENERIC_SPRING',anchor,slide,spos),{}, {})
+            c.spring_type='SPRING2';c.use_spring_x=True;c.spring_stiffness_x=spring;c.spring_damping_x=.5
         items.append(dict(kind=kind,axis=axis,base=base,z=z,rz=rz,initial=initial,cam=cam,roller=roller,slide=slide,xy=xy))
     outpos=(items[0]['initial'],items[1]['initial'],3.5)
     carriage=box('physical XY output carriage',outpos,(.32,.32,.25),.1);carriage.color=(.9,.3,.2,1)
@@ -86,13 +89,13 @@ def setup(separated,enabled,substeps=16):
     bpy.context.view_layer.update();sc.frame_set(1)
     objs=[shaft,carriage]+[it[k] for it in items for k in ('cam','roller','slide')]
     cs=[o.rigid_body_constraint for o in sc.objects if o.rigid_body_constraint]
-    assert len(cs)==11 and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
+    assert len(cs)==11+int(spring is not None and spring>0) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
     assert all(o.animation_data is None and not o.rigid_body.kinematic for o in objs)
     return sc,shaft,carriage,items
 def wrap(a):return math.atan2(math.sin(a),math.cos(a))
 def az(M):return math.atan2(M[1][0],M[0][0])
-def run_case(name,separated,enabled,dest,substeps=16):
-    sc,shaft,carriage,items=setup(separated,enabled,substeps)
+def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None):
+    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/('phase210_xy_'+name+'.blend')))
     rows=[];last=None;travel=0.
     for f in range(1,FRAMES+1):
@@ -100,7 +103,7 @@ def run_case(name,separated,enabled,dest,substeps=16):
         mat=lambda o:o.evaluated_get(dg).matrix_world.copy()
         S=mat(shaft);O=mat(carriage);a=az(S)
         if last is not None:travel+=wrap(a-last)
-        last=a;phase=(START-travel)%math.tau
+        last=a;phase=(start-travel)%math.tau
         row=dict(frame=f,travel=travel,phase=phase,shaft_drift=(S.translation-Vector((0.,0.,.5))).length,
             output_z_drift=abs(O.translation.z-3.5))
         for i,it in enumerate(items):
@@ -109,7 +112,7 @@ def run_case(name,separated,enabled,dest,substeps=16):
             edge=np.roll(c,-1,axis=0)-c;delta=p-c
             t=np.clip(np.sum(delta*edge,axis=1)/np.sum(edge*edge,axis=1),0.,1.)
             gap=float(np.linalg.norm(delta-t[:,None]*edge,axis=1).min()-ROLLER)
-            expected=float(law(phase,kind));actual=float(B.translation[i]-it['base'])
+            expected=float(law(phase,kind,duty));actual=float(B.translation[i]-it['base'])
             output=float(O.translation[i]-it['base'])
             row.update({kind+'_expected':expected,kind+'_follower':actual,kind+'_output':output,
                 kind+'_error':output-expected,kind+'_coupler_error':output-actual,
@@ -129,13 +132,14 @@ def run_case(name,separated,enabled,dest,substeps=16):
     coupler=max(peak(k+'_coupler_error') for k in amp)
     drift=max(peak(k) for k in ['shaft_drift','output_z_drift']+[a+b for a in amp for b in ('_cam_drift','_guide_drift','_slider_drift')])
     gaps=max(peak(k+'_gap') for k in amp)
-    stance=[r for r in rows if r['phase']<=.75*math.tau]
+    stance=[r for r in rows if r['phase']<=duty*math.tau]
     dwell=max((abs(r['lift_output']) for r in stance),default=0.)
     checks=dict(shaft_sync=sync<=.015,coupling=coupler<=.015,guide_drift=drift<=.015)
+    span_expected=SPAN if duty==.75 else float(np.ptp(law(np.arange(36000)*math.tau/36000,'stride',duty)))
     if name=='engaged':
         checks.update(full_cycle=travel<=-math.tau,xy_tracking=peak('xy_error')<=.04,
             axis_tracking=all(peak(k+'_error')<=.025 for k in amp),
-            stride=abs(amp['stride']-SPAN)<=.05,lift=.55<=amp['lift']<=.65,
+            stride=abs(amp['stride']-span_expected)<=.05,lift=.55<=amp['lift']<=.65,
             stance_height=bool(stance) and dwell<=.025,contact=gaps<=.025,
             axial_overlap=all(peak(k+'_axial')<.05 for k in amp))
     elif name=='separated':
@@ -147,7 +151,7 @@ def run_case(name,separated,enabled,dest,substeps=16):
         # brake is added; reject sustained rotation or large output motion.
         checks.update(no_sustained_drive=abs(travel)<=.4,
             no_large_output=amp['stride']<=.25 and amp['lift']<=.15)
-    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,travel=travel,amplitude=amp,
+    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,travel=travel,amplitude=amp,
         max_xy_error=peak('xy_error'),max_axis_error={k:peak(k+'_error') for k in amp},
         max_sync=sync,max_coupler_error=coupler,max_drift=drift,max_contact_gap=gaps,
         max_stance_height=dwell,checks=checks,passed=all(checks.values()),rows=rows)
