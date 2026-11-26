@@ -15,7 +15,7 @@ import zipfile
 import bpy
 from bpy.props import FloatProperty, EnumProperty, StringProperty, PointerProperty, IntProperty
 from bpy.types import Operator, Panel, PropertyGroup
-from cbdk.joint_integration import proposals, review, score, verified_write
+from cbdk.joint_integration import proposals, review, score, verified_write, checked_provider_folder
 
 ZIP_SHA = '91700f02210e03940eee38f1939f6a7d9778ed9406f902e9359f73bf5f4a88c1'
 PROVIDERS = None
@@ -44,11 +44,9 @@ def configure(zip_path, gl_root):
     verify(root)
     if 'cbdk_geometry' in sys.modules: raise ValueError('external_geometry_already_loaded')
     TEMP = tempfile.TemporaryDirectory(prefix='cbdk-a-local-')
-    folder = Path(TEMP.name)
     with zipfile.ZipFile(zip_path) as archive:
         if sum(x.file_size for x in archive.infolist()) > 20_000_000: raise ValueError('provider_size')
-        for x in archive.infolist():
-            if not (folder/x.filename).resolve().is_relative_to(folder): raise ValueError('provider_path')
+        folder = checked_provider_folder(TEMP.name, (x.filename for x in archive.infolist()))
         archive.extractall(folder)
     sys.path.insert(0,str(folder)); sys.path.insert(0,str(root))
     cjm = importlib.import_module('chappy_joint_maker')

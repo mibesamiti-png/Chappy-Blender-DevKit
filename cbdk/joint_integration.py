@@ -1,5 +1,6 @@
 """Bounded synthetic rotary candidate review. No execution, approval or R28 schema."""
 from math import isfinite
+from pathlib import Path
 
 POLICIES = ('LOCKED', 'PREFERRED', 'FREE')
 MAX_CANDIDATES = 4
@@ -84,3 +85,12 @@ def verified_write(read, write, original, candidate, finish):
         except BaseException as error:
             raise RuntimeError('rollback_failed') from error
         raise
+
+
+def checked_provider_folder(folder, names):
+    """Resolve both sides of containment before testing a pinned ZIP's paths."""
+    root = Path(folder).resolve(strict=True)
+    for name in names:
+        if not (root / name).resolve().is_relative_to(root):
+            raise ValueError('provider_path')
+    return root

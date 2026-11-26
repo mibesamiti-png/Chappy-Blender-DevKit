@@ -1,6 +1,8 @@
 import copy
 import unittest
-from cbdk.joint_integration import proposals,review,score,verified_write
+import tempfile
+from pathlib import Path
+from cbdk.joint_integration import proposals,review,score,verified_write,checked_provider_folder
 
 
 def measure(d=5):
@@ -59,3 +61,16 @@ class IntegrationReviewTests(unittest.TestCase):
         self.assertEqual((base,candidate),before)
         self.assertFalse(result['approved'])
         self.assertFalse(result['auto_apply'])
+
+    def test_provider_paths_canonical_root_and_escape_rejection(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp).resolve()
+            folder = base / 'provider'
+            folder.mkdir()
+            # Noncanonical alias models a mismatch between lexical and resolved roots.
+            alias = folder / '..' / folder.name
+            self.assertNotEqual(alias, folder)
+            self.assertEqual(checked_provider_folder(alias, ['chappy_joint_maker/__init__.py']), folder)
+            for name in ('../escape.py', str(base / 'outside.py')):
+                with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'provider_path'):
+                    checked_provider_folder(alias, [name])
