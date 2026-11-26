@@ -100,6 +100,35 @@ jobs:
           assert not d["physical_walk_certified"] and not d["whole_machine_certified"]
           print("Passive return physical gate:",d["spring_gate"])
           PY
+      - name: Finish bounded spring stiffness comparison
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_spring_refine.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_spring_refine.json").read_text())
+          b=json.loads((p/"phase211_spring_return.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["criteria_changed"] and not d["geometry_changed"] and not d["physical_walk_certified"]
+          assert d["prior_gate"]==b["spring_gate"] and d["negative_control_detected"]==b["negative_control_detected"]
+          t=d["trials"]
+          assert [r["stiffness"] for r in t]==[60.,100.][:len(t)]
+          for r in t:
+              c=r["cases"]
+              assert [v["name"] for v in c]==(["engaged","separated","motor_off"] if c[0]["passed"] else ["engaged"])
+              assert r["passed"]==(len(c)==3 and all(v["passed"] for v in c))
+              for v in c:
+                  assert v["passed"]==all(v["checks"].values()) and len(v["rows"])==601
+                  assert v["spring"]==r["stiffness"] and v["substeps"]==32
+                  assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+          chosen=b["selected_stiffness"] if b["spring_gate"] else next((r["stiffness"] for r in t if r["passed"]),None)
+          assert d["selected_stiffness"]==chosen
+          assert (not t if b["spring_gate"] else bool(t) and (chosen is not None or len(t)==2))
+          assert d["spring_gate"]==(chosen is not None and d["negative_control_detected"])
+          print("Refined passive return physical gate:",d["spring_gate"])
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
