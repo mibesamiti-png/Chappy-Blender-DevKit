@@ -479,3 +479,63 @@ jobs:
           path: research/native_bevel_phase112/results/phase211_four_leg_diagnosis.json
           if-no-files-found: warn
           retention-days: 14
+
+  phase211-integrated:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Compare integrated eight-cam shaft with full-cycle controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_integrated_drive.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results/phase211_integrated")
+          d=json.loads((p/"phase211_integrated_drive.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["identical_cam_surfaces"] and d["structural_phase_identity"] and d["ideal_rigid_assembly"] and d["fixed_fixture"]
+          assert not d["welded_solid_certified"] and not d["physical_walk_certified"]
+          assert d["cam_count"]==8 and d["active_bodies"]==21 and d["constraint_count"]==30 and d["removed_fixed_joints"]==8
+          assert d["camshaft_mass"]==28.8 and d["motor_count"]==1 and d["impulse"]==240.
+          assert d["phases"]==[0,270,180,90] and d["duty"]==.77
+          c=d["cases"]
+          assert [v["name"] for v in c]==["engaged","separated","motor_off"]
+          for v in c:
+              assert v["integrated"] and [r["frame"] for r in v["rows"]]==list(range(1,602))
+              assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+              assert [q["phase"] for q in v["legs"]]==d["phases"]
+              assert all(q["passed"]==all(q["checks"].values()) for q in v["legs"])
+              assert v["passed"]==(all(v["checks"].values()) and all(q["passed"] for q in v["legs"]))
+              assert (p/("phase211_four_leg_"+v["name"]+".blend")).stat().st_size>0
+          assert d["integrated_drive_gate"]==all(v["passed"] for v in c)
+          print("Integrated camshaft fixture gate:",d["integrated_drive_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-integrated-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_integrated/
+          if-no-files-found: warn
+          retention-days: 14
