@@ -105,3 +105,9 @@ C #174/D #173 専門9ファイルはdevと完全一致、重複マージせずcl
 v0.20節目#176 dev 972736be66515f558c2ba9ef07ba6c5947047118 独立7CI成功、Notion同期済み、最終35/35＋追加push1。既承認方針に従いv0.21 F021-01のR26限定割当候補を作成。旧GLB-012の7 variant・GLB-021 AST/測定元照合・GLB-022比較/停止を再利用。B静的候補、C実登録/読値/効果、D厳格照合、A同一固定source/run/版の診断縦断。正式割当統合・独立7CI・#125 rev20 active前は着手禁止。実ユーザー/任意コード/自動適用/配布なし。44要件/24 NEXT・正式版/main/last_verified維持、GL/DIL独立。F021-02/03未着手。
 
 [R26割当候補](../R26_ABCD_START.md)。v0.20は限定目標受入済み、実GUI/通常Undo/公式installer/権利は未確認。既承認移行方針に基づく候補で、正式開始は統合後の独立7CIと掲示板発行が条件。
+
+## 2026-11-26 JST — R26 / F021-01限定受入
+
+R26 #182 dev 08f63ce8b4f9f045eb03675db5bb48c4031c6fa3 独立7CI＋追加push成功。B #178/C #180/D #179/A #182各5CI含む最終27/27＋1、18 native jobs、最終再試行0。C初回変数衝突修正。A候補・独立・pushの9実験で2設定×9=18照合、7GLB×9=63、3版radius診断・RNA読値・対象変化/非対象不変・SHA/cleanup確認。bevel変位は診断原因証明でない。専門11blob一致・個別mergeなしclosed。F021-01限定受入、#125 rev21 paused。任意コード/最適値/自動適用/真正性/権利未確認。F021-02/03/R27自動開始なし。44要件/24 NEXT・正式版/main/last_verified維持。
+
+独立CI: Python45750425779、Windows45750425767、Blender45750425757、Chromium45750425701、Handoff45750425759、Kit45750425706、Skill45750425690。追加push Blender45750420669。候補Blender45749196784、独立native jobs139676607930/139676607649/139676607936、push jobs139676591449/139676591483/139676591031。3版で同一run/source/版の静的・実RNA・実測証拠とradius診断、全7 GLB/legacy report SHA再確認、元ソース不変・cleanup・非対象不変。6統合後ログを直接照合、候補3ログも照合済み。各run ID独立。C初回修正は最終成功数に含めない。専門9 nativeは旧/専門実験、A結合9 nativeとは別。v0.21はin_progress、F021-02/03未着手、R27自動開始なし。Notion同期は節目文書統合・独立CI後。

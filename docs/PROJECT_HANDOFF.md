@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: v0.20節目#176独立7CI・Notion同期成功。v0.21 R26限定割当候補（F021-01、既存AST/実測効果の同一固定fixture照合）。#125 rev19 paused、正式ゲート前実装禁止。正式v0.17.0/main/last_verified維持。
+- 最新の節目: R26 #182独立7CI＋追加push成功。F021-01固定fixture限定受入（AST・RNA・形状効果・診断の同一実験照合）。#125 rev21 paused、節目同期候補。F021-02/03未着手。正式v0.17.0/main/last_verified維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
@@ -218,6 +218,7 @@
 - `DEC-089` R24の非空依存閉包を限定受入し、v0.20残条件を評価する。R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI（Python45708363907、Windows45708363838、Blender45708363884、Chromium45708363947、Handoff45708363876、Kit45708363916、Skill45708364079）成功。C #169/D #168/A #170各5CI含む最終22/22、実Blender12/12、最終再試行0。C初回Blender未発火はUI回帰追加、D初回狭いmin/max各2件×3 Python版の再現後に固定manifest範囲外を生成前拒否。合成要求1→4機能/5部品、legacyとExtension実行payload一致、同一ZIP公式validate・実順序登録/逆順解除/途中rollback・read/edit・SHA不変。F020-02限定受入、F020-03 partial維持。#125 rev17 paused、実カタログ依存全空維持。Undo/実GUI/公式installer/権利/配布未確認、次は残条件調査。44要件/24 NEXT・正式版/main/last_verified維持。
 - `DEC-090` R25の同一生成物の段階証拠と明示Undoを限定受入し、v0.20の限定3目標を区切る。R25 #175 dev 1f8235589363e7ddbee89b6fff3599402e1d6aec 独立7CI＋追加push Blender成功。C #174/D #173/A #175各5CI含む最終22/22＋追加1、15 native jobs、最終再試行0。C初回cleanup参照エラー修正、D初回CI未発火は回帰追加。固定read/edit/grouped 3版×6工程54/54、SHA一致。grouped明示Undo/Redo単一/複数・接続/選択復元・取消/解除成功。通常背景Undo unavailable/Redo not_attempted、GUI未検証。失敗/欠落/矛盾はPython負例。F020-03とv0.20限定3/3受入。#125 rev19 paused、B/C/D待機。公式installer/任意コード/権利/配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持、v0.21/R26自動開始なし。詳細はPROGRESS・future JSON参照。
 - `DEC-091` 既承認v0.21のF021-01をR26限定割当候補にする。v0.20節目#176 dev 972736be66515f558c2ba9ef07ba6c5947047118 独立7CI成功、Notion同期済み、最終35/35＋追加push1。既承認方針に従いv0.21 F021-01のR26限定割当候補を作成。旧GLB-012の7 variant・GLB-021 AST/測定元照合・GLB-022比較/停止を再利用。B静的候補、C実登録/読値/効果、D厳格照合、A同一固定source/run/版の診断縦断。正式割当統合・独立7CI・#125 rev20 active前は着手禁止。実ユーザー/任意コード/自動適用/配布なし。44要件/24 NEXT・正式版/main/last_verified維持、GL/DIL独立。F021-02/03未着手。
+- `DEC-092` R26の同一固定fixture設定証拠を限定受入する。R26 #182 dev 08f63ce8b4f9f045eb03675db5bb48c4031c6fa3 独立7CI＋追加push成功。B #178/C #180/D #179/A #182各5CI含む最終27/27＋1、18 native jobs、最終再試行0。C初回変数衝突修正。A候補・独立・pushの9実験で2設定×9=18照合、7GLB×9=63、3版radius診断・RNA読値・対象変化/非対象不変・SHA/cleanup確認。bevel変位は診断原因証明でない。専門11blob一致・個別mergeなしclosed。F021-01限定受入、#125 rev21 paused。任意コード/最適値/自動適用/真正性/権利未確認。F021-02/03/R27自動開始なし。44要件/24 NEXT・正式版/main/last_verified維持。
 
 ## 更新・プライバシールール
 

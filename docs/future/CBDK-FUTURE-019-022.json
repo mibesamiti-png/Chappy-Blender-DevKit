@@ -154,8 +154,10 @@
     },
     "0.21": {
       "F021-01": {
-        "status": "allocation_candidate",
-        "scope": "R26 fixed existing parameter fixture, two FloatProperties, seven existing GLB variants. Static declaration/geometry flow, native actual RNA registration/readback and measured target/unrelated effects, fixed identity-bound evidence, real radius diagnosis on three Blender versions. No implementation before allocation merge, independent seven CI and dispatch."
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "08f63ce8b4f9f045eb03675db5bb48c4031c6fa3",
+        "blender_run": 45750425757,
+        "scope": "Fixed repository-authored parameter fixture only: two FloatProperties, seven unchanged variants, static AST counts/API, actual RNA registration/readback, generated/reimported target changes and unrelated invariance, source/GLB/report digests, cleanup and parent run identity. Three Blender versions; actual sphere size diagnostic matched; bevel displacement does not prove a diagnostic cause. Nine A candidate/independent/push runs, 18 property matches, 63 GLB observations; specialist 9 native regressions separate. No general addon causality, authenticity, optimum, arbitrary execution, automatic application, adoption, or distribution."
       },
       "F021-02": {
         "status": "not_started"
@@ -310,5 +312,54 @@
     "pr25_draft": true,
     "scope": "v0.20 scoped milestones 3/3 accepted; GUI/normal Undo/installer/arbitrary source/rights/distribution unverified. Existing Notion synchronized. No release.",
     "dispatch": "R26 candidate only; merge and independent seven CI plus revision 20 active before implementation."
+  },
+  "v021_r26_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "08f63ce8b4f9f045eb03675db5bb48c4031c6fa3",
+    "pr": 182,
+    "workflow_runs": {
+      "python": 45750425779,
+      "windows": 45750425767,
+      "blender": 45750425757,
+      "chromium": 45750425701,
+      "handoff": 45750425759,
+      "kit": 45750425706,
+      "skill": 45750425690
+    },
+    "extra_push_blender": 45750420669,
+    "specialist_prs": {
+      "B": 178,
+      "C": 180,
+      "D": 179
+    },
+    "candidate_head": "37306a81de4a0cd194e96488ff8cdf22b2540efb",
+    "candidate_blender": 45749196784,
+    "native_jobs": {
+      "candidate": [
+        139672618144,
+        139672617867,
+        139672618170
+      ],
+      "independent": [
+        139676607930,
+        139676607649,
+        139676607936
+      ],
+      "push": [
+        139676591449,
+        139676591483,
+        139676591031
+      ]
+    },
+    "source_sha256": "e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3",
+    "comparison_sha256": "e3d0645e759c1a2428d0b36315f59a68bdec492f996269a3f9d4675b6643a9b8",
+    "final_required_workflows": 27,
+    "extra_workflows": 1,
+    "native_jobs_total": 18,
+    "joined_runs": 9,
+    "joined_property_matches": 18,
+    "joined_glb_observations": 63,
+    "dispatch": "revision 21 paused; no automatic R27",
+    "scope": "Fixed repository-authored parameter fixture only: two FloatProperties, seven unchanged variants, static AST counts/API, actual RNA registration/readback, generated/reimported target changes and unrelated invariance, source/GLB/report digests, cleanup and parent run identity. Three Blender versions; actual sphere size diagnostic matched; bevel displacement does not prove a diagnostic cause. Nine A candidate/independent/push runs, 18 property matches, 63 GLB observations; specialist 9 native regressions separate. No general addon causality, authenticity, optimum, arbitrary execution, automatic application, adoption, or distribution."
   }
 }
