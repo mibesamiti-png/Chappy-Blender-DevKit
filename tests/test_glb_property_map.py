@@ -424,10 +424,33 @@ class R27FixedSourceCandidateTests(unittest.TestCase):
     def setUp(self):
         import hashlib
         from cbdk.parameter_source_candidate_r27 import FIXTURE, SOURCE_SHA256
-        self.original = FIXTURE.read_bytes()
-        self.assertEqual(hashlib.sha256(self.original).hexdigest(), SOURCE_SHA256)
+        self.checkout = FIXTURE
+        self.checkout_bytes = FIXTURE.read_bytes()
         self.identity = dict(run_id="b"*32, source_sha256=SOURCE_SHA256,
                              blender_version="4.4.3")
+        self.original = self.checkout_bytes
+        if hashlib.sha256(self.original).hexdigest() != SOURCE_SHA256:
+            # Windows Git checkout can translate LF to CRLF. This is NOT
+            # an accepted production input: prove the live helper rejects it.
+            # Only the test copy may recover the known canonical bytes.
+            from cbdk.parameter_source_candidate_r27 import build_fixed_source_candidate
+            self.assertEqual(hashlib.sha256(self.original).hexdigest(),
+                "eec6968b7cb5208e0af92279b7b32dc0c8d617ebad6d1cdbb5ca39cc64d1918f")
+            with self.assertRaisesRegex(ValueError,"fixed_source_sha_mismatch"):
+                build_fixed_source_candidate(**self.identity)
+            self.original = self.original.replace(b"\r\n", b"\n")
+        self.assertEqual(hashlib.sha256(self.original).hexdigest(), SOURCE_SHA256)
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.fixed_copy = Path(tmp.name) / "cbdk_parameter_experiment.py"
+        self.fixed_copy.write_bytes(self.original)
+        # Exercise unchanged strict code on an exact, isolated test fixture
+        # in both OS matrices; do not rewrite the checkout or weaken its SHA.
+        for target in ("cbdk.parameter_source_candidate_r27.FIXTURE",
+                       "cbdk.glb_parameter_static_r26.FIXTURE"):
+            guard = patch(target, self.fixed_copy)
+            guard.start()
+            self.addCleanup(guard.stop)
 
     def test_r27_exact_candidate_and_reverse(self):
         import hashlib
@@ -452,6 +475,7 @@ class R27FixedSourceCandidateTests(unittest.TestCase):
                 restored_sha256=identity["source_sha256"]))
             self.assertEqual(restore_fixed_source_candidate(candidate),self.original)
             self.assertEqual(FIXTURE.read_bytes(),self.original)
+            self.assertEqual(self.checkout.read_bytes(),self.checkout_bytes)
 
     def test_r27_reject_wrong_identity_and_source_digest(self):
         from cbdk.parameter_source_candidate_r27 import build_fixed_source_candidate
@@ -465,6 +489,18 @@ class R27FixedSourceCandidateTests(unittest.TestCase):
             with patch("cbdk.parameter_source_candidate_r27.FIXTURE",path):
                 with self.assertRaisesRegex(ValueError,"fixed_source_sha_mismatch"):
                     build_fixed_source_candidate(**self.identity)
+
+    def test_r27_crlf_copy_is_rejected_not_normalized(self):
+        from cbdk.parameter_source_candidate_r27 import (
+            build_fixed_source_candidate, restore_fixed_source_candidate)
+        crlf = self.original.replace(b"\n",b"\r\n")
+        self.fixed_copy.write_bytes(crlf)
+        with self.assertRaisesRegex(ValueError,"fixed_source_sha_mismatch"):
+            build_fixed_source_candidate(**self.identity)
+        with self.assertRaisesRegex(ValueError,"fixed_source_sha_mismatch"):
+            restore_fixed_source_candidate(crlf)
+        self.assertEqual(self.fixed_copy.read_bytes(),crlf)
+        self.assertEqual(self.checkout.read_bytes(),self.checkout_bytes)
 
     def test_r27_reject_ambiguous_declaration_and_unknown_value(self):
         from cbdk.parameter_source_candidate_r27 import _derive_candidate
