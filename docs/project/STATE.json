@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "R26 #182独立7CI＋追加push成功。F021-01固定fixture限定受入（AST・RNA・形状効果・診断の同一実験照合）。#125 rev21 paused、節目同期候補。F021-02/03未着手。正式v0.17.0/main/last_verified維持。"
+    "milestone": "R26節目#183独立7CI・Notion同期成功。R27 F021-02固定サンプルの1箇所変更候補・作業コピー復元・再生成比較の限定割当候補。#125 rev21 paused、正式ゲート前実装禁止。正式v0.17.0/main/last_verified維持。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -1119,6 +1119,11 @@
       "id": "DEC-092",
       "decision": "R26の同一固定fixture設定証拠を限定受入する",
       "note": "R26 #182 dev 08f63ce8b4f9f045eb03675db5bb48c4031c6fa3 独立7CI＋追加push成功。B #178/C #180/D #179/A #182各5CI含む最終27/27＋1、18 native jobs、最終再試行0。C初回変数衝突修正。A候補・独立・pushの9実験で2設定×9=18照合、7GLB×9=63、3版radius診断・RNA読値・対象変化/非対象不変・SHA/cleanup確認。bevel変位は診断原因証明でない。専門11blob一致・個別mergeなしclosed。F021-01限定受入、#125 rev21 paused。任意コード/最適値/自動適用/真正性/権利未確認。F021-02/03/R27自動開始なし。44要件/24 NEXT・正式版/main/last_verified維持。"
+    },
+    {
+      "id": "DEC-093",
+      "decision": "R27 F021-02を固定ソースの単一変更・復元実験に限定する",
+      "note": "R26節目#183 dev 0b0418729295649c2cadd7bdacb1ca9fe8cfb64b 独立7CI・Notion同期成功、最終40/40＋追加push1。既存GLB-012/R26 RNA・形状計測、GLB-021測定元照合、GLB-022固定候補/退行拒否を再利用。R27は固定fixtureのsphere_radius default 0.75→1.15のみ、参照は既存sphere_radius_changed。B候補差分/逆変換、C隔離コピーの既定値実登録・再生成・復元、D厳格検査、A親接続。元ソース不変、任意入力/最適値/自動採用なし。割当統合・独立7CI・#125 rev22 active前は実装禁止。F021-03未着手、44要件/24 NEXT・正式版/main/last_verified維持。GL/DIL独立。"
     }
   ],
   "last_verified": {

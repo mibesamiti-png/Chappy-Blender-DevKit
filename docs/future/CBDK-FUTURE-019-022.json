@@ -160,7 +160,8 @@
         "scope": "Fixed repository-authored parameter fixture only: two FloatProperties, seven unchanged variants, static AST counts/API, actual RNA registration/readback, generated/reimported target changes and unrelated invariance, source/GLB/report digests, cleanup and parent run identity. Three Blender versions; actual sphere size diagnostic matched; bevel displacement does not prove a diagnostic cause. Nine A candidate/independent/push runs, 18 property matches, 63 GLB observations; specialist 9 native regressions separate. No general addon causality, authenticity, optimum, arbitrary execution, automatic application, adoption, or distribution."
       },
       "F021-02": {
-        "status": "not_started"
+        "status": "allocation_candidate",
+        "scope": "R27 fixed authored source only, exact SHA e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3. Change sphere_radius FloatProperty default 0.75 to 1.15 on a temporary copy; unchanged bevel default 0.08. Existing seven R26 variants remain unchanged; reference is existing sphere_radius_changed, not an optimized value. B exact single-token candidate/diff/reverse, C default readback and actual native original/candidate/restored GLB generation/import and cleanup, D strict evidence/rollback checks, A independent parent identity and fixed artifacts. No arbitrary source/paths/patch execution or approval. Formal dispatch required."
       },
       "F021-03": {
         "status": "not_started"
@@ -361,5 +362,22 @@
     "joined_glb_observations": 63,
     "dispatch": "revision 21 paused; no automatic R27",
     "scope": "Fixed repository-authored parameter fixture only: two FloatProperties, seven unchanged variants, static AST counts/API, actual RNA registration/readback, generated/reimported target changes and unrelated invariance, source/GLB/report digests, cleanup and parent run identity. Three Blender versions; actual sphere size diagnostic matched; bevel displacement does not prove a diagnostic cause. Nine A candidate/independent/push runs, 18 property matches, 63 GLB observations; specialist 9 native regressions separate. No general addon causality, authenticity, optimum, arbitrary execution, automatic application, adoption, or distribution."
+  },
+  "v021_r27_allocation": {
+    "date": "2026-11-26",
+    "verified_base_sha": "0b0418729295649c2cadd7bdacb1ca9fe8cfb64b",
+    "workflow_runs": {
+      "python": 45752209622,
+      "windows": 45752209655,
+      "blender": 45752209618,
+      "chromium": 45752209661,
+      "handoff": 45752209582,
+      "kit": 45752209700,
+      "skill": 45752209593
+    },
+    "pr25_draft": true,
+    "prior_milestone": 183,
+    "scope": "R27 fixed authored source only, exact SHA e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3. Change sphere_radius FloatProperty default 0.75 to 1.15 on a temporary copy; unchanged bevel default 0.08. Existing seven R26 variants remain unchanged; reference is existing sphere_radius_changed, not an optimized value. B exact single-token candidate/diff/reverse, C default readback and actual native original/candidate/restored GLB generation/import and cleanup, D strict evidence/rollback checks, A independent parent identity and fixed artifacts. No arbitrary source/paths/patch execution or approval. Formal dispatch required.",
+    "dispatch": "candidate only, revision 21 paused; allocation merge + independent seven CI + revision 22 active before implementation"
   }
 }

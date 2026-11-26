@@ -460,3 +460,11 @@ v0.20節目#176 dev 972736be66515f558c2ba9ef07ba6c5947047118 独立7CI成功、N
 R26 #182 dev 08f63ce8b4f9f045eb03675db5bb48c4031c6fa3 独立7CI＋追加push成功。B #178/C #180/D #179/A #182各5CI含む最終27/27＋1、18 native jobs、最終再試行0。C初回変数衝突修正。A候補・独立・pushの9実験で2設定×9=18照合、7GLB×9=63、3版radius診断・RNA読値・対象変化/非対象不変・SHA/cleanup確認。bevel変位は診断原因証明でない。専門11blob一致・個別mergeなしclosed。F021-01限定受入、#125 rev21 paused。任意コード/最適値/自動適用/真正性/権利未確認。F021-02/03/R27自動開始なし。44要件/24 NEXT・正式版/main/last_verified維持。
 
 独立CI: Python45750425779、Windows45750425767、Blender45750425757、Chromium45750425701、Handoff45750425759、Kit45750425706、Skill45750425690。追加push Blender45750420669。候補Blender45749196784、独立native jobs139676607930/139676607649/139676607936、push jobs139676591449/139676591483/139676591031。3版で同一run/source/版の静的・実RNA・実測証拠とradius診断、全7 GLB/legacy report SHA再確認、元ソース不変・cleanup・非対象不変。6統合後ログを直接照合、候補3ログも照合済み。各run ID独立。C初回修正は最終成功数に含めない。専門9 nativeは旧/専門実験、A結合9 nativeとは別。v0.21はin_progress、F021-02/03未着手、R27自動開始なし。Notion同期は節目文書統合・独立CI後。
+
+## 2026-11-26 JST — R27 / F021-02 限定割当候補
+
+R26節目#183 dev 0b0418729295649c2cadd7bdacb1ca9fe8cfb64b 独立7CI・Notion同期成功、最終40/40＋追加push1。既存GLB-012/R26 RNA・形状計測、GLB-021測定元照合、GLB-022固定候補/退行拒否を再利用。R27は固定fixtureのsphere_radius default 0.75→1.15のみ、参照は既存sphere_radius_changed。B候補差分/逆変換、C隔離コピーの既定値実登録・再生成・復元、D厳格検査、A親接続。元ソース不変、任意入力/最適値/自動採用なし。割当統合・独立7CI・#125 rev22 active前は実装禁止。F021-03未着手、44要件/24 NEXT・正式版/main/last_verified維持。GL/DIL独立。
+
+R26節目独立CI: Python45752209622、Windows45752209655、Blender45752209618、Chromium45752209661、Handoff45752209582、Kit45752209700、Skill45752209593。既存7 variant・GLB-022の比較/停止を保持。R27はソース変更・コピー保全・復元を新たに測る限定実験で、F021-03の複数候補の採否評価には進まない。
+
+[R27割当候補](R27_ABCD_START.md)。
