@@ -1,4 +1,4 @@
-name: Geometry Lab isolated collar Phase 143
+name: Geometry Lab isolated intent Phase 151
 on:
   pull_request:
     paths:
@@ -73,6 +73,21 @@ jobs:
           assert len(d["rows"])==6 and len(d["controls"])==8
           assert all(len(r["levels"])==3 and len(r["domains"])==6 for r in d["rows"])
           print("Measured",len(d["rows"]),"Passed",sum(r["passed"] for r in d["rows"]))
+          PY
+      - name: Compare built-in editing tools under paired intents
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase151_native_intent.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase151_native_intent.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==3 and all(len(r["options"])==7 for r in d["rows"])
+          assert all(r["preserve"]==r["unknown"]=="keep" for r in d["rows"])
           PY
       - uses: actions/upload-artifact@v4
         if: always()
