@@ -18,8 +18,8 @@ START=math.tau*(.75+.25*Q)
 MIN=float(law(START,'stride'))
 MAX=float(law(math.tau*(.75+.25*(1-Q)),'stride'))
 SPAN=MAX-MIN
-def run_case(name,offset,enabled,dest):
-    sc,cam,roller,c=setup(offset,enabled,'stride',BASE,START,3.)
+def run_case(name,offset,enabled,dest,impulse=10.):
+    sc,cam,roller,c=setup(offset,enabled,'stride',BASE,START,3.,impulse)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/('phase210_stride_'+name+'.blend')))
     edge=np.roll(c,-1,axis=0)-c;den=np.sum(edge*edge,axis=1)
     rows=[];last=None;travel=0.
@@ -55,7 +55,7 @@ def run_case(name,offset,enabled,dest):
         # At a cam minimum, small settling rotation is permitted; no
         # external brake or position constraint is added to force it.
         checks.update(no_sustained_drive=abs(travel)<=.15,no_stroke=amp<=.025)
-    out=dict(name=name,enabled=enabled,offset=offset,travel=travel,amplitude=amp,
+    out=dict(name=name,enabled=enabled,offset=offset,impulse=impulse,travel=travel,amplitude=amp,
         max_tracking_error=maxerr,max_radial_gap=gapmax,max_drift=drift,
         max_stance_step_error=max_step_error,stance_reverse=stance_reverse,stance_steps=len(stance),
         min_displacement=min(actual),max_displacement=max(actual),checks=checks,passed=all(checks.values()),rows=rows)
