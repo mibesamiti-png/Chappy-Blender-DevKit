@@ -946,6 +946,22 @@ jobs:
           assert all(d["controls"].values())
           assert len(list(p.glob("phase206_*.obj")))==19 and (p/"phase206_hybrid_machine.blend").stat().st_size>0
           PY
+      - name: Synthesize foot trajectory and fabricate four-leg geared walker
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase207_walking_machine.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase207_walking_machine.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert d["dense"]["passed"] and len(d["parts"])==32
+          assert all(x["passed"] for x in d["parts"].values())
+          assert len(d["mesh_collisions"])==361 and not any(x["pairs"] for x in d["mesh_collisions"])
+          assert all(d["controls"].values())
+          assert len(list(p.glob("phase207_*.obj")))==32 and (p/"phase207_walking_machine.blend").stat().st_size>0
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
