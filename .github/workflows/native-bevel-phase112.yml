@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 174
+name: Geometry Lab isolated operations Phase 175
 on:
   pull_request:
     paths:
@@ -467,6 +467,22 @@ jobs:
           assert len(d["controls"])==5 and all(r["rejected"] and not r["planner_invoked"] for r in d["controls"])
           print("Certified coverage",sum(r["certificate"]["passed"] for r in d["rows"]),"/24")
           print("Matched decisions",sum(r["matched"] for r in d["rows"]),"/24")
+          PY
+      - name: Verify certified local fan normalization before bevel
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase175_local_fan_normalization.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase175_local_fan_normalization.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==24 and all(r["input_unchanged"] for r in d["rows"])
+          print("Baseline matched",sum(r["baseline_matched"] for r in d["rows"]),"/24")
+          print("Normalized matched",sum(r["matched"] for r in d["rows"]),"/24")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
