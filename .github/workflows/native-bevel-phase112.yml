@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 190
+name: Geometry Lab isolated operations Phase 191
 on:
   pull_request:
     paths:
@@ -719,6 +719,24 @@ jobs:
           assert all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
           assert all(r["stale_rejected"] and r["invalid_role_rejected"] and r["input_unchanged"] for r in d["controls"])
           print("Matched",sum(r["matched"] for r in d["rows"]),"/192")
+          PY
+      - name: Test semantic rim bevel on isolated frusta and refuse invalid plans
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase191_semantic_rim_bevel.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase191_semantic_rim_bevel.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==36 and len(d["controls"])==204
+          assert all(r["target_correct"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert all(r["qualified"] for r in d["rows"] if r["mode"]=="quad")
+          assert all(r["passed"] for r in d["controls"])
+          print("Qualified",sum(r["qualified"] for r in d["rows"]),"/36")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
