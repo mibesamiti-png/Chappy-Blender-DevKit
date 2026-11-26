@@ -1,4 +1,4 @@
-name: Geometry Lab isolated LoopTools Phase 158
+name: Geometry Lab isolated LoopTools Phase 159
 on:
   pull_request:
     paths:
@@ -207,6 +207,20 @@ jobs:
           assert len(d["rows"])==9 and all(1<=r["evaluations"]<=3 and len(r["options"])==2 for r in d["rows"])
           print("Baseline passed",sum(r["baseline"]["passed"] for r in d["rows"]),"/9")
           print("Selected passed",sum(r["selected"]["passed"] for r in d["rows"]),"/9")
+          PY
+      - name: Compare explicit objective profiles on measured candidates
+        run: |
+          set -euo pipefail
+          python phase159_objective_profiles.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase159_objective_profiles.json").read_text())
+          assert d["complete"] and d["native_source"] and d["replay_only"] and not d["approved"]
+          assert len(d["rows"])==9 and d["controls"]==11
+          assert all(d["summary"][p]["edits"]==0 for p in ("unknown","preserve","sufficient"))
+          assert d["summary"]["balanced"]["max_turn_increase"]<=2.000001
+          assert d["summary"]["balanced"]["max_extent_increase"]<=.010001
           PY
       - uses: actions/upload-artifact@v4
         if: always()
