@@ -1050,6 +1050,38 @@ jobs:
           assert not d["combined_motion_certified"] and not d["walking_certified"]
           print("Stride physical gate (separate from evidence integrity):",d["physical_gate"])
           PY
+      - name: Diagnose stride cam drive capacity with bounded impulse candidates
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_stride_impulse.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_stride_impulse.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["profile_changed"] and not d["criteria_changed"]
+          trials=d["trials"]
+          assert [t["impulse"] for t in trials]==[10.,40.,100.][:len(trials)]
+          assert 1<=len(trials)<=3
+          for t in trials:
+              cases=t["cases"]
+              assert [c["name"] for c in cases] in (["engaged","separated"],["engaged","separated","motor_off"])
+              assert t["passed"]==(len(cases)==3 and all(c["passed"] for c in cases))
+              for c in cases:
+                  assert c["impulse"]==t["impulse"]
+                  assert [r["frame"] for r in c["rows"]]==list(range(1,482))
+                  assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+                  assert c["passed"]==all(c["checks"].values())
+                  assert (p/("phase210_stride_impulse_"+str(int(t["impulse"])))/("phase210_stride_"+c["name"]+".blend")).stat().st_size>0
+          chosen=next((t["impulse"] for t in trials if t["passed"]),None)
+          assert chosen==d["selected_impulse"]
+          assert chosen is not None or len(trials)==3
+          assert d["baseline_reproduced"]==all(not c["checks"]["full_cycle"] for c in trials[0]["cases"][:2])
+          assert d["physical_gate"]==(d["baseline_reproduced"] and chosen is not None)
+          assert not d["combined_motion_certified"] and not d["walking_certified"]
+          print("Drive capacity physical gate:",d["physical_gate"])
+          PY
       - name: Evaluate bounded stance-duty search against actual foot outline
         run: |
           set -euo pipefail
