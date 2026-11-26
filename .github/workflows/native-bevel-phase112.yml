@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 199
+name: Geometry Lab isolated operations Phase 200
 on:
   pull_request:
     paths:
@@ -843,6 +843,20 @@ jobs:
           assert len(d["rows"])==6 and all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
           assert sum(r["status"]=="proposal_verified" for r in d["rows"])==1
           assert list(Path("results").glob("phase199_*.obj"))==[Path("results/phase199_repair_web.obj")]
+          PY
+      - name: Test bounded autonomous mounting-block fabrication workflow
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase200_mounting_block_workflow.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase200_mounting_block_workflow.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==8 and all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert sum(r["status"]=="direct" for r in d["rows"])==1
+          assert sum(r["status"]=="repaired" for r in d["rows"])==2
+          assert {p.name for p in Path("results").glob("phase200_*.obj")}=={"phase200_direct.obj","phase200_repair_web.obj","phase200_repair_outer.obj"}
           PY
       - uses: actions/upload-artifact@v4
         if: always()
