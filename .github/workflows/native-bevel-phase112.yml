@@ -69,6 +69,41 @@ jobs:
           print(json.dumps(out))
           assert out["measured"]==252,"Native measurements incomplete; see artifact"
           PY
+      - name: Render frozen matched comparison arms
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase115_visual.py
+      - name: Verify all visual evidence and build contact sheets
+        run: |
+          python -m pip install pillow==11.3.0
+          python - <<'PY'
+          import json, hashlib
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          p=Path("results/visual")
+          d=json.loads((p/"manifest.json").read_text())
+          assert d["render_count"]==72 and len(d["images"])==72
+          imgs={(x["case"],x["arm"],x["level"]):x for x in d["images"]}
+          cases=sorted({x["case"] for x in d["images"]})
+          assert len(cases)==12 and len(imgs)==72
+          for case in cases:
+              sheet=Image.new("RGB",(3*384,2*414+30),(28,28,28))
+              draw=ImageDraw.Draw(sheet)
+              draw.text((12,8),case,fill="white")
+              for j,level in enumerate((0,2)):
+                  for i,arm in enumerate(("native1","native6","custom")):
+                      rec=imgs[case,arm,level]
+                      path=p/rec["filename"]
+                      assert hashlib.sha256(path.read_bytes()).hexdigest()==rec["sha256"]
+                      im=Image.open(path).convert("RGB")
+                      assert im.size==(384,384)
+                      assert max(hi-lo for lo,hi in im.getextrema())>20
+                      x,y=i*384,30+j*414
+                      draw.text((x+8,y+5),f"{arm} | L{level} | {rec['base_faces']} base faces",fill="white")
+                      sheet.paste(im,(x,y+30))
+              sheet.save(p/f"{case}_sheet.png")
+          print("PHASE115 VERIFIED",len(imgs),"renders",len(cases),"sheets")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
