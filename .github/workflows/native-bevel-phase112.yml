@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 186
+name: Geometry Lab isolated operations Phase 187
 on:
   pull_request:
     paths:
@@ -656,6 +656,21 @@ jobs:
           assert d["complete"] and d["native_executed"] and not d["approved"]
           assert len(d["rows"])==36 and all(r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
           print("Matched",sum(r["matched"] for r in d["rows"]),"/36")
+          PY
+      - name: Recognize irregular cylinder side patches without aligned rings
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase187_irregular_side_patches.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase187_irregular_side_patches.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==33 and all(r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/33")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
