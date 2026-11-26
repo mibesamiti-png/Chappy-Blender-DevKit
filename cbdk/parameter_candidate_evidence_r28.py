@@ -266,6 +266,10 @@ def reduce_candidate_evidence(trials, claimed_history, *, run_id, blender_versio
         for mapping in (allowed_candidates, measured):
             if type(mapping) is not dict or not set(mapping) <= set(TRIALS[:budget]):
                 _fail("trial_order_mismatch")
+        for trial_id, allowed in allowed_candidates.items():
+            expected, _ = _fixed_candidate(source_bytes, TRIALS.index(trial_id))
+            if type(allowed) is not bytes or allowed != expected:
+                _fail("fixed_candidate_mismatch")
         refs = {} if references is None else _reference_rows(references, identity)
         missing = []
         if set(refs) != set(REFERENCES):
@@ -302,8 +306,35 @@ def reduce_candidate_evidence(trials, claimed_history, *, run_id, blender_versio
             # An incomplete trace must not carry a target/adoption claim.
             if claimed_history is not None:
                 _record(claimed_history, HISTORY_FIELDS)
-                if claimed_history["target_reached"] is not False or claimed_history["stop_reason"] == "target_reached":
+                if (type(claimed_history["budget"]) is not int or claimed_history["budget"] != budget
+                        or type(claimed_history["rows"]) is not list
+                        or len(claimed_history["rows"]) > len(trials)):
+                    _fail("history_mismatch")
+                if (claimed_history["target_reached"] is not False
+                        or claimed_history["stop_reason"] == "target_reached"):
                     _fail("premature_target")
+                best = "baseline"
+                for index, row in enumerate(claimed_history["rows"]):
+                    _record(row, ROW_FIELDS)
+                    decision = row["decision"]
+                    if decision == "observed_target_reached":
+                        _fail("premature_target")
+                    if (type(decision) is not str or decision not in (
+                            "target_regression", "protected_part_regression", "observed_improvement",
+                            "uncertain_no_strict_improvement")
+                            or row["trial_id"] != TRIALS[index] or row["best_before"] != best
+                            or any(not _number(row[k]) or row[k] < 0 for k in
+                                   ("generated_score", "imported_score"))):
+                        _fail("history_mismatch")
+                    if decision == "observed_improvement":
+                        best = TRIALS[index]
+                    if row["best_after"] != best:
+                        _fail("history_mismatch")
+                if (claimed_history["best_id"] != best or claimed_history["stop_reason"] not in
+                        ("incomplete", "budget_exhausted")
+                        or (claimed_history["stop_reason"] == "budget_exhausted"
+                            and len(claimed_history["rows"]) != budget)):
+                    _fail("history_mismatch")
             return _summary("incomplete", missing, identity)
         replayed = _replay(refs["baseline"], refs["sphere_radius_changed"], verified_candidates, budget)
         _verify_history(claimed_history, replayed)
