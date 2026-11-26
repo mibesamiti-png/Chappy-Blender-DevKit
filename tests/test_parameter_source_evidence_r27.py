@@ -70,8 +70,21 @@ class SourceEvidenceTests(unittest.TestCase):
             self.assertEqual(report["status"], status)
 
     def test_independent_pinned_bytes_and_reverse(self):
-        source = (ROOT / "fixtures/cbdk_parameter_experiment.py").read_bytes()
+        path = ROOT / "fixtures/cbdk_parameter_experiment.py"
+        checkout = path.read_bytes()
+        source = checkout
+        # Windows Git checkout may materialize the exact tracked LF fixture
+        # with CRLF. Only this static test can recover canonical test bytes;
+        # the actual runtime reducer must still reject the raw CRLF digest.
+        crlf_sha = "eec6968b7cb5208e0af92279b7b32dc0c8d617ebad6d1cdbb5ca39cc64d1918f"
+        if hashlib.sha256(checkout).hexdigest() == crlf_sha:
+            source = checkout.replace(b"\r\n", b"\n")
+            self.assertEqual(source.replace(b"\n", b"\r\n"), checkout)
         self.assertEqual(hashlib.sha256(source).hexdigest(), SOURCE_SHA256)
+        self.assertEqual(hashlib.sha256(source.replace(b"\n", b"\r\n")).hexdigest(), crlf_sha)
+        self.blocked(reduce(*observations(), source_sha256=crlf_sha),
+                     "source_digest_mismatch", "rejected")
+        self.assertEqual(path.read_bytes(), checkout)
         self.assertEqual(source.count(b"0.75"), 1)
         self.assertEqual(source[BYTE_OFFSET:BYTE_OFFSET+4], b"0.75")
         candidate = source[:BYTE_OFFSET] + b"1.15" + source[BYTE_OFFSET+4:]
