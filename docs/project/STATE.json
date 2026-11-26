@@ -7,7 +7,7 @@
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "v0.20 R25 #175 dev 1f8235589363e7ddbee89b6fff3599402e1d6aec 独立7CI＋追加Blender成功。F020-01/02/03限定3/3受入、通常Undo/実GUI/公式installer/権利/配布未確認。#125 rev19 paused、節目同期中。正式v0.17.0/main/last_verified維持。"
+    "milestone": "v0.20節目#176独立7CI・Notion同期成功。v0.21 R26限定割当候補（F021-01、既存AST/実測効果の同一固定fixture照合）。#125 rev19 paused、正式ゲート前実装禁止。正式v0.17.0/main/last_verified維持。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [
@@ -1109,6 +1109,11 @@
       "id": "DEC-090",
       "decision": "R25の同一生成物の段階証拠と明示Undoを限定受入し、v0.20の限定3目標を区切る",
       "note": "R25 #175 dev 1f8235589363e7ddbee89b6fff3599402e1d6aec 独立7CI＋追加push Blender成功。C #174/D #173/A #175各5CI含む最終22/22＋追加1、15 native jobs、最終再試行0。C初回cleanup参照エラー修正、D初回CI未発火は回帰追加。固定read/edit/grouped 3版×6工程54/54、SHA一致。grouped明示Undo/Redo単一/複数・接続/選択復元・取消/解除成功。通常背景Undo unavailable/Redo not_attempted、GUI未検証。失敗/欠落/矛盾はPython負例。F020-03とv0.20限定3/3受入。#125 rev19 paused、B/C/D待機。公式installer/任意コード/権利/配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持、v0.21/R26自動開始なし。詳細はPROGRESS・future JSON参照。"
+    },
+    {
+      "id": "DEC-091",
+      "decision": "既承認v0.21のF021-01をR26限定割当候補にする",
+      "note": "v0.20節目#176 dev 972736be66515f558c2ba9ef07ba6c5947047118 独立7CI成功、Notion同期済み、最終35/35＋追加push1。既承認方針に従いv0.21 F021-01のR26限定割当候補を作成。旧GLB-012の7 variant・GLB-021 AST/測定元照合・GLB-022比較/停止を再利用。B静的候補、C実登録/読値/効果、D厳格照合、A同一固定source/run/版の診断縦断。正式割当統合・独立7CI・#125 rev20 active前は着手禁止。実ユーザー/任意コード/自動適用/配布なし。44要件/24 NEXT・正式版/main/last_verified維持、GL/DIL独立。F021-02/03未着手。"
     }
   ],
   "last_verified": {

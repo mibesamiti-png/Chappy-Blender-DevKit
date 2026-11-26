@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "plan_id": "CBDK-FUTURE-019-022",
-  "status": "ACTIVE_V020",
+  "status": "ACTIVE_V021",
   "active": true,
   "approved_on": "2026-11-07",
   "approval_basis": "User explicitly approved the future plan and transition policy; finish automatable v0.18 work and record remaining human blockers first.",
@@ -53,7 +53,7 @@
     },
     {
       "version": "0.21",
-      "status": "not_started",
+      "status": "in_progress",
       "goal": "Safe repair and improvement candidate experiments",
       "candidates": [
         "Strengthen diagnostic-to-setting/code hypotheses",
@@ -150,6 +150,18 @@
         "verified_dev_sha": "1f8235589363e7ddbee89b6fff3599402e1d6aec",
         "blender_run": 45722761515,
         "scope": "R23 read/edit/grouped trusted generation and same ZIP official validate, isolated manual local repo bl_ext enable/draw/read/edit/disable; R24 fixed dependency closure/order/rollback and conservative manifest range rejection; R25 actual six-stage observations across three fixed recipes and Blender 4.4.3/4.5.15/5.2.1 (9 cases, 54 gates), strict case/version/run/SHA consistency and synthetic missing/failure/mismatch controls. Grouped same registered ZIP explicit ed.undo_push single/multi Undo/Redo, exact topology/selection/cancel and cleanup, unchanged SHA. Normal background Undo unavailable/Redo not_attempted; actual GUI, official installer, arbitrary inputs, authenticity, rights and distribution unverified. Scoped phase goals accepted, not full product completion."
+      }
+    },
+    "0.21": {
+      "F021-01": {
+        "status": "allocation_candidate",
+        "scope": "R26 fixed existing parameter fixture, two FloatProperties, seven existing GLB variants. Static declaration/geometry flow, native actual RNA registration/readback and measured target/unrelated effects, fixed identity-bound evidence, real radius diagnosis on three Blender versions. No implementation before allocation merge, independent seven CI and dispatch."
+      },
+      "F021-02": {
+        "status": "not_started"
+      },
+      "F021-03": {
+        "status": "not_started"
       }
     }
   },
@@ -282,5 +294,21 @@
     "initial_d": "Blender path filter omitted; existing manifest diagnostic regression expanded",
     "dispatch": "revision 19 paused; v0.21 and R26 not started",
     "notion": "pending milestone sync after verified docs integration"
+  },
+  "v021_transition_evidence": {
+    "date": "2026-11-26",
+    "verified_base_sha": "972736be66515f558c2ba9ef07ba6c5947047118",
+    "workflow_runs": {
+      "python": 45725920249,
+      "windows": 45725920191,
+      "blender": 45725920198,
+      "chromium": 45725920203,
+      "handoff": 45725920193,
+      "kit": 45725920338,
+      "skill": 45725920526
+    },
+    "pr25_draft": true,
+    "scope": "v0.20 scoped milestones 3/3 accepted; GUI/normal Undo/installer/arbitrary source/rights/distribution unverified. Existing Notion synchronized. No release.",
+    "dispatch": "R26 candidate only; merge and independent seven CI plus revision 20 active before implementation."
   }
 }
