@@ -15,29 +15,31 @@ from phase208_motor_contact import body,constraint
 from phase206_hybrid_machine import ring,BORE,key_check
 from phase210_inverse_cam import profile,law,ROLLER
 FPS=60;FRAMES=481;BASE=2.5
-def setup(offset,enabled):
+def setup(offset,enabled,kind='lift',base=BASE,start_phase=0.,upper=1.):
+    initial=base+float(law(start_phase,kind))
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene
     sc.gravity=(-9.81,0.,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES
     bpy.ops.mesh.primitive_cube_add(size=.5,location=(0,0,-5))
     anchor=body(bpy.context.object,True);anchor.name='ideal stationary guide and bearing reference'
     anchor.hide_render=True
-    c=profile('lift',BASE)
-    mesh,a=ring('inverse lift cam',[tuple(v) for v in c],[tuple(v*BORE/max(abs(v))) for v in c])
+    c=profile(kind,base)
+    mesh,a=ring('inverse '+kind+' cam',[tuple(v) for v in c],[tuple(v*BORE/max(abs(v))) for v in c])
     assert a['passed'] and key_check(mesh)
-    cam=bpy.data.objects.new('motor driven lift cam',mesh);sc.collection.objects.link(cam)
+    cam=bpy.data.objects.new('motor driven '+kind+' cam',mesh);sc.collection.objects.link(cam)
+    cam.rotation_euler.z=-start_phase
     body(cam);cam.rigid_body.mass=3.;cam.color=(.8,.55,.15,1)
     constraint('ideal cam bearing','HINGE',anchor,cam,(0.,0.,0.))
     motor=constraint('only motor','MOTOR',anchor,cam,(0.,0.,0.),(0.,-math.pi/2,0.))
     motor.use_motor_lin=False;motor.use_motor_ang=enabled
     motor.motor_ang_target_velocity=1.;motor.motor_ang_max_impulse=10.
-    bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=ROLLER,depth=.24,location=(BASE,0.,offset))
+    bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=ROLLER,depth=.24,location=(initial,0.,offset))
     roller=body(bpy.context.object);roller.name='unpowered rolling follower'
     roller.rigid_body.collision_shape='CONVEX_HULL';roller.rigid_body.mass=.25
     roller.rigid_body.friction=.2;roller.color=(.2,.55,.85,1)
     # X translation and Z spin free within generous stops, all other DOFs locked.
-    guide=constraint('ideal linear guide with free roller spin','GENERIC',anchor,roller,(BASE,0.,offset))
-    guide.use_limit_lin_x=True;guide.limit_lin_x_lower=-.10;guide.limit_lin_x_upper=1.
+    guide=constraint('ideal linear guide with free roller spin','GENERIC',anchor,roller,(initial,0.,offset))
+    guide.use_limit_lin_x=True;guide.limit_lin_x_lower=-.10;guide.limit_lin_x_upper=upper
     for axis in ('y','z'):
         setattr(guide,'use_limit_lin_'+axis,True)
         setattr(guide,'limit_lin_'+axis+'_lower',0.)
