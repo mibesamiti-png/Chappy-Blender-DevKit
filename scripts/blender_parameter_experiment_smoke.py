@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
+import uuid
 
 import bpy
 
@@ -17,7 +19,15 @@ PROJECT = Path(__file__).resolve().parents[1]
 if str(PROJECT) not in sys.path:
     sys.path.insert(0, str(PROJECT))
 
+FIXTURE_SOURCE = PROJECT / "fixtures/cbdk_parameter_experiment.py"
+_FIXTURE_BYTES = FIXTURE_SOURCE.read_bytes()
+_SOURCE_SHA256 = hashlib.sha256(_FIXTURE_BYTES).hexdigest()
 from fixtures import cbdk_parameter_experiment as fixture  # noqa: E402
+from scripts.parameter_r26_observation import (  # noqa: E402
+    CASE_ID, PROPERTIES, build_native_observation, run_identity,
+)
+if Path(fixture.__file__).resolve() != FIXTURE_SOURCE.resolve() or FIXTURE_SOURCE.read_bytes() != _FIXTURE_BYTES:
+    raise AssertionError("R26 fixed source identity changed during import")
 from cbdk.parameter_experiment_metrics import (  # noqa: E402
     vertex_displacement, radial_distribution_error,
 )
@@ -89,35 +99,86 @@ def _assert_real_effects(snapshots: dict) -> None:
         raise AssertionError("Cube bounds changed; bevel fixture should preserve dimensions")
 
 
-def main() -> None:
-    if "--" not in sys.argv:
-        raise RuntimeError("Expected output folder after --")
-    args = sys.argv[sys.argv.index("--") + 1:]
-    if len(args) != 1:
-        raise RuntimeError("Expected exactly one output folder")
-    root = Path(args[0]).resolve()
-    root.mkdir(parents=True, exist_ok=True)
+def _registered_properties():
+    """Observe actual RNA and the fixed Scene instance, not annotations."""
+    scene = bpy.context.scene
+    pointer = bpy.types.Scene.bl_rna.properties.get("cbdk_parameter_experiment")
+    expected = fixture.CBDKParameterExperimentSettings
+    if (pointer is None or pointer.type != "POINTER" or not expected.is_registered
+            or pointer.fixed_type.identifier != expected.bl_rna.identifier):
+        return {name: False for name in PROPERTIES}
+    settings = getattr(scene, "cbdk_parameter_experiment", None)
+    if (settings is None or not isinstance(settings, expected)
+            or settings.id_data != scene or settings.bl_rna.identifier != expected.bl_rna.identifier):
+        return {name: False for name in PROPERTIES}
+    result = {}
+    for name in PROPERTIES:
+        prop = settings.bl_rna.properties.get(name)
+        declared = expected.bl_rna.properties.get(name)
+        result[name] = bool(prop is not None and declared is not None
+                            and prop.type == declared.type == "FLOAT"
+                            and not prop.is_array and not declared.is_array
+                            and prop.identifier == declared.identifier == name)
+    return result
 
+
+def _cleanup_verified():
+    return (not hasattr(bpy.types.Scene, "cbdk_parameter_experiment")
+            and bpy.types.Scene.bl_rna.properties.get("cbdk_parameter_experiment") is None
+            and all(not cls.is_registered for cls in fixture.CLASSES)
+            and all(not hasattr(bpy.types, cls.__name__) for cls in fixture.CLASSES)
+            and not any(_registered_properties().values()))
+
+
+def run(root: Path, *, run_id=None, expected_source_sha256=None, expected_blender_version=None):
+    """Fixed internal experiment; parent supplies identity, never source/code."""
+    version = ".".join(map(str, bpy.app.version))
+    identity, origin = run_identity(run_id, expected_source_sha256, expected_blender_version,
+                                    source_sha256=_SOURCE_SHA256, blender_version=version,
+                                    independent_id=uuid.uuid4().hex)
+    if FIXTURE_SOURCE.read_bytes() != _FIXTURE_BYTES:
+        raise AssertionError("R26 fixed fixture source changed before execution")
+    root.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
+    declared = fixture.CBDKParameterExperimentSettings.__annotations__
+    if not all(name in declared for name in PROPERTIES) or not _cleanup_verified():
+        raise AssertionError("R26 unregistered declaration negative control failed")
     fixture.register()
     generated = {}
     imported = {}
+    readbacks = {}
+    glb_hashes = {}
     try:
         for variant, radius, bevel_width in VARIANTS:
             _clean_scene()
+            registered = _registered_properties()
             settings = bpy.context.scene.cbdk_parameter_experiment
             settings.sphere_radius = radius
             settings.bevel_width = bevel_width
+            before = {name: float(getattr(settings, name)) for name in PROPERTIES}
+            if not all(registered.values()):
+                raise AssertionError("R26 expected registered RNA/Scene instance missing")
+            if any(abs(before[name] - value) > 1e-6 for name, value in
+                   (("sphere_radius", radius), ("bevel_width", bevel_width))):
+                raise AssertionError("R26 assigned RNA value did not read back")
             status = bpy.ops.mesh.cbdk_parameter_experiment_build()
             if "FINISHED" not in status:
                 raise AssertionError("Trusted fixture operator did not finish")
+            after = {name: float(getattr(bpy.context.scene.cbdk_parameter_experiment, name))
+                     for name in PROPERTIES}
+            readbacks[variant] = {"registered": registered, "before": before, "after": after}
             generated[variant] = _snapshot()
             glb = root / f"{variant}.glb"
             bpy.ops.export_scene.gltf(filepath=str(glb), export_format="GLB")
             if not glb.is_file() or glb.stat().st_size < 100:
                 raise RuntimeError("Trusted fixture did not produce GLB")
+            digest = hashlib.sha256(glb.read_bytes()).hexdigest()
             _clean_scene()
-            bpy.ops.import_scene.gltf(filepath=str(glb))
+            if bpy.ops.import_scene.gltf(filepath=str(glb)) != {"FINISHED"}:
+                raise AssertionError("R26 fixed GLB import failed")
+            if hashlib.sha256(glb.read_bytes()).hexdigest() != digest:
+                raise AssertionError("R26 GLB bytes changed during import")
+            glb_hashes[variant] = digest
             imported[variant] = _snapshot()
             for name in generated[variant]:
                 original = generated[variant][name]["world_dimensions"]
@@ -127,8 +188,14 @@ def main() -> None:
         _assert_real_effects(generated)
         _assert_real_effects(imported)
     finally:
-        _clean_scene()
-        fixture.unregister()
+        try:
+            _clean_scene()
+        finally:
+            fixture.unregister()
+    cleanup = _cleanup_verified()
+    unchanged = FIXTURE_SOURCE.read_bytes() == _FIXTURE_BYTES
+    if not cleanup or not unchanged:
+        raise AssertionError("R26 fixture cleanup/source unchanged verification failed")
 
     # Only synthetic repository-owned meshes enter this metric. Drop raw XYZ
     # coordinates from the final JSON: report only aggregate evidence.
@@ -259,6 +326,36 @@ def main() -> None:
     print("CBDK_PARAMETER_EXPERIMENT_PASS " +
           json.dumps({"blender_version": bpy.app.version_string,
                       "variants": len(VARIANTS), "report": destination.name}))
+    observation = build_native_observation(identity, _SOURCE_SHA256, version,
+                                          readbacks, displacement, direction_evidence,
+                                          cleanup_verified=cleanup, source_unchanged=unchanged)
+    if not all(all(value is True for key, value in row.items() if key != "property")
+               for row in observation["properties"]):
+        raise AssertionError("R26 native observation contains an incomplete property")
+    (root / "parameter_experiment_r26_native.json").write_text(
+        json.dumps(observation, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    details = {"case_id": CASE_ID, "run_id": identity, "source_sha256": _SOURCE_SHA256,
+               "blender_version": version, "run_id_origin": origin,
+               "variant_readbacks": readbacks, "glb_sha256": glb_hashes,
+               "legacy_report_sha256": hashlib.sha256(destination.read_bytes()).hexdigest(),
+               "unregistered_negative_control": True}
+    (root / "parameter_experiment_r26_details.json").write_text(
+        json.dumps(details, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    print("CBDK_R26_PARAMETER_NATIVE_PASS " + json.dumps(observation, sort_keys=True), flush=True)
+    print("CBDK_R26_PARAMETER_NATIVE_DETAILS " + json.dumps(details, sort_keys=True), flush=True)
+    return observation
+
+
+def main() -> None:
+    if "--" not in sys.argv:
+        raise RuntimeError("Expected output folder after --")
+    args = sys.argv[sys.argv.index("--") + 1:]
+    if len(args) != 1:
+        raise RuntimeError("Expected exactly one output folder")
+    run(Path(args[0]).resolve(),
+        run_id=os.environ.get("CBDK_R26_RUN_ID"),
+        expected_source_sha256=os.environ.get("CBDK_R26_SOURCE_SHA256"),
+        expected_blender_version=os.environ.get("CBDK_R26_BLENDER_VERSION"))
 
 
 if __name__ == "__main__":
