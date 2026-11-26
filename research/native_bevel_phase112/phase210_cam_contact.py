@@ -15,7 +15,7 @@ from phase208_motor_contact import body,constraint
 from phase206_hybrid_machine import ring,BORE,key_check
 from phase210_inverse_cam import profile,law,ROLLER
 FPS=60;FRAMES=481;BASE=2.5
-def setup(offset,enabled,kind='lift',base=BASE,start_phase=0.,upper=1.):
+def setup(offset,enabled,kind='lift',base=BASE,start_phase=0.,upper=1.,impulse=10.):
     initial=base+float(law(start_phase,kind))
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene
@@ -32,7 +32,7 @@ def setup(offset,enabled,kind='lift',base=BASE,start_phase=0.,upper=1.):
     constraint('ideal cam bearing','HINGE',anchor,cam,(0.,0.,0.))
     motor=constraint('only motor','MOTOR',anchor,cam,(0.,0.,0.),(0.,-math.pi/2,0.))
     motor.use_motor_lin=False;motor.use_motor_ang=enabled
-    motor.motor_ang_target_velocity=1.;motor.motor_ang_max_impulse=10.
+    motor.motor_ang_target_velocity=1.;motor.motor_ang_max_impulse=impulse
     bpy.ops.mesh.primitive_cylinder_add(vertices=128,radius=ROLLER,depth=.24,location=(initial,0.,offset))
     roller=body(bpy.context.object);roller.name='unpowered rolling follower'
     roller.rigid_body.collision_shape='CONVEX_HULL';roller.rigid_body.mass=.25
