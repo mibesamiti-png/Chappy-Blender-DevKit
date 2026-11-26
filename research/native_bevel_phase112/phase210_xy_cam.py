@@ -34,7 +34,7 @@ def limits(c,linear,angular):
                 setattr(c,'limit_'+key+'_lower',lo)
                 setattr(c,'limit_'+key+'_upper',hi)
     return c
-def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0,groove=False):
+def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0,groove=False,backed=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene
     sc.gravity=(-9.81,-9.81,0.) if spring is None else (0.,-9.81,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES+delay
@@ -59,6 +59,7 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
             for kp in fc.keyframe_points:kp.interpolation='CONSTANT'
         motor.motor_ang_target_velocity=0.
     assert preload>=0 and (preload==0 or (spring is not None and spring>0))
+    assert not backed or groove
     assert not groove or (spring==0. and preload==0 and delay==0)
     items=[];zero={a:(0.,0.) for a in 'xyz'}
     for kind,axis,base,z,phi in [('stride','x',7.,0.,0.),('lift','y',2.5,1.,math.pi/2)]:
@@ -67,14 +68,21 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
         # follower; the square bore is invariant under this 90-degree index.
         rot=np.array([[math.cos(phi),-math.sin(phi)],[math.sin(phi),math.cos(phi)]])
         xy=c@rot.T
-        m,a=ring(kind+' cam',[tuple(v) for v in xy],[tuple(v*BORE/max(abs(v))) for v in xy])
+        back_side=1. if axis=='x' else -1.
+        if backed:
+            from phase211_backed_groove import backed_mesh
+            m,a,xy,backed_inner=backed_mesh(kind,base,duty,rot,back_side)
+        else:
+            m,a=ring(kind+' cam',[tuple(v) for v in xy],[tuple(v*BORE/max(abs(v))) for v in xy])
         assert a['passed'] and key_check(m)
         cam=bpy.data.objects.new(kind+' keyed cam',m);sc.collection.objects.link(cam)
         cam.location=(0.,0.,z);cam.rotation_euler.z=-start
-        body(cam);cam.rigid_body.mass=3.;cam.color=(.8,.55,.15,1) if axis=='y' else (.25,.55,.8,1)
+        body(cam);cam.rigid_body.mass=3.5 if backed else 3.;cam.color=(.8,.55,.15,1) if axis=='y' else (.25,.55,.8,1)
         constraint(kind+' rigid shaft coupling','FIXED',shaft,cam,(0.,0.,z))
         wall_ob=None;wall_xy=None
-        if groove:
+        if backed:
+            wall_ob=cam;wall_xy=backed_inner
+        elif groove:
             from phase211_groove_profile import wall
             outer,inner,qa=wall(kind,base,duty)
             assert qa['passed'],qa
@@ -110,7 +118,7 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
                 spring_anchor=weight
             c=limits(constraint('passive stride return spring','GENERIC_SPRING',spring_anchor,slide,spos),{}, {})
             c.spring_type='SPRING2';c.use_spring_x=True;c.spring_stiffness_x=spring;c.spring_damping_x=.5
-        items.append(dict(kind=kind,axis=axis,base=base,z=z,rz=rz,initial=initial,cam=cam,roller=roller,slide=slide,xy=xy,weight=weight,weight_origin=weight_origin,wall_ob=wall_ob,wall_xy=wall_xy))
+        items.append(dict(kind=kind,axis=axis,base=base,z=z,rz=rz,initial=initial,cam=cam,roller=roller,slide=slide,xy=xy,weight=weight,weight_origin=weight_origin,wall_ob=wall_ob,wall_xy=wall_xy,back_side=back_side))
     outpos=(items[0]['initial'],items[1]['initial'],3.5)
     carriage=box('physical XY output carriage',outpos,(.32,.32,.25),.1);carriage.color=(.9,.3,.2,1)
     limits(constraint('output planar guide','GENERIC',anchor,carriage,outpos),{'z':(0.,0.)},zero)
@@ -126,13 +134,13 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
     objs.extend(it['weight'] for it in items if it['weight'] is not None)
     objs.extend(it['wall_ob'] for it in items if it['wall_ob'] is not None)
     cs=[o.rigid_body_constraint for o in sc.objects if o.rigid_body_constraint]
-    assert len(cs)==11+int(spring is not None and spring>0)+int(preload>0)+2*int(groove) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
+    assert len(cs)==11+int(spring is not None and spring>0)+int(preload>0)+2*int(groove and not backed) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
     assert all(o.animation_data is None and not o.rigid_body.kinematic for o in objs)
     return sc,shaft,carriage,items
 def wrap(a):return math.atan2(math.sin(a),math.cos(a))
 def az(M):return math.atan2(M[1][0],M[0][0])
-def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0,groove=False):
-    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring,preload,delay,groove)
+def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0,groove=False,backed=False):
+    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring,preload,delay,groove,backed)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/('phase210_xy_'+name+'.blend')))
     rows=[];last=None;travel=0.
     for f in range(1,FRAMES+delay+1):
@@ -166,6 +174,12 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
                 row[kind+'_outer_gap']=nearest(np.array((local_g.x,local_g.y)),it['wall_xy'])-ROLLER
                 row[kind+'_outer_sync']=abs(wrap(az(G)-a))
                 row[kind+'_outer_drift']=(G.translation-Vector((0.,0.,it['z']))).length
+                if backed:
+                    from phase211_backed_groove import FLOOR
+                    # Conservative axial projection of the actual cylinder, including tilt.
+                    rel=G.inverted()@B
+                    reach=.12*abs(rel[2][2])+ROLLER*math.hypot(rel[2][0],rel[2][1])
+                    row[kind+'_back_gap']=FLOOR-it['back_side']*local_g.z-reach
         it=items[0]
         if it['weight'] is not None:
             W=mat(it['weight']);dw=W.translation-Vector(it['weight_origin'])
@@ -211,6 +225,8 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
         checks['outer_drift']=all(peak(k+'_outer_drift')<=.015 for k in amp)
         if name=='engaged':
             checks['outer_clearance']=all(peak(k+'_outer_gap')<=.025 for k in amp)
+        if backed and not separated:
+            checks['backplate_clearance']=all(min(r[k+'_back_gap'] for r in rows)>=.02 for k in amp)
     startup_checks={}
     if delay:
         # Do not waive the startup tracking or constraint gates. In separated
@@ -223,7 +239,7 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
                 startup_tracking=max(abs(r[k+'_error']) for r in startup for k in amp)<=.025,
                 preload_ready=-startup[-1]['preload_anchor_x']>=.9*preload and startup[-1]['spring_force_proxy']>=2.)
         checks.update(startup_checks)
-    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,preload=preload,delay=delay,groove=groove,travel=travel,amplitude=amp,
+    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,preload=preload,delay=delay,groove=groove,backed=backed,travel=travel,amplitude=amp,
         max_xy_error=peak('xy_error'),max_axis_error={k:peak(k+'_error') for k in amp},
         max_sync=sync,max_coupler_error=coupler,max_drift=drift,max_contact_gap=gaps,
         max_stance_height=dwell,checks=checks,passed=all(checks.values()),rows=all_rows)
