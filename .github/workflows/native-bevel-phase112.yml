@@ -962,6 +962,39 @@ jobs:
           assert all(d["controls"].values())
           assert len(list(p.glob("phase207_*.obj")))==32 and (p/"phase207_walking_machine.blend").stat().st_size>0
           PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-bevel-phase112-${{ github.sha }}
+          path: research/native_bevel_phase112/results/
+          if-no-files-found: warn
+          retention-days: 14
+  phase208-dynamics:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned publisher Blender archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
       - name: Verify motor-only gear contact with separated and motor-off controls
         run: |
           set -euo pipefail
@@ -979,7 +1012,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: native-bevel-phase112-${{ github.sha }}
-          path: research/native_bevel_phase112/results/
+          name: phase208-dynamics-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase208_*
           if-no-files-found: warn
           retention-days: 14
