@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 202
+name: Geometry Lab isolated operations Phase 203
 on:
   pull_request:
     paths:
@@ -883,6 +883,19 @@ jobs:
           assert len(d["rows"])==5 and all(r["matched"] and r["source_unchanged"] for r in d["rows"])
           assert sum(r["status"]=="complete" for r in d["rows"])==1
           assert {p.name for p in Path("results").glob("phase202_*.obj")}=={"phase202_rounded.obj"}
+          PY
+      - name: Fabricate ribbed rounded L bracket
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase203_ribbed_bracket.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase203_ribbed_bracket.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==6 and all(r["matched"] and r["source_unchanged"] for r in d["rows"])
+          assert sum(r["status"]=="complete" for r in d["rows"])==1
+          assert {p.name for p in Path("results").glob("phase203_*.obj")}=={"phase203_ribbed.obj"}
           PY
       - uses: actions/upload-artifact@v4
         if: always()
