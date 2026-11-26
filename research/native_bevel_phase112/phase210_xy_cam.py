@@ -34,7 +34,7 @@ def limits(c,linear,angular):
                 setattr(c,'limit_'+key+'_lower',lo)
                 setattr(c,'limit_'+key+'_upper',hi)
     return c
-def setup(separated,enabled):
+def setup(separated,enabled,substeps=16):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene
     sc.gravity=(-9.81,-9.81,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES
@@ -81,7 +81,7 @@ def setup(separated,enabled):
         # each slider is nonspinning, its constraint frame stays aligned.
         limits(constraint(it['kind']+' output cross-slide','GENERIC',it['slide'],carriage,outpos),
             {it['axis']:(0.,0.)},{})
-    world=sc.rigidbody_world;world.substeps_per_frame=16;world.solver_iterations=100
+    world=sc.rigidbody_world;world.substeps_per_frame=substeps;world.solver_iterations=100
     world.point_cache.frame_start=1;world.point_cache.frame_end=FRAMES
     bpy.context.view_layer.update();sc.frame_set(1)
     objs=[shaft,carriage]+[it[k] for it in items for k in ('cam','roller','slide')]
@@ -91,8 +91,8 @@ def setup(separated,enabled):
     return sc,shaft,carriage,items
 def wrap(a):return math.atan2(math.sin(a),math.cos(a))
 def az(M):return math.atan2(M[1][0],M[0][0])
-def run_case(name,separated,enabled,dest):
-    sc,shaft,carriage,items=setup(separated,enabled)
+def run_case(name,separated,enabled,dest,substeps=16):
+    sc,shaft,carriage,items=setup(separated,enabled,substeps)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/('phase210_xy_'+name+'.blend')))
     rows=[];last=None;travel=0.
     for f in range(1,FRAMES+1):
@@ -116,7 +116,10 @@ def run_case(name,separated,enabled,dest):
                 kind+'_gap':gap,kind+'_axial':abs(local.z),
                 kind+'_sync':abs(wrap(az(A)-a)),kind+'_cam_drift':(A.translation-Vector((0.,0.,it['z']))).length,
                 kind+'_guide_drift':math.hypot(B.translation[1-i],B.translation.z-it['rz']),
-                kind+'_slider_drift':abs(D.translation[1-i])})
+                kind+'_slider_drift':abs(D.translation[1-i]),
+                kind+'_slide_displacement':float(D.translation[i]-it['initial']),
+                kind+'_roller_slide_error':float(B.translation[i]-D.translation[i]),
+                kind+'_slide_output_error':float(O.translation[i]-D.translation[i])})
         row['xy_error']=math.hypot(row['stride_error'],row['lift_error'])
         rows.append(row)
     peak=lambda k:max(abs(r[k]) for r in rows)
@@ -144,7 +147,7 @@ def run_case(name,separated,enabled,dest):
         # brake is added; reject sustained rotation or large output motion.
         checks.update(no_sustained_drive=abs(travel)<=.4,
             no_large_output=amp['stride']<=.25 and amp['lift']<=.15)
-    out=dict(name=name,separated=separated,enabled=enabled,travel=travel,amplitude=amp,
+    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,travel=travel,amplitude=amp,
         max_xy_error=peak('xy_error'),max_axis_error={k:peak(k+'_error') for k in amp},
         max_sync=sync,max_coupler_error=coupler,max_drift=drift,max_contact_gap=gaps,
         max_stance_height=dwell,checks=checks,passed=all(checks.values()),rows=rows)
