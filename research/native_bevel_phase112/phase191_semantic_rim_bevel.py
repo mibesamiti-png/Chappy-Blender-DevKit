@@ -22,7 +22,7 @@ def face_key(V,f):
     q=tuple(tuple(float(x) for x in V[i]) for i in f)
     return min(q[i:]+q[:i] for i in range(len(q)))
 def vec(v):return tuple(float(x) for x in v)
-def attempt(m,role,p,width):
+def attempt(m,role,p,width,observer=None):
     V,F=arrays(m);before=signature(V,F)
     def finish(reason,**kw):
         return dict(reason=reason,qualified=reason=='qualified',
@@ -68,6 +68,7 @@ def attempt(m,role,p,width):
             localized_new_vertices=bool(new_points) and all(float((np.asarray(v)-c)@a)>0 for v in new_points),
             localized_bevel_faces=local,changed=signature(W,G)!=before,
             volume_loss=1e-8*base['volume']<loss<=.05*base['volume'])
+        if observer is not None and all(checks.values()):observer(candidate)
         return finish('qualified' if all(checks.values()) else 'discarded',
             checks=checks,width=width,selected_edges=len(geom),bevel_faces=len(new_faces),
             source_volume=base['volume'],candidate_volume=post['volume'],
