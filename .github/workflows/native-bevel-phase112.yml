@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 180
+name: Geometry Lab isolated operations Phase 181
 on:
   pull_request:
     paths:
@@ -564,6 +564,21 @@ jobs:
           assert len(d["rows"])==20 and all(r["input_unchanged"] for r in d["rows"])
           assert len(d["decisions"])==12 and len(d["controls"])==3 and all(r["rejected"] for r in d["controls"])
           print("Matched decisions",sum(r["matched"] for r in d["decisions"]),"/12")
+          PY
+      - name: Verify bounded adaptive cylinder refinement
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase181_adaptive_cylinder_refinement.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase181_adaptive_cylinder_refinement.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==11 and all(r["input_unchanged"] and r["original_vertices_exact"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/11")
           PY
       - uses: actions/upload-artifact@v4
         if: always()
