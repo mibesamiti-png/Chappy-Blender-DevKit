@@ -18,7 +18,9 @@ and a separate frozen GL `research/geometry_lab` snapshot. The connector accepts
 only the reviewed ZIP digest and the four pinned GL source digests. No source
 is fetched automatically. CJM is extracted into a temporary local directory and
 imported without registering its addon. Do not load another CJM instance in the
-same Blender process. Use a fresh synthetic scene; origin cursor, Object mode,
+same Blender process. After providers load, changes to either resolved source path
+are refused; restart Blender to select other paths. This is session binding, not
+hot reload or same-path file-change detection. Use a fresh synthetic scene; origin cursor, Object mode,
 unit scale 1 are required. Coordinates are explicit internal world units, not
 a claim of millimetres or manufacturing fit.
 
@@ -46,7 +48,9 @@ scene invalidates adoption. PREFERRED permits changing that dimension only
 because every other dimension is fixed; the change remains explicit and visible.
 
 Interactive execution yields between the baseline and candidates. Cancel or Esc
-stops at the next boundary. One Boolean or detector invocation is synchronous;
+stops at the next boundary. Status stays RUNNING until the timer processes
+cancellation; new runs, adoption, rejection and restoration are refused meanwhile.
+Restore or retry explicitly after the previous operator ends. One Boolean or detector invocation is synchronous;
 this is not preemptive cancellation inside Blender. GL is bounded to 512 triangles
 per part, 200000 scanned pairs, cooperative 10 seconds. Unknown/timeout/missing
 results fail closed. A cleanup or restoration failure latches BLOCKED; no retry

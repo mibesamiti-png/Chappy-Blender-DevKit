@@ -19,6 +19,7 @@ from cbdk.joint_integration import proposals, review, score, verified_write
 
 ZIP_SHA = '91700f02210e03940eee38f1939f6a7d9778ed9406f902e9359f73bf5f4a88c1'
 PROVIDERS = None
+PROVIDER_PATHS = None
 TEMP = None
 RUNS = {}
 OWNED = False
@@ -29,13 +30,18 @@ def digest(value):
 
 
 def configure(zip_path, gl_root):
-    global PROVIDERS, TEMP
-    if PROVIDERS is not None: return
-    raw = Path(zip_path).read_bytes()
+    global PROVIDERS, PROVIDER_PATHS, TEMP
+    zip_path, root = Path(zip_path).resolve(), Path(gl_root).resolve()
+    requested = (zip_path, root)
+    if PROVIDERS is not None:
+        if requested != PROVIDER_PATHS:
+            raise ValueError('provider_paths_changed_restart_required')
+        return
+    raw = zip_path.read_bytes()
     if hashlib.sha256(raw).hexdigest() != ZIP_SHA: raise ValueError('local_provider_hash_mismatch')
     if 'chappy_joint_maker' in sys.modules: raise ValueError('external_provider_already_loaded')
     from experiments.team_a_staged.run_gl import verify
-    root = Path(gl_root).resolve(); verify(root)
+    verify(root)
     if 'cbdk_geometry' in sys.modules: raise ValueError('external_geometry_already_loaded')
     TEMP = tempfile.TemporaryDirectory(prefix='cbdk-a-local-')
     folder = Path(TEMP.name)
@@ -49,6 +55,7 @@ def configure(zip_path, gl_root):
     geometry = importlib.import_module('cbdk_geometry')
     detector = importlib.import_module('cbdk_geometry.accelerated')
     PROVIDERS = (cjm, geometry, detector)
+    PROVIDER_PATHS = requested
 
 
 def object_state(o):
@@ -208,6 +215,7 @@ class CBDK_A_OT_start(Operator):
             s.restore_diameter=s.diameter
             s.cancel_requested=False;s.status='RUNNING'
             self._scene=context.scene
+            RUNS.pop(context.scene.as_pointer(),None)
             self._steps=iter_run(context,s)
             self._timer=context.window_manager.event_timer_add(.1,window=context.window)
             context.window_manager.modal_handler_add(self)
@@ -219,6 +227,7 @@ class CBDK_A_OT_start(Operator):
         s=self._scene.cbdk_a_joint
         if context.scene!=self._scene:
             context.window_manager.event_timer_remove(self._timer)
+            RUNS.pop(self._scene.as_pointer(),None)
             s.status='FAILED';s.reason='context_scene_changed'
             return {'CANCELLED'}
         if event.type=='ESC': s.cancel_requested=True
@@ -247,7 +256,12 @@ class CBDK_A_OT_action(Operator):
 
     def execute(self, context):
         s = context.scene.cbdk_a_joint
-        if s.status=='RUNNING' and self.action in ('RUN','RETRY','ADOPT'):
+        if s.status=='RUNNING':
+            if self.action == 'CANCEL':
+                s.cancel_requested=True
+                RUNS.pop(context.scene.as_pointer(),None)
+                s.reason='cancellation_requested'
+                return {'FINISHED'}
             return {'CANCELLED'}
         try:
             if s.status == 'BLOCKED': raise RuntimeError('restoration_blocked')
@@ -258,6 +272,7 @@ class CBDK_A_OT_action(Operator):
             elif self.action == 'ADOPT':
                 p = RUNS.get(context.scene.as_pointer())
                 if not p or s.status != 'READY': raise ValueError('no_current_candidate')
+                configure(bpy.path.abspath(s.provider_zip),bpy.path.abspath(s.geometry_root))
                 if (s.diameter,s.target,s.policy,scene_signature(context)) != (p['original'],p['target'],p['policy'],p['signature']):
                     raise ValueError('stale_inputs')
                 row = p['rows'][s.candidate]
@@ -269,7 +284,6 @@ class CBDK_A_OT_action(Operator):
                                original,row['diameter'],lambda:None)
                 s.status = 'ADOPTED_DIMENSION_ONLY'
             elif self.action == 'RESTORE':
-                if s.status=='RUNNING': s.cancel_requested=True
                 original = float(s.diameter)
                 verified_write(lambda:float(s.diameter),lambda x:setattr(s,'diameter',x),
                                original,float(s.restore_diameter),lambda:None)

@@ -56,16 +56,52 @@ def registration_and_busy():
     try:ui.register();raise AssertionError('duplicate registration accepted')
     except RuntimeError as e:assert str(e)=='foreign_scene_property'
     s.status='RUNNING'
-    for action in ('RUN','RETRY','ADOPT'):
+    old_diameter=s.diameter
+    s.restore_diameter=4.
+    for action in ('RUN','RETRY','ADOPT','REJECT','RESTORE'):
         assert bpy.ops.cbdk_a.joint_action(action=action)=={'CANCELLED'}
-        assert s.status=='RUNNING'
+        assert s.status=='RUNNING' and not s.cancel_requested
+        assert s.diameter==old_diameter
+    assert bpy.ops.cbdk_a.joint_action(action='CANCEL')=={'FINISHED'}
+    assert s.cancel_requested and s.status=='RUNNING'
+    for action in ('RUN','RETRY','ADOPT','REJECT','RESTORE'):
+        assert bpy.ops.cbdk_a.joint_action(action=action)=={'CANCELLED'}
+    # Real RNA and action operator; controlled timer boundary, not GUI clicks.
+    from types import SimpleNamespace as NS
+    timer=object(); removed=[]
+    operator=NS(_scene=bpy.context.scene,_timer=timer,_steps=ui.iter_run(bpy.context,s))
+    context=NS(scene=bpy.context.scene,window_manager=NS(event_timer_remove=removed.append),area=None)
+    assert ui.CBDK_A_OT_start.modal(operator,context,NS(type='TIMER'))=={'CANCELLED'}
+    assert removed==[timer] and s.status=='CANCELLED'
     assert bpy.ops.cbdk_a.joint_action(action='RESTORE')=={'FINISHED'}
-    assert s.cancel_requested
+    assert s.diameter==4.
+    s.diameter=old_diameter;s.restore_diameter=old_diameter
     s.cancel_requested=False;s.status='IDLE'
-record('duplicate_registration_busy_and_restore_stop',registration_and_busy)
+record('duplicate_registration_and_cancel_timer_boundary',registration_and_busy)
+
+
+def cached_provider_paths():
+    from tempfile import TemporaryDirectory
+    with TemporaryDirectory() as d:
+        root=Path(d).resolve()
+        z=root/'original.zip';g=root/'geometry'
+        sentinel=object()
+        old=ui.PROVIDERS,ui.PROVIDER_PATHS
+        try:
+            ui.PROVIDERS=sentinel;ui.PROVIDER_PATHS=(z,g)
+            ui.configure(z,g)
+            for a,b in ((root/'changed.zip',g),(z,root/'changed-geometry')):
+                try:ui.configure(a,b);raise AssertionError('changed path accepted')
+                except ValueError as e:assert str(e)=='provider_paths_changed_restart_required'
+                assert ui.PROVIDERS is sentinel and ui.PROVIDER_PATHS==(z,g)
+        finally:
+            ui.PROVIDERS,ui.PROVIDER_PATHS=old
+record('cached_provider_path_change_refused',cached_provider_paths)
 
 if args.cjm_zip and args.gl_root:
-    ui.configure(args.cjm_zip,args.gl_root)
+    s.provider_zip=str(Path(args.cjm_zip).resolve())
+    s.geometry_root=str(Path(args.gl_root).resolve())
+    ui.configure(s.provider_zip,s.geometry_root)
     assert ui.corrected(3.,'FREE')>3.5
     try:ui.corrected(3.,'LOCKED');raise AssertionError('locked conflict accepted')
     except ValueError:pass
@@ -76,6 +112,12 @@ if args.cjm_zip and args.gl_root:
     rows.append(dict(case='actual_cjm_gl_cbdk_chain',status='passed',seconds=time.perf_counter()-start,
                      measurements=payload['rows'],baseline=payload['baseline']))
     s.candidate=payload['best']
+    original_zip=s.provider_zip
+    s.provider_zip=original_zip+'.changed'
+    assert bpy.ops.cbdk_a.joint_action(action='ADOPT')=={'CANCELLED'}
+    assert s.diameter==5. and s.status=='FAILED'
+    s.provider_zip=original_zip
+    payload=ui.run(bpy.context,s);s.candidate=payload['best']
     assert bpy.ops.cbdk_a.joint_action(action='ADOPT')=={'FINISHED'}
     assert s.status=='ADOPTED_DIMENSION_ONLY' and s.diameter==4.
     assert bpy.ops.cbdk_a.joint_action(action='RESTORE')=={'FINISHED'}
