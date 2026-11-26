@@ -96,9 +96,16 @@ def _reparse_or_link(path: Path) -> bool:
 
 
 def _fingerprint(info) -> tuple:
-    """File identity/size and two modification clocks, not trust evidence."""
-    return (info.st_dev, info.st_ino, info.st_size,
-            info.st_mtime_ns, info.st_ctime_ns)
+    """Compare identical clock semantics, not trust evidence.
+
+    On Windows, path stat historically exposes creation time as ctime,
+    while newer CPython fstat can expose metadata change time. Compare
+    creation time explicitly on both, falling back to legacy ctime on
+    Python 3.11. POSIX retains its metadata-change clock.
+    """
+    clock = (getattr(info, "st_birthtime_ns", info.st_ctime_ns)
+             if os.name == "nt" else info.st_ctime_ns)
+    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, clock)
 
 
 def _stable_reference_read(
@@ -245,6 +252,20 @@ class R13FrozenReferenceTests(unittest.TestCase):
                     response = _compare_frozen_basis(archive, candidate, frozen, frozen)
                 self.assertEqual(response["status"], "inconclusive_reference_basis")
                 self.report_is_unauthorized(response)
+
+    def test_r13_fingerprint_compares_equivalent_platform_clocks(self):
+        from types import SimpleNamespace
+        base = dict(st_dev=1, st_ino=2, st_size=3, st_mtime_ns=4)
+        path = SimpleNamespace(**base, st_ctime_ns=5, st_birthtime_ns=5)
+        handle = SimpleNamespace(**base, st_ctime_ns=6, st_birthtime_ns=5)
+        legacy = SimpleNamespace(**base, st_ctime_ns=5)
+        with patch.object(os, "name", "nt"):
+            self.assertEqual(_fingerprint(path), _fingerprint(handle))
+            self.assertEqual(_fingerprint(path), _fingerprint(legacy))
+            handle.st_birthtime_ns = 7
+            self.assertNotEqual(_fingerprint(path), _fingerprint(handle))
+        with patch.object(os, "name", "posix"):
+            self.assertNotEqual(_fingerprint(path), _fingerprint(handle))
 
     def test_r13_changed_source_between_read_and_final_stat_is_inconclusive(self):
         def mutate():
