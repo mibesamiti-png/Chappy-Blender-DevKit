@@ -474,3 +474,11 @@ R26節目独立CI: Python45752209622、Windows45752209655、Blender45752209618�
 R27 #188 dev ed7e2d828c4f4aee336d7129d9329c740c79b2f5 独立7CI＋追加push成功。B #186/C #185/D #187/A #188各5CI含む最終27/27＋追加1、18 native jobs。専門初回Windows CRLFテスト修正、A対象fixture LF固定、統合後Windows旧R13 case-alias検査初回1件失敗・同一HEAD再試行1回成功、原因未確定。A候補/独立/push 9実験で27新規GLB＋63参照GLB、固定source単一トークン0.75→1.15、実RNA・元/候補/復元の形状・非対象不変・同一job参照・SHA/cleanup・D厳格照合を3版確認。専門12blob完全一致、個別mergeなしclosed。固定fixture限定F021-02受入、#125 rev23 paused。任意ソース/最適値/自動適用/真正性/権利未確認、F021-03/R28未開始、正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
 
 独立CI: Python45768313422、Windows45768313401 attempt2、Blender45768313332、Chromium45768313535、Handoff45768313368、Kit45768313348、Skill45768313484。追加push Blender45768307034。候補Blender45767477252、独立native jobs139734541335/139734541453/139734541550、push jobs139734520045/139734519568/139734519875。候補3＋独立3＋push3の実ログ直接照合、各run ID独立、重複ログは二重計上しない。Windows初回失敗job139734541050 artifact15093221147でR13 case-aliasテストのinconclusive_reference_changedを確認、同一HEAD再試行job139736211570 1339 tests OK(skipped=16)。原因未確定、再試行で通過したことは根治の証明ではない。B/D専門nativeは既存回帰、C専門nativeは別実験でAの9実験に含めない。実機失敗復元注入は未検証、Python制御負例と通常復元を区別。Notionは節目文書統合・独立CI後。
+
+## 2026-11-26 JST — R28 / F021-03 限定割当候補
+
+R27節目#189 dev 0e62d85f0c657f909ea3336d81378cf24ae2c42f 独立7CI・Notion同期成功、最終40/40＋追加push1。F021-03 R28は固定fixtureの4候補（逆方向0.55、副作用1.15＋bevel0.20、中間0.95、目標1.15）だけを、元0.75/bevel0.08から独立生成・隔離コピー復元し、同一job R26参照とgenerated/imported寸法・非対象測定で比較。唯一の2トークン負例は副作用拒否専用。B評価、C実測、D独立replay、A親接続。既存GLB-022判定原則・R26/R27を再利用。予算1..4、棄却best不変、目標時停止、同点/混合は不確実。任意ソース/最適値/自動適用なし。割当統合・独立7CI・#125 rev24 active前は実装禁止。F021-03未実装、v0.22/R29自動開始なし、44要件/24 NEXT・正式版/main/last_verified維持、GL/DIL独立。
+
+R27節目独立CI: Python45771553334、Windows45771553321、Blender45771553369、Chromium45771553315、Handoff45771553377、Kit45771553314、Skill45771553459。既存7 variant・R27固定ソース実験維持。新規R28は候補の実測選別で、一般形状等価/最適化や自動適用ではない。
+
+[R28割当候補](R28_ABCD_START.md)。

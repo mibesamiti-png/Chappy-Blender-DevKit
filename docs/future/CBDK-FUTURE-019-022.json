@@ -166,7 +166,8 @@
         "scope": "Fixed repository-authored source fixture only; pinned original and candidate SHA, exact single-token sphere_radius default 0.75 to 1.15, isolated copy, actual three-stage RNA registration/readback, generated/reimported geometry, unrelated mesh invariance, exact reverse bytes, cleanup and same-job R26 references. A candidate/independent/push nine distinct runs, 27 new GLBs and 63 reference GLBs; three Blender versions. Windows actual checkout LF pinned; one unrelated R13 Windows failure passed unchanged retry, root cause unconfirmed. No general addon causality, optimum, arbitrary input or execution, auto-application, authenticity, legal approval, adoption or distribution."
       },
       "F021-03": {
-        "status": "not_started"
+        "status": "allocation_candidate",
+        "scope": "R28 fixed authored source only. Independent candidates from pinned original: wrong_direction sphere 0.55; cross_part sphere 1.15 + bevel 0.20 (sole two-token negative control); intermediate sphere 0.95; target sphere 1.15. Baseline sphere 0.75/bevel 0.08 and reference sphere 1.15/bevel 0.08. Per-trial isolated original/candidate/restored native stages, exact bytes/inverse, same-job R26 references, generated/imported target dimensional scores and exact protected-part summaries, strict improvement, veto, uncertainty, virtual best, max four attempts, budget prefixes and target stop. B pure evaluation, C actual source-copy/RNA/GLB, D independent evidence and replay, A parent join. Reuse R26/R27 and GLB-022 rules; no arbitrary code/source/values or actual adoption. Formal dispatch required."
       }
     }
   },
@@ -440,5 +441,22 @@
     },
     "dispatch": "revision 23 paused; no automatic R28",
     "scope": "Fixed repository-authored source fixture only; pinned original and candidate SHA, exact single-token sphere_radius default 0.75 to 1.15, isolated copy, actual three-stage RNA registration/readback, generated/reimported geometry, unrelated mesh invariance, exact reverse bytes, cleanup and same-job R26 references. A candidate/independent/push nine distinct runs, 27 new GLBs and 63 reference GLBs; three Blender versions. Windows actual checkout LF pinned; one unrelated R13 Windows failure passed unchanged retry, root cause unconfirmed. No general addon causality, optimum, arbitrary input or execution, auto-application, authenticity, legal approval, adoption or distribution."
+  },
+  "v021_r28_allocation": {
+    "date": "2026-11-26",
+    "verified_base_sha": "0e62d85f0c657f909ea3336d81378cf24ae2c42f",
+    "workflow_runs": {
+      "python": 45771553334,
+      "windows": 45771553321,
+      "blender": 45771553369,
+      "chromium": 45771553315,
+      "handoff": 45771553377,
+      "kit": 45771553314,
+      "skill": 45771553459
+    },
+    "pr25_draft": true,
+    "prior_milestone": 189,
+    "scope": "R28 fixed authored source only. Independent candidates from pinned original: wrong_direction sphere 0.55; cross_part sphere 1.15 + bevel 0.20 (sole two-token negative control); intermediate sphere 0.95; target sphere 1.15. Baseline sphere 0.75/bevel 0.08 and reference sphere 1.15/bevel 0.08. Per-trial isolated original/candidate/restored native stages, exact bytes/inverse, same-job R26 references, generated/imported target dimensional scores and exact protected-part summaries, strict improvement, veto, uncertainty, virtual best, max four attempts, budget prefixes and target stop. B pure evaluation, C actual source-copy/RNA/GLB, D independent evidence and replay, A parent join. Reuse R26/R27 and GLB-022 rules; no arbitrary code/source/values or actual adoption. Formal dispatch required.",
+    "dispatch": "candidate only, revision 23 paused; allocation merge + independent seven CI + revision 24 active before implementation"
   }
 }
