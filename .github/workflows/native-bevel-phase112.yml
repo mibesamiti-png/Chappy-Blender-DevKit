@@ -1,4 +1,4 @@
-name: Geometry Lab isolated LoopTools Phase 159
+name: Geometry Lab isolated operations Phase 160
 on:
   pull_request:
     paths:
@@ -221,6 +221,21 @@ jobs:
           assert all(d["summary"][p]["edits"]==0 for p in ("unknown","preserve","sufficient"))
           assert d["summary"]["balanced"]["max_turn_increase"]<=2.000001
           assert d["summary"]["balanced"]["max_extent_increase"]<=.010001
+          PY
+      - name: Test native operation contracts on new fixtures
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase160_operation_contracts.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase160_operation_contracts.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==10 and all(r["passed"] for r in d["rows"])
+          assert sum(r["selected"] is None for r in d["rows"])==2
           PY
       - uses: actions/upload-artifact@v4
         if: always()
