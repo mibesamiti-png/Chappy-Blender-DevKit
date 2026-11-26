@@ -1441,7 +1441,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Windows native Blender failed: $LASTEXITCODE" }
           $report = Get-Content -LiteralPath $output -Raw | ConvertFrom-Json
           $rows = @($report.rows)
-          if ($rows.Count -ne 17 -or @($rows | Where-Object { $_.status -ne 'passed' }).Count -ne 0) { throw 'Expected all 17 native provider observations passed' }
+          if ($rows.Count -ne 18 -or @($rows | Where-Object { $_.status -ne 'passed' }).Count -ne 0) { throw 'Expected all 18 native provider observations passed' }
           if (@($rows | Where-Object { $_.case -eq 'actual_cjm_gl_cbdk_chain' }).Count -ne 1 -or $report.gui_mouse_keyboard -ne $false -or $report.approved -ne $false) { throw 'Provider evidence scope mismatch' }
           Write-Host "CBDK_A_WINDOWS_PROVIDER_CHAIN_PASS $($report.blender) $($rows.Count)"
       - name: Real Windows desktop input and ordinary Undo pilot

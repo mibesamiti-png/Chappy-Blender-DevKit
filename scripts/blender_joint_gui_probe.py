@@ -72,7 +72,7 @@ def gui_probe(args):
                 for key, action in (("LEFTMOUSE", None), ("F6", None),
                                     ("F7", "ADOPT"), ("F8", "RESTORE")):
                     item = km.keymap_items.new(
-                        "cbdk_a.joint_start" if action is None else "cbdk_a.joint_action",
+                        "cbdk_a.joint_start" if action is None else "cbdk_a.joint_dimension",
                         key, "PRESS", ctrl=True, alt=True, shift=True)
                     if action is not None:
                         item.properties.action = action

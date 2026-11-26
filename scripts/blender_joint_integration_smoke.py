@@ -22,6 +22,12 @@ def record(name,fun):
 
 
 ui.register();s=bpy.context.scene.cbdk_a_joint
+
+
+def op(action):
+    if action in ('ADOPT', 'RESTORE'):
+        return bpy.ops.cbdk_a.joint_dimension(action=action)
+    return bpy.ops.cbdk_a.joint_action(action=action)
 origin=ui.scene_signature(bpy.context)
 
 
@@ -47,7 +53,7 @@ record('panel_draw',draw)
 def sticky_block():
     s.status='BLOCKED'
     for action in ('RUN','RETRY','RESTORE','ADOPT'):
-        assert bpy.ops.cbdk_a.joint_action(action=action)=={'CANCELLED'}
+        assert op(action)=={'CANCELLED'}
         assert s.status=='BLOCKED'
     s.status='IDLE'
 record('blocked_state_cannot_be_cleared_by_actions',sticky_block)
@@ -59,21 +65,21 @@ def registration_and_busy():
     old_diameter=s.diameter
     s.restore_diameter=4.
     for action in ('RUN','RETRY','ADOPT','REJECT','RESTORE'):
-        assert bpy.ops.cbdk_a.joint_action(action=action)=={'CANCELLED'}
+        assert op(action)=={'CANCELLED'}
         assert s.status=='RUNNING' and not s.cancel_requested
         assert s.diameter==old_diameter
     assert bpy.ops.cbdk_a.joint_action(action='CANCEL')=={'FINISHED'}
     assert s.cancel_requested and s.status=='RUNNING'
     for action in ('RUN','RETRY','ADOPT','REJECT','RESTORE'):
-        assert bpy.ops.cbdk_a.joint_action(action=action)=={'CANCELLED'}
+        assert op(action)=={'CANCELLED'}
     # Real RNA and action operator; controlled timer boundary, not GUI clicks.
     from types import SimpleNamespace as NS
     timer=object(); removed=[]
-    operator=NS(_scene=bpy.context.scene,_timer=timer,_steps=ui.iter_run(bpy.context,s))
+    operator=NS(_scene=bpy.context.scene,_timer=timer,_steps=ui.iter_run(bpy.context,s),_epoch=ui.HISTORY_EPOCH)
     context=NS(scene=bpy.context.scene,window_manager=NS(event_timer_remove=removed.append),area=None)
     assert ui.CBDK_A_OT_start.modal(operator,context,NS(type='TIMER'))=={'CANCELLED'}
     assert removed==[timer] and s.status=='CANCELLED'
-    assert bpy.ops.cbdk_a.joint_action(action='RESTORE')=={'FINISHED'}
+    assert op('RESTORE')=={'FINISHED'}
     assert s.diameter==4.
     s.diameter=old_diameter;s.restore_diameter=old_diameter
     s.cancel_requested=False;s.status='IDLE'
@@ -98,6 +104,41 @@ def cached_provider_paths():
             ui.PROVIDERS,ui.PROVIDER_PATHS=old
 record('cached_provider_path_change_refused',cached_provider_paths)
 
+def history_boundary():
+    # Direct callback boundary test, not actual native Undo/Redo or GUI input.
+    from types import SimpleNamespace as NS
+    assert 'UNDO' in ui.CBDK_A_OT_dimension.bl_options
+    assert 'UNDO' not in ui.CBDK_A_OT_action.bl_options
+    assert 'UNDO' not in ui.CBDK_A_OT_start.bl_options
+    for name, callback in ui.HISTORY_HANDLERS:
+        assert getattr(bpy.app.handlers, name).count(callback) == 1
+    old_diameter = s.diameter
+    epoch = ui.HISTORY_EPOCH
+    timer = object(); removed = []
+    s.status = 'READY'; s.result_json = 'stale'
+    ui.RUNS[bpy.context.scene.as_pointer()] = {'stale': True}
+    ui.history_before(); ui.history_after()
+    assert ui.HISTORY_EPOCH == epoch + 1 and not ui.RUNS
+    assert s.status == 'FAILED' and s.reason == 'history_changed_rerun_required'
+    assert s.result_json == '' and s.diameter == old_diameter
+    assert op('ADOPT') == {'CANCELLED'} and s.diameter == old_diameter
+    # Stale modal must stop without accessing invalidated RNA scene.
+    operator = NS(_epoch=epoch, _timer=timer)
+    context = NS(window_manager=NS(event_timer_remove=removed.append))
+    assert ui.CBDK_A_OT_start.modal(operator, context, NS(type='TIMER')) == {'CANCELLED'}
+    assert removed == [timer]
+    # Simulate RNA restoring an earlier state; the session latch wins.
+    old_latch = ui.HISTORY_BLOCKED
+    try:
+        s.status = 'BLOCKED'; ui.history_before()
+        s.status = 'IDLE'; ui.history_after()
+        assert s.status == 'BLOCKED' and op('RESTORE') == {'CANCELLED'}
+    finally:
+        ui.HISTORY_BLOCKED = old_latch
+        s.status = 'IDLE'; s.reason = ''
+    assert ui.scene_signature(bpy.context) == origin
+record('history_callback_boundary_and_separate_dimension_operator', history_boundary)
+
 if args.cjm_zip and args.gl_root:
     s.provider_zip=str(Path(args.cjm_zip).resolve())
     s.geometry_root=str(Path(args.gl_root).resolve())
@@ -114,13 +155,13 @@ if args.cjm_zip and args.gl_root:
     s.candidate=payload['best']
     original_zip=s.provider_zip
     s.provider_zip=original_zip+'.changed'
-    assert bpy.ops.cbdk_a.joint_action(action='ADOPT')=={'CANCELLED'}
+    assert op('ADOPT')=={'CANCELLED'}
     assert s.diameter==5. and s.status=='FAILED'
     s.provider_zip=original_zip
     payload=ui.run(bpy.context,s);s.candidate=payload['best']
-    assert bpy.ops.cbdk_a.joint_action(action='ADOPT')=={'FINISHED'}
+    assert op('ADOPT')=={'FINISHED'}
     assert s.status=='ADOPTED_DIMENSION_ONLY' and s.diameter==4.
-    assert bpy.ops.cbdk_a.joint_action(action='RESTORE')=={'FINISHED'}
+    assert op('RESTORE')=={'FINISHED'}
     assert s.diameter==5.
     rows.append(dict(case='native_adopt_and_restore',status='passed'))
     steps=ui.iter_run(bpy.context,s)
@@ -165,6 +206,7 @@ else:
 
 ui.unregister()
 assert not hasattr(bpy.types.Scene,'cbdk_a_joint')
+assert all(callback not in getattr(bpy.app.handlers, name) for name, callback in ui.HISTORY_HANDLERS)
 result=dict(blender=bpy.app.version_string,rows=rows,gui_mouse_keyboard=False,
             continuous_collision=False,printing=False,approved=False)
 out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)

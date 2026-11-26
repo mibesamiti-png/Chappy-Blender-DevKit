@@ -23,6 +23,8 @@ PROVIDER_PATHS = None
 TEMP = None
 RUNS = {}
 OWNED = False
+HISTORY_EPOCH = 0
+HISTORY_BLOCKED = False
 
 
 def digest(value):
@@ -198,12 +200,43 @@ class CBDK_A_Settings(PropertyGroup):
     cancel_requested: bpy.props.BoolProperty(default=False)
 
 
+def history_before(*_args):
+    """Do not retain transient candidate authorization across native history."""
+    global HISTORY_EPOCH, HISTORY_BLOCKED
+    HISTORY_EPOCH += 1
+    RUNS.clear()
+    # Conservative fail-closed latch for this synthetic preview session.
+    HISTORY_BLOCKED = HISTORY_BLOCKED or any(
+        scene.cbdk_a_joint.status == 'BLOCKED' for scene in bpy.data.scenes)
+
+
+def history_after(*_args):
+    RUNS.clear()
+    for scene in bpy.data.scenes:
+        s = scene.cbdk_a_joint
+        if HISTORY_BLOCKED:
+            s.status = 'BLOCKED'
+            s.reason = 'restoration_blocked'
+        elif s.status in ('READY', 'RUNNING'):
+            s.status = 'FAILED'
+            s.reason = 'history_changed_rerun_required'
+        else:
+            continue
+        s.result_json = ''
+        s.cancel_requested = False
+
+
+HISTORY_HANDLERS = (('undo_pre', history_before), ('redo_pre', history_before),
+                    ('undo_post', history_after), ('redo_post', history_after))
+
+
 class CBDK_A_OT_start(Operator):
     bl_idname='cbdk_a.joint_start'
     bl_label='人工関節の検証開始'
     _timer=None
     _steps=None
     _scene=None
+    _epoch=None
 
     def invoke(self, context, event):
         s=context.scene.cbdk_a_joint
@@ -213,6 +246,7 @@ class CBDK_A_OT_start(Operator):
             s.restore_diameter=s.diameter
             s.cancel_requested=False;s.status='RUNNING'
             self._scene=context.scene
+            self._epoch=HISTORY_EPOCH
             RUNS.pop(context.scene.as_pointer(),None)
             self._steps=iter_run(context,s)
             self._timer=context.window_manager.event_timer_add(.1,window=context.window)
@@ -222,6 +256,9 @@ class CBDK_A_OT_start(Operator):
             s.status='FAILED';s.reason='provider_configuration_failed';return {'CANCELLED'}
 
     def modal(self, context, event):
+        if self._epoch != HISTORY_EPOCH:
+            context.window_manager.event_timer_remove(self._timer)
+            return {'CANCELLED'}
         s=self._scene.cbdk_a_joint
         if context.scene!=self._scene:
             context.window_manager.event_timer_remove(self._timer)
@@ -250,54 +287,68 @@ class CBDK_A_OT_start(Operator):
 class CBDK_A_OT_action(Operator):
     bl_idname = 'cbdk_a.joint_action'
     bl_label = '人工関節の限定検証'
-    action: EnumProperty(items=[(x,x,'') for x in ('RUN','ADOPT','REJECT','CANCEL','RESTORE','RETRY')])
+    action: EnumProperty(items=[(x,x,'') for x in ('RUN','REJECT','CANCEL','RETRY')])
 
     def execute(self, context):
-        s = context.scene.cbdk_a_joint
-        if s.status=='RUNNING':
-            if self.action == 'CANCEL':
-                s.cancel_requested=True
-                RUNS.pop(context.scene.as_pointer(),None)
-                s.reason='cancellation_requested'
-                return {'FINISHED'}
-            return {'CANCELLED'}
-        try:
-            if s.status == 'BLOCKED': raise RuntimeError('restoration_blocked')
-            if self.action in ('RUN','RETRY'):
-                configure(bpy.path.abspath(s.provider_zip),bpy.path.abspath(s.geometry_root))
-                s.restore_diameter = s.diameter
-                run(context,s)
-            elif self.action == 'ADOPT':
-                p = RUNS.get(context.scene.as_pointer())
-                if not p or s.status != 'READY': raise ValueError('no_current_candidate')
-                configure(bpy.path.abspath(s.provider_zip),bpy.path.abspath(s.geometry_root))
-                if (s.diameter,s.target,s.policy,scene_signature(context)) != (p['original'],p['target'],p['policy'],p['signature']):
-                    raise ValueError('stale_inputs')
-                row = p['rows'][s.candidate]
-                if not row['review']['accepted_for_review']: raise ValueError('rejected_candidate')
-                measured = trial(context,row['diameter'])
-                if measured != row['measurement']: raise ValueError('fresh_measurement_changed')
-                original = float(s.diameter)
-                verified_write(lambda:float(s.diameter),lambda x:setattr(s,'diameter',x),
-                               original,row['diameter'],lambda:None)
-                s.status = 'ADOPTED_DIMENSION_ONLY'
-            elif self.action == 'RESTORE':
-                original = float(s.diameter)
-                verified_write(lambda:float(s.diameter),lambda x:setattr(s,'diameter',x),
-                               original,float(s.restore_diameter),lambda:None)
-                s.status = 'RESTORED'
-                RUNS.pop(context.scene.as_pointer(),None)
-            else:
-                s.cancel_requested=True
-                RUNS.pop(context.scene.as_pointer(),None)
-                s.status = 'CANCELLED' if self.action=='CANCEL' else 'REJECTED'
-            s.reason = ''
+        return execute_action(context, self.action)
+
+
+class CBDK_A_OT_dimension(Operator):
+    bl_idname = 'cbdk_a.joint_dimension'
+    bl_label = '人工関節の寸法変更'
+    bl_options = {'UNDO'}
+    action: EnumProperty(items=[(x,x,'') for x in ('ADOPT','RESTORE')])
+
+    def execute(self, context):
+        return execute_action(context, self.action)
+
+
+def execute_action(context, action):
+    s = context.scene.cbdk_a_joint
+    if s.status=='RUNNING':
+        if action == 'CANCEL':
+            s.cancel_requested=True
+            RUNS.pop(context.scene.as_pointer(),None)
+            s.reason='cancellation_requested'
             return {'FINISHED'}
-        except Exception as error:
-            reason = str(error)
-            s.reason = reason if reason.isascii() and len(reason)<80 and '/' not in reason and '\\' not in reason else 'provider_or_geometry_failure'
-            s.status = 'BLOCKED' if s.status == 'BLOCKED' or any(x in reason for x in ('rollback','cleanup','source_changed','restoration_blocked')) else 'FAILED'
-            return {'CANCELLED'}
+        return {'CANCELLED'}
+    try:
+        if s.status == 'BLOCKED': raise RuntimeError('restoration_blocked')
+        if action in ('RUN','RETRY'):
+            configure(bpy.path.abspath(s.provider_zip),bpy.path.abspath(s.geometry_root))
+            s.restore_diameter = s.diameter
+            run(context,s)
+        elif action == 'ADOPT':
+            p = RUNS.get(context.scene.as_pointer())
+            if not p or s.status != 'READY': raise ValueError('no_current_candidate')
+            configure(bpy.path.abspath(s.provider_zip),bpy.path.abspath(s.geometry_root))
+            if (s.diameter,s.target,s.policy,scene_signature(context)) != (p['original'],p['target'],p['policy'],p['signature']):
+                raise ValueError('stale_inputs')
+            row = p['rows'][s.candidate]
+            if not row['review']['accepted_for_review']: raise ValueError('rejected_candidate')
+            measured = trial(context,row['diameter'])
+            if measured != row['measurement']: raise ValueError('fresh_measurement_changed')
+            original = float(s.diameter)
+            verified_write(lambda:float(s.diameter),lambda x:setattr(s,'diameter',x),
+                           original,row['diameter'],lambda:None)
+            s.status = 'ADOPTED_DIMENSION_ONLY'
+        elif action == 'RESTORE':
+            original = float(s.diameter)
+            verified_write(lambda:float(s.diameter),lambda x:setattr(s,'diameter',x),
+                           original,float(s.restore_diameter),lambda:None)
+            s.status = 'RESTORED'
+            RUNS.pop(context.scene.as_pointer(),None)
+        else:
+            s.cancel_requested=True
+            RUNS.pop(context.scene.as_pointer(),None)
+            s.status = 'CANCELLED' if action=='CANCEL' else 'REJECTED'
+        s.reason = ''
+        return {'FINISHED'}
+    except Exception as error:
+        reason = str(error)
+        s.reason = reason if reason.isascii() and len(reason)<80 and '/' not in reason and '\\' not in reason else 'provider_or_geometry_failure'
+        s.status = 'BLOCKED' if s.status == 'BLOCKED' or any(x in reason for x in ('rollback','cleanup','source_changed','restoration_blocked')) else 'FAILED'
+        return {'CANCELLED'}
 
 
 class CBDK_A_PT_joint(Panel):
@@ -316,13 +367,14 @@ class CBDK_A_PT_joint(Panel):
                 layout.label(text=f"{i}: {row['diameter']:.4f} / {row['review']['decision']} / {row['review']['score']:.5f}")
             layout.prop(s,'candidate')
         for text,action in [('寸法だけ採用','ADOPT'),('拒否','REJECT'),('中断 後続工程停止','CANCEL'),('元の寸法へ復元','RESTORE')]:
-            layout.operator('cbdk_a.joint_action',text=text).action = action
+            op = 'cbdk_a.joint_dimension' if action in ('ADOPT','RESTORE') else 'cbdk_a.joint_action'
+            layout.operator(op,text=text).action = action
         layout.label(text=s.status)
         if s.reason: layout.label(text=s.reason,icon='ERROR')
         layout.label(text='中断とEscは候補の境界で停止 検査中は待機')
 
 
-CLASSES = (CBDK_A_Settings,CBDK_A_OT_action,CBDK_A_OT_start,CBDK_A_PT_joint)
+CLASSES = (CBDK_A_Settings,CBDK_A_OT_action,CBDK_A_OT_dimension,CBDK_A_OT_start,CBDK_A_PT_joint)
 
 
 def register():
@@ -332,8 +384,14 @@ def register():
     try:
         for cls in CLASSES: bpy.utils.register_class(cls); done.append(cls)
         bpy.types.Scene.cbdk_a_joint = PointerProperty(type=CBDK_A_Settings)
+        for name, callback in HISTORY_HANDLERS:
+            getattr(bpy.app.handlers, name).append(callback)
         OWNED=True
     except Exception:
+        for name, callback in HISTORY_HANDLERS:
+            handlers = getattr(bpy.app.handlers, name)
+            if callback in handlers: handlers.remove(callback)
+        if hasattr(bpy.types.Scene,'cbdk_a_joint'): del bpy.types.Scene.cbdk_a_joint
         for cls in reversed(done): bpy.utils.unregister_class(cls)
         raise
 
@@ -344,6 +402,9 @@ def unregister():
     prop=bpy.types.Scene.bl_rna.properties.get('cbdk_a_joint')
     if prop is None or prop.fixed_type != CBDK_A_Settings.bl_rna:
         raise RuntimeError('foreign_scene_property')
+    for name, callback in HISTORY_HANDLERS:
+        handlers = getattr(bpy.app.handlers, name)
+        if callback in handlers: handlers.remove(callback)
     if hasattr(bpy.types.Scene,'cbdk_a_joint'): del bpy.types.Scene.cbdk_a_joint
     for cls in reversed(CLASSES): bpy.utils.unregister_class(cls)
     RUNS.clear()

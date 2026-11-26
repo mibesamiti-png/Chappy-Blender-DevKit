@@ -42,7 +42,7 @@ The panel shows candidate IDs, measured error and acceptance/rejection reasons.
 Choose the candidate row and explicitly adopt. Only this panel's diameter is
 written after fresh geometry verification and RNA readback; generated trial
 objects have already been deleted. This is dimension adoption, not a mesh commit.
-Restore returns that dimension to its pre-run value. Reject/cancel removes the
+Restore returns that dimension to its pre-run value. Adoption and restore use a separate UNDO-enabled operator; review, retry, rejection and cancellation are not explicitly added to native undo history. Undo/redo callbacks invalidate cached candidates and stop stale modal work; rerun before adopting. A previously blocked state is conservatively retained across history in this synthetic session. Ordinary Ctrl+Z / Ctrl+Shift+Z behavior remains unverified until interactive testing. Reject/cancel removes the
 candidate authorization. Retry starts a fresh run. Editing inputs or the source
 scene invalidates adoption. PREFERRED permits changing that dimension only
 because every other dimension is fixed; the change remains explicit and visible.
@@ -58,10 +58,10 @@ is permitted in that scene session. Diagnose it in a fresh synthetic process.
 
 ## Validation scope
 
-The native smoke executes the actual external provider chain only when its
-local arguments are explicitly supplied. Public CI does not contain CJM; it
-tests the preview's registration, draw, missing-provider refusal and sticky
-blocked state. That local/CI distinction is retained in every evidence record.
+The native smoke executes the actual provider chain with explicit pinned
+arguments. Public CI now has the owner-authorized CJM ZIP and fetches the exact
+frozen GL sources. The separate sentinel-only run still excludes providers.
+The direct history-callback test is not an actual Undo/Redo test.
 Native `Panel.draw` and operators are not Windows mouse/keyboard or Ctrl+Z proof.
 Continuous collision, arbitrary models, physical strength and printing remain
 unverified. No core registry/recipe catalog automatically enables this preview.
