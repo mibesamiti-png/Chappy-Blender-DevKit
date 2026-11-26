@@ -1023,6 +1023,20 @@ jobs:
           assert all(c["passed"] and len(c["rows"])==601 for c in d["cases"])
           assert (p/"phase208_single_leg.blend").stat().st_size>0
           PY
+      - name: Verify single-motor three-gear four-leg dynamics
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase208_four_legs.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase208_four_legs.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          assert all(c["passed"] and len(c["rows"])==601 and set(c["legs"])=={"LF","LB","RF","RB"} for c in d["cases"])
+          assert (p/"phase208_four_legs.blend").stat().st_size>0
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
