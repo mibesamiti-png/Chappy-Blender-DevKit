@@ -212,3 +212,5 @@ if __name__ == "__main__":
     require(sys.argv[sys.argv.index("--") + 1:] == ["reports/ci/parameter_experiment"],
             "r27_fixed_output")
     run()
+    from scripts.blender_parameter_source_r28_smoke import run_source_trials
+    run_source_trials(ROOT)
