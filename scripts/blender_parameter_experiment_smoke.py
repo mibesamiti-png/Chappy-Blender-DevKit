@@ -356,6 +356,8 @@ def main() -> None:
         run_id=os.environ.get("CBDK_R26_RUN_ID"),
         expected_source_sha256=os.environ.get("CBDK_R26_SOURCE_SHA256"),
         expected_blender_version=os.environ.get("CBDK_R26_BLENDER_VERSION"))
+    from scripts.blender_parameter_source_r27_smoke import run_source_experiment
+    run_source_experiment(Path(args[0]).resolve(), snapshot=_snapshot, clean_scene=_clean_scene)
 
 
 if __name__ == "__main__":

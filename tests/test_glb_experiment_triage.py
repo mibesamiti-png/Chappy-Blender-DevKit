@@ -167,6 +167,26 @@ class ExperimentTriageTests(unittest.TestCase):
         self.assertFalse(rejected["same_fixture_observations_verified"])
         self.assertFalse(any(rejected["safety"].values()))
 
+    def test_r27_candidate_and_restoration_require_actual_measurement_binding(self):
+        from test_parameter_source_evidence_r27 import observations, reduce
+        report = self.build()
+        self.assertFalse(any(report["safety"].values()))
+        diff, native, measured, references = observations()
+        # Existing weak candidate review cannot certify a source edit.
+        self.assertEqual(reduce(diff, None, None, None)["status"], "incomplete")
+        native["stages"][1]["glb_sha256"] = "9" * 64
+        self.assertEqual(reduce(diff, native, measured, references)["reason_codes"],
+                         ["measurement_mismatch"])
+        diff, native, measured, references = observations()
+        native["restored_copy_sha256"] = native["candidate_sha256"]
+        self.assertEqual(reduce(diff, native, measured, references)["reason_codes"],
+                         ["restoration_mismatch"])
+        diff, native, measured, references = observations()
+        diff["auto_adopts"] = True
+        rejected = reduce(diff, native, measured, references)
+        self.assertFalse(rejected["same_fixture_change_restoration_verified"])
+        self.assertFalse(any(rejected["safety"].values()))
+
     def test_forged_candidate_selection_and_delta_rejected(self):
         for change in (
             lambda r: r["candidate_reviews"][0].update(selected_declaration="first"),
