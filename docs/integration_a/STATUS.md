@@ -5,7 +5,15 @@ GL reference: PR #114 `6cdb85f4c97bf4cdbb4693a7b1bc180149b4ca2b`.
 DIL reference: PR #115 `70fb5701d65449839bcccacffd0d55d0afcf27a9`.
 Dedicated branch only; no merge, release, shared STATE/HANDOFF or dispatch changes.
 
-## Stage gates
+## Current adoption audit (supersedes historical scope statements below)
+
+Evidence HEAD: `ac1e2de353f4a62de0386ef56446e3180e566d7f`; development base `84be565c30a9058676f481f6e5714965d7940715`. All 7 workflow families passed; 18 provider observations per environment (Linux 4.4.3/4.5.15/5.2.1, Windows 4.5.15), 72 total. Linux real-window X11 GUI passed 5/5 including ordinary Ctrl+Z/Ctrl+Shift+Z with no explicit undo push, on the fixed synthetic rotary fixture. Run 45866535236, GUI job 140070677747. Windows interactive and production sidebar clicks remain unverified. Prior local Windows full-suite R13 discrepancy was separately addressed by merged PR #197 on dev; original local reproduction remains unverified. Do not claim full v0.22.
+
+Owner authorized public inclusion of the pinned CJM ZIP on 2026-11-27 JST; archive now exists in the repository and is used by explicit native CI. No additional license grant, default provider installation or product adoption inferred. Audit found Windows kit builder previously included all tracked files, including the provider directory. This change excludes that directory and adds an archive-entry assertion; new packaging CI is required before acceptance. Skill packages have explicit six/seven entry checks. Research code remains opt-in; ordinary registries/catalogs and shared STATE/HANDOFF/dispatch unchanged (Issue #125 rev25 paused). The earlier local evidence below is historical, not the current acceptance gate.
+
+Recommendation: bounded opt-in development integration only after the packaging gate, with explicit Windows GUI/sidebar limitations; no release, automatic enablement, arbitrary models, printing, R29 restart or complete v0.22 claim. Draft remains unmerged pending review.
+
+## Historical stage gates
 
 | Stage | Gate | Current observation |
 |---|---|---|
