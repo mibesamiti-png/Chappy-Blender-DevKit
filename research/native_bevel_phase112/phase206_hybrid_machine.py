@@ -92,9 +92,25 @@ def ring(name,outer,inner,h=THICK):
     for i in range(n):
         j=(i+1)%n;a=n+idx[i];b=n+idx[j]
         f.append((i,j,j+stride,i+stride))
-        if a!=b:f.append((a,a+stride,b+stride,b))
-        f.append(tuple(dict.fromkeys((i,a,b,j))))
-        f.append(tuple(dict.fromkeys((i+stride,j+stride,b+stride,a+stride))))
+        if a==b:continue
+        f.append((a,a+stride,b+stride,b))
+        if len(unique)==n:
+            f.extend(((i,a,b,j),(i+stride,j+stride,b+stride,a+stride)))
+            continue
+        # A collapsed radial sector has no cap area. Instead split the
+        # neighboring nonzero sector along its longer radial boundary,
+        # retaining the nearer outer vertex as a conforming edge split.
+        p=(i-1)%n;q=(j+1)%n
+        radius=lambda k:math.hypot(*outer[k])
+        if idx[p]==idx[i] and radius(p)<radius(i):
+            caps=[(i,p,b),(p,a,b)]
+        else:caps=[(i,a,b)]
+        if idx[q]==idx[j] and radius(q)<radius(j):
+            caps.extend(((i,b,q),(i,q,j)))
+        else:caps.append((i,b,j))
+        for tri in caps:
+            f.append(tri)
+            f.append(tuple(k+stride for k in reversed(tri)))
     m=mesh(name,v,f)
     audit=closed(m,1,(polygon_area(outer)-polygon_area(inner))*h)
     audit['collapsed_inner_vertices_per_layer']=n-len(unique)
