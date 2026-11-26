@@ -962,6 +962,20 @@ jobs:
           assert all(d["controls"].values())
           assert len(list(p.glob("phase207_*.obj")))==32 and (p/"phase207_walking_machine.blend").stat().st_size>0
           PY
+      - name: Verify motor-only gear contact with separated and motor-off controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase208_motor_contact.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase208_motor_contact.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          assert all(c["passed"] and len(c["rows"])==481 for c in d["cases"])
+          assert (p/"phase208_motor_contact.blend").stat().st_size>0
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
