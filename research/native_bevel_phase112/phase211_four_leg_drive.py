@@ -17,7 +17,7 @@ from phase211_groove_profile import nearest
 DUTY=.77;PHASES=[0,270,180,90];FRAMES=601;IMPULSE=240.
 START=float((t:=np.arange(36000)*math.tau/36000)[np.argmin(law(t,'stride',DUTY))])
 SPAN=float(np.ptp(law(t,'stride',DUTY)))
-def setup(separated,enabled):
+def setup(separated,enabled,integrated=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene;sc.gravity=(0.,-9.81,0.);sc.render.fps=60;sc.frame_end=FRAMES
     anchor=box('fixed fixture',(0.,0.,-4.),(.5,.5,.5),1.)
@@ -56,16 +56,44 @@ def setup(separated,enabled):
         for it in items:
             limits(constraint(f'L{j} '+it['kind']+' cross-slide','GENERIC',it['slide'],out,opos),{it['axis']:(0.,0.)},{})
         legs.append(dict(offset=offset,items=items,out=out,oz=opos[2]))
+    if integrated:
+        # Assemble actual collision triangles in shaft-local coordinates.
+        # No cam-to-shaft constraints remain. Separate connected shells
+        # represent an ideally rigid keyed assembly, not a welded solid.
+        bpy.context.view_layer.update()
+        inverse=shaft.matrix_world.inverted()
+        vertices=[tuple(v.co) for v in shaft.data.vertices]
+        faces=[tuple(p.vertices) for p in shaft.data.polygons]
+        cams=[it for L in legs for it in L['items']]
+        for it in cams:
+            cam=it['cam'];local=inverse@cam.matrix_world
+            it['cam_local']=local.copy()
+            n=len(vertices)
+            vertices.extend(tuple(local@v.co) for v in cam.data.vertices)
+            faces.extend(tuple(n+i for i in p.vertices) for p in cam.data.polygons)
+        names={it['cam'].name for it in cams}
+        for o in list(sc.objects):
+            c=o.rigid_body_constraint
+            if c and c.type=='FIXED' and c.object1==shaft and c.object2.name in names:
+                bpy.data.objects.remove(o,do_unlink=True)
+        for it in cams:
+            bpy.data.objects.remove(it['cam'],do_unlink=True)
+            it['cam']=None
+        m=bpy.data.meshes.new('rigid shaft and eight groove cams')
+        m.from_pydata(vertices,[],faces);m.update()
+        shaft.data=m;shaft.rigid_body.collision_shape='MESH';shaft.rigid_body.mass=28.8
+        shaft.name='integrated camshaft'
+        bpy.context.view_layer.update()
     world=sc.rigidbody_world;world.substeps_per_frame=32;world.solver_iterations=100
     world.point_cache.frame_start=1;world.point_cache.frame_end=FRAMES
     bpy.context.view_layer.update();sc.frame_set(1)
     cs=[o.rigid_body_constraint for o in sc.objects if o.rigid_body_constraint]
     bodies=[o for o in sc.objects if o.rigid_body and o.rigid_body.type=='ACTIVE']
-    assert len(cs)==38 and len(bodies)==29 and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
+    assert len(cs)==(30 if integrated else 38) and len(bodies)==(21 if integrated else 29) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
     assert all(o.animation_data is None and not o.rigid_body.kinematic for o in bodies)
     return sc,shaft,legs
-def run(name,separated,enabled,dest):
-    sc,shaft,legs=setup(separated,enabled)
+def run(name,separated,enabled,dest,integrated=False):
+    sc,shaft,legs=setup(separated,enabled,integrated)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/('phase211_four_leg_'+name+'.blend')))
     rows=[];last=None;travel=0.
     for f in range(1,FRAMES+1):
@@ -79,7 +107,7 @@ def run(name,separated,enabled,dest):
             phase=(START-travel+L['offset'])%math.tau;O=mat(L['out']);pfx=f'L{j}_'
             row[pfx+'phase']=phase;row[pfx+'out_drift']=abs(O.translation.z-L['oz'])
             for i,it in enumerate(L['items']):
-                A=mat(it['cam']);B=mat(it['roller']);D=mat(it['slide']);rel=A.inverted()@B;v=rel.translation
+                A=S@it['cam_local'] if integrated else mat(it['cam']);B=mat(it['roller']);D=mat(it['slide']);rel=A.inverted()@B;v=rel.translation
                 p=np.array((v.x,v.y));k=pfx+it['kind']+'_'
                 out=float(O.translation[i]-it['base']);expected=float(law(phase,it['kind'],DUTY))
                 reach=.12*abs(rel[2][2])+ROLLER*math.hypot(rel[2][0],rel[2][1])
@@ -115,7 +143,7 @@ def run(name,separated,enabled,dest):
         else:
             q.update(no_large_output=amp[0]<=.25 and amp[1]<=.15,backplate=bg>=.02)
         outputs.append(dict(leg=j,phase=PHASES[j],amplitude=amp,max_axis_error=err,max_xy_error=xy,max_gap=gap,max_outer_gap=outer,min_back_gap=bg,checks=q,passed=all(q.values())))
-    c=dict(name=name,separated=separated,enabled=enabled,travel=travel,checks=checks,legs=outputs,
+    c=dict(name=name,separated=separated,enabled=enabled,integrated=integrated,travel=travel,checks=checks,legs=outputs,
         passed=all(checks.values()) and all(v['passed'] for v in outputs),rows=rows)
     print('PHASE211D1_CASE',json.dumps({k:v for k,v in c.items() if k!='rows'},allow_nan=False),flush=True)
     return c
