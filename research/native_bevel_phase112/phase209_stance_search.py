@@ -3,11 +3,12 @@ Use the actual convex rounded triangular outline (32 directions, R=.27)
 and a fixed horizontal floor band above the global minimum of its bottom.
 Retain failure to reach duty .75, rather than relax the target.
 """
-import json,math,time
+import json,math,time,sys
 from pathlib import Path
-from phase207_walking_machine import points,rng
 import numpy as np
 ROOT=Path(__file__).resolve().parent
+sys.path.insert(0,str(ROOT))
+from phase207_walking_machine import points,rng
 N=120;R=.27;TOL=.035;TARGET=.75
 BASE=[.6929126433990895,1.495141205001622,2.1626974924188103,1.4865368241155517,3.298077477756888,-1.0078676866004241]
 def evaluate(z,n=N):
