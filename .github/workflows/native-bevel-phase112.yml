@@ -1102,6 +1102,39 @@ jobs:
           assert d["physical_gate"]==all(c["passed"] for c in d["cases"])
           print("XY physical gate (separate from evidence integrity):",d["physical_gate"])
           PY
+      - name: Diagnose separated XY control with bounded simulation substeps
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_xy_diagnosis.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_xy_diagnosis.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["criteria_changed"] and not d["geometry_changed"]
+          trials=d["trials"]
+          assert 1<=len(trials)<=3
+          assert [t["substeps"] for t in trials]==[16,32,64][:len(trials)]
+          for t in trials:
+              cases=t["cases"]
+              assert [c["name"] for c in cases] in (["separated"],["separated","engaged","motor_off"])
+              assert t["passed"]==(len(cases)==3 and all(c["passed"] for c in cases))
+              for c in cases:
+                  assert c["substeps"]==t["substeps"]
+                  assert [r["frame"] for r in c["rows"]]==list(range(1,602))
+                  assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+                  assert c["passed"]==all(c["checks"].values())
+                  assert (p/("phase210_xy_resolution_"+str(t["substeps"]))/("phase210_xy_"+c["name"]+".blend")).stat().st_size>0
+          chosen=next((t["substeps"] for t in trials if t["passed"]),None)
+          assert chosen==d["selected_substeps"]
+          assert chosen is not None or len(trials)==3
+          checks=trials[0]["cases"][0]["checks"]
+          assert d["baseline_reproduced"]==(not checks["coupling"] and all(v for k,v in checks.items() if k!="coupling"))
+          assert d["physical_gate"]==(d["baseline_reproduced"] and chosen is not None)
+          assert not d["walking_certified"]
+          print("XY diagnostic physical gate:",d["physical_gate"])
+          PY
       - name: Evaluate bounded stance-duty search against actual foot outline
         run: |
           set -euo pipefail
