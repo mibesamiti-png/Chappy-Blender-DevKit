@@ -73,7 +73,7 @@ def audit(ob,hs):
                   for h,x in zip(hs,per)))
     return dict(passed=all(checks.values()),checks=checks,volume=a['volume'],expected_volume=volume,
                 euler=q['euler'],faces=q['faces'],per_hole=per,pairs=pairs)
-def execute(hs):
+def execute(hs,observer=None):
     ob,m=make('p164_block',BOX,FACES);cutters=[];mods=[]
     try:
         base=snapshot(ob,hs[0]);stages=[]
@@ -83,6 +83,10 @@ def execute(hs):
             mod.operation='DIFFERENCE';mod.solver='EXACT';mod.object=co
             s=snapshot(ob,h);stages.append(dict(clean=s['clean'],euler=s['metrics']['euler'],faces=s['metrics']['faces']))
         result=audit(ob,hs);result['stages']=stages
+        if observer is not None and preflight(hs)['passed'] and result['passed'] and all(x['clean'] for x in stages):
+            dg=bpy.context.evaluated_depsgraph_get();ev=ob.evaluated_get(dg);candidate=ev.to_mesh()
+            try:observer(candidate)
+            finally:ev.to_mesh_clear()
         for mod in reversed(mods):ob.modifiers.remove(mod)
         restored=snapshot(ob,hs[0]);result['rollback_exact']=restored['sha256']==base['sha256']
         assert result['rollback_exact']
