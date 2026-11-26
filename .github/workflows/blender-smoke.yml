@@ -12,6 +12,9 @@ on:
       - 'cbdk/joint_integration.py'
       - 'parts/blender/joint_preview.py'
       - 'scripts/blender_joint_integration_smoke.py'
+      - 'experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip'
+      - 'experiments/team_a_staged/gl_manifest.json'
+      - 'experiments/team_a_staged/run_gl.py'
       - 'tests/test_joint_integration.py'
       - 'pyproject.toml'
       - 'docs/project/STATE.json'
@@ -1318,6 +1321,35 @@ jobs:
           "$BLENDER_PATH" --background --factory-startup --disable-autoexec --python-exit-code 7 \
             --python scripts/blender_joint_integration_smoke.py -- \
             --output reports/ci/team-a-public-native.json
+
+      # Keep provider-backed evidence separate from the public sentinel smoke.
+      # Fetch only the frozen GL snapshot; do not merge the research branch.
+      - name: Bounded Team A actual CJM GL provider chain
+        if: ${{ hashFiles('experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip') != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          CJM_ZIP="$GITHUB_WORKSPACE/experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip"
+          printf '%s  %s\n' '91700f02210e03940eee38f1939f6a7d9778ed9406f902e9359f73bf5f4a88c1' "$CJM_ZIP" | sha256sum --check
+          GL_HEAD="$(python -c 'import json; print(json.load(open("experiments/team_a_staged/gl_manifest.json"))["head"])')"
+          GL_SNAPSHOT="$(mktemp -d "$RUNNER_TEMP/cbdk-a-gl.XXXXXX")"
+          trap 'rm -rf "$GL_SNAPSHOT"' EXIT
+          git fetch --no-tags --depth=1 origin "$GL_HEAD"
+          git archive FETCH_HEAD research/geometry_lab/cbdk_geometry | tar -x -C "$GL_SNAPSHOT"
+          GL_ROOT="$GL_SNAPSHOT/research/geometry_lab"
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec --python-exit-code 7 \
+            --python scripts/blender_joint_integration_smoke.py -- \
+            --cjm-zip "$CJM_ZIP" --gl-root "$GL_ROOT" \
+            --output reports/ci/team-a-provider-native.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("reports/ci/team-a-provider-native.json").read_text())
+          rows = report["rows"]
+          assert rows and all(row["status"] == "passed" for row in rows), rows
+          assert sum(row["case"] == "actual_cjm_gl_cbdk_chain" for row in rows) == 1
+          print("CBDK_A_PROVIDER_CHAIN_PASS", report["blender"], len(rows))
+          PY
 
       - name: Upload evidence and log even when Blender fails
         if: always()
