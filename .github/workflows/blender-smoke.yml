@@ -12,6 +12,7 @@ on:
       - 'cbdk/joint_integration.py'
       - 'parts/blender/joint_preview.py'
       - 'scripts/blender_joint_integration_smoke.py'
+      - 'scripts/blender_joint_gui_probe.py'
       - 'experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip'
       - 'experiments/team_a_staged/gl_manifest.json'
       - 'experiments/team_a_staged/run_gl.py'
@@ -1359,3 +1360,59 @@ jobs:
           path: reports/ci/
           retention-days: 14
           if-no-files-found: warn
+
+
+  # One Windows GUI pilot. A failed/blocked experiment is not an accepted GUI gate.
+  team-a-windows-gui-pilot:
+    if: github.event_name == 'pull_request'
+    runs-on: windows-2022
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check pinned GUI probe syntax
+        run: python -m py_compile scripts/blender_joint_gui_probe.py
+      - name: Prepare exact Windows Blender and pinned provider snapshot
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Join-Path $PWD 'experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip'
+          if ((Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower() -ne '91700f02210e03940eee38f1939f6a7d9778ed9406f902e9359f73bf5f4a88c1') { throw 'CJM hash mismatch' }
+          $archive = Join-Path $env:RUNNER_TEMP 'blender-4.5.15-windows-x64.zip'
+          curl.exe --fail --location --proto '=https' --proto-redir '=https' --connect-timeout 30 --max-time 300 'https://download.blender.org/release/Blender4.5/blender-4.5.15-windows-x64.zip' -o $archive
+          if ($LASTEXITCODE -ne 0) { throw 'Windows Blender archive transfer failed' }
+          if ((Get-FileHash -Algorithm SHA256 $archive).Hash.ToLower() -ne '52dd02fd74877fa08e74b67d7854cf32468a232c02aaa19b6844c91285574f8d') { throw 'Blender archive hash mismatch' }
+          $folder = Join-Path $env:RUNNER_TEMP 'team-a-windows-blender'
+          Expand-Archive -LiteralPath $archive -DestinationPath $folder
+          $blender = @(Get-ChildItem $folder -Recurse -Filter blender.exe -File)
+          if ($blender.Count -ne 1) { throw 'Expected exactly one Blender executable' }
+          $manifest = Get-Content 'experiments/team_a_staged/gl_manifest.json' -Raw | ConvertFrom-Json
+          git fetch --no-tags --depth=1 origin $manifest.head
+          if ($LASTEXITCODE -ne 0) { throw 'GL fetch failed' }
+          $glZip = Join-Path $env:RUNNER_TEMP 'team-a-gl.zip'
+          git archive --format=zip --output=$glZip FETCH_HEAD research/geometry_lab/cbdk_geometry
+          if ($LASTEXITCODE -ne 0) { throw 'GL snapshot failed' }
+          $glFolder = Join-Path $env:RUNNER_TEMP 'team-a-gl'
+          Expand-Archive -LiteralPath $glZip -DestinationPath $glFolder
+          $glRoot = Join-Path $glFolder 'research/geometry_lab'
+          foreach ($file in $manifest.files.PSObject.Properties) {
+            if ((Get-FileHash -Algorithm SHA256 (Join-Path $glRoot $file.Name)).Hash.ToLower() -ne $file.Value) { throw 'GL hash mismatch' }
+          }
+          "A_BLENDER=$($blender[0].FullName)" >> $env:GITHUB_ENV
+          "A_GL_ROOT=$glRoot" >> $env:GITHUB_ENV
+      - name: Real Windows desktop input and ordinary Undo pilot
+        shell: pwsh
+        run: |
+          python scripts/blender_joint_gui_probe.py --blender "$env:A_BLENDER" --gl "$env:A_GL_ROOT" --zip "experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip" --output "reports/ci/team-a-windows-gui.json"
+      - name: Retain pilot evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-team-a-windows-gui-pilot
+          path: reports/ci/
+          if-no-files-found: warn
+          retention-days: 14
