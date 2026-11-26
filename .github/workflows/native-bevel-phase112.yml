@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 163
+name: Geometry Lab isolated operations Phase 164
 on:
   pull_request:
     paths:
@@ -284,6 +284,24 @@ jobs:
           assert len(d["rows"])==3 and all(len(r["records"])==6 for r in d["rows"])
           assert all(c["rollback_exact"] for r in d["rows"] for c in r["records"])
           print("Selected",[(r["target"]["name"],r["selected"]) for r in d["rows"]])
+          PY
+      - name: Test multiple-hole clearance and minimum wall contracts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase164_multi_hole_clearance.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase164_multi_hole_clearance.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==8
+          assert all(r["preflight"]["passed"]==r["expected"] for r in d["rows"])
+          assert all(not r["accepted"] for r in d["rows"] if not r["expected"])
+          assert all(r["native"]["rollback_exact"] for r in d["rows"] if r["native"] is not None)
+          print("Accepted",sum(r["accepted"] for r in d["rows"]))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
