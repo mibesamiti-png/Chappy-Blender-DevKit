@@ -21,3 +21,42 @@ This is a **bounded synthetic interleaving** test. It does not prove absolute fr
 Only safe status names and bounded counts are exposed, without paths, source contents, synthetic private markers, unknown names or license data. All source-authenticity, owner consent, licensing, redistribution, signing, code execution, official real-package validation and release authorization indicators remain false.
 
 The seven CBDK-authored preview ZIP positives, 16 MiB archive / 2 MiB member / 64 member limits, R9 self-rehashed negative cases and existing three-version Blender official validator **six data-only synthetic** fixtures remain required. No private/user addon Python is imported, installed, executed or published. `EXT-001` stays partial. This design doc is not CI evidence; final verified CI and any capability skips belong to the R13 draft PR.
+
+## Windows clock compatibility correction (A, 2026-11-26)
+
+Windows Python 3.12/3.13 can expose creation time through path stat ctime
+and metadata change time through descriptor fstat ctime. These are not
+equivalent clocks. The test-only fingerprint compares birthtime_ns on
+Windows when available, with legacy ctime_ns fallback; POSIX retains
+ctime_ns. Path checks, size/identity/mtime comparisons, bounds and prior
+test expectations remain unchanged. This is not a production reader or
+a new guarantee against hostile timestamp restoration or all metadata
+changes.
+
+Independent diagnostic branch `work/a-r13-observation-20261126`:
+- [Initial reproduction](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45837112669):
+  Python 3.13 focused 59/60, one false refusal before the mutation callback
+  due exclusively to ctime_ns; Python 3.11 focused 60/60.
+- [Win32 FileBasicInfo comparison](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45839415722):
+  40 observations per interpreter; native mapping confirmed for 3.11.9
+  and 3.13.17. One natural 15.6168 ms clock difference in 20 fresh
+  3.13 files, 20/20 deliberately separated-clock files reproduced it.
+- [Repair comparison and regression](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45840533624):
+  old reader met 100/300 scenario expectations (newer Windows readers
+  refused before mutation, not an unsafe acceptance); corrected reader
+  met 300/300, including 240 actual mutation detections with no returned
+  bytes. Windows 3.11/3.12/3.13 focused 180/180; full suite 1370 tests
+  per environment (Windows 16 skips each, Linux 3.13 7 skips), no failures.
+  This evidence belongs to research commit `f4538b0ad31a802b42b698c5b267ff48887bd831`,
+  which includes the separate integration candidate, not this dev-based PR.
+  The exact corrected test-file blob is reused.
+
+Source audit:
+[CPython v3.13.17 path stat](https://github.com/python/cpython/blob/v3.13.17/Modules/posixmodule.c#L2218-L2228),
+[descriptor clock mapping](https://github.com/python/cpython/blob/v3.13.17/Python/fileutils.c#L1139-L1143),
+[Python 3.11 legacy mapping](https://github.com/python/cpython/blob/v3.11.9/Python/fileutils.c#L1089-L1093).
+
+The Work host's separate changed-source failure has not been independently
+reproduced there. The demonstrated early false refusal may explain it
+but the original detailed failure log remains unavailable. Do not claim
+that all possible R13 races or the integration candidate are certified.
