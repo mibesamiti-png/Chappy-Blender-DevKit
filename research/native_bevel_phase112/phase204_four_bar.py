@@ -25,23 +25,38 @@ def prism(name,xy,z0,z1):
     f=[tuple(reversed(range(n))),tuple(range(n,2*n))]
     f.extend((i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n))
     return mesh(name,v,f)
-def make_link(name,l):
+def make_link_attempt(name,l,mode):
     xy=[(l+LINK_R*math.cos(-math.pi/2+i*math.pi/16),LINK_R*math.sin(-math.pi/2+i*math.pi/16)) for i in range(17)]
     xy.extend((LINK_R*math.cos(math.pi/2+i*math.pi/16),LINK_R*math.sin(math.pi/2+i*math.pi/16)) for i in range(17))
-    m=prism(name,xy,-THICK/2,THICK/2);base=measure(m,'cube');stages=[]
+    shift=l/2 if mode=='centered' else 0.
+    m=prism(name,[(x-shift,y) for x,y in xy],-THICK/2,THICK/2);base=measure(m,'cube');stages=[]
     try:
-        for x in (0.,l):
-            n=drill(m,np.array([x,0.,0.]),basis((0,0,1)),.4,HOLE_R)
+        order=(l,0.) if mode=='reversed' else (0.,l)
+        for x in order:
+            n=drill(m,np.array([x-shift,0.,0.]),basis((0,0,1)),.4,HOLE_R)
             bpy.data.meshes.remove(m);m=n;stages.append(measure(m,'cube'))
-        a=stages[-1];q=a['metrics'];rays=Rays(m)
+        if shift:
+            for v in m.vertices:v.co.x+=shift
+            m.update()
+        a=measure(m,'cube');q=a['metrics'];rays=Rays(m)
         bore=all(rays.cast((x+dx,dy,.5),(0,0,-1),1.) is None for x in (0.,l)
                  for dx,dy in ((0.,0.),(.08,0.),(-.08,0.),(0.,.08),(0.,-.08)))
         radii=[rays.cast((x,0.,0.),d,1.) for x in (0.,l) for d in ((1,0,0),(-1,0,0),(0,1,0),(0,-1,0))]
         expected=base['volume']-2*64*.5*HOLE_R**2*math.sin(2*math.pi/64)*THICK
-        ok=base['clean'] and all(s['clean'] for s in stages) and q['boundary_edges']==0 and q['euler']==-2 and bore and all(r is not None and abs(r-HOLE_R)<EPS for r in radii) and abs(a['volume']-expected)<EPS
-        return m,dict(passed=ok,faces=q['faces'],volume=a['volume'],expected_volume=expected,bore=bore,radii=radii)
+        checks=dict(base_clean=base['clean'],stages_clean=all(s['clean'] for s in stages),final_clean=a['clean'],closed=q['boundary_edges']==0,topology=q['euler']==-2,bore=bore,radius=all(r is not None and abs(r-HOLE_R)<EPS for r in radii),volume=abs(a['volume']-expected)<EPS,bounds=bool(np.max(np.abs(np.asarray(a['bounds'])-[[-LINK_R,-LINK_R,-THICK/2],[l+LINK_R,LINK_R,THICK/2]]))<=EPS))
+        return m,dict(passed=all(checks.values()),mode=mode,checks=checks,faces=q['faces'],volume=a['volume'],expected_volume=expected,bore=bore,radii=radii,base=base,stages=stages,final=a)
     except:
         bpy.data.meshes.remove(m);raise
+def make_link(name,l):
+    attempts=[];m=None
+    # Same dimensions and unchanged acceptance checks. Only the failed crank
+    # can receive a bounded retry. Keep baseline evidence even when it fails.
+    for mode in ('baseline','reversed','centered') if name=='crank' else ('baseline',):
+        if m is not None:bpy.data.meshes.remove(m)
+        m,a=make_link_attempt(name,l,mode);attempts.append(a)
+        print('PHASE204_PART',json.dumps(dict(name=name,**a),allow_nan=False),flush=True)
+        if a['passed']:break
+    return m,dict(**a,attempts=attempts)
 def make_pin(name,h,r=PIN_R):
     xy=[(r*math.cos(i*math.pi/32),r*math.sin(i*math.pi/32)) for i in range(64)]
     m=prism(name,xy,0.,h);a=measure(m,'cube')
