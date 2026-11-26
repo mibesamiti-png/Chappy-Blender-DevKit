@@ -61,7 +61,12 @@ is permitted in that scene session. Diagnose it in a fresh synthetic process.
 The native smoke executes the actual provider chain with explicit pinned
 arguments. Public CI now has the owner-authorized CJM ZIP and fetches the exact
 frozen GL sources. The separate sentinel-only run still excludes providers.
-The direct history-callback test is not an actual Undo/Redo test.
+The direct history-callback test is not an actual Undo/Redo test. A separate
+isolated background history experiment uses a single explicit baseline push,
+the actual ADOPT operator and native ed.undo/redo (no post-adopt manual push).
+It compares semantic scene content rather than RNA pointers after traversal.
+Its report may be passed, failed or unavailable; failure/unavailability does
+not count as success or release approval. The GUI gate remains separate.
 Native `Panel.draw` and operators are not Windows mouse/keyboard or Ctrl+Z proof.
 Continuous collision, arbitrary models, physical strength and printing remain
 unverified. No core registry/recipe catalog automatically enables this preview.
