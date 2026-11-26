@@ -1,0 +1,78 @@
+name: Geometry Lab isolated native bevel Phase 112
+on:
+  pull_request:
+    paths:
+      - 'research/native_bevel_phase112/**'
+      - '.github/workflows/native-bevel-phase112.yml'
+permissions:
+  contents: read
+concurrency:
+  group: native-bevel-phase112-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  native-bevel:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify frozen synthetic inputs
+        run: |
+          set -euo pipefail
+          echo 'e6665689f92ca582dccd49e2a2dff720a412bff9c0ae63fe90946ede6b143200  phase111_fixtures.json' | sha256sum --check
+          echo 'af9aa832ececf2316ee75b630bd55f9a1696e418ff4e53c7f8e97a6a2918243c  phase112_native_benchmark.py' | sha256sum --check
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned publisher Blender archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Run preflight and frozen native benchmark
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          mkdir -p results
+          BLENDER="$RUNNER_TEMP/blender-4.4.3-linux-x64/blender"
+          "$BLENDER" --version
+          "$BLENDER" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase112_native_benchmark.py -- --preflight --out results/preflight.json
+          "$BLENDER" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase112_native_benchmark.py -- --out results/native.json
+      - name: Check measurement completeness, summarize without adoption
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from collections import Counter
+          p=Path("results")
+          d=json.loads((p/"native.json").read_text())
+          assert d["native_executed"] and d["complete"] and d["blender_version"].startswith("4.4.3")
+          assert len(d["rows"])==12 and all(len(x["candidates"])==21 for x in d["rows"])
+          out={"approved":False,"version":d["blender_version"],"cases":[]}
+          for row in d["rows"]:
+              candidates=row["candidates"]
+              out["cases"].append({"name":row["name"],"measured":sum(c["status"]=="measured" for c in candidates),"screened":sum(c.get("screened",False) for c in candidates),"rejections":dict(Counter(reason for c in candidates for reason in c.get("screen_reasons",[]))),"errors":[c.get("error") for c in candidates if c["status"]!="measured"],"custom_screened":row["custom_screened"]})
+          out["measured"]=sum(c["measured"] for c in out["cases"])
+          (p/"summary.json").write_text(json.dumps(out,indent=2))
+          print(json.dumps(out))
+          assert out["measured"]==252,"Native measurements incomplete; see artifact"
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-bevel-phase112-${{ github.sha }}
+          path: research/native_bevel_phase112/results/
+          if-no-files-found: warn
+          retention-days: 14
