@@ -1,4 +1,4 @@
-name: Geometry Lab isolated operations Phase 204
+name: Geometry Lab isolated operations Phase 205
 on:
   pull_request:
     paths:
@@ -912,6 +912,23 @@ jobs:
           assert len(d["mesh_collisions"])==73 and not any(x["pairs"] for x in d["mesh_collisions"])
           assert all(d["controls"].values()) and all(x>0 for x in d["insertion_gaps"].values())
           assert len(list(p.glob("phase204_*.obj")))==8 and (p/"phase204_four_bar.blend").stat().st_size>0
+          PY
+      - name: Fabricate and verify two-loop six-bar mechanism
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase205_six_bar.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase205_six_bar.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["parts"])==12 and all(x["passed"] for x in d["parts"].values())
+          assert len(d["samples"])==361 and all(x["passed"] for x in d["samples"])
+          assert len(d["mesh_collisions"])==361 and not any(x["pairs"] for x in d["mesh_collisions"])
+          assert len(d["insertion_gaps"])==6 and all(x>0 for x in d["insertion_gaps"].values())
+          assert all(d["controls"].values())
+          assert len(list(p.glob("phase205_*.obj")))==12 and (p/"phase205_six_bar.blend").stat().st_size>0
           PY
       - uses: actions/upload-artifact@v4
         if: always()
