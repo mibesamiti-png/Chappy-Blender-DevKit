@@ -34,7 +34,7 @@ def limits(c,linear,angular):
                 setattr(c,'limit_'+key+'_lower',lo)
                 setattr(c,'limit_'+key+'_upper',hi)
     return c
-def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0):
+def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0,groove=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene
     sc.gravity=(-9.81,-9.81,0.) if spring is None else (0.,-9.81,0.);sc.render.fps=FPS;sc.frame_start=1;sc.frame_end=FRAMES+delay
@@ -59,6 +59,7 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
             for kp in fc.keyframe_points:kp.interpolation='CONSTANT'
         motor.motor_ang_target_velocity=0.
     assert preload>=0 and (preload==0 or (spring is not None and spring>0))
+    assert not groove or (spring==0. and preload==0 and delay==0)
     items=[];zero={a:(0.,0.) for a in 'xyz'}
     for kind,axis,base,z,phi in [('stride','x',7.,0.,0.),('lift','y',2.5,1.,math.pi/2)]:
         c=profile(kind,base,duty=duty)
@@ -72,6 +73,18 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
         cam.location=(0.,0.,z);cam.rotation_euler.z=-start
         body(cam);cam.rigid_body.mass=3.;cam.color=(.8,.55,.15,1) if axis=='y' else (.25,.55,.8,1)
         constraint(kind+' rigid shaft coupling','FIXED',shaft,cam,(0.,0.,z))
+        wall_ob=None;wall_xy=None
+        if groove:
+            from phase211_groove_profile import wall
+            outer,inner,qa=wall(kind,base,duty)
+            assert qa['passed'],qa
+            wall_xy=inner@rot.T
+            wm,wa=ring(kind+' conjugate outer wall',[tuple(v) for v in outer@rot.T],[tuple(v) for v in wall_xy])
+            assert wa['passed'],wa
+            wall_ob=bpy.data.objects.new(kind+' outer groove wall',wm);sc.collection.objects.link(wall_ob)
+            wall_ob.location=(0.,0.,z);wall_ob.rotation_euler.z=-start
+            body(wall_ob);wall_ob.rigid_body.mass=.5;wall_ob.color=(.55,.55,.65,1)
+            constraint(kind+' outer wall shaft coupling','FIXED',shaft,wall_ob,(0.,0.,z))
         initial=base+float(law(start,kind,duty));rz=z+((-1. if axis=='x' else 1.) if separated else 0.)
         side=-1. if axis=='x' else 1.
         pos=(initial,0.,rz) if axis=='x' else (0.,initial,rz)
@@ -97,7 +110,7 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
                 spring_anchor=weight
             c=limits(constraint('passive stride return spring','GENERIC_SPRING',spring_anchor,slide,spos),{}, {})
             c.spring_type='SPRING2';c.use_spring_x=True;c.spring_stiffness_x=spring;c.spring_damping_x=.5
-        items.append(dict(kind=kind,axis=axis,base=base,z=z,rz=rz,initial=initial,cam=cam,roller=roller,slide=slide,xy=xy,weight=weight,weight_origin=weight_origin))
+        items.append(dict(kind=kind,axis=axis,base=base,z=z,rz=rz,initial=initial,cam=cam,roller=roller,slide=slide,xy=xy,weight=weight,weight_origin=weight_origin,wall_ob=wall_ob,wall_xy=wall_xy))
     outpos=(items[0]['initial'],items[1]['initial'],3.5)
     carriage=box('physical XY output carriage',outpos,(.32,.32,.25),.1);carriage.color=(.9,.3,.2,1)
     limits(constraint('output planar guide','GENERIC',anchor,carriage,outpos),{'z':(0.,0.)},zero)
@@ -111,14 +124,15 @@ def setup(separated,enabled,substeps=16,duty=.75,start=START,spring=None,preload
     bpy.context.view_layer.update();sc.frame_set(1)
     objs=[shaft,carriage]+[it[k] for it in items for k in ('cam','roller','slide')]
     objs.extend(it['weight'] for it in items if it['weight'] is not None)
+    objs.extend(it['wall_ob'] for it in items if it['wall_ob'] is not None)
     cs=[o.rigid_body_constraint for o in sc.objects if o.rigid_body_constraint]
-    assert len(cs)==11+int(spring is not None and spring>0)+int(preload>0) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
+    assert len(cs)==11+int(spring is not None and spring>0)+int(preload>0)+2*int(groove) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
     assert all(o.animation_data is None and not o.rigid_body.kinematic for o in objs)
     return sc,shaft,carriage,items
 def wrap(a):return math.atan2(math.sin(a),math.cos(a))
 def az(M):return math.atan2(M[1][0],M[0][0])
-def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0):
-    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring,preload,delay)
+def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring=None,preload=0.,delay=0,groove=False):
+    sc,shaft,carriage,items=setup(separated,enabled,substeps,duty,start,spring,preload,delay,groove)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/('phase210_xy_'+name+'.blend')))
     rows=[];last=None;travel=0.
     for f in range(1,FRAMES+delay+1):
@@ -146,6 +160,12 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
                 kind+'_slide_displacement':float(D.translation[i]-it['initial']),
                 kind+'_roller_slide_error':float(B.translation[i]-D.translation[i]),
                 kind+'_slide_output_error':float(O.translation[i]-D.translation[i])})
+            if groove:
+                from phase211_groove_profile import nearest
+                G=mat(it['wall_ob']);local_g=G.inverted()@B.translation
+                row[kind+'_outer_gap']=nearest(np.array((local_g.x,local_g.y)),it['wall_xy'])-ROLLER
+                row[kind+'_outer_sync']=abs(wrap(az(G)-a))
+                row[kind+'_outer_drift']=(G.translation-Vector((0.,0.,it['z']))).length
         it=items[0]
         if it['weight'] is not None:
             W=mat(it['weight']);dw=W.translation-Vector(it['weight_origin'])
@@ -186,6 +206,11 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
         # brake is added; reject sustained rotation or large output motion.
         checks.update(no_sustained_drive=abs(travel)<=.4,
             no_large_output=amp['stride']<=.25 and amp['lift']<=.15)
+    if groove:
+        checks['outer_sync']=all(peak(k+'_outer_sync')<=.015 for k in amp)
+        checks['outer_drift']=all(peak(k+'_outer_drift')<=.015 for k in amp)
+        if name=='engaged':
+            checks['outer_clearance']=all(peak(k+'_outer_gap')<=.025 for k in amp)
     startup_checks={}
     if delay:
         # Do not waive the startup tracking or constraint gates. In separated
@@ -198,7 +223,7 @@ def run_case(name,separated,enabled,dest,substeps=16,duty=.75,start=START,spring
                 startup_tracking=max(abs(r[k+'_error']) for r in startup for k in amp)<=.025,
                 preload_ready=-startup[-1]['preload_anchor_x']>=.9*preload and startup[-1]['spring_force_proxy']>=2.)
         checks.update(startup_checks)
-    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,preload=preload,delay=delay,travel=travel,amplitude=amp,
+    out=dict(name=name,separated=separated,enabled=enabled,substeps=substeps,duty=duty,spring=spring,preload=preload,delay=delay,groove=groove,travel=travel,amplitude=amp,
         max_xy_error=peak('xy_error'),max_axis_error={k:peak(k+'_error') for k in amp},
         max_sync=sync,max_coupler_error=coupler,max_drift=drift,max_contact_gap=gaps,
         max_stance_height=dwell,checks=checks,passed=all(checks.values()),rows=all_rows)
