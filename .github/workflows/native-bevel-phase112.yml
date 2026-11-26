@@ -1010,6 +1010,27 @@ jobs:
           assert d["independent_samples"]==1440 and not d["walking_certified"]
           assert (p/"phase210_inverse_cam.blend").stat().st_size>0
           PY
+      - name: Evaluate guarded four-pad support and revised cam profiles
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_support_design.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_support_design.json").read_text())
+          assert d["complete"] and not d["approved"] and not d["physical_walk_certified"] and not d["packaging_certified"]
+          assert [t["duty"] for t in d["trials"]]==[.75,.77,.80]
+          for t in d["trials"]:
+              assert len(t["orders"])==6 and len(t["profiles"])==2
+              assert all(sum(q["support_counts"])==1440 for q in t["orders"])
+              assert t["gate"]==(t["best"]["support_gate"] and all(p["passed"] for p in t["profiles"]))
+          chosen=next((t for t in d["trials"] if t["gate"]),None)
+          assert d["selected_duty"]==(chosen["duty"] if chosen else None)
+          assert d["static_gate"]==bool(d["dense"] and d["dense"]["support_gate"])
+          if chosen:
+              assert d["dense"]["samples"]==3600 and d["dense"]["phases"]==d["selected_phases"]
+          print("Static support gate (not physical walk):",d["static_gate"])
+          PY
       - name: Measure motor-driven inverse cam and gravity-return roller with controls
         run: |
           set -euo pipefail
@@ -1229,5 +1250,6 @@ jobs:
             research/native_bevel_phase112/results/phase208_*
             research/native_bevel_phase112/results/phase209_*
             research/native_bevel_phase112/results/phase210_*
+            research/native_bevel_phase112/results/phase211_*
           if-no-files-found: warn
           retention-days: 14
