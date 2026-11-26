@@ -187,6 +187,20 @@ class ExperimentTriageTests(unittest.TestCase):
         self.assertFalse(rejected["same_fixture_change_restoration_verified"])
         self.assertFalse(any(rejected["safety"].values()))
 
+    def test_r28_review_cannot_override_protected_part_veto_or_stop(self):
+        from test_parameter_candidate_evidence_r28 import observations, evaluate
+        self.assertFalse(any(self.build()["safety"].values()))
+        args = observations(budget=2)
+        valid = evaluate(args)
+        self.assertEqual(valid["history"]["best_id"], "baseline")
+        self.assertEqual(valid["history"]["stop_reason"], "budget_exhausted")
+        self.assertFalse(valid["same_fixture_selection_verified"])
+        args[1]["rows"][1].update(decision="observed_target_reached", best_after="cross_part")
+        args[1].update(best_id="cross_part", stop_reason="target_reached", target_reached=True)
+        rejected = evaluate(args)
+        self.assertEqual(rejected["status"], "rejected")
+        self.assertFalse(any(rejected["safety"].values()))
+
     def test_forged_candidate_selection_and_delta_rejected(self):
         for change in (
             lambda r: r["candidate_reviews"][0].update(selected_declaration="first"),
