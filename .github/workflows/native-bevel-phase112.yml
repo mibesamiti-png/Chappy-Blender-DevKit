@@ -1,4 +1,4 @@
-name: Geometry Lab isolated intent Phase 151
+name: Geometry Lab isolated intent Phase 152
 on:
   pull_request:
     paths:
@@ -88,6 +88,20 @@ jobs:
           assert d["complete"] and d["native_executed"] and not d["approved"]
           assert len(d["rows"])==3 and all(len(r["options"])==7 for r in d["rows"])
           assert all(r["preserve"]==r["unknown"]=="keep" for r in d["rows"])
+          PY
+      - name: Sweep built-in smoothing parameters
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase152_native_sweep.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase152_native_sweep.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["cases"])==3 and all(len(c["rows"])==28 for c in d["cases"])
           PY
       - uses: actions/upload-artifact@v4
         if: always()
