@@ -83,7 +83,13 @@ class ProjectHandoffTests(unittest.TestCase):
         # must remain readable without weakening small catalog input budgets.
         state_path = self.root / STATE
         self.assertLess(state_path.stat().st_size, 128 * 1024)
-        self.assertEqual(validate_state(self.root)["state"]["schema_version"], 1)
+        # Exercise both checkout forms on every OS before the oversized probe.
+        lf = state_path.read_bytes().replace(b"\r\n", b"\n")
+        for data in (lf, lf.replace(b"\n", b"\r\n")):
+            with self.subTest(size=len(data)):
+                self.assertLess(len(data), 128 * 1024)
+                state_path.write_bytes(data)
+                self.assertEqual(validate_state(self.root)["state"], self.state)
         with state_path.open("ab") as stream:
             stream.write(b" " * (128 * 1024 + 1))
         with self.assertRaisesRegex(ValueError, "oversized state file"):

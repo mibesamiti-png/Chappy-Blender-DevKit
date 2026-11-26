@@ -53,7 +53,7 @@
     },
     {
       "version": "0.21",
-      "status": "in_progress",
+      "status": "scoped_milestones_accepted",
       "goal": "Safe repair and improvement candidate experiments",
       "candidates": [
         "Strengthen diagnostic-to-setting/code hypotheses",
@@ -166,8 +166,10 @@
         "scope": "Fixed repository-authored source fixture only; pinned original and candidate SHA, exact single-token sphere_radius default 0.75 to 1.15, isolated copy, actual three-stage RNA registration/readback, generated/reimported geometry, unrelated mesh invariance, exact reverse bytes, cleanup and same-job R26 references. A candidate/independent/push nine distinct runs, 27 new GLBs and 63 reference GLBs; three Blender versions. Windows actual checkout LF pinned; one unrelated R13 Windows failure passed unchanged retry, root cause unconfirmed. No general addon causality, optimum, arbitrary input or execution, auto-application, authenticity, legal approval, adoption or distribution."
       },
       "F021-03": {
-        "status": "allocation_candidate",
-        "scope": "R28 fixed authored source only. Independent candidates from pinned original: wrong_direction sphere 0.55; cross_part sphere 1.15 + bevel 0.20 (sole two-token negative control); intermediate sphere 0.95; target sphere 1.15. Baseline sphere 0.75/bevel 0.08 and reference sphere 1.15/bevel 0.08. Per-trial isolated original/candidate/restored native stages, exact bytes/inverse, same-job R26 references, generated/imported target dimensional scores and exact protected-part summaries, strict improvement, veto, uncertainty, virtual best, max four attempts, budget prefixes and target stop. B pure evaluation, C actual source-copy/RNA/GLB, D independent evidence and replay, A parent join. Reuse R26/R27 and GLB-022 rules; no arbitrary code/source/values or actual adoption. Formal dispatch required."
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "d2b64cc27ec3741c0dada504bbda60163c82ba18",
+        "blender_run": 45784528324,
+        "scope": "Fixed repository-authored fixture only. Four fixed independent source candidates from pinned original, sole two-token cross-part negative control; per-trial original/candidate/restored native RNA, generated/reimported mesh, source/GLB SHA and exact inverse; same-job seven R26 reference GLBs, R27 evidence preserved. Generated/imported dimension scores 0.8 baseline, 1.2/0/0.4/0; reject target regression and protected-part regression even at zero error, intermediate virtual best then target stop. Nine distinct A candidate/independent/push runs: 540 callback observations, 108 new stage GLBs, 63 R26 reference GLB observations, 36 restored trials, 36 B/D budget-history comparisons; specialist 9 native jobs separate. Prefix replay is not physical early stopping; no arbitrary source, general equivalence, optimum, automatic application/adoption, authenticity, license or native failure injection claim."
       }
     }
   },
@@ -458,5 +460,64 @@
     "prior_milestone": 189,
     "scope": "R28 fixed authored source only. Independent candidates from pinned original: wrong_direction sphere 0.55; cross_part sphere 1.15 + bevel 0.20 (sole two-token negative control); intermediate sphere 0.95; target sphere 1.15. Baseline sphere 0.75/bevel 0.08 and reference sphere 1.15/bevel 0.08. Per-trial isolated original/candidate/restored native stages, exact bytes/inverse, same-job R26 references, generated/imported target dimensional scores and exact protected-part summaries, strict improvement, veto, uncertainty, virtual best, max four attempts, budget prefixes and target stop. B pure evaluation, C actual source-copy/RNA/GLB, D independent evidence and replay, A parent join. Reuse R26/R27 and GLB-022 rules; no arbitrary code/source/values or actual adoption. Formal dispatch required.",
     "dispatch": "candidate only, revision 23 paused; allocation merge + independent seven CI + revision 24 active before implementation"
+  },
+  "v021_r28_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "d2b64cc27ec3741c0dada504bbda60163c82ba18",
+    "pr": 194,
+    "workflow_runs": {
+      "python": 45784528480,
+      "windows": 45784528566,
+      "blender": 45784528324,
+      "chromium": 45784528327,
+      "handoff": 45784528563,
+      "kit": 45784528476,
+      "skill": 45784528412
+    },
+    "extra_push_blender": 45784519573,
+    "specialist_prs": {
+      "B": 192,
+      "C": 191,
+      "D": 193
+    },
+    "candidate_head": "08b5004718b4b2d60eaf2e54e68323bf5c78cede",
+    "candidate_blender": 45782504442,
+    "native_jobs": {
+      "candidate": [
+        139781121267,
+        139781121606,
+        139781121493
+      ],
+      "independent": [
+        139787842022,
+        139787842150,
+        139787841605
+      ],
+      "push": [
+        139787810265,
+        139787810638,
+        139787810594
+      ]
+    },
+    "source_sha256": "e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3",
+    "candidate_sha256": {
+      "wrong_direction": "b8a70b569e5004a43842d31c6799bf13c18730b1a06a6a511691e720ec92566f",
+      "cross_part": "b029567c83fa1f1aaf527fd9d24e5fa864c1ec6d67c861e7940e814c69c8428f",
+      "intermediate": "8da8748483ec5c318bd951fee5766860fb7f4e4027e617227e6509527177db2a",
+      "target": "edde3abe885bf40830052068fcdd6cab57d3d945fdccbc5f3625cff4594c72d7"
+    },
+    "final_required_workflows": 27,
+    "extra_workflows": 1,
+    "native_jobs_total": 18,
+    "joined_runs": 9,
+    "joined_callback_observations": 540,
+    "joined_new_glb_observations": 108,
+    "joined_reference_glb_observations": 63,
+    "joined_prior_r27_glbs_preserved": 27,
+    "joined_restorations": 36,
+    "joined_budget_history_comparisons": 36,
+    "retries": 0,
+    "dispatch": "revision 25 paused; no automatic v0.22/R29",
+    "scope": "Fixed repository-authored fixture only. Four fixed independent source candidates from pinned original, sole two-token cross-part negative control; per-trial original/candidate/restored native RNA, generated/reimported mesh, source/GLB SHA and exact inverse; same-job seven R26 reference GLBs, R27 evidence preserved. Generated/imported dimension scores 0.8 baseline, 1.2/0/0.4/0; reject target regression and protected-part regression even at zero error, intermediate virtual best then target stop. Nine distinct A candidate/independent/push runs: 540 callback observations, 108 new stage GLBs, 63 R26 reference GLB observations, 36 restored trials, 36 B/D budget-history comparisons; specialist 9 native jobs separate. Prefix replay is not physical early stopping; no arbitrary source, general equivalence, optimum, automatic application/adoption, authenticity, license or native failure injection claim."
   }
 }

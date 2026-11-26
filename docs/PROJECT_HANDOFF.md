@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: R27節目#189独立7CI・Notion同期成功。R28 F021-03固定4候補の実測比較・副作用拒否・仮想best・停止の限定割当候補。#125 rev23 paused、正式ゲート前実装禁止。正式v0.17.0/main/last_verified維持。
+- 最新の節目: R28 #194独立7CI＋追加push成功。F021-03固定4候補の実測選別・副作用拒否・隔離復元・停止を限定受入、v0.21限定3/3。#125 rev25 paused、節目同期候補。v0.22未着手、正式v0.17.0/main/last_verified維持。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
@@ -222,6 +222,7 @@
 - `DEC-093` R27 F021-02を固定ソースの単一変更・復元実験に限定する。R26節目#183 dev 0b0418729295649c2cadd7bdacb1ca9fe8cfb64b 独立7CI・Notion同期成功、最終40/40＋追加push1。既存GLB-012/R26 RNA・形状計測、GLB-021測定元照合、GLB-022固定候補/退行拒否を再利用。R27は固定fixtureのsphere_radius default 0.75→1.15のみ、参照は既存sphere_radius_changed。B候補差分/逆変換、C隔離コピーの既定値実登録・再生成・復元、D厳格検査、A親接続。元ソース不変、任意入力/最適値/自動採用なし。割当統合・独立7CI・#125 rev22 active前は実装禁止。F021-03未着手、44要件/24 NEXT・正式版/main/last_verified維持。GL/DIL独立。
 - `DEC-094` R27の固定ソース単一変更と復元の証拠を限定受入する。R27 #188 dev ed7e2d828c4f4aee336d7129d9329c740c79b2f5 独立7CI＋追加push成功。B #186/C #185/D #187/A #188各5CI含む最終27/27＋追加1、18 native jobs。専門初回Windows CRLFテスト修正、A対象fixture LF固定、統合後Windows旧R13 case-alias検査初回1件失敗・同一HEAD再試行1回成功、原因未確定。A候補/独立/push 9実験で27新規GLB＋63参照GLB、固定source単一トークン0.75→1.15、実RNA・元/候補/復元の形状・非対象不変・同一job参照・SHA/cleanup・D厳格照合を3版確認。専門12blob完全一致、個別mergeなしclosed。固定fixture限定F021-02受入、#125 rev23 paused。任意ソース/最適値/自動適用/真正性/権利未確認、F021-03/R28未開始、正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
 - `DEC-095` R28 F021-03を固定4候補の実測比較・副作用拒否・停止に限定する。R27節目#189 dev 0e62d85f0c657f909ea3336d81378cf24ae2c42f 独立7CI・Notion同期成功、最終40/40＋追加push1。F021-03 R28は固定fixtureの4候補（逆方向0.55、副作用1.15＋bevel0.20、中間0.95、目標1.15）だけを、元0.75/bevel0.08から独立生成・隔離コピー復元し、同一job R26参照とgenerated/imported寸法・非対象測定で比較。唯一の2トークン負例は副作用拒否専用。B評価、C実測、D独立replay、A親接続。既存GLB-022判定原則・R26/R27を再利用。予算1..4、棄却best不変、目標時停止、同点/混合は不確実。任意ソース/最適値/自動適用なし。割当統合・独立7CI・#125 rev24 active前は実装禁止。F021-03未実装、v0.22/R29自動開始なし、44要件/24 NEXT・正式版/main/last_verified維持、GL/DIL独立。
+- `DEC-096` R28の固定4候補実測選別を限定受入しv0.21の限定目標を完了とする。R28 #194 dev d2b64cc27ec3741c0dada504bbda60163c82ba18 独立7CI＋追加push成功。B #192/C #191/D #193/A #194各5CI含む最終27/27＋追加1、18 native jobs、修正コミット/再試行0。A候補/独立/push9実験、540独立観測、108新規GLB＋63同一job R26参照GLB、R27既存27GLB保全、36復元、36予算履歴B/D照合。逆方向1.2棄却、副作用あり0棄却、中間0.4改善、目標0停止（初期0.8、生成/再import各）。3版で実RNA/全固定形状測定・元/候補/復元SHA・非対象・同一job参照・cleanup・判定/仮想best・安全flag確認。専門12blob完全一致、個別mergeなしclosed。F021-03固定fixture限定受入、v0.21限定3/3、#125 rev25 paused。prefix replayは実機途中停止の証明ではない。任意ソース/一般形状等価/最適値/自動適用/真正性/権利/実機失敗復元注入未確認。v0.22/R29自動開始なし、正式v0.17.0/main/last_verified/44要件/24 NEXT維持、GL/DIL独立。
 
 ## 更新・プライバシールール
 
