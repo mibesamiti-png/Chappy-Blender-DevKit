@@ -1,4 +1,4 @@
-name: Geometry Lab isolated intent Phase 152
+name: Geometry Lab isolated LoopTools Phase 154
 on:
   pull_request:
     paths:
@@ -102,6 +102,60 @@ jobs:
           d=json.loads(Path("results/phase152_native_sweep.json").read_text())
           assert d["complete"] and d["native_executed"] and not d["approved"]
           assert len(d["cases"])==3 and all(len(c["rows"])==28 for c in d["cases"])
+          PY
+      - name: Acquire official LoopTools extension with manifest hash
+        env:
+          LOOPTOOLS_DIR: ${{ runner.temp }}/looptools154
+          LOOPTOOLS_PROVENANCE: ${{ runner.temp }}/looptools154-provenance.json
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, hashlib, os, urllib.request, urllib.parse, zipfile, io, pathlib, tomllib
+          url='https://extensions.blender.org/api/v1/extensions/?blender_version=4.4.3'
+          def fetch(u,limit):
+              req=urllib.request.Request(u,headers={'User-Agent':'Blender/4.4.3'})
+              with urllib.request.urlopen(req,timeout=45) as r:
+                  data=r.read(limit+1)
+                  assert len(data)<=limit
+                  return data
+          index=json.loads(fetch(url,32*1024*1024))
+          candidates=[x for x in index['data'] if x.get('name','').replace(' ','').lower()=='looptools' and x.get('version')=='4.7.7']
+          assert len(candidates)==1,[(x.get('id'),x.get('version')) for x in index['data'] if 'looptool' in str(x.get('id','')).lower()]
+          a=candidates[0]
+          archive=urllib.parse.urljoin(url,a['archive_url'])
+          assert urllib.parse.urlparse(archive).scheme=='https' and urllib.parse.urlparse(archive).hostname=='extensions.blender.org'
+          blob=fetch(archive,2*1024*1024); digest=hashlib.sha256(blob).hexdigest()
+          assert len(blob)==a['archive_size'] and a['archive_hash']=='sha256:'+digest
+          dest=pathlib.Path(os.environ['LOOPTOOLS_DIR']);dest.mkdir(exist_ok=False)
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              entries=z.infolist()
+              assert sum(x.file_size for x in entries)<8*1024*1024
+              assert all(not pathlib.PurePosixPath(x.filename).is_absolute() and '..' not in pathlib.PurePosixPath(x.filename).parts and '\\' not in x.filename for x in entries)
+              z.extractall(dest)
+          manifests=list(dest.rglob('blender_manifest.toml'));assert len(manifests)==1
+          manifest=tomllib.loads(manifests[0].read_text())
+          assert manifest['version']=='4.7.7' and (manifests[0].parent/'__init__.py').is_file()
+          provenance=dict(id=a['id'],version=a['version'],sha256=digest,archive_url=archive,manifest_root=str(manifests[0].parent))
+          pathlib.Path(os.environ['LOOPTOOLS_PROVENANCE']).write_text(json.dumps(provenance))
+          print(json.dumps(provenance))
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('LOOPTOOLS_DIR='+str(manifests[0].parent)+'\n')
+              f.write('LOOPTOOLS_PROVENANCE='+os.environ['LOOPTOOLS_PROVENANCE']+'\n')
+          PY
+      - name: Compare actual LoopTools with the surrogate
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase154_looptools.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase154_looptools.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==4 and all(len(r["records"])==29 for r in d["rows"])
+          assert sum('error' in x for r in d["rows"] for x in r["records"])==0
           PY
       - uses: actions/upload-artifact@v4
         if: always()
