@@ -72,49 +72,48 @@ jobs:
       - name: Render frozen matched comparison arms
         run: |
           set -euo pipefail
-          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase117_exposure_pilot.py
-      - name: Verify all visual evidence and build contact sheets
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase118_sample_pilot.py
+      - name: Audit sample count stability, no adoption
         run: |
-          python -m pip install pillow==11.3.0
+          python -m pip install pillow==11.3.0 numpy==2.2.6
           python - <<'PY'
-          import json, hashlib
+          import json,hashlib,itertools
+          import numpy as np
           from pathlib import Path
-          from PIL import Image, ImageDraw
-          p=Path("results/visual_pilot")
+          from PIL import Image
+          p=Path("results/sample_pilot")
           d=json.loads((p/"manifest.json").read_text())
-          assert d["render_count"]==18 and len(d["images"])==18
-          imgs={(x["case"],x["arm"],x["level"]):x for x in d["images"]}
-          cases=sorted({x["case"] for x in d["images"]})
-          assert len(cases)==3 and len(imgs)==18
-          stats=[]
-          for case in cases:
-              sheet=Image.new("RGB",(3*384,2*414+30),(28,28,28))
-              draw=ImageDraw.Draw(sheet)
-              draw.text((12,8),case,fill="white")
-              for j,level in enumerate((0,2)):
-                  for i,arm in enumerate(("native1","native6","custom")):
-                      rec=imgs[case,arm,level]
-                      path=p/rec["filename"]
-                      assert hashlib.sha256(path.read_bytes()).hexdigest()==rec["sha256"]
-                      rgba=Image.open(path).convert("RGBA")
-                      assert rgba.size==(384,384)
-                      foreground=[(r,g,b) for r,g,b,a in rgba.getdata() if a>=254]
-                      assert len(foreground)>384*384*.01
-                      white=sum(min(c)>=250 for c in foreground)/len(foreground)
-                      clipped=sum(max(c)==255 for c in foreground)/len(foreground)
-                      dark=sum(max(c)<=20 for c in foreground)/len(foreground)
-                      lum=sorted((.2126*r+.7152*g+.0722*b) for r,g,b in foreground)
-                      spread=lum[int(.95*(len(lum)-1))]-lum[int(.05*(len(lum)-1))]
-                      stats.append(dict(case=case,arm=arm,level=level,foreground=len(foreground),near_white=white,clipped=clipped,dark=dark,spread=spread,passed=white<=.05 and clipped<=.05 and dark<=.15 and spread>=15))
-                      im=Image.new("RGB",rgba.size,(89,89,89))
-                      im.paste(rgba,mask=rgba.getchannel("A"))
-                      x,y=i*384,30+j*414
-                      draw.text((x+8,y+5),f"{arm} | L{level} | {rec['base_faces']} base faces",fill="white")
-                      sheet.paste(im,(x,y+30))
-              sheet.save(p/f"{case}_sheet.png")
-          (p/"exposure.json").write_text(json.dumps(stats,indent=2))
-          print("PHASE117 EXPOSURE",json.dumps(stats))
-          assert all(x["passed"] for x in stats),"Exposure pilot not accepted"
+          expected=set(itertools.product(("native1","native6","custom"),(32,64,128),(115,317)))
+          images={}
+          for r in d["images"]:
+              k=(r["arm"],r["samples"],r["seed"])
+              f=p/r["filename"]
+              assert r["case"]=="flat_dense" and r["level"]==2 and k not in images
+              assert hashlib.sha256(f.read_bytes()).hexdigest()==r["sha256"]
+              a=np.asarray(Image.open(f).convert("RGBA"),dtype=float)/255
+              assert a.shape==(384,384,4)
+              images[k]=a
+          assert set(images)==expected and d["render_count"]==18
+          def compare(a,b):
+              ma=a[...,3]>=254/255;mb=b[...,3]>=254/255;m=ma&mb
+              interior=np.logical_and.reduce([m[i:i+382,j:j+382] for i in range(3) for j in range(3)])
+              mask=np.zeros_like(m);mask[1:-1,1:-1]=interior
+              assert mask.sum()>=100
+              diff=np.abs((a[...,:3]-b[...,:3])@np.array([.2126,.7152,.0722]))[mask]*255
+              rgb=np.abs(a[...,:3]-b[...,:3])[mask]*255
+              out=dict(pixels=int(mask.sum()),mae_luma=float(diff.mean()),p95_luma=float(np.percentile(diff,95)),p99_luma=float(np.percentile(diff,99)),mae_rgb=float(rgb.mean()),alpha_mae=float(np.abs(a[...,3]-b[...,3])[ma|mb].mean()),nearwhite_a=float(np.mean(np.min(a[...,:3][mask],axis=-1)>=250/255)),nearwhite_b=float(np.mean(np.min(b[...,:3][mask],axis=-1)>=250/255)))
+              out["stable"]=bool(out["mae_luma"]<=1 and out["p95_luma"]<=3 and out["p99_luma"]<=6 and out["alpha_mae"]<=.005 and max(out["nearwhite_a"],out["nearwhite_b"])<=.05)
+              return out
+          records=[]
+          for arm in ("native1","native6","custom"):
+              for samples in (32,64):
+                  for seed in (115,317):
+                      records.append(dict(arm=arm,samples=samples,seed=seed,reference_samples=128,reference_seed=seed,**compare(images[arm,samples,seed],images[arm,128,seed])))
+              for samples in (32,64,128):
+                  records.append(dict(arm=arm,samples=samples,seed=115,reference_samples=samples,reference_seed=317,**compare(images[arm,samples,115],images[arm,samples,317])))
+          out=dict(approved=False,reference_is_not_ground_truth=True,scope="one known synthetic shape, level2, fixed camera, denoised AgX RGBA, full foreground",records=records)
+          (p/"convergence.json").write_text(json.dumps(out,indent=2))
+          print("PHASE118",json.dumps(out))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
