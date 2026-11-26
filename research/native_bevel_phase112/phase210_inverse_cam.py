@@ -7,6 +7,7 @@ import math,json,time,sys
 from pathlib import Path
 import numpy as np
 ROOT=Path(__file__).resolve().parent
+sys.path.insert(0,str(ROOT))
 N=720;CHECK=1440;ROLLER=.25;DUTY=.75
 def law(t,kind):
     u=np.mod(np.asarray(t)/math.tau,1.)
