@@ -8,8 +8,10 @@ import numpy as np
 import bpy
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from phase189_directional_end_roles import bind,CASES,FRESH
-from phase188_circular_frustum_recognition import build
+from phase188_circular_frustum_recognition import build,classify,hypothesis
 from phase185_triangulated_caps import regions
+from phase160_operation_contracts import measure
+import itertools
 from phase182_cylinder_recognition import REL
 from phase171_planar_topology_variants import arrays
 from phase170_reindexed_state_planner import reindex
@@ -52,6 +54,21 @@ def plan(m,role):
         return finish('rim_not_certified')
     return finish('ready',target['ids'],rim,other['ids'])
 
+def diagnose(m):
+    V,F=arrays(m);P=np.asarray(V,dtype=float);rr=regions(m)
+    candidates=[]
+    for a,b in itertools.combinations(rr,2):
+        if a['ids']&b['ids'] or set(a['boundary'])&set(b['boundary']):continue
+        dot=float(a['normal']@b['normal'])
+        if dot> -1+1e-7:continue
+        result,reason=hypothesis(P,F,a,b)
+        candidates.append(dict(reason=reason,normal_dot=dot,
+            boundary_counts=[len(a['boundary']),len(b['boundary'])],result=result))
+    return dict(classification=classify(m),binding=bind(m),
+        audit=measure(m,'cube'),regions=[dict(normal=r['normal'].tolist(),
+            boundary_count=len(r['boundary']),face_count=len(r['ids']),
+            area_error=r['area_error']) for r in rr],candidates=candidates)
+
 def applicable(m,p):
     return p['reason']=='ready' and signature(*arrays(m))==p['source_signature']
 
@@ -86,12 +103,14 @@ def main():
                                 matched=(p['reason']=='role_unavailable' and not applicable(q,p)
                                     and not any(p[k] for k in ('cap_faces','rim_edges','protected_faces')))
                             row=dict(name=name,mode=mode,seed=seed,expected=expected,matched=matched,**p)
+                            if not matched:row['diagnostic']=diagnose(q)
                             rows.append(row);print('PHASE190_ROW',json.dumps(row,allow_nan=False),flush=True)
                         if expected=='frustum':
                             p=plan(q,'small_end');reordered=reindex(q,1903)
                             try:
                                 control=dict(name=name,mode=mode,seed=seed,
-                                    stale_rejected=not applicable(reordered,p),
+                                    baseline_applicable=applicable(q,p),
+                                    stale_rejected=applicable(q,p) and not applicable(reordered,p),
                                     invalid_role_rejected=plan(q,'top')['reason']=='invalid_role',
                                     input_unchanged=signature(*arrays(q))==p['source_signature'])
                                 controls.append(control)
