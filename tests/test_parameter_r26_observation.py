@@ -83,3 +83,9 @@ class NativeParameterR26Tests(unittest.TestCase):
         self.displacement["generated"]["sphere_radius_changed"]["CBDK_Param_Sphere"]["changed_vertex_count"] = 0
         with self.assertRaises(ValueError):
             self.observation()
+
+    def test_source_unchanged_cannot_be_replaced_by_probe_control_mapping(self):
+        with self.assertRaises(ValueError):
+            self.observation(source_unchanged={"bevel_probe_up": 0, "bevel_probe_down": 0})
+        self.assertTrue(self.observation()["source_unchanged"])
+        self.assertFalse(self.observation(source_unchanged=False)["source_unchanged"])

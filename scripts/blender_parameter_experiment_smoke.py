@@ -193,8 +193,8 @@ def run(root: Path, *, run_id=None, expected_source_sha256=None, expected_blende
         finally:
             fixture.unregister()
     cleanup = _cleanup_verified()
-    unchanged = FIXTURE_SOURCE.read_bytes() == _FIXTURE_BYTES
-    if not cleanup or not unchanged:
+    source_unchanged = FIXTURE_SOURCE.read_bytes() == _FIXTURE_BYTES
+    if not cleanup or not source_unchanged:
         raise AssertionError("R26 fixture cleanup/source unchanged verification failed")
 
     # Only synthetic repository-owned meshes enter this metric. Drop raw XYZ
@@ -328,7 +328,7 @@ def run(root: Path, *, run_id=None, expected_source_sha256=None, expected_blende
                       "variants": len(VARIANTS), "report": destination.name}))
     observation = build_native_observation(identity, _SOURCE_SHA256, version,
                                           readbacks, displacement, direction_evidence,
-                                          cleanup_verified=cleanup, source_unchanged=unchanged)
+                                          cleanup_verified=cleanup, source_unchanged=source_unchanged)
     if not all(all(value is True for key, value in row.items() if key != "property")
                for row in observation["properties"]):
         raise AssertionError("R26 native observation contains an incomplete property")
