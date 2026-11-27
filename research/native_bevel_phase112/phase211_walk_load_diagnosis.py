@@ -49,7 +49,7 @@ def run(name,has_floor,friction,impulse):
                 expected_delta.append(desired-initial_law)
                 rel=A.inverted()@B;v=rel.translation;p=np.array((v.x,v.y))
                 reach=.12*abs(rel[2][2])+ROLLER*math.hypot(rel[2][0],rel[2][1])
-                q=dict(axis=k,cam_tracking=abs(float(B.translation[i]+(6. if i==1 else 0.)-it['base'])-desired),
+                q=dict(axis=k,cam_tracking=abs(float(B.translation[i]-(6. if i==1 else 0.)-it['base'])-desired),
                     roller_bearing=(bd-dd).length,cross_slide=abs(float(foot_delta[i]-dd[i])),
                     guide=math.sqrt(sum(float(dd[h])**2 for h in range(3) if h!=i)),
                     axial=abs(v.z),contact=abs(nearest(p,it['core'])-ROLLER),
