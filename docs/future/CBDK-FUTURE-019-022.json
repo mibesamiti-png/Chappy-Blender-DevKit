@@ -519,5 +519,22 @@
     "retries": 0,
     "dispatch": "revision 25 paused; no automatic v0.22/R29",
     "scope": "Fixed repository-authored fixture only. Four fixed independent source candidates from pinned original, sole two-token cross-part negative control; per-trial original/candidate/restored native RNA, generated/reimported mesh, source/GLB SHA and exact inverse; same-job seven R26 reference GLBs, R27 evidence preserved. Generated/imported dimension scores 0.8 baseline, 1.2/0/0.4/0; reject target regression and protected-part regression even at zero error, intermediate virtual best then target stop. Nine distinct A candidate/independent/push runs: 540 callback observations, 108 new stage GLBs, 63 R26 reference GLB observations, 36 restored trials, 36 B/D budget-history comparisons; specialist 9 native jobs separate. Prefix replay is not physical early stopping; no arbitrary source, general equivalence, optimum, automatic application/adoption, authenticity, license or native failure injection claim."
+  },
+  "v022_r29_allocation": {
+    "date": "2026-11-27",
+    "verified_base_sha": "9969c848f48b0c1be99a5c8c19bc032cf77a97f5",
+    "workflow_runs": {
+      "python": 45983042573,
+      "windows": 45983042767,
+      "blender": 45983042567,
+      "chromium": 45983042677,
+      "handoff": 45983042614,
+      "kit": 45983042541,
+      "skill": 45983042508
+    },
+    "integrated_pr": 196,
+    "verification_pr": 198,
+    "scope": "Fixed opt-in rotary preview only; B read-only evidence projection, C Blender integrated view and delegation to existing actions, D independent lifecycle/evidence validation, A joins. No default registration, arbitrary recipe/provider, new geometry solver, source or mesh commit, distribution, Windows GUI claim.",
+    "dispatch": "candidate only; rev25 paused; allocation merged + independent seven CI + rev26 active before specialist work"
   }
 }

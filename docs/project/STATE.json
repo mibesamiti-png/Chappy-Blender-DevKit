@@ -2,12 +2,12 @@
   "schema_version": 1,
   "project": "Chappy Blender DevKit (CBDK)",
   "repository": "mibesamiti-png/Chappy-Blender-DevKit",
-  "updated_on": "2026-11-26",
+  "updated_on": "2026-11-27",
   "release": {
     "current": "0.17.0",
     "stage": "public_repository_v0.18_development",
     "next_planned": "0.18.0",
-    "milestone": "R28 #194独立7CI＋追加push成功。F021-03固定4候補の実測選別・副作用拒否・隔離復元・停止を限定受入、v0.21限定3/3。#125 rev25 paused、節目同期候補。v0.22未着手、正式v0.17.0/main/last_verified維持。"
+    "milestone": "PR #196限定統合 dev 9969c848、独立7CI・provider 72/72・Linux GUI 5/5・配布除外成功。R29 F022-01割当候補、#125 rev25 paused。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。Windows GUI・実パネルクリック未検証。"
   },
   "mission": "自作Blenderアドオンの安全な静的棚卸し、再利用部品の台帳化、レシピからのプレビュー生成とBlender実機CI",
   "entry_points": [

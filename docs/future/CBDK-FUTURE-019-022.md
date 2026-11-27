@@ -139,3 +139,10 @@ R27節目独立CI: Python45771553334、Windows45771553321、Blender45771553369�
 R28 #194 dev d2b64cc27ec3741c0dada504bbda60163c82ba18 独立7CI＋追加push成功。B #192/C #191/D #193/A #194各5CI含む最終27/27＋追加1、18 native jobs、修正コミット/再試行0。A候補/独立/push9実験、540独立観測、108新規GLB＋63同一job R26参照GLB、R27既存27GLB保全、36復元、36予算履歴B/D照合。逆方向1.2棄却、副作用あり0棄却、中間0.4改善、目標0停止（初期0.8、生成/再import各）。3版で実RNA/全固定形状測定・元/候補/復元SHA・非対象・同一job参照・cleanup・判定/仮想best・安全flag確認。専門12blob完全一致、個別mergeなしclosed。F021-03固定fixture限定受入、v0.21限定3/3、#125 rev25 paused。prefix replayは実機途中停止の証明ではない。任意ソース/一般形状等価/最適値/自動適用/真正性/権利/実機失敗復元注入未確認。v0.22/R29自動開始なし、正式v0.17.0/main/last_verified/44要件/24 NEXT維持、GL/DIL独立。
 
 独立CI: Python45784528480、Windows45784528566、Blender45784528324、Chromium45784528327、Handoff45784528563、Kit45784528476、Skill45784528412。追加push Blender45784519573。候補Blender45782504442、候補native jobs139781121267/139781121606/139781121493、独立139787842022/139787842150/139787841605、push139787810265/139787810638/139787810594。9実ログを直接照合、各run ID独立、重複marker非二重計上。専門B/Dは旧R26/R27回帰、C専門の36新規GLB・12復元はA統合9実験と別集計。予算1/2/3は既測定prefixの独立再計算、物理途中停止未検証。節目候補CI・独立CI後にNotion同期。v0.22はnot_startedのまま。
+
+
+## 2026-11-27 JST — R29 / F022-01 限定割当候補
+
+PR #196 dev 9969c848f48b0c1be99a5c8c19bc032cf77a97f5、独立7CI（Python45983042573、Windows45983042767、Blender45983042567、Chromium45983042677、Handoff45983042614、Kit45983042541、Skill45983042508）。4環境provider各18、Linux 4.5.15 GUI 5/5、Windows kit研究provider除外。#198は検証専用でclosed/unmerged。既承認F022-01の限定割当候補を作成。固定人工回転関節の読取ビュー・既存操作・証拠/状態境界を一つの開発UIに接続し、R28/GLB-022/CJM/GLの既存処理を再実装しない。#125 rev25 paused、割当統合・独立7CI・rev26 active前は専門実装禁止。v0.22全体完了・任意モデル・Windows GUI・正式配布は未承認/未検証。main/正式版/last_verified/44要件/24 NEXT不変。
+
+[R29割当候補](../R29_ABCD_START.md)。
