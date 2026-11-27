@@ -1,0 +1,177 @@
+name: Geometry Lab continuous walking Phase 211-E5
+on:
+  pull_request:
+    paths:
+      - 'research/native_bevel_phase112/phase211_continuous_walk.py'
+      - 'research/native_bevel_phase112/phase211_free_walk.py'
+      - 'research/native_bevel_phase112/phase211_four_leg_drive.py'
+      - '.github/workflows/geometry-lab-continuous-walk.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-continuous-walk-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  walk:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    outputs:
+      gate: ${{ steps.evidence.outputs.gate }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Verify three complete free walking cycles
+        id: evidence
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+          WALK_CASE: 'free_engaged'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_continuous_walk.py -- "$WALK_CASE"
+          python - <<'PY'
+          import json,math,os
+          from pathlib import Path
+          name=os.environ["WALK_CASE"]
+          p=Path("results/phase211_continuous")/name
+          d=json.loads((p/"report.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["case"]==name and d["frames"]==1201
+          assert d["candidate"]=="moving_mass_and_drive" and d["moving_mass"]==.5 and d["impulse"]==960. and d["pivot"]=="slider"
+          assert len(d["mass_evidence"])==12 and len({e["name"] for e in d["mass_evidence"]})==12
+          assert all(e["mass"]==.5 for e in d["mass_evidence"])
+          assert d["ideal_offset_couplers"] and d["ideal_rigid_camshaft"] and d["support_is_geometric_proxy"] and d["com_is_origin_weighted_proxy"]
+          assert not d["physical_manufacturing_certified"]
+          r=d["result"];rows=r["rows"]
+          assert [v["frame"] for v in rows]==list(range(1,1202))
+          assert all(math.isfinite(x) for v in rows for x in v.values())
+          assert r["free"] and r["enabled"]==(name!="motor_off") and r["friction"]==(0. if name=="frictionless" else .8)
+          assert r["max_foot_error"]==max(v[f"L{j}_error"] for v in rows for j in range(4))
+          assert r["checks"]["foot_tracking"]==(r["max_foot_error"]<=.04)
+          assert r["passed"]==all(r["checks"].values())
+          cycles=[];prev=rows[0]
+          for n in range(1,4):
+              nxt=next((v for v in rows if -v["travel"]>=n*math.tau),None)
+              if nxt is None:break
+              cycles.append(dict(cycle=n,start_frame=prev["frame"],end_frame=nxt["frame"],dx=nxt["x"]-prev["x"],dz=nxt["z"]-prev["z"]))
+              prev=nxt
+          assert d["cycles"]==cycles
+          checks=dict(r["checks"])
+          if r["enabled"]:checks["three_cycles"]=len(cycles)==3
+          if name=="free_engaged":
+              checks["forward_every_cycle"]=len(cycles)==3 and all(c["dx"]<=-.5 for c in cycles)
+              checks["lateral_every_cycle"]=len(cycles)==3 and all(abs(c["dz"])<=.5 for c in cycles)
+          assert d["checks"]==checks and d["case_gate"]==all(checks.values())
+          assert (p/("phase211_walk_"+name+".blend")).stat().st_size>0
+          print("Continuous walking case gate:",name,d["case_gate"])
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:f.write("gate="+str(d["case_gate"]).lower()+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: continuous-walk-free_engaged-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_continuous/free_engaged/
+          if-no-files-found: warn
+          retention-days: 14
+  controls:
+    needs: walk
+    if: needs.walk.outputs.gate == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [frictionless, motor_off]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Verify independent no-propulsion control
+        id: evidence
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+          WALK_CASE: ${{ matrix.case }}
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_continuous_walk.py -- "$WALK_CASE"
+          python - <<'PY'
+          import json,math,os
+          from pathlib import Path
+          name=os.environ["WALK_CASE"]
+          p=Path("results/phase211_continuous")/name
+          d=json.loads((p/"report.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["case"]==name and d["frames"]==1201
+          assert d["candidate"]=="moving_mass_and_drive" and d["moving_mass"]==.5 and d["impulse"]==960. and d["pivot"]=="slider"
+          assert len(d["mass_evidence"])==12 and len({e["name"] for e in d["mass_evidence"]})==12
+          assert all(e["mass"]==.5 for e in d["mass_evidence"])
+          assert d["ideal_offset_couplers"] and d["ideal_rigid_camshaft"] and d["support_is_geometric_proxy"] and d["com_is_origin_weighted_proxy"]
+          assert not d["physical_manufacturing_certified"]
+          r=d["result"];rows=r["rows"]
+          assert [v["frame"] for v in rows]==list(range(1,1202))
+          assert all(math.isfinite(x) for v in rows for x in v.values())
+          assert r["free"] and r["enabled"]==(name!="motor_off") and r["friction"]==(0. if name=="frictionless" else .8)
+          assert r["max_foot_error"]==max(v[f"L{j}_error"] for v in rows for j in range(4))
+          assert r["checks"]["foot_tracking"]==(r["max_foot_error"]<=.04)
+          assert r["passed"]==all(r["checks"].values())
+          cycles=[];prev=rows[0]
+          for n in range(1,4):
+              nxt=next((v for v in rows if -v["travel"]>=n*math.tau),None)
+              if nxt is None:break
+              cycles.append(dict(cycle=n,start_frame=prev["frame"],end_frame=nxt["frame"],dx=nxt["x"]-prev["x"],dz=nxt["z"]-prev["z"]))
+              prev=nxt
+          assert d["cycles"]==cycles
+          checks=dict(r["checks"])
+          if r["enabled"]:checks["three_cycles"]=len(cycles)==3
+          if name=="free_engaged":
+              checks["forward_every_cycle"]=len(cycles)==3 and all(c["dx"]<=-.5 for c in cycles)
+              checks["lateral_every_cycle"]=len(cycles)==3 and all(abs(c["dz"])<=.5 for c in cycles)
+          assert d["checks"]==checks and d["case_gate"]==all(checks.values())
+          assert (p/("phase211_walk_"+name+".blend")).stat().st_size>0
+          print("Continuous walking case gate:",name,d["case_gate"])
+          with open(os.environ["GITHUB_OUTPUT"],"a") as f:f.write("gate="+str(d["case_gate"]).lower()+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: continuous-walk-${{ matrix.case }}-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_continuous/${{ matrix.case }}/
+          if-no-files-found: warn
+          retention-days: 14
