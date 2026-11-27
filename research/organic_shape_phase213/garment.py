@@ -13,14 +13,16 @@ GAP=.045
 TARGET=Target(.32,.22,.08)
 WAIST=Boundary(Ellipsoid((1.,1.,1.)),(.04,.02,-.02,-.04,-.04,-.02,.02,.04))
 
-def base():
+def base(style="original"):
+    if style not in ("original","rounded"):raise ValueError("fixed garment variants only")
+    rounded=style=="rounded"
     p=[];faces=[]
     def add(q):
         p.append(tuple(q));return len(p)-1
     def upper(theta,z):
         return fit([(math.cos(theta),math.sin(theta),z)],TARGET,GAP)[0]
     angles=[math.pi/2+math.tau*i/N for i in range(N)]
-    waist_z=[.48+WAIST.latitude(i/N) for i in range(N)]
+    waist_z=[(.40 if rounded else .48)+WAIST.latitude(i/N) for i in range(N)]
     # R4 radial projection along the entire upper band, not just endpoints.
     rings=[]
     for j in range(9):
@@ -31,7 +33,7 @@ def base():
     for a,b in zip(rings,rings[1:]):connect(a,b)
     top,mid=rings[0],rings[-1]
     front=p[mid[0]][1];back=p[mid[N//2]][1]
-    bridge=[add((0.,back+(front-back)*j/(N//2),-.08-.67*math.sin(math.pi*j/(N//2)))) for j in range(1,N//2)]
+    bridge=[add((0.,back+(front-back)*j/(N//2),-.08-(.71 if rounded else .67)*math.sin(math.pi*j/(N//2)))) for j in range(1,N//2)]
     left=mid[:N//2+1]+bridge
     right=mid[N//2:]+[mid[0]]+bridge[::-1]
     def leg(sign,start):
@@ -39,7 +41,7 @@ def base():
         for i in range(N):
             a=start+math.tau*i/N;c=math.cos(a);s=math.sin(a)
             # High outer edge, lower inner edge, slightly lower rear hem.
-            z=-.67+.27*sign*c+.045*s
+            z=(-.60+.20*sign*c+.10*s) if rounded else (-.67+.27*sign*c+.045*s)
             out.append(add((sign*.52+.435*c,-.04+.465*s,z)))
         return out
     low_l=leg(-1,math.pi/2);low_r=leg(1,3*math.pi/2)
@@ -53,7 +55,18 @@ def base():
                     A,B=p[k],p[l]
                     w=math.sin(math.pi*(i-N//2)/(N//2)) if i>N//2 else 0.
                     q=(1-w)*t+w*t*t*(3-2*t)
-                    nxt.append(add((A[0]+t*(B[0]-A[0]),A[1]+q*(B[1]-A[1]),A[2]+q*(B[2]-A[2]))))
+                    point=[A[0]+t*(B[0]-A[0]),A[1]+q*(B[1]-A[1]),A[2]+q*(B[2]-A[2])]
+                    if rounded and 0<i<N//2:
+                        # Blend the outer half toward the incoming torso tangent.
+                        theta=math.atan2(A[1],A[0])
+                        up=upper(theta,-.08+.001)
+                        down=upper(theta,-.08-.001)
+                        w_outer=math.sin(math.pi*i/(N//2))**2
+                        for axis in (0,1):
+                            tangent=(down[axis]-up[axis])/.002*(A[2]-B[2])
+                            delta=B[axis]-A[axis]
+                            point[axis]+=w_outer*t*(1-t)**2*(tangent-delta)
+                    nxt.append(add(point))
             connect(prev,nxt);prev=nxt
     branch(left,low_l);branch(right,low_r)
     return p,faces,(top,low_l,low_r)
@@ -86,8 +99,8 @@ def inspect(p,q,l,ref):
     m["garment_pilot_pass"]=m["passed"] and m["upper_gap_min"]>.005 and m["upper_gap_max"]<.085 and m["left_max_x"]<0<m["right_min_x"] and all(counts[role]==len(loop) for role,loop in zip(("waist","left_leg","right_leg"),l))
     return m
 
-def trial():
-    p,q,l=base()
+def trial(style="original"):
+    p,q,l=base(style)
     history=[]
     # Bounded candidate plan: only one refinement pass, no thickness required.
     for steps in (0,8,16):
