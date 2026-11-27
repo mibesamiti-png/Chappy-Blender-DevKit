@@ -731,3 +731,77 @@ jobs:
           path: research/native_bevel_phase112/results/phase211_walk_load_diagnosis.json
           if-no-files-found: warn
           retention-days: 14
+
+  phase211-coupling-repair:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Screen cross-slide constraint conditioning under load
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_coupling_repair.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_coupling_repair.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["screening_only"]
+          assert not any(d[k] for k in ("approved","geometry_changed","mass_changed","criteria_changed","physical_walk_certified"))
+          assert d["frames"]==121
+          t=d["trials"]
+          assert [(r["name"],r["pivot"],r["iterations"]) for r in t]==[("baseline","pad",100),("midpoint","midpoint",100),("slider_pivot","slider",100),("cross_slide_iterations","pad",300)]
+          for r in t:
+              assert [v["frame"] for v in r["rows"]]==list(range(1,122))
+              assert r["has_floor"] and r["friction"]==.8 and r["impulse"]==240.
+              assert len(r["pivot_evidence"])==8
+              for e in r["pivot_evidence"]:
+                  assert e["pad_lever_before"]<1e-4 and e["effective_iterations"]==r["iterations"]
+                  assert e["override"]==(r["iterations"]!=100)
+                  if r["pivot"]=="midpoint":
+                      assert abs(e["pad_lever_after"]-e["slide_lever_after"])<1e-4
+                  elif r["pivot"]=="slider":
+                      assert e["slide_lever_after"]<1e-4
+                  else:assert e["pad_lever_after"]<1e-4
+              for k,v in d["limits"].items():
+                  vals=[q[k] for row in r["rows"] for q in row["axes"]+row["feet"]+[row] if k in q]
+                  assert all(math.isfinite(x) for x in vals)
+                  assert r["peak"][k]==max(vals)
+                  assert r["screening_checks"][k]==(max(vals)<=v)
+              assert r["screening_checks"]["backplate"]==(r["min_back_gap"]>=.02)
+              assert r["screening_checks"]["upright"]==(r["max_tilt"]<=15.)
+              assert r["screening_checks"]["late_speed"]==(r["late_mean_velocity"]>=.8)
+              assert r["screening_passed"]==all(r["screening_checks"].values())
+          c=[r for r in t[1:] if r["screening_passed"]]
+          assert d["selected"]==(min(c,key=lambda r:(r["iterations"],r["peak"]["foot_tracking"],r["name"]))["name"] if c else None)
+          print("Cross-slide screening candidate:",d["selected"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-coupling-repair-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_coupling_repair.json
+          if-no-files-found: warn
+          retention-days: 14
