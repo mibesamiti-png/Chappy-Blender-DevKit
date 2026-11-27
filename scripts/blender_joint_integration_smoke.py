@@ -213,3 +213,7 @@ result=dict(blender=bpy.app.version_string,rows=rows,gui_mouse_keyboard=False,
 out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
 with out.open('x',encoding='utf-8') as f:json.dump(result,f,indent=2)
 print('CBDK_A_NATIVE_PASS '+json.dumps(dict(blender=result['blender'],cases=len(rows))),flush=True)
+
+# R29 specialist: separate fixed stub draw/native operator boundary, not provider integration.
+from scripts.blender_joint_panel_r29_smoke import run_stub_smoke
+run_stub_smoke(out.with_name(out.stem + "_r29_panel.json"))
