@@ -26,3 +26,13 @@ Preserve the demonstrator, not a claim of qualified walking.
 Backend-neutral pure Python evaluator: finite observations, inclusive numeric limits, earliest observed violation, pass/fail/unverified states, predeclared candidate budget and rank, separate qualification gate. Tested independently of Blender; the historical summary fixture is a replay of reported aggregate values, not a reconstruction of native per-frame evidence.
 
 Next: general-purpose motion specification and geometry adapters; validate each on small fixtures before composing a design engine. Do not launch another robot tuning loop. Geneva plus cam is a possible future composition challenge, not a selected requirement. Main/dev unchanged.
+
+## Phase 212-B through H: limited cam engine proven
+- Common C2 motion tracks, sampled radial roller profile audit, native annular part construction, native stack kinematics.
+- Single actuator and two-station ideal rigid camshaft contact fixtures passed engaged, separated and motor-off tests. Gravity return and ideal guides remain laboratory assumptions.
+- Integrated fixture: source cd966c260d0c9ba75dcd995c0c965062f97b5e42; run 45965339628 (all five jobs successful, 23 Python tests). Compact candidate rejected at geometry; reference candidate passed geometry, screen, physical motion and controls. Artifact 15182413700.
+- This is bounded selection of declared candidates, not arbitrary mechanism invention. All seven regression workflows on that source passed; historical walk gate remains false.
+
+## Phase 212-I: separate external Geneva indexing adapter
+Analytic external Geneva centerline model for 3–12 slots. One drive revolution advances 360/N degrees; motion fraction 1/2-1/N, dwell fraction 1/2+1/N. Conservative preliminary slot envelope and independent Cartesian pin/slot projection audit. Compare finite candidates against explicit indexing requirements (advance, minimum dwell, hub/web envelope and continuity).
+A conventional Geneva has continuous angle and velocity but a nonzero acceleration jump at engagement/disengagement. Do not disguise this as the Phase212-B C2 quintic motion track: reject a strict C2 request instead. No solid wheel, locking disk, actual contact, load capacity or fabrication validation yet. Next after analytic gate: wheel/driver/locking geometry and native independent verification before integration with cam drive. Main/dev unchanged.
