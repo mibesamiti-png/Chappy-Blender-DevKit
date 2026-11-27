@@ -22,12 +22,14 @@ jobs:
         with:
           persist-credentials: false
       - name: Run pure Python boundary checks
-        run: python -m unittest -v test_boundary
+        run: python -m unittest discover -v -p 'test_*.py'
       - name: Export measured boundary evidence
-        run: python test_boundary.py
+        run: |
+          python test_boundary.py
+          python test_patch.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-r1-${{ github.sha }}
+          name: phase213-r2-${{ github.sha }}
           path: research/organic_shape_phase213/results/
           if-no-files-found: warn
