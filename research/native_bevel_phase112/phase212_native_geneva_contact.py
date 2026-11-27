@@ -30,11 +30,11 @@ def combine(name,parts):
     for m,*_ in parts:bpy.data.meshes.remove(m)
     return mesh
 
-def setup(separated,enabled):
+def setup(separated,enabled,relief_degrees=35,impulse=IMPULSE):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene;sc.gravity=(0.,0.,0.);sc.render.fps=FPS
     sc.frame_start=1;sc.frame_end=FRAMES
-    g=Geneva(4,10,.3,.05);wheel,driver,dims=profiles(g)
+    g=Geneva(4,10,.3,.05);wheel,driver,dims=profiles(g,relief_degrees)
     wm,wa=part('four slot wheel',wheel,.6,.7)
     dm,da=part('relieved lock disk',driver,.6,.5,radial=True)
     assert wa['passed'] and da['passed']
@@ -59,7 +59,7 @@ def setup(separated,enabled):
     constraint('driver bearing','HINGE',anchor,inp,(10.,0.,z))
     constraint('passive wheel bearing','HINGE',anchor,out,(0.,0.,0.))
     c=constraint('only motor','MOTOR',anchor,inp,(10.,0.,z),(0.,-math.pi/2,0.))
-    c.use_motor_lin=False;c.use_motor_ang=enabled;c.motor_ang_target_velocity=1.;c.motor_ang_max_impulse=IMPULSE
+    c.use_motor_lin=False;c.use_motor_ang=enabled;c.motor_ang_target_velocity=1.;c.motor_ang_max_impulse=impulse
     world=sc.rigidbody_world;world.substeps_per_frame=32;world.solver_iterations=100
     world.point_cache.frame_start=1;world.point_cache.frame_end=FRAMES
     bpy.context.view_layer.update();sc.frame_set(1)
@@ -69,8 +69,8 @@ def setup(separated,enabled):
     assert all(o.animation_data is None and not o.rigid_body.kinematic for o in bodies)
     return sc,g,inp,out,z
 
-def run(name,separated,enabled,dest):
-    sc,g,inp,out,z=setup(separated,enabled)
+def run(name,separated,enabled,dest,relief_degrees=35,impulse=IMPULSE):
+    sc,g,inp,out,z=setup(separated,enabled,relief_degrees,impulse)
     if name=='engaged':bpy.ops.wm.save_as_mainfile(filepath=str(dest/'geneva_physical_trial.blend'))
     rows=[];last=None;travel=[0.,0.]
     for f in range(1,FRAMES+1):
@@ -111,7 +111,7 @@ def run(name,separated,enabled,dest):
         scalar('no_output',max(abs(q['output']) for q in rows),upper=.02)
         if separated:series('axial_clearance',lower=1.3)
     ev=evaluate(bounds,obs)
-    out=dict(name=name,input=travel[0],output=travel[1],max_error=max(q['error'] for q in rows),
+    out=dict(name=name,relief_degrees=relief_degrees,impulse=impulse,input=travel[0],output=travel[1],max_error=max(q['error'] for q in rows),
         evaluation=ev,rows=rows)
     print('PHASE212K_CASE',json.dumps({k:v for k,v in out.items() if k!='rows'},allow_nan=False),flush=True)
     return out
