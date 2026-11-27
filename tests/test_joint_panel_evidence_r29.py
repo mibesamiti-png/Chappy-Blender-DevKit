@@ -1,6 +1,7 @@
 """Synthetic R29 controls; no native or GUI proof is produced by these tests."""
 import copy
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -127,6 +128,7 @@ class PanelEvidenceTests(unittest.TestCase):
         self.blocked(args,"step_missing","incomplete")
         for key,value in (("run_id","2"*32),("blender_version","5.2.1"),("fixture_id",PRIVATE),("mode","stub")):
             args=observations();args[0][0][key]=value;self.blocked(args,"identity_mismatch")
+        args=observations();args[0][0]=None;self.blocked(args,"case_inventory_invalid")
         args=observations();args[0].reverse();self.blocked(args,"case_order_mismatch")
         args=observations();args[0][1]=copy.deepcopy(args[0][0]);self.blocked(args,"case_order_mismatch")
 
@@ -201,6 +203,7 @@ class PanelEvidenceTests(unittest.TestCase):
         step["before"]["reason"]="cancellation_requested";step["view_before"]["reason"]="cancellation_requested"
         self.blocked(args,"transition_discontinuity")
 
+    @unittest.skipUnless(os.name == "posix", "existing Windows kit builder runs in Linux CI")
     def test_existing_kit_builder_excludes_research_provider(self):
         # Exercise the existing packaging implementation, not a copied filter.
         required=["run_blender_tests_windows.bat","scripts/windows_run_blender_tests.ps1",
