@@ -108,10 +108,10 @@ def main():
     cases=[run(n,spec,cfg,z,e,dest) for n,z,e in [('engaged',0.,True),('separated',1.,True),('motor_off',0.,False)]]
     states={r['name']:r['evaluation']['status'] for r in cases}
     stages=dict(geometry='pass' if all(r['part_status']=='pass' for r in cases) else 'fail',
-        screen='pass',full_motion=states['engaged'],
+        full_motion=states['engaged'],
         negative_controls='pass' if all(states[n]=='pass' for n in ('separated','motor_off')) else 'fail')
     # Single-actuator fixture gate only; not whole-machine qualification.
-    fixture_gate=qualification(stages)
+    fixture_gate=qualification(stages,required=('geometry','full_motion','negative_controls'))
     out=dict(complete=True,native_executed=True,fixture_gate=fixture_gate,
         spec=spec.to_dict(),cases=cases,frames=FRAMES,ideal_guides=True,gravity_return=True,
         keyframed=False,whole_machine_certified=False,manufacturing_certified=False)
