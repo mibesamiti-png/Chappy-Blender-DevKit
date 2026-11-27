@@ -37,7 +37,9 @@ class MotionTests(unittest.TestCase):
         t=Track("stroke","mm",(Knot(0,0),Knot(.5,8,0,-4),Knot(1,0)))
         spec=MotionSpec((t,),2.5)
         h=1e-5
-        for s in (.2,.8,1.25,1.8,2.7):
+        self.assertAlmostEqual(spec.sample(1.25)["stroke"][2],-4/2.5**2)
+        # Finite-difference tests away from knots, where jerk can be discontinuous.
+        for s in (.2,.8,1.2,1.8,2.7):
             p,v,a=spec.sample(s)["stroke"]
             lo=spec.sample(s-h)["stroke"];hi=spec.sample(s+h)["stroke"]
             self.assertAlmostEqual(v,(hi[0]-lo[0])/(2*h),places=6)
