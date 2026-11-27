@@ -1,0 +1,1317 @@
+{
+  "schema": 1,
+  "gl_head": "6cdb85f4c97bf4cdbb4693a7b1bc180149b4ca2b",
+  "python": "3.13.15",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "adapter_sha256": "3e1eaad96d28c05b3174dde85d57e1c94cad3a3d66bb93a14826b1fb8361475d",
+  "caps": {
+    "faces": 512,
+    "pairs": 20000,
+    "cooperative_seconds": 2,
+    "process_seconds": 10
+  },
+  "independent_oracle": "analytic expectations; CGAL not installed locally",
+  "auto_adopt": false,
+  "approved": false,
+  "passed": 46,
+  "total": 46,
+  "rows": [
+    {
+      "case": "cross",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.001968100001249695,
+          0.0007798000006005168,
+          0.0008654000012029428
+        ],
+        "median_seconds": 0.0008654000012029428,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "9e1defa1de1f315a407b7395407da158ccfc1d7d82f8c1f3f8901551acd44fa3"
+      }
+    },
+    {
+      "case": "cross",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "clip": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0015573000018775929,
+          0.0007898000003478955,
+          0.0007631999978912063
+        ],
+        "median_seconds": 0.0007898000003478955,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "9e1defa1de1f315a407b7395407da158ccfc1d7d82f8c1f3f8901551acd44fa3"
+      }
+    },
+    {
+      "case": "cross",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0011264000022492837,
+          0.000791199996456271,
+          0.0007761999986541923
+        ],
+        "median_seconds": 0.000791199996456271,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "2d8c1440ef8b22a94effecf88a820b43e9fd7812e7c7d8eebc61a91a42bf9428"
+      }
+    },
+    {
+      "case": "cross",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "clip": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0012399000006553251,
+          0.0008171000008587725,
+          0.0007619999996677507
+        ],
+        "median_seconds": 0.0008171000008587725,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "2d8c1440ef8b22a94effecf88a820b43e9fd7812e7c7d8eebc61a91a42bf9428"
+      }
+    },
+    {
+      "case": "cross",
+      "control": "normal",
+      "scale": 8,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0010696000026655383,
+          0.0007430999976349995,
+          0.0007426000011037104
+        ],
+        "median_seconds": 0.0007430999976349995,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "507530e47e6d4adeda6432ff4a26ac5b3d282acc1786cf06637b1aef32b7b9f2"
+      }
+    },
+    {
+      "case": "cross",
+      "control": "normal",
+      "scale": 8,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "clip": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.001099899996916065,
+          0.0007598000011057593,
+          0.0007426000011037104
+        ],
+        "median_seconds": 0.0007598000011057593,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "507530e47e6d4adeda6432ff4a26ac5b3d282acc1786cf06637b1aef32b7b9f2"
+      }
+    },
+    {
+      "case": "gap",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [],
+        "scanned": 1,
+        "narrow_tests": 0,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          3.9599999581696466e-05,
+          2.1299998479662463e-05,
+          1.5300000086426735e-05
+        ],
+        "median_seconds": 2.1299998479662463e-05,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "31f61310b053bedc91c483b0a629d64d414a1bf1d8496fe333559245e6053595"
+      }
+    },
+    {
+      "case": "gap",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 0,
+        "paths": {},
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0007416000007651746,
+          0.00015389999680337496,
+          0.00013550000221584924
+        ],
+        "median_seconds": 0.00015389999680337496,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "31f61310b053bedc91c483b0a629d64d414a1bf1d8496fe333559245e6053595"
+      }
+    },
+    {
+      "case": "gap",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [],
+        "scanned": 1,
+        "narrow_tests": 0,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          3.899999865097925e-05,
+          2.1600000764010474e-05,
+          1.5300000086426735e-05
+        ],
+        "median_seconds": 2.1600000764010474e-05,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "70f26d1ccbce540d3fd77dbc933434d96dcad95d542135d2db497b01ee089a10"
+      }
+    },
+    {
+      "case": "gap",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 0,
+        "paths": {},
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0004439000003912952,
+          0.00014870000086375512,
+          0.0001336999994236976
+        ],
+        "median_seconds": 0.00014870000086375512,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "70f26d1ccbce540d3fd77dbc933434d96dcad95d542135d2db497b01ee089a10"
+      }
+    },
+    {
+      "case": "gap",
+      "control": "normal",
+      "scale": 8,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [],
+        "scanned": 1,
+        "narrow_tests": 0,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          7.370000093942508e-05,
+          2.6900001103058457e-05,
+          1.759999940986745e-05
+        ],
+        "median_seconds": 2.6900001103058457e-05,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "d370b336eaf26750a710e9f1232b9b36bb0e0da013314b8f7b9b035432379f11"
+      }
+    },
+    {
+      "case": "gap",
+      "control": "normal",
+      "scale": 8,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 0,
+        "paths": {},
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.00044659999912255444,
+          0.0001475000026402995,
+          0.00013269999908516183
+        ],
+        "median_seconds": 0.0001475000026402995,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "d370b336eaf26750a710e9f1232b9b36bb0e0da013314b8f7b9b035432379f11"
+      }
+    },
+    {
+      "case": "shared_edge",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0013768999997409992,
+          0.0010360000014770776,
+          0.0011266999972576741
+        ],
+        "median_seconds": 0.0011266999972576741,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "e82d84d3e8dc67f33c198a56d396a30272d041c30eea645bcf5e1f45e08557b3"
+      }
+    },
+    {
+      "case": "shared_edge",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "shared_edge_nonplanar": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0005161000008229166,
+          0.00016510000205016695,
+          0.000148899998748675
+        ],
+        "median_seconds": 0.00016510000205016695,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "e82d84d3e8dc67f33c198a56d396a30272d041c30eea645bcf5e1f45e08557b3"
+      }
+    },
+    {
+      "case": "shared_edge",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0013607999972009566,
+          0.0010167000000365078,
+          0.0009986000004573725
+        ],
+        "median_seconds": 0.0010167000000365078,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "fbf7007b0f8a4907b0eff5c3ac756f04ef13f6b1839464f1a72e82c210a84b90"
+      }
+    },
+    {
+      "case": "shared_edge",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "shared_edge_nonplanar": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0005372999985411298,
+          0.00015999999959603883,
+          0.00014229999942472205
+        ],
+        "median_seconds": 0.00015999999959603883,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "fbf7007b0f8a4907b0eff5c3ac756f04ef13f6b1839464f1a72e82c210a84b90"
+      }
+    },
+    {
+      "case": "shared_edge",
+      "control": "normal",
+      "scale": 8,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.001432000000932021,
+          0.0010293000013916753,
+          0.001012999997328734
+        ],
+        "median_seconds": 0.0010293000013916753,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "1cf4306457fd634cf86bdd6791f1c3460a95edb34df26ffa4fc76263f0a979a2"
+      }
+    },
+    {
+      "case": "shared_edge",
+      "control": "normal",
+      "scale": 8,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "shared_edge_nonplanar": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.000450999999884516,
+          0.0001632999992580153,
+          0.00014799999917158857
+        ],
+        "median_seconds": 0.0001632999992580153,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "1cf4306457fd634cf86bdd6791f1c3460a95edb34df26ffa4fc76263f0a979a2"
+      }
+    },
+    {
+      "case": "duplicate",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.001284400001168251,
+          0.0009352999986731447,
+          0.0009205000023939647
+        ],
+        "median_seconds": 0.0009352999986731447,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "05e46dd7e2d9e3fd77fe3d016f452a0af3b480df0cc11a9582959d887d195e28"
+      }
+    },
+    {
+      "case": "duplicate",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "duplicate": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0004455999987840187,
+          0.00015450000137207098,
+          0.00013870000111637637
+        ],
+        "median_seconds": 0.00015450000137207098,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "05e46dd7e2d9e3fd77fe3d016f452a0af3b480df0cc11a9582959d887d195e28"
+      }
+    },
+    {
+      "case": "duplicate",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0013034999974479433,
+          0.0009479000000283122,
+          0.0009393000000272878
+        ],
+        "median_seconds": 0.0009479000000283122,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "31586146aef2277d90058b2f91d6ca7b000bf9304c14f4c8d07840a15e225b3a"
+      }
+    },
+    {
+      "case": "duplicate",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "duplicate": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.00043789999836008064,
+          0.00015159999747993425,
+          0.0001357000001007691
+        ],
+        "median_seconds": 0.00015159999747993425,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "31586146aef2277d90058b2f91d6ca7b000bf9304c14f4c8d07840a15e225b3a"
+      }
+    },
+    {
+      "case": "duplicate",
+      "control": "normal",
+      "scale": 8,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0012545999998110346,
+          0.0009214999990945216,
+          0.000932999999349704
+        ],
+        "median_seconds": 0.000932999999349704,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "4de91aa11ebe675044ae1761573b3d5856a6c46895c1786353442688bd0a699d"
+      }
+    },
+    {
+      "case": "duplicate",
+      "control": "normal",
+      "scale": 8,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "duplicate": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0004721000004792586,
+          0.00015839999832678586,
+          0.0001427000024705194
+        ],
+        "median_seconds": 0.00015839999832678586,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "4de91aa11ebe675044ae1761573b3d5856a6c46895c1786353442688bd0a699d"
+      }
+    },
+    {
+      "case": "shared_overlap",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.001366500000585802,
+          0.0009754000020620879,
+          0.0009596000018063933
+        ],
+        "median_seconds": 0.0009754000020620879,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "e7cabfe19b4f00f902d4efeed9a187a198da9ccdab36eea2554311f57f97721f"
+      }
+    },
+    {
+      "case": "shared_overlap",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "shared_edge_coplanar": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0005175999976927415,
+          0.0001995999991777353,
+          0.00018260000069858506
+        ],
+        "median_seconds": 0.0001995999991777353,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "e7cabfe19b4f00f902d4efeed9a187a198da9ccdab36eea2554311f57f97721f"
+      }
+    },
+    {
+      "case": "shared_overlap",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0013090000029478688,
+          0.0009540999999444466,
+          0.0009381999989273027
+        ],
+        "median_seconds": 0.0009540999999444466,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "4605f21b5e0a2d223d65eadcdb58bbac8b1208bdf155909584f5e3e5dd4988a7"
+      }
+    },
+    {
+      "case": "shared_overlap",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "shared_edge_coplanar": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0005094000007375143,
+          0.0002393000031588599,
+          0.00018319999799132347
+        ],
+        "median_seconds": 0.0002393000031588599,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "4605f21b5e0a2d223d65eadcdb58bbac8b1208bdf155909584f5e3e5dd4988a7"
+      }
+    },
+    {
+      "case": "shared_overlap",
+      "control": "normal",
+      "scale": 8,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0013560999977926258,
+          0.0009788000024855137,
+          0.0009600999983376823
+        ],
+        "median_seconds": 0.0009788000024855137,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "5e48cfe77e0b94e0d430fa400dfee0b041865a9a40b536300ec19b6df4b96b71"
+      }
+    },
+    {
+      "case": "shared_overlap",
+      "control": "normal",
+      "scale": 8,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "shared_edge_coplanar": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0005405999982031062,
+          0.00024449999909847975,
+          0.00019220000103814527
+        ],
+        "median_seconds": 0.00024449999909847975,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "5e48cfe77e0b94e0d430fa400dfee0b041865a9a40b536300ec19b6df4b96b71"
+      }
+    },
+    {
+      "case": "unwelded_touch",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0011016999997082166,
+          0.0007656999987375457,
+          0.0007483999979740474
+        ],
+        "median_seconds": 0.0007656999987375457,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "acef95d66880355ea9de5cf5af892405e5addf1c7ec7391dcb990ff3daf062f1"
+      }
+    },
+    {
+      "case": "unwelded_touch",
+      "control": "normal",
+      "scale": 0.125,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "clip": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0013066999999864493,
+          0.0007929000021249522,
+          0.0007665999983146321
+        ],
+        "median_seconds": 0.0007929000021249522,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "acef95d66880355ea9de5cf5af892405e5addf1c7ec7391dcb990ff3daf062f1"
+      }
+    },
+    {
+      "case": "unwelded_touch",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0011488999989524018,
+          0.0007845000000088476,
+          0.0010903000002144836
+        ],
+        "median_seconds": 0.0010903000002144836,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "c7af8fc900aa89de472c7a34362621f35adb65e145dc8f59762b5118de3f3e95"
+      }
+    },
+    {
+      "case": "unwelded_touch",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "clip": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0011388000020815525,
+          0.0007756000013614539,
+          0.0007562999999208841
+        ],
+        "median_seconds": 0.0007756000013614539,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "c7af8fc900aa89de472c7a34362621f35adb65e145dc8f59762b5118de3f3e95"
+      }
+    },
+    {
+      "case": "unwelded_touch",
+      "control": "normal",
+      "scale": 8,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "scanned": 1,
+        "narrow_tests": 1,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.001112400001147762,
+          0.0007684999982302543,
+          0.0007433999999193475
+        ],
+        "median_seconds": 0.0007684999982302543,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "d8e04d54e6f5b340c6328954d8d01ab11be56fda7a84b8e9f63cd5f2c7a6d634"
+      }
+    },
+    {
+      "case": "unwelded_touch",
+      "control": "normal",
+      "scale": 8,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [
+          [
+            0,
+            1
+          ]
+        ],
+        "reason": null,
+        "scanned": 1,
+        "narrow_tests": 1,
+        "paths": {
+          "clip": 1
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0013056999996479135,
+          0.0013039999976172112,
+          0.0008239999988290947
+        ],
+        "median_seconds": 0.0013039999976172112,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "d8e04d54e6f5b340c6328954d8d01ab11be56fda7a84b8e9f63cd5f2c7a6d634"
+      }
+    },
+    {
+      "case": "sparse64",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [],
+        "scanned": 2016,
+        "narrow_tests": 0,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.0017534999969939236,
+          0.0017698000010568649,
+          0.0018060000002151355
+        ],
+        "median_seconds": 0.0017698000010568649,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "5eed01435019385954bb3659861282e9a1759b02802f858b1a6f29b9e1f232f5"
+      }
+    },
+    {
+      "case": "sparse64",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [],
+        "reason": null,
+        "scanned": 2016,
+        "narrow_tests": 0,
+        "paths": {},
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.004855600000155391,
+          0.004390699999930803,
+          0.0048989000024448615
+        ],
+        "median_seconds": 0.004855600000155391,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "5eed01435019385954bb3659861282e9a1759b02802f858b1a6f29b9e1f232f5"
+      }
+    },
+    {
+      "case": "grid128",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "measured",
+        "reason": null,
+        "pairs": [],
+        "scanned": 8128,
+        "narrow_tests": 904,
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.8881268000004638,
+          0.7325062999989314,
+          0.7784353999995801
+        ],
+        "median_seconds": 0.7784353999995801,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "78ef4f464a0307826f786055d7f34803b5d000e7ada5fae07aefb5facda4df12"
+      }
+    },
+    {
+      "case": "grid128",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "measured",
+        "pairs": [],
+        "reason": null,
+        "scanned": 8128,
+        "narrow_tests": 904,
+        "paths": {
+          "shared_edge_coplanar": 176,
+          "clip": 728
+        },
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.5379408999979205,
+          0.5319891999970423,
+          0.5497991999982332
+        ],
+        "median_seconds": 0.5379408999979205,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "78ef4f464a0307826f786055d7f34803b5d000e7ada5fae07aefb5facda4df12"
+      }
+    },
+    {
+      "case": "sparse64",
+      "control": "pair_limit",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "budget_exceeded",
+        "reason": "pair_or_time_limit",
+        "pairs": null,
+        "scanned": 1,
+        "narrow_tests": 0,
+        "certified": false,
+        "samples_seconds": [
+          6.27999979769811e-05,
+          4.579999949783087e-05,
+          3.840000135824084e-05
+        ],
+        "median_seconds": 4.579999949783087e-05,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "5eed01435019385954bb3659861282e9a1759b02802f858b1a6f29b9e1f232f5"
+      }
+    },
+    {
+      "case": "sparse64",
+      "control": "pair_limit",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "budget_exceeded",
+        "pairs": null,
+        "reason": "pair_or_time_limit",
+        "scanned": 0,
+        "narrow_tests": 0,
+        "paths": {},
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          0.003001199998834636,
+          0.002918300000601448,
+          0.002860500000679167
+        ],
+        "median_seconds": 0.002918300000601448,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "5eed01435019385954bb3659861282e9a1759b02802f858b1a6f29b9e1f232f5"
+      }
+    },
+    {
+      "case": "sparse64",
+      "control": "time_limit",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "budget_exceeded",
+        "reason": "pair_or_time_limit",
+        "pairs": null,
+        "scanned": 0,
+        "narrow_tests": 0,
+        "certified": false,
+        "samples_seconds": [
+          5.919999966863543e-05,
+          4.2499999835854396e-05,
+          3.649999780463986e-05
+        ],
+        "median_seconds": 4.2499999835854396e-05,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "5eed01435019385954bb3659861282e9a1759b02802f858b1a6f29b9e1f232f5"
+      }
+    },
+    {
+      "case": "sparse64",
+      "control": "time_limit",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "budget_exceeded",
+        "pairs": null,
+        "reason": "time_limit",
+        "scanned": 0,
+        "narrow_tests": 0,
+        "paths": {},
+        "certified": false,
+        "arithmetic": "exact_binary64_rational",
+        "samples_seconds": [
+          5.4700001783203334e-05,
+          4.099999932805076e-05,
+          3.5799999750452116e-05
+        ],
+        "median_seconds": 4.099999932805076e-05,
+        "input_preserved": true,
+        "passed": true,
+        "numpy": "2.5.4",
+        "input_sha256": "5eed01435019385954bb3659861282e9a1759b02802f858b1a6f29b9e1f232f5"
+      }
+    },
+    {
+      "case": "sparse513",
+      "control": "normal",
+      "scale": 1,
+      "method": "r2",
+      "result": {
+        "status": "budget_exceeded",
+        "pairs": null,
+        "reason": "a_face_limit",
+        "passed": true
+      }
+    },
+    {
+      "case": "sparse513",
+      "control": "normal",
+      "scale": 1,
+      "method": "r3",
+      "result": {
+        "status": "budget_exceeded",
+        "pairs": null,
+        "reason": "a_face_limit",
+        "passed": true
+      }
+    }
+  ]
+}

@@ -2,6 +2,11 @@ name: CBDK Blender multi-version runtime smoke
 
 on:
   workflow_dispatch:
+    inputs:
+      team_a_gui_pilot:
+        description: 'Explicitly attempt Windows desktop input after native smoke (experimental)'
+        type: boolean
+        default: false
   # Prime the shared dev-branch cache after a reviewed cache-policy change.
   # PR merge-ref caches cannot be restored by sibling PRs.
   push:
@@ -9,6 +14,16 @@ on:
     paths: ['.github/workflows/blender-smoke.yml']
   pull_request:
     paths:
+      - 'cbdk/joint_integration.py'
+      - 'parts/blender/joint_preview.py'
+      - 'scripts/blender_joint_integration_smoke.py'
+      - 'scripts/blender_joint_history_probe.py'
+      - 'scripts/blender_joint_gui_probe.py'
+      - 'scripts/blender_joint_linux_gui_probe.py'
+      - 'experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip'
+      - 'experiments/team_a_staged/gl_manifest.json'
+      - 'experiments/team_a_staged/run_gl.py'
+      - 'tests/test_joint_integration.py'
       - 'pyproject.toml'
       - 'docs/project/STATE.json'
       - 'parts/blender/**'
@@ -1308,6 +1323,51 @@ jobs:
           PY
           echo "Synthetic Blender render gallery: 13 real PNGs (reference, drift, parts) in screenshot_gallery/index.html." >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Bounded Team A joint preview native safety and UI
+        shell: bash
+        run: |
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec --python-exit-code 7 \
+            --python scripts/blender_joint_integration_smoke.py -- \
+            --output reports/ci/team-a-public-native.json
+
+      # Keep provider-backed evidence separate from the public sentinel smoke.
+      # Fetch only the frozen GL snapshot; do not merge the research branch.
+      - name: Bounded Team A actual CJM GL provider chain
+        if: ${{ hashFiles('experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip') != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          CJM_ZIP="$GITHUB_WORKSPACE/experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip"
+          printf '%s  %s\n' '91700f02210e03940eee38f1939f6a7d9778ed9406f902e9359f73bf5f4a88c1' "$CJM_ZIP" | sha256sum --check
+          GL_HEAD="$(python -c 'import json; print(json.load(open("experiments/team_a_staged/gl_manifest.json"))["head"])')"
+          GL_SNAPSHOT="$(mktemp -d "$RUNNER_TEMP/cbdk-a-gl.XXXXXX")"
+          trap 'rm -rf "$GL_SNAPSHOT"' EXIT
+          git fetch --no-tags --depth=1 origin "$GL_HEAD"
+          git archive FETCH_HEAD research/geometry_lab/cbdk_geometry | tar -x -C "$GL_SNAPSHOT"
+          GL_ROOT="$GL_SNAPSHOT/research/geometry_lab"
+          "$BLENDER_PATH" --background --factory-startup --disable-autoexec --python-exit-code 7 \
+            --python scripts/blender_joint_integration_smoke.py -- \
+            --cjm-zip "$CJM_ZIP" --gl-root "$GL_ROOT" \
+            --output reports/ci/team-a-provider-native.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("reports/ci/team-a-provider-native.json").read_text())
+          rows = report["rows"]
+          assert rows and all(row["status"] == "passed" for row in rows), rows
+          assert sum(row["case"] == "actual_cjm_gl_cbdk_chain" for row in rows) == 1
+          print("CBDK_A_PROVIDER_CHAIN_PASS", report["blender"], len(rows))
+          PY
+          if [ "${{ matrix.blender-version }}" = "4.5.15" ]; then
+            sudo timeout 120 apt-get update
+            sudo timeout 180 apt-get install -y --no-install-recommends xvfb xauth xdotool openbox libgl1-mesa-dri
+            CBDK_PRIVATE_XVFB=1 LIBGL_ALWAYS_SOFTWARE=1 GDK_BACKEND=x11 \
+              timeout 300 xvfb-run -a -s '-screen 0 1280x900x24 +extension GLX' \
+              python scripts/blender_joint_linux_gui_probe.py --blender "$BLENDER_PATH" \
+              --zip "$CJM_ZIP" --gl "$GL_ROOT" --output reports/ci/team-a-linux-gui.json
+            python -c 'import json; r=json.load(open("reports/ci/team-a-linux-gui.json")); assert r["result"] in ("passed","not_passed"); print("Linux GUI experiment:",r["result"],r.get("stop_stage","complete"))'
+          fi
+
       - name: Upload evidence and log even when Blender fails
         if: always()
         uses: actions/upload-artifact@v4
@@ -1316,3 +1376,95 @@ jobs:
           path: reports/ci/
           retention-days: 14
           if-no-files-found: warn
+
+
+  # Windows native provider check is separate from the Linux matrix.
+  # The experimental desktop test requires an explicit manual request.
+  team-a-windows-provider-native:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.team_a_gui_pilot)
+    runs-on: windows-2022
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check pinned GUI probe syntax
+        run: python -m py_compile scripts/blender_joint_gui_probe.py
+      - name: Prepare exact Windows Blender and pinned provider snapshot
+        if: hashFiles('experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip') != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $zip = Join-Path $PWD 'experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip'
+          if ((Get-FileHash -Algorithm SHA256 $zip).Hash.ToLower() -ne '91700f02210e03940eee38f1939f6a7d9778ed9406f902e9359f73bf5f4a88c1') { throw 'CJM hash mismatch' }
+          $archive = Join-Path $env:RUNNER_TEMP 'blender-4.5.15-windows-x64.zip'
+          curl.exe --fail --location --proto '=https' --proto-redir '=https' --connect-timeout 30 --max-time 300 'https://download.blender.org/release/Blender4.5/blender-4.5.15-windows-x64.zip' -o $archive
+          if ($LASTEXITCODE -ne 0) { throw 'Windows Blender archive transfer failed' }
+          if ((Get-FileHash -Algorithm SHA256 $archive).Hash.ToLower() -ne '52dd02fd74877fa08e74b67d7854cf32468a232c02aaa19b6844c91285574f8d') { throw 'Blender archive hash mismatch' }
+          $folder = Join-Path $env:RUNNER_TEMP 'team-a-windows-blender'
+          Expand-Archive -LiteralPath $archive -DestinationPath $folder
+          $blender = @(Get-ChildItem $folder -Recurse -Filter blender.exe -File)
+          if ($blender.Count -ne 1) { throw 'Expected exactly one Blender executable' }
+          $manifest = Get-Content 'experiments/team_a_staged/gl_manifest.json' -Raw | ConvertFrom-Json
+          git fetch --no-tags --depth=1 origin $manifest.head
+          if ($LASTEXITCODE -ne 0) { throw 'GL fetch failed' }
+          $glRoot = Join-Path $env:RUNNER_TEMP 'team-a-gl/research/geometry_lab'
+          # Read Git blob bytes directly, avoiding platform archive/checkout conversions.
+          # Fail closed against the same frozen manifest; no normalization or new hashes.
+          $env:A_GL_ROOT = $glRoot
+          @'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          manifest = json.loads(Path("experiments/team_a_staged/gl_manifest.json").read_text(encoding="utf-8"))
+          root = Path(os.environ["A_GL_ROOT"])
+          actual = subprocess.check_output(["git", "rev-parse", "FETCH_HEAD"], text=True).strip()
+          assert actual == manifest["head"], "GL commit mismatch"
+          for name, expected in manifest["files"].items():
+              raw = subprocess.check_output(["git", "cat-file", "blob", actual + ":research/geometry_lab/" + name])
+              got = hashlib.sha256(raw).hexdigest()
+              if got != expected:
+                  raise RuntimeError(f"GL blob hash mismatch: {name}: {got} != {expected}")
+              path = root / name
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(raw)
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == expected
+              print("CBDK_A_GL_RAW_BLOB_PASS", name, got, flush=True)
+          '@ | python -
+          if ($LASTEXITCODE -ne 0) { throw 'GL raw snapshot verification failed' }
+          "A_BLENDER=$($blender[0].FullName)" >> $env:GITHUB_ENV
+          "A_GL_ROOT=$glRoot" >> $env:GITHUB_ENV
+      - name: Windows background actual CJM GL provider chain
+        if: hashFiles('experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip') != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = Join-Path $PWD 'reports/ci/team-a-windows-provider-native.json'
+          $zip = Join-Path $PWD 'experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip'
+          # Reuse the exact existing provider-backed test; no GUI or explicit Undo claim.
+          & $env:A_BLENDER --background --factory-startup --disable-autoexec --python-exit-code 7 --python scripts/blender_joint_integration_smoke.py -- --cjm-zip "$zip" --gl-root "$env:A_GL_ROOT" --output "$output"
+          if ($LASTEXITCODE -ne 0) { throw "Windows native Blender failed: $LASTEXITCODE" }
+          $report = Get-Content -LiteralPath $output -Raw | ConvertFrom-Json
+          $rows = @($report.rows)
+          if ($rows.Count -ne 18 -or @($rows | Where-Object { $_.status -ne 'passed' }).Count -ne 0) { throw 'Expected all 18 native provider observations passed' }
+          if (@($rows | Where-Object { $_.case -eq 'actual_cjm_gl_cbdk_chain' }).Count -ne 1 -or $report.gui_mouse_keyboard -ne $false -or $report.approved -ne $false) { throw 'Provider evidence scope mismatch' }
+          Write-Host "CBDK_A_WINDOWS_PROVIDER_CHAIN_PASS $($report.blender) $($rows.Count)"
+      - name: Real Windows desktop input and ordinary Undo pilot
+        if: github.event_name == 'workflow_dispatch' && inputs.team_a_gui_pilot && hashFiles('experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip') != ''
+        shell: pwsh
+        run: |
+          python scripts/blender_joint_gui_probe.py --blender "$env:A_BLENDER" --gl "$env:A_GL_ROOT" --zip "experiments/team_a_staged/providers/chappy_joint_maker_v042_debug_fix.zip" --output "reports/ci/team-a-windows-gui.json"
+      - name: Retain pilot evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-team-a-windows-provider-native
+          path: reports/ci/
+          if-no-files-found: warn
+          retention-days: 14

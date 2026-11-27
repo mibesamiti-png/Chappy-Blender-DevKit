@@ -35,6 +35,9 @@ def build(output: Path) -> int:
         for relative in sorted(files):
             if relative.is_absolute() or ".." in relative.parts:
                 raise ValueError("Unexpected path from git ls-files")
+            # Public research inputs are not distributed with the Windows kit.
+            if relative.parts[:3] == ("experiments", "team_a_staged", "providers"):
+                continue
             absolute = ROOT / relative
             if absolute.is_symlink() or not absolute.is_file():
                 raise ValueError(f"Unexpected tracked file: {relative}")
