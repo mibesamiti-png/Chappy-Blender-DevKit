@@ -1,0 +1,517 @@
+name: Geometry Lab reusable design evaluation Phase 212
+on:
+  pull_request:
+    paths:
+      - 'research/native_bevel_phase112/phase212_*.py'
+      - 'research/native_bevel_phase112/test_phase212_*.py'
+      - '.github/workflows/geometry-lab-design-212.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-design-212-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  evaluation:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test backend-neutral evidence and stopping rules
+        run: python -m unittest discover -v -p 'test_phase212_*.py'
+
+  native-cam-part:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Generate and independently verify native 3D cam parts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_cam_fixture.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_cam_part")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"] and r["gate"]
+          assert len(r["parts"])==2 and all(q["status"]=="pass" and all(q["checks"].values()) for q in r["parts"])
+          assert all(r["controls"].values())
+          assert not any(r[k] for k in ("physical_contact_certified","assembly_certified","manufacturing_certified"))
+          assert all((p/n).stat().st_size>0 for n in ("cam_parts.blend","stride.obj","dwell.obj"))
+          PY
+      - name: Verify native coaxial cam assembly and keyframe playback
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_assembly_fixture.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_cam_assembly")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"] and r["gate"] and r["replay_pass"]
+          assert len(r["objects"])==5 and r["assembly"]["samples"]==241
+          assert r["assembly"]["evaluation"]["status"]=="pass"
+          assert len(r["assembly"]["evaluation"]["metrics"])==21
+          assert all(r["controls"].values()) and r["ideal_shared_rotation"]
+          assert not any(r[k] for k in ("physical_motion_certified","torque_transfer_certified","manufacturing_certified"))
+          assert (p/"cam_stack.blend").stat().st_size>0
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-cam-parts-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_cam_part/
+          if-no-files-found: warn
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-cam-assembly-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_cam_assembly/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native-contact:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Measure generated cam under real motor contact and negative controls
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_contact.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_contact")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"] and r["frames"]==481
+          assert [c["name"] for c in r["cases"]]==["engaged","separated","motor_off"]
+          assert all(len(c["rows"])==481 for c in r["cases"])
+          assert not any(r[k] for k in ("keyframed","whole_machine_certified","manufacturing_certified"))
+          assert r["ideal_guides"] and r["gravity_return"]
+          assert r["fixture_gate"]["certified"]==all(c["evaluation"]["status"]=="pass" for c in r["cases"])
+          assert (p/"contact_cam.blend").stat().st_size>0
+          print("Contact fixture gate:",r["fixture_gate"]["status"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-contact-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_contact/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native-shared-drive:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Validate two generated cam motions under one powered shaft
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_shared_drive.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_shared_drive")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"] and r["frames"]==601
+          assert (r["cam_count"],r["active_bodies"],r["motor_count"])==(2,3,1)
+          assert [c["name"] for c in r["cases"]]==["engaged","separated","motor_off"]
+          assert all(len(c["rows"])==601 and len(c["outputs"])==2 for c in r["cases"])
+          assert all(c["kinematic_status"]=="pass" for c in r["cases"])
+          assert r["ideal_rigid_camshaft"] and r["ideal_guides"] and r["gravity_return"]
+          assert not any(r[k] for k in ("keyframed","torque_transfer_certified","manufacturing_certified"))
+          assert r["fixture_gate"]["certified"]==all(c["evaluation"]["status"]=="pass" for c in r["cases"])
+          assert (p/"physical_cam_stack.blend").stat().st_size>0
+          print("Shared drive fixture gate:",r["fixture_gate"]["status"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-shared-drive-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_shared_drive/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native-design-engine:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Execute bounded end-to-end design and verify evidence
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_engine_fixture.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_engine")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"] and not r["manufacturing_certified"]
+          d=r["design"]
+          assert d["budget"]==2 and len(d["history"])<=2
+          assert r["calls"][0]==["compact","geometry"]
+          assert d["history"][0]["qualification"]["status"]=="fail"
+          assert all(c[0]!="compact" or c[1]=="geometry" for c in r["calls"])
+          assert d["selected"]=="reference" and d["action"]=="validated_fixture"
+          assert r["calls"]==[["compact","geometry"]]+[["reference",s] for s in ("geometry","screen","full_motion","negative_controls")]
+          assert d["history"][1]["qualification"]["certified"]
+          for n in ("engaged","separated","motor_off"):
+              c=json.loads((p/"reference"/(n+".json")).read_text())
+              assert c["name"]==n and len(c["rows"])==601 and c["evaluation"]["status"]=="pass"
+          assert all((p/"reference"/n).stat().st_size>0 for n in ("kinematic_preview.blend","physical_cam_stack.blend"))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-engine-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_engine/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native-geneva-geometry:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Verify four-slot wheel and relieved disk geometry
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_geneva_geometry.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_geneva_geometry")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"]
+          assert len(r["rows"])==721 and len(r["parts"])==3
+          assert 0<=r["lock_fraction"]<=1 and r["lock_samples"]
+          assert not any(r[k] for k in ("continuous_lock_proven","physical_contact_certified","manufacturing_certified"))
+          assert r["geometry_gate"]==(all(q["passed"] for q in r["parts"].values()) and r["evaluation"]["status"]=="pass" and all(r["controls"].values()))
+          assert r["lock_target"]==.98 and r["sampled_lock_gate"]==(r["lock_fraction"]>=r["lock_target"])
+          if r["geometry_gate"] and r["sampled_lock_gate"]:assert (p/"geneva_geometry_preview.blend").stat().st_size>0
+          print("Geneva geometry gate:",r["geometry_gate"],"dwell lock fraction:",r["lock_fraction"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-geneva-geometry-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_geneva_geometry/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native-geneva-contact:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Measure passive Geneva indexing under actual motor contact
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_geneva_contact.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_geneva_contact")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"] and r["frames"]==961
+          assert r["motor_count"]==1 and r["active_bodies"]==2
+          assert not r["keyframed"] and not r["manufacturing_certified"]
+          assert r["ideal_bearings"] and r["ideal_rigid_driver"] and r["zero_external_load"]
+          assert [c["name"] for c in r["cases"]]==["engaged","separated","motor_off"]
+          assert all(len(c["rows"])==961 for c in r["cases"])
+          assert r["fixture_gate"]["certified"]==all(c["evaluation"]["status"]=="pass" for c in r["cases"])
+          assert (p/"geneva_physical_trial.blend").stat().st_size>0
+          print("Geneva physical gate:",r["fixture_gate"]["status"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-geneva-contact-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_geneva_contact/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native-geneva-k2:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Diagnose Geneva stall with bounded candidates
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_geneva_contact_screen.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_geneva_k2")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"] and r["frames"]==961
+          assert r["plan"]==[["relief40",40,40.],["relief45",45,40.],["impulse160",35,160.]]
+          assert 1<=len(r["history"])<=r["budget"]==3
+          assert not any(r[k] for k in ("sampled_lock_reverified","whole_design_certified","manufacturing_certified"))
+          for i,h in enumerate(r["history"]):
+              assert h["candidate"]==r["plan"][i][0]
+              d=p/h["candidate"]
+              c=json.loads((d/"engaged.json").read_text())
+              assert len(c["rows"])==961 and c["evaluation"]==h["motion"]
+              assert (c["relief_degrees"],c["impulse"])==tuple(r["plan"][i][1:])
+              for n,v in h["controls"].items():
+                  c=json.loads((d/(n+".json")).read_text())
+                  assert len(c["rows"])==961 and c["evaluation"]==v
+          if r["selected"]:
+              h=r["history"][-1]
+              assert h["candidate"]==r["selected"] and h["fixture_gate"]["certified"]
+              assert set(h["controls"])=={"separated","motor_off"}
+              assert r["action"]=="physical_fixture_pass_lock_recheck_required"
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-geneva-k2-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_geneva_k2/
+          if-no-files-found: warn
+          retention-days: 14
+
+  native-geneva-swept:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Validate swept relief and conditional passive drive
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_geneva_swept_trial.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_geneva_swept")
+          r=json.loads((p/"report.json").read_text())
+          g=json.loads((p/"geometry/report.json").read_text())
+          d=g["dimensions"]
+          assert r["complete"] and r["native_executed"] and r["frames"]==961
+          assert len(g["rows"])==721 and len(g["lock_samples"])==540
+          assert r["perturbed_count"]==len(g["perturbed_disk_rows"])==362
+          assert d["profile_kind"]=="sampled_radial_sweep" and d["sweep_poses"]==543
+          assert d["sweep_margin"]==.02 and d["error_degrees"]==.96
+          assert len(d["radius_before"])==len(d["radius_after"])==360
+          cuts=[a-b for a,b in zip(d["radius_before"],d["radius_after"])]
+          assert min(cuts)>=-1e-12 and max(cuts)<.1
+          assert d["changed_vertices"]==sum(c>1e-8 for c in cuts)>0
+          assert not r["continuous_sweep_proven"] and not r["manufacturing_certified"]
+          stages=r["stages"]
+          assert (stages["geometry"]=="pass")==g["geometry_gate"]
+          assert (stages["sampled_lock"]=="pass")==g["sampled_lock_gate"]
+          assert (stages["perturbed_disk"]=="pass")==g["perturbed_disk_gate"]
+          eligible=all(stages[k]=="pass" for k in ("geometry","sampled_lock","perturbed_disk"))
+          assert bool(r["cases"])==eligible
+          for c in r["cases"]:
+              full=json.loads((p/"physical"/(c["name"]+".json")).read_text())
+              assert len(full["rows"])==961 and c["evaluation"]==full["evaluation"]
+              assert c["profile_factory"]=="swept_profiles" and c["impulse"]==40.
+          if r["gate"]["certified"]:
+              assert all(v=="pass" for v in stages.values())
+              assert {c["name"] for c in r["cases"]}=={"engaged","separated","motor_off"}
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-geneva-swept-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_geneva_swept/
+          if-no-files-found: warn
+          retention-days: 14

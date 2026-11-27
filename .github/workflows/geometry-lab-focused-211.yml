@@ -1,0 +1,875 @@
+name: Geometry Lab focused Phase 211
+on:
+  pull_request:
+    paths:
+      - 'research/native_bevel_phase112/phase211_*.py'
+      - 'research/native_bevel_phase112/phase210_inverse_cam.py'
+      - 'research/native_bevel_phase112/phase210_xy_cam.py'
+      - '.github/workflows/geometry-lab-focused-211.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-focused-211-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  phase211-focused:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Reproduce inverse profiles and guarded support design
+        run: |
+          set -euo pipefail
+          B="$RUNNER_TEMP/blender-4.4.3-linux-x64/blender"
+          "$B" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_inverse_cam.py
+          "$B" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_support_design.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          a=json.loads((p/"phase210_inverse_cam.json").read_text())
+          b=json.loads((p/"phase211_support_design.json").read_text())
+          assert a["gate"] and b["static_gate"]
+          assert b["selected_duty"]==.77 and b["selected_phases"]==[0,270,180,90]
+          PY
+      - name: Build and audit stacked cam subassembly
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_cam_pack.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_cam_pack.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert (d["cam_count"],d["roller_count"],d["shaft_count"])==(8,8,1)
+          assert d["duty"]==.77 and d["phases"]==[0,270,180,90]
+          assert d["pack_gate"]==(all(d["checks"].values()) and all(d["controls"].values()))
+          assert not d["transmission_certified"] and not d["whole_machine_com_certified"] and not d["physical_walk_certified"]
+          assert len(d["rows"])==721
+          assert all(math.isfinite(v) for r in d["rows"] for k in ("com","cam_com") for v in r[k])
+          assert (p/"phase211_cam_pack.blend").stat().st_size>0
+          print("Cam pack gate (subassembly only):",d["pack_gate"])
+          PY
+      - name: Evaluate passive return spring under vertical gravity
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_spring_return.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_spring_return.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["gravity"]==[0.,-9.81,0.] and d["duty"]==.77
+          t=d["trials"]
+          assert [r["stiffness"] for r in t]==[3.,10.,30.][:len(t)]
+          chosen=next((r["stiffness"] for r in t if r["case"]["passed"]),None)
+          assert d["selected_stiffness"]==chosen
+          assert chosen is not None or len(t)==3
+          controls=d["controls"] or []
+          assert [c["name"] for c in controls]==(["separated","motor_off"] if chosen is not None else [])
+          n=d["spring_disabled"]
+          assert n["spring"]==0.
+          assert d["negative_control_detected"]==(not n["checks"]["axis_tracking"] or not n["checks"]["contact"])
+          assert d["spring_gate"]==(chosen is not None and all(c["passed"] for c in controls) and d["negative_control_detected"])
+          for c in [r["case"] for r in t]+controls+[n]:
+              assert c["passed"]==all(c["checks"].values())
+              assert len(c["rows"])==601 and c["substeps"]==32
+              assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+          assert not d["physical_walk_certified"] and not d["whole_machine_certified"]
+          print("Passive return physical gate:",d["spring_gate"])
+          PY
+      - name: Finish bounded spring stiffness comparison
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_spring_refine.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_spring_refine.json").read_text())
+          b=json.loads((p/"phase211_spring_return.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["criteria_changed"] and not d["geometry_changed"] and not d["physical_walk_certified"]
+          assert d["prior_gate"]==b["spring_gate"] and d["negative_control_detected"]==b["negative_control_detected"]
+          t=d["trials"]
+          assert [r["stiffness"] for r in t]==[60.,100.][:len(t)]
+          for r in t:
+              c=r["cases"]
+              assert [v["name"] for v in c]==(["engaged","separated","motor_off"] if c[0]["passed"] else ["engaged"])
+              assert r["passed"]==(len(c)==3 and all(v["passed"] for v in c))
+              for v in c:
+                  assert v["passed"]==all(v["checks"].values()) and len(v["rows"])==601
+                  assert v["spring"]==r["stiffness"] and v["substeps"]==32
+                  assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+          chosen=b["selected_stiffness"] if b["spring_gate"] else next((r["stiffness"] for r in t if r["passed"]),None)
+          assert d["selected_stiffness"]==chosen
+          assert (not t if b["spring_gate"] else bool(t) and (chosen is not None or len(t)==2))
+          assert d["spring_gate"]==(chosen is not None and d["negative_control_detected"])
+          print("Refined passive return physical gate:",d["spring_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-focused-${{ github.sha }}
+          path: |
+            research/native_bevel_phase112/results/phase210_inverse_cam.json
+            research/native_bevel_phase112/results/phase211_*
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-preload:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Evaluate gravity-loaded passive spring anchor
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_spring_preload.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_spring_preload.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["criteria_changed"] and not d["cam_geometry_changed"]
+          assert d["initially_relaxed"] and d["gravity_dependent_anchor"] and d["force_proxy_not_measured"]
+          assert not d["portable_return_certified"] and not d["physical_walk_certified"]
+          assert d["stiffness"]==5. and d["gravity"]==[0.,-9.81,0.] and d["duty"]==.77
+          t=d["trials"]
+          assert [r["preload"] for r in t]==[0.,1.,2.][:len(t)] and len(t)>=2
+          for r in t:
+              q=r["audit"];c=r["cases"]
+              if r["preload"]:
+                  assert q["passed"]==(q["min_settled_anchor_travel"]>=.9*r["preload"] and q["max_guide_error"]<=.02 and q["min_settled_force_proxy"]>=2.)
+              else:
+                  assert q is None
+              assert r["passed"]==bool(q and q["passed"] and len(c)==3 and all(v["passed"] for v in c))
+              for v in c:
+                  assert v["passed"]==all(v["checks"].values()) and len(v["rows"])==601
+                  assert v["preload"]==r["preload"] and v["spring"]==5. and v["substeps"]==32
+                  assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+          chosen=next((r["preload"] for r in t if r["passed"]),None)
+          assert chosen==d["selected_preload"] and (chosen is not None or len(t)==3)
+          assert d["baseline_failed"]==(not t[0]["cases"][0]["passed"])
+          assert d["preload_gate"]==(d["baseline_failed"] and chosen is not None)
+          print("Gravity-loaded preload fixture gate:",d["preload_gate"])
+          PY
+      - name: Isolate preload startup with held shaft and delayed drive
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_delayed_start.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_delayed_start.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["criteria_relaxed"] and not d["body_transform_keyframes"]
+          assert not d["portable_return_certified"] and not d["physical_walk_certified"]
+          assert d["delay_frames"]==120 and d["drive_frames"]==601 and d["motor_hold"]
+          assert d["preload"]==1. and d["stiffness"]==5.
+          c=d["cases"]
+          assert [v["name"] for v in c]==(["engaged","separated","motor_off"] if c[0]["passed"] and d["audit"]["passed"] else ["engaged"])
+          for v in c:
+              assert v["passed"]==all(v["checks"].values())
+              assert v["delay"]==120 and v["spring"]==5. and v["preload"]==1.
+              assert [r["frame"] for r in v["rows"]]==list(range(1,722))
+              assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+              assert all(k in v["checks"] for k in ("startup_hold","startup_coupling","startup_drift"))
+          assert all(k in c[0]["checks"] for k in ("startup_contact","startup_tracking","preload_ready"))
+          assert d["delayed_gate"]==(len(c)==3 and all(v["passed"] for v in c) and d["audit"]["passed"])
+          assert d["baseline_peaks"] and all(q["peak"]["frame"]>=1 for q in d["baseline_peaks"])
+          print("Delayed motor start fixture gate:",d["delayed_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-preload-${{ github.sha }}
+          path: |
+            research/native_bevel_phase112/results/phase211_spring_preload.json
+            research/native_bevel_phase112/results/phase211_preload_*
+            research/native_bevel_phase112/results/phase211_delayed*
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-groove:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Evaluate conjugate groove geometry and positive drive
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_groove_drive.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_groove_drive.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["spring"] and d["gravity"]==[0.,-9.81,0.] and d["duty"]==.77
+          assert not d["manufacturable_groove_certified"] and not d["physical_walk_certified"]
+          assert d["ideal_wall_attachment"] and d["nominal_clearance"]==.006
+          assert [q["kind"] for q in d["profiles"]]==["stride","lift"]
+          assert d["profile_gate"]==all(q["passed"] for q in d["profiles"])
+          for q in d["profiles"]:
+              assert q["passed"]==(q["min_gap"]>=.004 and q["max_gap"]<=.008 and q["min_polar_step"]>0.)
+          c=d["cases"];n=d["open_wall_control"]
+          assert [v["name"] for v in c]==(["engaged","separated","motor_off"] if d["profile_gate"] else [])
+          assert bool(n)==d["profile_gate"]
+          for v in c+([n] if n else []):
+              assert len(v["rows"])==601 and v["passed"]==all(v["checks"].values())
+              assert v["spring"]==0. and v["substeps"]==32
+              assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+          assert all(v["groove"] for v in c) and (n is None or not n["groove"])
+          assert d["open_wall_rejected"]==bool(n and (not n["checks"]["contact"] or not n["checks"]["axis_tracking"]))
+          assert d["positive_drive_gate"]==(len(c)==3 and all(v["passed"] for v in c) and d["open_wall_rejected"])
+          print("Positive groove drive fixture gate:",d["positive_drive_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-groove-${{ github.sha }}
+          path: |
+            research/native_bevel_phase112/results/phase211_groove_drive.json
+            research/native_bevel_phase112/results/phase211_groove*
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-backed:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Verify connected groove solids and positive drive
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_backed_drive.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_backed_drive.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["independent_wall_constraint"] and not d["manufacturing_certified"] and not d["physical_walk_certified"]
+          assert d["ideal_shaft_coupling"] and not d["spring"] and d["duty"]==.77
+          assert [q["kind"] for q in d["geometry"]]==["stride","lift"]
+          assert d["geometry_gate"]==all(q["passed"] for q in d["geometry"])
+          c=d["cases"]
+          assert [v["name"] for v in c]==(["engaged","separated","motor_off"] if d["geometry_gate"] else [])
+          for v in c:
+              assert len(v["rows"])==601 and v["passed"]==all(v["checks"].values())
+              assert v["backed"] and v["groove"] and v["spring"]==0.
+              assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+              if not v["separated"]:
+                  assert v["checks"]["backplate_clearance"]==all(min(r[k+"_back_gap"] for r in v["rows"])>=.02 for k in ("stride","lift"))
+              assert (p/"phase211_backed"/("phase210_xy_"+v["name"]+".blend")).stat().st_size>0
+          assert d["backed_drive_gate"]==(len(c)==3 and all(v["passed"] for v in c))
+          print("Connected groove solid drive gate:",d["backed_drive_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-backed-${{ github.sha }}
+          path: |
+            research/native_bevel_phase112/results/phase211_backed*
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-four-leg:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Verify four phased XY outputs on a shared motor shaft
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_four_leg_drive.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase211_four_leg_drive.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["fixed_fixture"] and d["axial_test_layout"] and d["ideal_guides"]
+          assert not d["physical_foot_layout"] and not d["physical_walk_certified"]
+          assert d["cam_count"]==8 and d["active_bodies"]==29 and d["motor_count"]==1
+          assert d["phases"]==[0,270,180,90] and d["duty"]==.77 and d["impulse"]==240.
+          c=d["cases"]
+          assert [v["name"] for v in c]==["engaged","separated","motor_off"]
+          for v in c:
+              assert [r["frame"] for r in v["rows"]]==list(range(1,602))
+              assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+              assert [q["phase"] for q in v["legs"]]==d["phases"]
+              assert [q["leg"] for q in v["legs"]]==list(range(4))
+              assert all(q["passed"]==all(q["checks"].values()) for q in v["legs"])
+              assert v["passed"]==(all(v["checks"].values()) and all(q["passed"] for q in v["legs"]))
+              assert (p/("phase211_four_leg_"+v["name"]+".blend")).stat().st_size>0
+          assert d["four_leg_drive_gate"]==all(v["passed"] for v in c)
+          print("Four phased XY output fixture gate:",d["four_leg_drive_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-four-leg-${{ github.sha }}
+          path: |
+            research/native_bevel_phase112/results/phase211_four_leg*
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-diagnosis:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Locate first four-leg failure and compare bounded controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_four_leg_diagnosis.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_four_leg_diagnosis.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["diagnosis_only"]
+          assert not d["approved"] and not d["geometry_changed"] and not d["criteria_changed"] and not d["physical_walk_certified"]
+          assert d["frames"]==61
+          t=d["trials"]
+          assert [v["name"] for v in t]==["baseline","motor_off","separated","reduced_impulse","heavier_shaft"]
+          assert [v["impulse"] for v in t]==[240.,240.,240.,60.,240.]
+          assert [v["shaft_mass"] for v in t]==[.8,.8,.8,.8,8.]
+          for v in t:
+              assert [r["frame"] for r in v["rows"]]==list(range(1,62))
+              assert all(len(r["parts"])==8 for r in v["rows"])
+              assert all(math.isfinite(x) for r in v["rows"] for q in r["parts"] for k,x in q.items() if k!="part")
+              assert v["events"][0]["frame"]==1
+              for k,e in v["first"].items():
+                  limit={"sync":.015,"coupling":.015,"drift":.015,"error":.025,"axial":.05,"gap":.025,"outer_gap":.025,"tilt":.015}[k]
+                  assert e["value"]>limit
+                  assert all(q[k]<=limit for r in v["rows"][:e["frame"]-1] for q in r["parts"])
+                  assert any(q["part"]==e["part"] and q[k]==e["value"] for q in v["rows"][e["frame"]-1]["parts"])
+          print("Four-leg diagnostic evidence validated")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-diagnosis-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_four_leg_diagnosis.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-integrated:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Compare integrated eight-cam shaft with full-cycle controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_integrated_drive.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results/phase211_integrated")
+          d=json.loads((p/"phase211_integrated_drive.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["identical_cam_surfaces"] and d["structural_phase_identity"] and d["ideal_rigid_assembly"] and d["fixed_fixture"]
+          assert not d["welded_solid_certified"] and not d["physical_walk_certified"]
+          assert d["cam_count"]==8 and d["active_bodies"]==21 and d["constraint_count"]==30 and d["removed_fixed_joints"]==8
+          assert d["camshaft_mass"]==28.8 and d["motor_count"]==1 and d["impulse"]==240.
+          assert d["phases"]==[0,270,180,90] and d["duty"]==.77
+          c=d["cases"]
+          assert [v["name"] for v in c]==["engaged","separated","motor_off"]
+          for v in c:
+              assert v["integrated"] and [r["frame"] for r in v["rows"]]==list(range(1,602))
+              assert all(math.isfinite(x) for row in v["rows"] for x in row.values())
+              assert [q["phase"] for q in v["legs"]]==d["phases"]
+              assert all(q["passed"]==all(q["checks"].values()) for q in v["legs"])
+              assert v["passed"]==(all(v["checks"].values()) and all(q["passed"] for q in v["legs"]))
+              assert (p/("phase211_four_leg_"+v["name"]+".blend")).stat().st_size>0
+          assert d["integrated_drive_gate"]==all(v["passed"] for v in c)
+          print("Integrated camshaft fixture gate:",d["integrated_drive_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-integrated-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_integrated/
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-separated-diagnosis:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Compare identical separated fixtures with motor enabled and disabled
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_separated_diagnosis.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results/phase211_separated_diagnosis")
+          d=json.loads((p/"phase211_separated_diagnosis.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["diagnosis_only"] and not d["approved"]
+          assert not any(d[k] for k in ("geometry_changed","gravity_changed","criteria_changed","physical_walk_certified"))
+          a,b=d["cases"]
+          assert a["enabled"] and not b["enabled"]
+          for c in (a,b):
+              assert c["separated"] and c["integrated"] and len(c["rows"])==601
+              assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+          assert d["raw_d3_separated_passed"]==a["passed"]
+          assert len(d["metrics"])==8
+          assert [q["axis"] for q in d["metrics"]]==[f"L{j}_{k}_" for j in range(4) for k in ("stride","lift")]
+          for q in d["metrics"]:
+              k=q["axis"]
+              for field in ("output","coupling"):
+                  assert q[field+"_difference"]==max(abs(x[k+field]-y[k+field]) for x,y in zip(a["rows"],b["rows"]))
+              assert q["min_axial"]==min(r[k+"axial"] for c in (a,b) for r in c["rows"])
+              assert q["passed"]==(q["output_difference"]<=.015 and q["coupling_difference"]<=.015 and q["min_axial"]>.5)
+          assert d["checks"]==dict(driven_full_cycle=a["travel"]<=-math.tau,undriven_no_rotation=abs(b["travel"])<=.4,paired_outputs=all(q["passed"] for q in d["metrics"]),shaft_drift=all(c["checks"]["shaft_drift"] for c in (a,b)))
+          assert d["causal_isolation_gate"]==all(d["checks"].values())
+          print("Paired separated-control causal isolation gate:",d["causal_isolation_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-separated-diagnosis-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_separated_diagnosis/
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-free-walk:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Test spatial foot arrangement and unanchored floor locomotion
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_free_walk.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results/phase211_free_walk")
+          d=json.loads((p/"phase211_free_walk.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["ideal_offset_couplers"] and d["ideal_rigid_camshaft"]
+          assert d["support_is_geometric_proxy"] and d["com_is_origin_weighted_proxy"] and not d["physical_manufacturing_certified"]
+          assert d["phases"]==[0,270,180,90] and d["duty"]==.77
+          assert d["feet"]==[[4.,3.],[-4.,3.],[4.,-3.],[-4.,-3.]]
+          assert d["floor_y"]==-11.55 and d["foot_radius"]==.4 and d["chassis_mass"]==20.
+          c=d["cases"]
+          assert [v["name"] for v in c] in [["fixed_spatial"],["fixed_spatial","free_engaged"],["fixed_spatial","free_engaged","frictionless","motor_off"]]
+          assert len(c)==1 or c[0]["passed"]
+          assert len(c)!=4 or c[1]["passed"]
+          assert len(c)!=1 or not c[0]["passed"]
+          assert len(c)!=2 or not c[1]["passed"]
+          for v in c:
+              assert [r["frame"] for r in v["rows"]]==list(range(1,602))
+              assert all(math.isfinite(x) for r in v["rows"] for x in r.values())
+              assert v["passed"]==all(v["checks"].values())
+              assert v["free"]==(v["name"]!="fixed_spatial")
+              assert v["enabled"]==(v["name"]!="motor_off")
+              assert v["friction"]==(0. if v["name"]=="frictionless" else .8)
+              assert v["max_foot_error"]==max(r[f"L{j}_error"] for r in v["rows"] for j in range(4))
+              assert v["checks"]["foot_tracking"]==(v["max_foot_error"]<=.04)
+              assert (p/("phase211_walk_"+v["name"]+".blend")).stat().st_size>0
+          assert d["walk_fixture_gate"]==(len(c)==4 and all(v["passed"] for v in c))
+          print("Free walking fixture gate:",d["walk_fixture_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-free-walk-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_free_walk/
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-walk-load-diagnosis:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Locate first loaded gait error and compare motor and floor controls
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_walk_load_diagnosis.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_walk_load_diagnosis.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["diagnosis_only"]
+          assert not any(d[k] for k in ("approved","geometry_changed","acceptance_changed","physical_walk_certified"))
+          assert d["frames"]==301
+          assert [(t["name"],t["has_floor"],t["friction"],t["impulse"]) for t in d["trials"]]==[("baseline",True,.8,240.),("no_floor",False,.8,240.),("frictionless",True,0.,240.),("higher_impulse",True,.8,960.)]
+          for t in d["trials"]:
+              rows=t["rows"]
+              assert [r["frame"] for r in rows]==list(range(1,302))
+              assert all(len(r["axes"])==8 and len(r["feet"])==4 for r in rows)
+              assert all((q["floor_gap"] is not None)==t["has_floor"] for r in rows for q in r["feet"])
+              assert abs(t["travel"]-rows[-1]["travel"])<1e-10
+              for k,limit in d["limits"].items():
+                  vals=[(r["frame"],q[k]) for r in rows for q in r["axes"]+r["feet"]+[r] if k in q]
+                  assert all(math.isfinite(x) for _,x in vals)
+                  assert t["peak"][k]==max(x for _,x in vals)
+                  first=next((f for f,x in vals if x>limit),None)
+                  assert first==(t["first"][k]["frame"] if k in t["first"] else None)
+                  assert all(x<=limit for f,x in vals if f==1), (t["name"],k,"initial pose")
+          print("Loaded gait diagnosis evidence validated")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-walk-load-diagnosis-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_walk_load_diagnosis.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-coupling-repair:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Screen cross-slide constraint conditioning under load
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_coupling_repair.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_coupling_repair.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["screening_only"]
+          assert not any(d[k] for k in ("approved","geometry_changed","mass_changed","criteria_changed","physical_walk_certified"))
+          assert d["frames"]==121
+          t=d["trials"]
+          assert [(r["name"],r["pivot"],r["iterations"]) for r in t]==[("baseline","pad",100),("midpoint","midpoint",100),("slider_pivot","slider",100),("cross_slide_iterations","pad",300)]
+          for r in t:
+              assert [v["frame"] for v in r["rows"]]==list(range(1,122))
+              assert r["has_floor"] and r["friction"]==.8 and r["impulse"]==240.
+              assert len(r["pivot_evidence"])==8
+              for e in r["pivot_evidence"]:
+                  assert e["pad_lever_before"]<1e-4 and e["effective_iterations"]==r["iterations"]
+                  assert e["override"]==(r["iterations"]!=100)
+                  if r["pivot"]=="midpoint":
+                      assert abs(e["pad_lever_after"]-e["slide_lever_after"])<1e-4
+                  elif r["pivot"]=="slider":
+                      assert e["slide_lever_after"]<1e-4
+                  else:assert e["pad_lever_after"]<1e-4
+              for k,v in d["limits"].items():
+                  vals=[q[k] for row in r["rows"] for q in row["axes"]+row["feet"]+[row] if k in q]
+                  assert all(math.isfinite(x) for x in vals)
+                  assert r["peak"][k]==max(vals)
+                  assert r["screening_checks"][k]==(max(vals)<=v)
+              assert r["screening_checks"]["backplate"]==(r["min_back_gap"]>=.02)
+              assert r["screening_checks"]["upright"]==(r["max_tilt"]<=15.)
+              assert r["screening_checks"]["late_speed"]==(r["late_mean_velocity"]>=.8)
+              assert r["screening_passed"]==all(r["screening_checks"].values())
+          c=[r for r in t[1:] if r["screening_passed"]]
+          assert d["selected"]==(min(c,key=lambda r:(r["iterations"],r["peak"]["foot_tracking"],r["name"]))["name"] if c else None)
+          print("Cross-slide screening candidate:",d["selected"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-coupling-repair-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_coupling_repair.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  phase211-coupling-load-screen:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Test bounded load and drive changes at improved coupling pivot
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_coupling_load_screen.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_coupling_load_screen.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["screening_only"]
+          assert d["mass_is_model_parameter"] and d["stop_if_no_candidate"]
+          assert not any(d[k] for k in ("approved","geometry_changed","criteria_changed","physical_walk_certified"))
+          assert d["frames"]==121
+          t=d["trials"]
+          assert [(r["name"],r["moving_mass"],r["impulse"]) for r in t]==[("slider_reference",.1,240.),("drive_only",.1,960.),("moving_mass_only",.5,240.),("moving_mass_and_drive",.5,960.)]
+          for r in t:
+              assert r["pivot"]=="slider" and r["has_floor"] and r["friction"]==.8
+              assert len(r["mass_evidence"])==12 and len({e["name"] for e in r["mass_evidence"]})==12
+              assert all(abs(e["mass"]-r["moving_mass"])<1e-6 for e in r["mass_evidence"])
+              assert [v["frame"] for v in r["rows"]]==list(range(1,122))
+              for k,v in d["limits"].items():
+                  vals=[q[k] for row in r["rows"] for q in row["axes"]+row["feet"]+[row] if k in q]
+                  assert all(math.isfinite(x) for x in vals)
+                  assert r["peak"][k]==max(vals)
+                  assert r["screening_checks"][k]==(max(vals)<=v)
+              assert r["screening_checks"]["backplate"]==(r["min_back_gap"]>=.02)
+              assert r["screening_checks"]["upright"]==(r["max_tilt"]<=15.)
+              assert r["screening_checks"]["late_speed"]==(r["late_mean_velocity"]>=.8)
+              assert r["screening_passed"]==all(r["screening_checks"].values())
+          c=[r for r in t if r["screening_passed"]]
+          assert d["selected"]==(min(c,key=lambda r:(r["impulse"],r["moving_mass"],r["peak"]["foot_tracking"]))["name"] if c else None)
+          print("Bounded load-screen candidate:",d["selected"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-coupling-load-screen-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_coupling_load_screen.json
+          if-no-files-found: warn
+          retention-days: 14

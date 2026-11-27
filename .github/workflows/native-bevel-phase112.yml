@@ -1,0 +1,1255 @@
+name: Geometry Lab isolated operations Phase 206
+on:
+  pull_request:
+    paths:
+      - 'research/native_bevel_phase112/**'
+      - '.github/workflows/native-bevel-phase112.yml'
+permissions:
+  contents: read
+concurrency:
+  group: native-bevel-phase112-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  native-bevel:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check research Python syntax before native experiments
+        run: python -m compileall -q .
+      - name: Verify frozen synthetic inputs
+        run: |
+          set -euo pipefail
+          echo 'e6665689f92ca582dccd49e2a2dff720a412bff9c0ae63fe90946ede6b143200  phase111_fixtures.json' | sha256sum --check
+          echo 'af9aa832ececf2316ee75b630bd55f9a1696e418ff4e53c7f8e97a6a2918243c  phase112_native_benchmark.py' | sha256sum --check
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned publisher Blender archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Recheck six frozen collars in Blender
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          echo 'd553b9541e8a080164b8550cdb270daf12423899aaf3f503a4c925e59bd91ed3  phase131_frozen_meshes.json' | sha256sum --check
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase132_native_recheck.py
+      - name: Verify measurement completeness without adoption
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase132_native.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==6 and len(d["controls"])==8
+          assert all(len(r["levels"])==3 and len(r["domains"])==2 for r in d["rows"])
+          print("Measured",len(d["rows"]),"Passed",sum(r["passed"] for r in d["rows"]))
+          PY
+      - name: Recheck six additional frozen collars in Blender
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase143_native_recheck.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase143_native.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==6 and len(d["controls"])==8
+          assert all(len(r["levels"])==3 and len(r["domains"])==6 for r in d["rows"])
+          print("Measured",len(d["rows"]),"Passed",sum(r["passed"] for r in d["rows"]))
+          PY
+      - name: Compare built-in editing tools under paired intents
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase151_native_intent.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase151_native_intent.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==3 and all(len(r["options"])==7 for r in d["rows"])
+          assert all(r["preserve"]==r["unknown"]=="keep" for r in d["rows"])
+          PY
+      - name: Sweep built-in smoothing parameters
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase152_native_sweep.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase152_native_sweep.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["cases"])==3 and all(len(c["rows"])==28 for c in d["cases"])
+          PY
+      - name: Acquire official LoopTools extension with manifest hash
+        env:
+          LOOPTOOLS_DIR: ${{ runner.temp }}/looptools154
+          LOOPTOOLS_PROVENANCE: ${{ runner.temp }}/looptools154-provenance.json
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, hashlib, os, urllib.request, urllib.parse, zipfile, io, pathlib, tomllib
+          url='https://extensions.blender.org/api/v1/extensions/?blender_version=4.4.3'
+          def fetch(u,limit):
+              req=urllib.request.Request(u,headers={'User-Agent':'Blender/4.4.3'})
+              with urllib.request.urlopen(req,timeout=45) as r:
+                  data=r.read(limit+1)
+                  assert len(data)<=limit
+                  return data
+          index=json.loads(fetch(url,32*1024*1024))
+          candidates=[x for x in index['data'] if x.get('name','').replace(' ','').lower()=='looptools' and x.get('version')=='4.7.7']
+          assert len(candidates)==1,[(x.get('id'),x.get('version')) for x in index['data'] if 'looptool' in str(x.get('id','')).lower()]
+          a=candidates[0]
+          archive=urllib.parse.urljoin(url,a['archive_url'])
+          assert urllib.parse.urlparse(archive).scheme=='https' and urllib.parse.urlparse(archive).hostname=='extensions.blender.org'
+          blob=fetch(archive,2*1024*1024); digest=hashlib.sha256(blob).hexdigest()
+          assert len(blob)==a['archive_size'] and a['archive_hash']=='sha256:'+digest
+          assert digest=='ff1ca3b3fff73094379da8b1fa2c1acbc9d88d26b7dfc73bb9de5941a6b50108'
+          dest=pathlib.Path(os.environ['LOOPTOOLS_DIR']);dest.mkdir(exist_ok=False)
+          with zipfile.ZipFile(io.BytesIO(blob)) as z:
+              entries=z.infolist()
+              assert sum(x.file_size for x in entries)<8*1024*1024
+              assert all(not pathlib.PurePosixPath(x.filename).is_absolute() and '..' not in pathlib.PurePosixPath(x.filename).parts and '\\' not in x.filename for x in entries)
+              z.extractall(dest)
+          manifests=list(dest.rglob('blender_manifest.toml'));assert len(manifests)==1
+          manifest=tomllib.loads(manifests[0].read_text())
+          assert manifest['version']=='4.7.7' and (manifests[0].parent/'__init__.py').is_file()
+          provenance=dict(id=a['id'],version=a['version'],sha256=digest,archive_url=archive,manifest_root=str(manifests[0].parent))
+          pathlib.Path(os.environ['LOOPTOOLS_PROVENANCE']).write_text(json.dumps(provenance))
+          print(json.dumps(provenance))
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              f.write('LOOPTOOLS_DIR='+str(manifests[0].parent)+'\n')
+              f.write('LOOPTOOLS_PROVENANCE='+os.environ['LOOPTOOLS_PROVENANCE']+'\n')
+          PY
+      - name: Compare actual LoopTools with the surrogate
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase154_looptools.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase154_looptools.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==4 and all(len(r["records"])==29 for r in d["rows"])
+          assert sum('error' in x for r in d["rows"] for x in r["records"])==0
+          PY
+      - name: Replay frozen LoopTools settings and audit native subdivision
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase156_looptools_subdiv.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase156_looptools_subdiv.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==4 and all(r["reproducible"] for r in d["rows"])
+          assert sum(r["edited"] is not None for r in d["rows"])==3
+          assert all(len(x["levels"])==3 for r in d["rows"] for x in (r["baseline"],r["edited"]) if x is not None)
+          print("Selected passed",sum(r["selected_passed"] for r in d["rows"]),"/ 4")
+          PY
+      - name: Test bounded tool selection on calibrated fixtures
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase157_bounded_selector.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase157_bounded_selector.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and not d["independent_holdout"]
+          assert len(d["rows"])==4 and d["controls"]==8
+          assert all(r["evaluations"]<=3 and not r["unknown_plan"] for r in d["rows"])
+          print("Selected passed",sum(r["selected"]["passed"] for r in d["rows"]),"/4")
+          PY
+      - name: Evaluate frozen selector on unused collar fixtures
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase158_selector_holdout.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase158_selector_holdout.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["selector_tuned"] and not d["new_geometry_corpus"] and d["held_out_from_selector_calibration"]
+          assert len(d["rows"])==9 and all(1<=r["evaluations"]<=3 and len(r["options"])==2 for r in d["rows"])
+          print("Baseline passed",sum(r["baseline"]["passed"] for r in d["rows"]),"/9")
+          print("Selected passed",sum(r["selected"]["passed"] for r in d["rows"]),"/9")
+          PY
+      - name: Compare explicit objective profiles on measured candidates
+        run: |
+          set -euo pipefail
+          python phase159_objective_profiles.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase159_objective_profiles.json").read_text())
+          assert d["complete"] and d["native_source"] and d["replay_only"] and not d["approved"]
+          assert len(d["rows"])==9 and d["controls"]==11
+          assert all(d["summary"][p]["edits"]==0 for p in ("unknown","preserve","sufficient"))
+          assert d["summary"]["balanced"]["max_turn_increase"]<=2.000001
+          assert d["summary"]["balanced"]["max_extent_increase"]<=.010001
+          PY
+      - name: Test native operation contracts on new fixtures
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase160_operation_contracts.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase160_operation_contracts.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==10 and all(r["passed"] for r in d["rows"])
+          assert sum(r["selected"] is None for r in d["rows"])==2
+          PY
+      - name: Compare short native modifier sequences
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase161_operation_sequences.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase161_operation_sequences.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==2 and all(len(r["candidates"])==10 for r in d["rows"])
+          assert all(len(c["stages"])==len(c["ops"])+1 for r in d["rows"] for c in r["candidates"])
+          print("Selected",[(r["name"],r["selected"]) for r in d["rows"]])
+          PY
+      - name: Test bounded state-driven native operation selection
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase162_state_planner.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase162_state_planner.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==7
+          assert all(r["final_clean"] and len(r["trace"])<=r["budget"] for r in d["rows"])
+          print("Goals met",sum(r["status"]=="goal_met" for r in d["rows"]))
+          PY
+      - name: Test native Boolean hole contracts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase163_hole_contracts.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase163_hole_contracts.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==3 and all(len(r["records"])==6 for r in d["rows"])
+          assert all(c["rollback_exact"] for r in d["rows"] for c in r["records"])
+          print("Selected",[(r["target"]["name"],r["selected"]) for r in d["rows"]])
+          PY
+      - name: Test multiple-hole clearance and minimum wall contracts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase164_multi_hole_clearance.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase164_multi_hole_clearance.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==8
+          assert all(r["preflight"]["passed"]==r["expected"] for r in d["rows"])
+          assert all(not r["accepted"] for r in d["rows"] if not r["expected"])
+          assert all(r["native"]["rollback_exact"] for r in d["rows"] if r["native"] is not None)
+          print("Accepted",sum(r["accepted"] for r in d["rows"]))
+          PY
+      - name: Verify bounded hole relocation proposals
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase165_bounded_hole_relocation.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase165_bounded_hole_relocation.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and not d["global_optimality_claim"]
+          assert len(d["rows"])==10 and all(r["matched"] and not r["persistent_edit"] for r in d["rows"])
+          assert sum(r["status"]=="proposal_verified" for r in d["rows"])==5
+          assert all(r["native"]["rollback_exact"] for r in d["rows"] if r["native"] is not None)
+          PY
+      - name: Verify grouped hole relocation with explicit geometric constraints
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase166_group_constraints.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase166_group_constraints.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and not d["continuous_optimality_claim"]
+          assert len(d["rows"])==11 and all(r["matched"] and not r["persistent_edit"] for r in d["rows"])
+          assert sum(r["status"]=="proposal_verified" for r in d["rows"])==7
+          assert all(r["native"]["rollback_exact"] for r in d["rows"] if r["native"] is not None)
+          PY
+      - name: Verify local native bevel and protected faces
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase167_protected_local_bevel.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase167_protected_local_bevel.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==5 and all(r["source_unchanged"] for r in d["rows"])
+          assert all(not r["passed"] for r in d["rows"] if r["name"] in ("keep","wrong_end","global"))
+          print("Selected",d["selected"])
+          PY
+      - name: Verify combined protected bevel and hole operations
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase168_combined_local_operations.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase168_combined_local_operations.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==7 and all(r["source_unchanged"] for r in d["rows"])
+          assert all(not r["passed"] for r in d["rows"] if r["name"] not in ("bevel_then_hole","hole_then_bevel"))
+          print("Selected",d["selected"])
+          PY
+      - name: Verify completion of partially machined protected parts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase169_combined_state_planner.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase169_combined_state_planner.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==11 and all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert sum(r["status"]=="goal_met" for r in d["rows"])==7
+          assert sum(t["rollback_exact"] for r in d["rows"] for t in r["trace"])==2
+          PY
+      - name: Compare state planner decisions after mesh reindexing
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase170_reindexed_state_planner.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase170_reindexed_state_planner.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==33 and all(r["reordered"] and r["oriented_connectivity_equal"] and r["input_unchanged"] for r in d["rows"])
+          print("Decision agreement:",sum(r["same_decision"] for r in d["rows"]),"/33")
+          print("Final contract agreement:",sum(r["same_final_contract"] for r in d["rows"]),"/33")
+          PY
+      - name: Evaluate planar triangulation and explicit protection policies
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase171_planar_topology_variants.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase171_planar_topology_variants.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==12 and all(r["input_unchanged"] for r in d["rows"])
+          print("Equivalent inputs",sum(r["equivalent"] for r in d["rows"]),"/12")
+          print("Matched decisions",sum(r["matched"] for r in d["rows"]),"/12")
+          PY
+      - name: Compare exact tessellation identity and sharp-edge-only bevel
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase172_sharp_edge_and_triangle_audit.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase172_sharp_edge_and_triangle_audit.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==12 and all(r["input_unchanged"] for r in d["rows"])
+          print("Exact triangle identity",sum(r["triangles"]["exact"] for r in d["rows"]),"/12")
+          print("Original method",sum(r["old_matched"] for r in d["rows"]),"/12")
+          print("Sharp-only method",sum(r["sharp_matched"] for r in d["rows"]),"/12")
+          PY
+      - name: Verify alternate planar diagonals and strict protection
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase173_alternate_diagonal.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase173_alternate_diagonal.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==12 and all(r["input_unchanged"] for r in d["rows"])
+          assert len(d["controls"])==3 and all(r["rejected"] and not r["planner_invoked"] for r in d["controls"])
+          print("Certified coverage",sum(r["certificate"]["passed"] for r in d["rows"]),"/12")
+          print("Matched decisions",sum(r["matched"] for r in d["rows"]),"/12")
+          PY
+      - name: Verify interior vertex fans and protected-region contracts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase174_planar_vertex_insertion.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase174_planar_vertex_insertion.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==24 and all(r["input_unchanged"] for r in d["rows"])
+          assert len(d["controls"])==5 and all(r["rejected"] and not r["planner_invoked"] for r in d["controls"])
+          print("Certified coverage",sum(r["certificate"]["passed"] for r in d["rows"]),"/24")
+          print("Matched decisions",sum(r["matched"] for r in d["rows"]),"/24")
+          PY
+      - name: Verify certified local fan normalization before bevel
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase175_local_fan_normalization.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase175_local_fan_normalization.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==24 and all(r["input_unchanged"] for r in d["rows"])
+          print("Baseline matched",sum(r["baseline_matched"] for r in d["rows"]),"/24")
+          print("Normalized matched",sum(r["matched"] for r in d["rows"]),"/24")
+          PY
+      - name: Verify conforming edge subdivision and local normalization
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase176_split_edge_normalization.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase176_split_edge_normalization.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==9 and all(r["input_unchanged"] for r in d["rows"])
+          assert len(d["controls"])==3 and all(r["rejected"] and not r["planner_invoked"] for r in d["controls"])
+          print("Baseline matched",sum(r["baseline_matched"] for r in d["rows"]),"/9")
+          print("Normalized matched",sum(r["matched"] for r in d["rows"]),"/9")
+          PY
+      - name: Diagnose straight valence two vertex links and verify machining
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase177_valence_two_links.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase177_valence_two_links.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==9 and all(r["input_unchanged"] for r in d["rows"])
+          assert len(d["controls"])==1 and not d["controls"][0]["exempted"] and not d["controls"][0]["certificate"]
+          print("Corrected clean",sum(r["new_clean"] for r in d["rows"]),"/9")
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/9")
+          PY
+      - name: Compose certified cap fan and split edge normalization
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase178_mixed_topology_normalization.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase178_mixed_topology_normalization.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==18 and all(r["input_unchanged"] for r in d["rows"])
+          assert len(d["controls"])==4 and all(r["rejected"] and not r["planner_invoked"] for r in d["controls"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/18")
+          PY
+      - name: Stress mixed topology normalization with new vertex layouts
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase179_mixed_topology_holdout.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase179_mixed_topology_holdout.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==27 and all(r["input_unchanged"] and r["original_unchanged"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/27")
+          PY
+      - name: Compare exact faceted cylinder preservation with ideal approximation
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase180_cylinder_surface_contracts.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase180_cylinder_surface_contracts.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==20 and all(r["input_unchanged"] for r in d["rows"])
+          assert len(d["decisions"])==12 and len(d["controls"])==3 and all(r["rejected"] for r in d["controls"])
+          print("Matched decisions",sum(r["matched"] for r in d["decisions"]),"/12")
+          PY
+      - name: Verify bounded adaptive cylinder refinement
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase181_adaptive_cylinder_refinement.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase181_adaptive_cylinder_refinement.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==11 and all(r["input_unchanged"] and r["original_vertices_exact"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/11")
+          PY
+      - name: Recognize cylinder parameters from oriented mesh geometry
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase182_cylinder_recognition.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase182_cylinder_recognition.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==12 and all(r["input_unchanged"] and r["source_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/12")
+          PY
+      - name: Connect recognized cylinder parameters to adaptive refinement
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase183_recognize_and_refine.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase183_recognize_and_refine.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==14 and all(r["input_unchanged"] and r["original_vertices_exact"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/14")
+          PY
+      - name: Recognize cylinders with triangulated and mixed side faces
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase184_triangulated_cylinder_recognition.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase184_triangulated_cylinder_recognition.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==44 and all(r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert len(d["controls"])==4 and all(r["rejected"] and r["input_unchanged"] for r in d["controls"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/44")
+          PY
+      - name: Recover triangulated cylinder end caps and recognize full mesh
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase185_triangulated_caps.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase185_triangulated_caps.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==66 and all(r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert len(d["controls"])==4 and all(r["rejected"] and r["input_unchanged"] for r in d["controls"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/66")
+          PY
+      - name: Recognize cylindrical extrusions with multiple axial rings
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase186_axial_ring_recognition.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase186_axial_ring_recognition.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==36 and all(r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/36")
+          PY
+      - name: Recognize irregular cylinder side patches without aligned rings
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase187_irregular_side_patches.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase187_irregular_side_patches.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==33 and all(r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/33")
+          PY
+      - name: Distinguish circular cylinders from coaxial frusta
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase188_circular_frustum_recognition.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase188_circular_frustum_recognition.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==36 and all(r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/36")
+          PY
+      - name: Verify stable small and large end roles without arbitrary cylinder direction
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase189_directional_end_roles.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase189_directional_end_roles.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==96 and sum(r["fresh"] for r in d["rows"])==24
+          assert all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/96")
+          PY
+      - name: Verify semantic cap and rim selection and reject stale plans
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase190_semantic_cap_selection.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase190_semantic_cap_selection.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert len(d["rows"])==192 and len(d["controls"])==36
+          assert all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert all(r["stale_rejected"] and r["invalid_role_rejected"] and r["input_unchanged"] for r in d["controls"])
+          print("Matched",sum(r["matched"] for r in d["rows"]),"/192")
+          PY
+      - name: Test semantic rim bevel on isolated frusta and refuse invalid plans
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase191_semantic_rim_bevel.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase191_semantic_rim_bevel.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==36 and len(d["controls"])==204
+          assert all(r["target_correct"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert all(r["qualified"] for r in d["rows"] if r["mode"]=="quad")
+          assert all(r["passed"] for r in d["controls"])
+          print("Qualified",sum(r["qualified"] for r in d["rows"]),"/36")
+          PY
+      - name: Measure semantic bevel surface repeatability across indexing and tessellation
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase192_bevel_surface_repeatability.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase192_bevel_surface_repeatability.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==72 and len(d["pairs"])==84
+          assert all(r["qualified"] and r["input_unchanged"] and r["captured"] and not r["persistent_edit"] for r in d["rows"])
+          assert all(r["measured"] for r in d["pairs"])
+          PY
+      - name: Test canonical index order before isolated semantic bevel
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase193_canonical_bevel_order.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase193_canonical_bevel_order.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==108 and len(d["pairs"])==72
+          assert all(r["qualified"] and r["input_unchanged"] and r["proxy_unchanged"] and r["target_correct"] and r["captured"] and not r["persistent_edit"] for r in d["rows"])
+          assert all(p["measured"] and p["canonical_input_equal"] and p["screen_pass"] for p in d["pairs"])
+          assert all(d["controls"].values())
+          PY
+      - name: Reevaluate original surface comparisons with calibrated independent triangle distances
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase194_independent_surface_distance.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase194_independent_surface_distance.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==72 and len(d["pairs"])==84
+          assert all(d["controls"].values())
+          assert all(p["measured"] and "legacy_bvh" in p for p in d["pairs"])
+          PY
+      - name: Recheck tapered spacer with independent ray probes and guarded cap preparation
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase195_tapered_spacer.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase195_tapered_spacer.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==30 and sum(r["accepted"] for r in d["rows"])==6
+          assert all(r["matched"] and r["source_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert len(list(Path("results").glob("phase195_*.obj")))==6
+          PY
+      - name: Compare bounded local-frame spacer fabrication and restored pose
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase197_local_frame_spacer.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase197_local_frame_spacer.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==30
+          assert len(list(Path("results").glob("phase197_*.obj")))==sum(r["accepted"] for r in d["rows"])
+          PY
+      - name: Fabricate three-hole mounting block using existing hole contracts
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase198_mounting_block.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase198_mounting_block.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==4 and sum(r["accepted"] for r in d["rows"])==1
+          assert all(r["native"] is None for r in d["rows"] if not r["expected"])
+          assert list(Path("results").glob("phase198_*.obj"))==[Path("results/phase198_mounting_block.obj")]
+          PY
+      - name: Recover mounting block by explicitly permitted bounded relocation
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase199_mounting_block_repair.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase199_mounting_block_repair.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==6 and all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert sum(r["status"]=="proposal_verified" for r in d["rows"])==1
+          assert list(Path("results").glob("phase199_*.obj"))==[Path("results/phase199_repair_web.obj")]
+          PY
+      - name: Test bounded autonomous mounting-block fabrication workflow
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase200_mounting_block_workflow.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase200_mounting_block_workflow.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==8 and all(r["matched"] and r["input_unchanged"] and not r["persistent_edit"] for r in d["rows"])
+          assert sum(r["status"]=="direct" for r in d["rows"])==1
+          assert sum(r["status"]=="repaired" for r in d["rows"])==2
+          assert {p.name for p in Path("results").glob("phase200_*.obj")}=={"phase200_direct.obj","phase200_repair_web.obj","phase200_repair_outer.obj"}
+          PY
+      - name: Fabricate fixed L bracket with orthogonal through bores
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase201_l_bracket.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase201_l_bracket.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==6 and all(r["matched"] and r["source_unchanged"] for r in d["rows"])
+          assert sum(r["status"]=="complete" for r in d["rows"])==1
+          assert {p.name for p in Path("results").glob("phase201_*.obj")}=={"phase201_bracket.obj"}
+          PY
+      - name: Round the L bracket before orthogonal drilling
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase202_rounded_bracket.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase202_rounded_bracket.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==5 and all(r["matched"] and r["source_unchanged"] for r in d["rows"])
+          assert sum(r["status"]=="complete" for r in d["rows"])==1
+          assert {p.name for p in Path("results").glob("phase202_*.obj")}=={"phase202_rounded.obj"}
+          PY
+      - name: Fabricate ribbed rounded L bracket
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase203_ribbed_bracket.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase203_ribbed_bracket.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["rows"])==6 and all(r["matched"] and r["source_unchanged"] for r in d["rows"])
+          assert sum(r["status"]=="complete" for r in d["rows"])==1
+          assert {p.name for p in Path("results").glob("phase203_*.obj")}=={"phase203_ribbed.obj"}
+          PY
+      - name: Fabricate and animate full four-bar mechanism
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase204_four_bar.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase204_four_bar.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["parts"])==8 and all(x["passed"] for x in d["parts"].values())
+          assert len(d["samples"])==361 and all(x["passed"] for x in d["samples"])
+          assert len(d["mesh_collisions"])==73 and not any(x["pairs"] for x in d["mesh_collisions"])
+          assert all(d["controls"].values()) and all(x>0 for x in d["insertion_gaps"].values())
+          assert len(list(p.glob("phase204_*.obj")))==8 and (p/"phase204_four_bar.blend").stat().st_size>0
+          PY
+      - name: Fabricate and verify two-loop six-bar mechanism
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase205_six_bar.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase205_six_bar.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["parts"])==12 and all(x["passed"] for x in d["parts"].values())
+          assert len(d["samples"])==361 and all(x["passed"] for x in d["samples"])
+          assert len(d["mesh_collisions"])==361 and not any(x["pairs"] for x in d["mesh_collisions"])
+          assert len(d["insertion_gaps"])==6 and all(x>0 for x in d["insertion_gaps"].values())
+          assert all(d["controls"].values())
+          assert len(list(p.glob("phase205_*.obj")))==12 and (p/"phase205_six_bar.blend").stat().st_size>0
+          PY
+      - name: Fabricate and verify hybrid geared six-bar slider mechanism
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase206_hybrid_machine.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase206_hybrid_machine.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and d["gate"]
+          assert len(d["parts"])==19 and all(x["passed"] for x in d["parts"].values())
+          assert len(d["samples"])==361 and all(x["passed"] for x in d["samples"])
+          assert len(d["mesh_collisions"])==361 and not any(x["pairs"] for x in d["mesh_collisions"])
+          assert all(d["controls"].values())
+          assert len(list(p.glob("phase206_*.obj")))==19 and (p/"phase206_hybrid_machine.blend").stat().st_size>0
+          PY
+      - name: Synthesize foot trajectory and fabricate four-leg geared walker
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase207_walking_machine.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase207_walking_machine.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert d["dense"]["passed"] and len(d["parts"])==32
+          assert all(x["passed"] for x in d["parts"].values())
+          assert len(d["mesh_collisions"])==361 and not any(x["pairs"] for x in d["mesh_collisions"])
+          assert all(d["controls"].values())
+          assert len(list(p.glob("phase207_*.obj")))==32 and (p/"phase207_walking_machine.blend").stat().st_size>0
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-bevel-phase112-${{ github.sha }}
+          path: research/native_bevel_phase112/results/
+          if-no-files-found: warn
+          retention-days: 14
+  phase208-dynamics:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned publisher Blender archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Generate inverse roller cam profiles and check independent envelope distances
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_inverse_cam.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_inverse_cam.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert len(d["profiles"])==2 and all(x["passed"] for x in d["profiles"])
+          assert all(d["controls"].values()) and len(d["controls"])==3
+          assert d["independent_samples"]==1440 and not d["walking_certified"]
+          assert (p/"phase210_inverse_cam.blend").stat().st_size>0
+          PY
+      - name: Evaluate guarded four-pad support and revised cam profiles
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_support_design.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_support_design.json").read_text())
+          assert d["complete"] and not d["approved"] and not d["physical_walk_certified"] and not d["packaging_certified"]
+          assert [t["duty"] for t in d["trials"]]==[.75,.77,.80]
+          for t in d["trials"]:
+              assert len(t["orders"])==6 and len(t["profiles"])==2
+              assert all(sum(q["support_counts"])==1440 for q in t["orders"])
+              assert t["gate"]==(t["best"]["support_gate"] and all(p["passed"] for p in t["profiles"]))
+          chosen=next((t for t in d["trials"] if t["gate"]),None)
+          assert d["selected_duty"]==(chosen["duty"] if chosen else None)
+          assert d["static_gate"]==bool(d["dense"] and d["dense"]["support_gate"])
+          if chosen:
+              assert d["dense"]["samples"]==3600 and d["dense"]["phases"]==d["selected_phases"]
+          print("Static support gate (not physical walk):",d["static_gate"])
+          PY
+      - name: Measure motor-driven inverse cam and gravity-return roller with controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_cam_contact.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_cam_contact.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          for c in d["cases"]:
+              assert [r["frame"] for r in c["rows"]]==list(range(1,482))
+              assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+              assert c["passed"]==all(c["checks"].values())
+              assert (p/("phase210_cam_"+c["name"]+".blend")).stat().st_size>0
+          assert d["physical_gate"]==all(c["passed"] for c in d["cases"])
+          assert not d["walking_certified"]
+          print("Cam physical gate (separate from evidence integrity):",d["physical_gate"])
+          PY
+      - name: Measure independent stride cam and gravity-return roller with controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_stride_contact.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_stride_contact.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          for c in d["cases"]:
+              assert [r["frame"] for r in c["rows"]]==list(range(1,482))
+              assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+              assert c["passed"]==all(c["checks"].values())
+              assert (p/("phase210_stride_"+c["name"]+".blend")).stat().st_size>0
+          assert d["physical_gate"]==all(c["passed"] for c in d["cases"])
+          assert not d["combined_motion_certified"] and not d["walking_certified"]
+          print("Stride physical gate (separate from evidence integrity):",d["physical_gate"])
+          PY
+      - name: Diagnose stride cam drive capacity with bounded impulse candidates
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_stride_impulse.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_stride_impulse.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["profile_changed"] and not d["criteria_changed"]
+          trials=d["trials"]
+          assert [t["impulse"] for t in trials]==[10.,40.,100.][:len(trials)]
+          assert 1<=len(trials)<=3
+          for t in trials:
+              cases=t["cases"]
+              assert [c["name"] for c in cases] in (["engaged","separated"],["engaged","separated","motor_off"])
+              assert t["passed"]==(len(cases)==3 and all(c["passed"] for c in cases))
+              for c in cases:
+                  assert c["impulse"]==t["impulse"]
+                  assert [r["frame"] for r in c["rows"]]==list(range(1,482))
+                  assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+                  assert c["passed"]==all(c["checks"].values())
+                  assert (p/("phase210_stride_impulse_"+str(int(t["impulse"])))/("phase210_stride_"+c["name"]+".blend")).stat().st_size>0
+          chosen=next((t["impulse"] for t in trials if t["passed"]),None)
+          assert chosen==d["selected_impulse"]
+          assert chosen is not None or len(trials)==3
+          assert d["baseline_reproduced"]==all(not c["checks"]["full_cycle"] for c in trials[0]["cases"][:2])
+          assert d["physical_gate"]==(d["baseline_reproduced"] and chosen is not None)
+          assert not d["combined_motion_certified"] and not d["walking_certified"]
+          print("Drive capacity physical gate:",d["physical_gate"])
+          PY
+      - name: Measure shared shaft two-cam physical XY output and controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_xy_cam.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_xy_cam.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["physical_output_body"] and d["ideal_guides"] and not d["walking_certified"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          for c in d["cases"]:
+              assert [r["frame"] for r in c["rows"]]==list(range(1,602))
+              assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+              assert c["passed"]==all(c["checks"].values())
+              assert (p/("phase210_xy_"+c["name"]+".blend")).stat().st_size>0
+          assert d["physical_gate"]==all(c["passed"] for c in d["cases"])
+          print("XY physical gate (separate from evidence integrity):",d["physical_gate"])
+          PY
+      - name: Diagnose separated XY control with bounded simulation substeps
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase210_xy_diagnosis.py
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase210_xy_diagnosis.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert not d["criteria_changed"] and not d["geometry_changed"]
+          trials=d["trials"]
+          assert 1<=len(trials)<=3
+          assert [t["substeps"] for t in trials]==[16,32,64][:len(trials)]
+          for t in trials:
+              cases=t["cases"]
+              assert [c["name"] for c in cases] in (["separated"],["separated","engaged","motor_off"])
+              assert t["passed"]==(len(cases)==3 and all(c["passed"] for c in cases))
+              for c in cases:
+                  assert c["substeps"]==t["substeps"]
+                  assert [r["frame"] for r in c["rows"]]==list(range(1,602))
+                  assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+                  assert c["passed"]==all(c["checks"].values())
+                  assert (p/("phase210_xy_resolution_"+str(t["substeps"]))/("phase210_xy_"+c["name"]+".blend")).stat().st_size>0
+          chosen=next((t["substeps"] for t in trials if t["passed"]),None)
+          assert chosen==d["selected_substeps"]
+          assert chosen is not None or len(trials)==3
+          checks=trials[0]["cases"][0]["checks"]
+          assert d["baseline_reproduced"]==(not checks["coupling"] and all(v for k,v in checks.items() if k!="coupling"))
+          assert d["physical_gate"]==(d["baseline_reproduced"] and chosen is not None)
+          assert not d["walking_certified"]
+          print("XY diagnostic physical gate:",d["physical_gate"])
+          PY
+      - name: Evaluate bounded stance-duty search against actual foot outline
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase209_stance_search.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path("results/phase209_stance_search.json").read_text())
+          assert d["complete"] and not d["approved"] and not d["physical_walk_certified"]
+          assert d["coarse_candidates"]==24000 and d["refinement_candidates"]==6000
+          assert d["target_met"] == (d["dense"]["duty"]>=d["target_duty"])
+          assert not d["global_infeasibility_proven"]
+          PY
+      - name: Verify motor-only gear contact with separated and motor-off controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase208_motor_contact.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase208_motor_contact.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          assert all(c["passed"] and len(c["rows"])==481 for c in d["cases"])
+          assert (p/"phase208_motor_contact.blend").stat().st_size>0
+          PY
+      - name: Verify tooth-driven passive single-leg motion and negative controls
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase208_single_leg.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase208_single_leg.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          assert all(c["passed"] and len(c["rows"])==601 for c in d["cases"])
+          assert (p/"phase208_single_leg.blend").stat().st_size>0
+          PY
+      - name: Verify single-motor three-gear four-leg dynamics
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase208_four_legs.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase208_four_legs.json").read_text())
+          assert d["gate"] and d["native_executed"] and not d["approved"]
+          assert [c["name"] for c in d["cases"]]==["engaged","separated","motor_off"]
+          assert all(c["passed"] and len(c["rows"])==601 and set(c["legs"])=={"LF","LB","RF","RB"} for c in d["cases"])
+          assert (p/"phase208_four_legs.blend").stat().st_size>0
+          PY
+      - name: Measure free chassis locomotion under gravity and floor friction
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase208_free_walk.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase208_free_walk.json").read_text())
+          assert d["experiment_complete"] and d["native_executed"] and not d["approved"] and not d["physical_walk_certified"]
+          assert [c["name"] for c in d["cases"]]==["driven","frictionless","motor_off"]
+          assert all(len(c["rows"])==601 and set(c["feet"])=={"LF","LB","RF","RB"} for c in d["cases"])
+          assert d["walk_gate"] == (d["cases"][0]["walk_candidate"] and all(d["controls"].values()))
+          assert (p/"phase208_free_walk.blend").stat().st_size>0
+          print("Walking gate (not CI integrity gate):",d["walk_gate"])
+          PY
+      - name: Compare three free chassis heights with frozen walking metrics
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase209_chassis_height.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results")
+          d=json.loads((p/"phase209_chassis_height.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"] and not d["physical_walk_certified"]
+          assert [c["name"] for c in d["cases"]]==["baseline","lower","lowest"]
+          assert all(len(c["rows"])==601 and (p/("phase209_"+c["name"]+".blend")).stat().st_size>0 for c in d["cases"])
+          assert d["ranked_candidate"] in {c["name"] for c in d["cases"]}
+          print("Chassis experiment walk gate:",d["walk_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase208-dynamics-${{ github.sha }}
+          path: |
+            research/native_bevel_phase112/results/phase208_*
+            research/native_bevel_phase112/results/phase209_*
+            research/native_bevel_phase112/results/phase210_*
+            research/native_bevel_phase112/results/phase211_*
+          if-no-files-found: warn
+          retention-days: 14
