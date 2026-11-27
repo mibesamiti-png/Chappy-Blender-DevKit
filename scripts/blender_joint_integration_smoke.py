@@ -217,3 +217,9 @@ print('CBDK_A_NATIVE_PASS '+json.dumps(dict(blender=result['blender'],cases=len(
 # R29 specialist: separate fixed stub draw/native operator boundary, not provider integration.
 from scripts.blender_joint_panel_r29_smoke import run_stub_smoke
 run_stub_smoke(out.with_name(out.stem + "_r29_panel.json"))
+
+# A bridge real-provider smoke. Keep existing specialist stub and original markers.
+if args.cjm_zip and args.gl_root:
+    from scripts.blender_joint_panel_bridge_r29_smoke import run_bridge_smoke
+    run_bridge_smoke(out.with_name(out.stem + "_r29_bridge.json"),
+                     str(Path(args.cjm_zip).resolve()), str(Path(args.gl_root).resolve()))
