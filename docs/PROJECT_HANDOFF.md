@@ -14,7 +14,7 @@
 
 - 現在のバージョン: `0.17.0`
 - 開発段階: public_repository_v0.18_development
-- 最新の節目: R28 #194独立7CI＋追加push成功。F021-03固定4候補の実測選別・副作用拒否・隔離復元・停止を限定受入、v0.21限定3/3。#125 rev25 paused、節目同期候補。v0.22未着手、正式v0.17.0/main/last_verified維持。
+- 最新の節目: PR #196限定統合 dev 9969c848、独立7CI・provider 72/72・Linux GUI 5/5・配布除外成功。R29 F022-01割当候補、#125 rev25 paused。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。Windows GUI・実パネルクリック未検証。
 - 次の予定リリース: `0.18.0`
 - 自作部品: 7件 (BLCTX-001, BLCTX-002, BLGEO-001, BLMOD-001, BME-001, BME-002, BME-003)
 - 組み込み機能: 6件 (edit_selection, mesh_bounds, mesh_center, modifier_summary, object_selection, vertex_nudge)
