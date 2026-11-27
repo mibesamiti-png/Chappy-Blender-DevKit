@@ -156,3 +156,59 @@ jobs:
           path: research/native_bevel_phase112/results/phase212_contact/
           if-no-files-found: warn
           retention-days: 14
+
+  native-shared-drive:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Validate two generated cam motions under one powered shaft
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase212_native_shared_drive.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("results/phase212_shared_drive")
+          r=json.loads((p/"report.json").read_text())
+          assert r["complete"] and r["native_executed"] and r["frames"]==601
+          assert (r["cam_count"],r["active_bodies"],r["motor_count"])==(2,3,1)
+          assert [c["name"] for c in r["cases"]]==["engaged","separated","motor_off"]
+          assert all(len(c["rows"])==601 and len(c["outputs"])==2 for c in r["cases"])
+          assert all(c["kinematic_status"]=="pass" for c in r["cases"])
+          assert r["ideal_rigid_camshaft"] and r["ideal_guides"] and r["gravity_return"]
+          assert not any(r[k] for k in ("keyframed","torque_transfer_certified","manufacturing_certified"))
+          assert r["fixture_gate"]["certified"]==all(c["evaluation"]["status"]=="pass" for c in r["cases"])
+          assert (p/"physical_cam_stack.blend").stat().st_size>0
+          print("Shared drive fixture gate:",r["fixture_gate"]["status"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase212-shared-drive-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase212_shared_drive/
+          if-no-files-found: warn
+          retention-days: 14
