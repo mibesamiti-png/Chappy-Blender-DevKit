@@ -129,7 +129,7 @@ def run_stub_smoke(output):
             check("adopted_dimension_only_stub_state", ["RESTORE"])
             assert bpy.ops.cbdk_a.joint_dimension(action="RESTORE") == {"FINISHED"}
             assert s.diameter == 5. and s.status == "RESTORED"
-            check("restored", ["RETRY", "RESTORE"])
+            check("restored", ["START", "RESTORE"])
             s.status = "BLOCKED"
             check("blocked", [])
             for action in ("RETRY", "REJECT", "CANCEL"):

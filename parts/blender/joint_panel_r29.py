@@ -62,9 +62,9 @@ def projection_input(context):
     s = context.scene.cbdk_a_joint
     payload = preview.RUNS.get(context.scene.as_pointer())
     try:
-        candidates = _rows(payload)
+        candidates = _rows(payload) if s.status in ("READY", "NO_CANDIDATE") else []
         valid = payload is None or type(payload.get("rows")) is list
-        current = bool(valid and s.status == "READY" and candidates and _fixed_context(context, s)
+        current = bool(valid and s.status in ("READY", "NO_CANDIDATE") and payload is not None and _fixed_context(context, s)
                        and (s.diameter, s.target, s.policy) ==
                        (payload.get("original"), payload.get("target"), payload.get("policy"))
                        and preview.scene_signature(context) == payload.get("signature")
@@ -73,7 +73,7 @@ def projection_input(context):
     except (AttributeError, TypeError, ValueError, KeyError, OverflowError, RuntimeError):
         candidates, current = [], False
     return dict(status=s.status, reason=s.reason, result_json=s.result_json,
-                candidates=candidates, current_inputs_match=current)
+                candidates=candidates, current_inputs_match=current, selected_index=int(s.candidate))
 
 
 def _safe_reason(reason):
@@ -106,9 +106,11 @@ def visible_actions(status, *, available, current, selected, fixed_context):
         return ()
     if status == "IDLE":
         return ("START",) if fixed_context else ()
+    if status == "RESTORED":
+        return (("START",) if fixed_context else ()) + ("RESTORE",)
     if status == "READY":
         return (("ADOPT",) if current and selected and fixed_context else ()) + ("REJECT", "RESTORE")
-    if status in ("FAILED", "CANCELLED", "NO_CANDIDATE", "REJECTED", "RESTORED"):
+    if status in ("FAILED", "CANCELLED", "NO_CANDIDATE", "REJECTED"):
         return (("RETRY",) if fixed_context else ()) + ("RESTORE",)
     if status == "ADOPTED_DIMENSION_ONLY":
         return ("RESTORE",)
