@@ -1,0 +1,26 @@
+name: Geometry Lab reusable design evaluation Phase 212
+on:
+  pull_request:
+    paths:
+      - 'research/native_bevel_phase112/phase212_*.py'
+      - 'research/native_bevel_phase112/test_phase212_*.py'
+      - '.github/workflows/geometry-lab-design-212.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-design-212-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  evaluation:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Test backend-neutral evidence and stopping rules
+        run: python -m unittest discover -v -p 'test_phase212_*.py'
