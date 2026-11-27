@@ -30,9 +30,10 @@ jobs:
           python test_junction.py
           python test_tangent_junction.py
           python test_fitting.py
+          python test_refinement.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-r4-${{ github.sha }}
+          name: phase213-r5-${{ github.sha }}
           path: research/organic_shape_phase213/results/
           if-no-files-found: warn
