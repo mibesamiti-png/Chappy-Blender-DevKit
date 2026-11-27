@@ -30,11 +30,11 @@ def part(name,xy,h,bore,radial=False):
     r['passed']=bool(r['passed'] and r['bore_open'])
     return m,r
 
-def main():
+def main(profile_factory=profiles,dest=None,error_degrees=None):
     assert bpy.app.version_string=='4.4.3'
-    dest=ROOT/'results'/'phase212_geneva_geometry';dest.mkdir(parents=True,exist_ok=True)
+    dest=dest or ROOT/'results'/'phase212_geneva_geometry';dest.mkdir(parents=True,exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    g=Geneva(4,10,.3,.05);wheel,driver,dims=profiles(g)
+    g=Geneva(4,10,.3,.05);wheel,driver,dims=profile_factory(g)
     h=.6
     wm,wa=part('four slot wheel',wheel,h,.7)
     dm,da=part('relieved locking disk',driver,h,.5,radial=True)
@@ -46,7 +46,7 @@ def main():
     for name,m in meshes.items():
         o=bpy.data.objects.new(name,m);bpy.context.collection.objects.link(o)
         o.color=(.25,.55,.85,1) if name=='wheel' else (.9,.55,.15,1);objects[name]=o
-    edges=_edges(wheel);rows=[];locks=[]
+    edges=_edges(wheel);rows=[];locks=[];error_rows=[]
     samples=721
     def transforms(u,delta=0.):
         a=g.sample(u)[0]+delta;theta=math.tau*(u-.5);x,y=g.pin(u)
@@ -62,6 +62,11 @@ def main():
             # At each dwell sample, test blocking under both signed 2 degree perturbations.
             hits=[bool(tree(wm,transforms(u,sign*math.radians(2))['wheel']).overlap(dt)) for sign in (-1,1)]
             locks.append(dict(frame=i+1,phase=u,blocks_both=all(hits),signed_hits=hits))
+        if error_degrees is not None and g.start<=u<=g.end:
+            for sign in (-1,1):
+                delta=sign*math.radians(error_degrees)
+                hit=bool(tree(wm,transforms(u,delta)['wheel']).overlap(dt))
+                error_rows.append(dict(frame=i+1,phase=u,delta_degrees=sign*error_degrees,disk_overlap=int(hit)))
         for name,o in objects.items():
             x,y,z,a=tr[name];o.location=(x,y,z);o.rotation_euler.z=a
             o.keyframe_insert(data_path='location',frame=i+1);o.keyframe_insert(data_path='rotation_euler',frame=i+1)
@@ -76,9 +81,13 @@ def main():
     out=dict(complete=True,native_executed=True,geometry_gate=gate,parts=dict(wheel=wa,driver=da,pin=pa),
         dimensions=dims,evaluation=evaluation,rows=rows,lock_samples=locks,lock_fraction=lock_fraction,
         controls=controls,sampled_lock_gate=lock_gate,lock_target=.98,continuous_lock_proven=False,physical_contact_certified=False,manufacturing_certified=False)
+    if error_degrees is not None:
+        out['perturbed_disk_rows']=error_rows
+        out['perturbed_disk_gate']=len(error_rows)==362 and not any(r['disk_overlap'] for r in error_rows)
     (dest/'report.json').write_text(json.dumps(out,indent=2,allow_nan=False))
     sc=bpy.context.scene;sc.frame_start=1;sc.frame_end=samples;sc.render.fps=60;sc.frame_set(1)
     if gate and lock_gate:bpy.ops.wm.save_as_mainfile(filepath=str(dest/'geneva_geometry_preview.blend'))
     print('PHASE212J_SUMMARY',json.dumps(dict(gate=gate,part_pass={k:v['passed'] for k,v in out['parts'].items()},
         evaluation=evaluation,lock_fraction=lock_fraction,sampled_lock_gate=lock_gate,controls=controls),allow_nan=False),flush=True)
+    return out
 if __name__=='__main__':main()
