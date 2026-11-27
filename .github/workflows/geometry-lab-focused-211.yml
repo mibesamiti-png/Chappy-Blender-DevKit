@@ -601,3 +601,70 @@ jobs:
           path: research/native_bevel_phase112/results/phase211_separated_diagnosis/
           if-no-files-found: warn
           retention-days: 14
+
+  phase211-free-walk:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Test spatial foot arrangement and unanchored floor locomotion
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_free_walk.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results/phase211_free_walk")
+          d=json.loads((p/"phase211_free_walk.json").read_text())
+          assert d["complete"] and d["native_executed"] and not d["approved"]
+          assert d["ideal_offset_couplers"] and d["ideal_rigid_camshaft"]
+          assert d["support_is_geometric_proxy"] and d["com_is_origin_weighted_proxy"] and not d["physical_manufacturing_certified"]
+          assert d["phases"]==[0,270,180,90] and d["duty"]==.77
+          assert d["feet"]==[[4.,3.],[-4.,3.],[4.,-3.],[-4.,-3.]]
+          assert d["floor_y"]==-11.55 and d["foot_radius"]==.4 and d["chassis_mass"]==20.
+          c=d["cases"]
+          assert [v["name"] for v in c] in [["fixed_spatial"],["fixed_spatial","free_engaged"],["fixed_spatial","free_engaged","frictionless","motor_off"]]
+          assert len(c)==1 or c[0]["passed"]
+          assert len(c)!=4 or c[1]["passed"]
+          assert len(c)!=1 or not c[0]["passed"]
+          assert len(c)!=2 or not c[1]["passed"]
+          for v in c:
+              assert [r["frame"] for r in v["rows"]]==list(range(1,602))
+              assert all(math.isfinite(x) for r in v["rows"] for x in r.values())
+              assert v["passed"]==all(v["checks"].values())
+              assert v["free"]==(v["name"]!="fixed_spatial")
+              assert v["enabled"]==(v["name"]!="motor_off")
+              assert v["friction"]==(0. if v["name"]=="frictionless" else .8)
+              assert v["max_foot_error"]==max(r[f"L{j}_error"] for r in v["rows"] for j in range(4))
+              assert v["checks"]["foot_tracking"]==(v["max_foot_error"]<=.04)
+              assert (p/("phase211_walk_"+v["name"]+".blend")).stat().st_size>0
+          assert d["walk_fixture_gate"]==(len(c)==4 and all(v["passed"] for v in c))
+          print("Free walking fixture gate:",d["walk_fixture_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-free-walk-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_free_walk/
+          if-no-files-found: warn
+          retention-days: 14
