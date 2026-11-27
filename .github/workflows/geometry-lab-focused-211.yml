@@ -668,3 +668,66 @@ jobs:
           path: research/native_bevel_phase112/results/phase211_free_walk/
           if-no-files-found: warn
           retention-days: 14
+
+  phase211-walk-load-diagnosis:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Locate first loaded gait error and compare motor and floor controls
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_walk_load_diagnosis.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_walk_load_diagnosis.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["diagnosis_only"]
+          assert not any(d[k] for k in ("approved","geometry_changed","acceptance_changed","physical_walk_certified"))
+          assert d["frames"]==301
+          assert [(t["name"],t["has_floor"],t["friction"],t["impulse"]) for t in d["trials"]]==[("baseline",True,.8,240.),("no_floor",False,.8,240.),("frictionless",True,0.,240.),("higher_impulse",True,.8,960.)]
+          for t in d["trials"]:
+              rows=t["rows"]
+              assert [r["frame"] for r in rows]==list(range(1,302))
+              assert all(len(r["axes"])==8 and len(r["feet"])==4 for r in rows)
+              assert all((q["floor_gap"] is not None)==t["has_floor"] for r in rows for q in r["feet"])
+              assert abs(t["travel"]-rows[-1]["travel"])<1e-10
+              for k,limit in d["limits"].items():
+                  vals=[(r["frame"],q[k]) for r in rows for q in r["axes"]+r["feet"]+[r] if k in q]
+                  assert all(math.isfinite(x) for _,x in vals)
+                  assert t["peak"][k]==max(x for _,x in vals)
+                  first=next((f for f,x in vals if x>limit),None)
+                  assert first==(t["first"][k]["frame"] if k in t["first"] else None)
+                  assert all(x<=limit for f,x in vals if f==1), (t["name"],k,"initial pose")
+          print("Loaded gait diagnosis evidence validated")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-walk-load-diagnosis-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_walk_load_diagnosis.json
+          if-no-files-found: warn
+          retention-days: 14
