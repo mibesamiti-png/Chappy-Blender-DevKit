@@ -1,0 +1,33 @@
+name: Geometry Lab organic shape Phase 213
+on:
+  pull_request:
+    paths:
+      - 'research/organic_shape_phase213/**'
+      - '.github/workflows/geometry-lab-organic-213.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-organic-213-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  boundary:
+    if: github.head_ref == 'research/organic-shape-phase213'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    defaults:
+      run:
+        working-directory: research/organic_shape_phase213
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run pure Python boundary checks
+        run: python -m unittest -v test_boundary
+      - name: Export measured boundary evidence
+        run: python test_boundary.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r1-${{ github.sha }}
+          path: research/organic_shape_phase213/results/
+          if-no-files-found: warn
