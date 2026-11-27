@@ -4,7 +4,9 @@ import math
 from patch import sub,dot,cross
 from boundary import norm
 
-def mesh(width=1.35,depth=.75,separation=.68):
+def mesh(width=1.35,depth=.75,separation=.68,method='linear'):
+    if method not in ('linear','tangent'):
+        raise ValueError('fixed junction methods only')
     if not (1.2<=width<=1.6 and .65<=depth<=.95 and .60<=separation<=.85):
         raise ValueError("bounded synthetic fixture")
     n=48;half=n//2
@@ -13,11 +15,16 @@ def mesh(width=1.35,depth=.75,separation=.68):
         pts.append(tuple(p));return len(pts)-1
     def ring(cx,rx,ry,z,start):
         return [add((cx+rx*math.cos(start+math.tau*i/n),ry*math.sin(start+math.tau*i/n),z)) for i in range(n)]
-    def loft(a,b,steps):
+    def loft(a,b,steps,branch=False):
         prev=a
         for j in range(1,steps+1):
             t=j/steps
-            nxt=b if j==steps else [add(tuple((1-t)*x+t*y for x,y in zip(pts[i],pts[k]))) for i,k in zip(a,b)]
+            def point(index,i,k):
+                A,B=pts[i],pts[k]
+                weight=math.sin(math.pi*(index-half)/half) if method=='tangent' and branch and index>half else 0.
+                q=(1-weight)*t+weight*t*t*(3-2*t)
+                return (A[0]+t*(B[0]-A[0]),A[1]+q*(B[1]-A[1]),A[2]+q*(B[2]-A[2]))
+            nxt=b if j==steps else [add(point(index,i,k)) for index,(i,k) in enumerate(zip(a,b))]
             faces.extend((prev[i],nxt[i],nxt[(i+1)%n],prev[(i+1)%n]) for i in range(n))
             prev=nxt
     top=ring(0,width,depth,1.4,math.pi/2)
@@ -29,7 +36,7 @@ def mesh(width=1.35,depth=.75,separation=.68):
     right=mid[half:]+[mid[0]]+bridge[::-1]
     low_l=ring(-separation,.46,.54,-1.2,math.pi/2)
     low_r=ring(separation,.46,.54,-1.2,3*math.pi/2)
-    loft(left,low_l,12);loft(right,low_r,12)
+    loft(left,low_l,12,True);loft(right,low_r,12,True)
     return pts,faces,(top,low_l,low_r)
 
 def smooth(pts,faces,loops,steps=16):
