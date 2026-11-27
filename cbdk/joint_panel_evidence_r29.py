@@ -114,7 +114,8 @@ def _snapshot(s, scene_sha):
     if selected is not None and (type(selected) is not int or not 0 <= selected < len(s["candidates"])):
         _fail("selection_invalid")
     if s["fresh"] and (s["status"] != "READY" or len(s["candidates"]) != 3
-                       or not any(row["accepted_for_review"] for row in s["candidates"])):
+                       or [row["decision"] for row in s["candidates"]]
+                       != ["regression", "observed_improvement", "target_reached"]):
         _fail("freshness_invalid")
     if not _is_digest(s["scene_sha"]) or s["scene_sha"] != scene_sha:
         _fail("scene_changed")
@@ -256,7 +257,7 @@ def _step(step, index, action, case, identity, scene_sha):
         if (a,b,result) != ("RUNNING",expected,"CANCELLED") or (action == "INTERRUPT" and not before["cancel_requested"]):
             _fail("state_transition_invalid")
     elif action == "REJECT":
-        if (a,b,result) != ("READY","REJECTED","FINISHED"):
+        if (a,b,result) != ("READY","REJECTED","FINISHED") or not before["fresh"]:
             _fail("state_transition_invalid")
     if not (case == "adopt_restore" and action in ("ADOPT","RESTORE")):
         if diameter_before != 5. or diameter_after != diameter_before:
@@ -312,8 +313,9 @@ def reduce_panel_evidence(records, *, run_id, blender_version, mode, scene_sha,
             if (fixture["axis"] != "Z" or fixture["mode"] != "OBJECT"
                     or type(fixture["origin"]) is not list or len(fixture["origin"]) != 3
                     or any(type(x) not in (int, float) or x != 0 for x in fixture["origin"])
-                    or any(type(fixture[k]) not in (int, float) or abs(fixture[k]-expected)>1e-6
-                           or not isfinite(fixture[k]) for k,expected in (("unit_scale",1.),("axle_diameter",2.),("clearance",.4)))):
+                    or any(type(fixture[k]) not in (int, float) or not 0 < fixture[k] <= 10
+                           or abs(fixture[k]-expected)>1e-6 or not isfinite(fixture[k])
+                           for k,expected in (("unit_scale",1.),("axle_diameter",2.),("clearance",.4)))):
                 _fail("fixture_settings_mismatch")
             draw = "native_panel_draw_recording_layout" if mode == "native" else "stub"
             projection = "real_projection" if mode == "native" else "stub"
@@ -326,6 +328,8 @@ def reduce_panel_evidence(records, *, run_id, blender_version, mode, scene_sha,
         verified, methods = [], []
         for index, record in enumerate(records):
             case = tuple(CASES)[index]
+            if type(record) is not dict or (case in measured and type(measured[case]) is not dict):
+                _fail("case_inventory_invalid")
             for observed in (record, measured.get(case)):
                 if observed is None:
                     missing.append("parent_measurement_missing")
