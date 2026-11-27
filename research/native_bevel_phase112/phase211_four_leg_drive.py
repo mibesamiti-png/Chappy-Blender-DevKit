@@ -17,11 +17,20 @@ from phase211_groove_profile import nearest
 DUTY=.77;PHASES=[0,270,180,90];FRAMES=601;IMPULSE=240.
 START=float((t:=np.arange(36000)*math.tau/36000)[np.argmin(law(t,'stride',DUTY))])
 SPAN=float(np.ptp(law(t,'stride',DUTY)))
-def setup(separated,enabled,integrated=False):
+def setup(separated,enabled,integrated=False,foot_layout=False,free=False,friction=.8):
+    assert not foot_layout or (integrated and not separated)
+    assert not free or foot_layout
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc=bpy.context.scene;sc.gravity=(0.,-9.81,0.);sc.render.fps=60;sc.frame_end=FRAMES
-    anchor=box('fixed fixture',(0.,0.,-4.),(.5,.5,.5),1.)
-    anchor.rigid_body.type='PASSIVE'
+    anchor=box('chassis reference' if foot_layout else 'fixed fixture',
+        (0.,-6.,6.5) if foot_layout else (0.,0.,-4.),(.5,.5,.5),20. if foot_layout else 1.)
+    anchor.rigid_body.type='ACTIVE' if free else 'PASSIVE'
+    if foot_layout:
+        from phase211_support_design import FEET
+        if free:
+            floor=box('physical floor',(0.,-11.8,6.5),(100.,.5,60.),1.)
+            floor.rigid_body.type='PASSIVE';floor.rigid_body.friction=friction
+            floor.color=(.45,.45,.45,1)
     shaft=box('common shaft',(0.,0.,6.5),(.18,.18,15.),.8);shaft.rotation_euler.z=-START
     constraint('shaft bearing','HINGE',anchor,shaft,(0.,0.,6.5))
     motor=constraint('only motor','MOTOR',anchor,shaft,(0.,0.,6.5),(0.,-math.pi/2,0.))
@@ -51,11 +60,22 @@ def setup(separated,enabled,integrated=False):
             limits(constraint(name+' guide','GENERIC',anchor,slide,spos),lin,zero)
             items.append(dict(kind=kind,axis=axis,base=base,z=z,rz=rz,initial=initial,cam=cam,roller=roller,slide=slide,core=core,outer=outer,side=side))
         opos=(items[0]['initial'],items[1]['initial'],3.5*j+2.5)
-        out=box(f'L{j} output',opos,(.32,.32,.25),.1);out.color=(.9,.3,.2,1)
+        if foot_layout:
+            # Same cross-slide coordinates, spatially translated to the
+            # support polygon. Long offset couplers are ideal constraints.
+            opos=(float(FEET[j,0])+items[0]['initial']-7.-1.2,
+                -11.4+items[1]['initial']-2.5,6.5+float(FEET[j,1]))
+            bpy.ops.mesh.primitive_cylinder_add(vertices=64,radius=.4,depth=.30,location=opos,rotation=(math.pi/2,0.,0.))
+            out=bpy.context.object;out.name=f'L{j} physical pad'
+            bpy.ops.object.transform_apply(location=False,rotation=True,scale=False)
+            body(out);out.rigid_body.collision_shape='CONVEX_HULL';out.rigid_body.mass=.1;out.rigid_body.friction=friction
+        else:
+            out=box(f'L{j} output',opos,(.32,.32,.25),.1)
+        out.color=(.9,.3,.2,1)
         limits(constraint(f'L{j} plane','GENERIC',anchor,out,opos),{'z':(0.,0.)},zero)
         for it in items:
             limits(constraint(f'L{j} '+it['kind']+' cross-slide','GENERIC',it['slide'],out,opos),{it['axis']:(0.,0.)},{})
-        legs.append(dict(offset=offset,items=items,out=out,oz=opos[2]))
+        legs.append(dict(offset=offset,items=items,out=out,oz=opos[2],out_initial=opos))
     if integrated:
         # Assemble actual collision triangles in shaft-local coordinates.
         # No cam-to-shaft constraints remain. Separate connected shells
@@ -89,7 +109,7 @@ def setup(separated,enabled,integrated=False):
     bpy.context.view_layer.update();sc.frame_set(1)
     cs=[o.rigid_body_constraint for o in sc.objects if o.rigid_body_constraint]
     bodies=[o for o in sc.objects if o.rigid_body and o.rigid_body.type=='ACTIVE']
-    assert len(cs)==(30 if integrated else 38) and len(bodies)==(21 if integrated else 29) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
+    assert len(cs)==(30 if integrated else 38) and len(bodies)==(21 if integrated else 29)+int(free) and sum(c.type=='MOTOR' and c.use_motor_ang for c in cs)==int(enabled)
     assert all(o.animation_data is None and not o.rigid_body.kinematic for o in bodies)
     return sc,shaft,legs
 def run(name,separated,enabled,dest,integrated=False):
