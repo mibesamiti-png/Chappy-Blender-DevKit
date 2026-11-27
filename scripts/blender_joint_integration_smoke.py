@@ -223,3 +223,7 @@ if args.cjm_zip and args.gl_root:
     from scripts.blender_joint_panel_bridge_r29_smoke import run_bridge_smoke
     run_bridge_smoke(out.with_name(out.stem + "_r29_bridge.json"),
                      str(Path(args.cjm_zip).resolve()), str(Path(args.gl_root).resolve()))
+
+    from scripts.blender_joint_panel_evidence_r29_smoke import run_evidence_smoke
+    run_evidence_smoke(out.with_name(out.stem + "_r29_evidence.json"),
+                       str(Path(args.cjm_zip).resolve()), str(Path(args.gl_root).resolve()))
