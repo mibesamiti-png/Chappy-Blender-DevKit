@@ -805,3 +805,71 @@ jobs:
           path: research/native_bevel_phase112/results/phase211_coupling_repair.json
           if-no-files-found: warn
           retention-days: 14
+
+  phase211-coupling-load-screen:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Test bounded load and drive changes at improved coupling pivot
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_coupling_load_screen.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          d=json.loads(Path("results/phase211_coupling_load_screen.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["screening_only"]
+          assert d["mass_is_model_parameter"] and d["stop_if_no_candidate"]
+          assert not any(d[k] for k in ("approved","geometry_changed","criteria_changed","physical_walk_certified"))
+          assert d["frames"]==121
+          t=d["trials"]
+          assert [(r["name"],r["moving_mass"],r["impulse"]) for r in t]==[("slider_reference",.1,240.),("drive_only",.1,960.),("moving_mass_only",.5,240.),("moving_mass_and_drive",.5,960.)]
+          for r in t:
+              assert r["pivot"]=="slider" and r["has_floor"] and r["friction"]==.8
+              assert len(r["mass_evidence"])==12 and len({e["name"] for e in r["mass_evidence"]})==12
+              assert all(abs(e["mass"]-r["moving_mass"])<1e-6 for e in r["mass_evidence"])
+              assert [v["frame"] for v in r["rows"]]==list(range(1,122))
+              for k,v in d["limits"].items():
+                  vals=[q[k] for row in r["rows"] for q in row["axes"]+row["feet"]+[row] if k in q]
+                  assert all(math.isfinite(x) for x in vals)
+                  assert r["peak"][k]==max(vals)
+                  assert r["screening_checks"][k]==(max(vals)<=v)
+              assert r["screening_checks"]["backplate"]==(r["min_back_gap"]>=.02)
+              assert r["screening_checks"]["upright"]==(r["max_tilt"]<=15.)
+              assert r["screening_checks"]["late_speed"]==(r["late_mean_velocity"]>=.8)
+              assert r["screening_passed"]==all(r["screening_checks"].values())
+          c=[r for r in t if r["screening_passed"]]
+          assert d["selected"]==(min(c,key=lambda r:(r["impulse"],r["moving_mass"],r["peak"]["foot_tracking"]))["name"] if c else None)
+          print("Bounded load-screen candidate:",d["selected"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-coupling-load-screen-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_coupling_load_screen.json
+          if-no-files-found: warn
+          retention-days: 14
