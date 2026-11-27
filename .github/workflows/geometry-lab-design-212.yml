@@ -310,11 +310,12 @@ jobs:
           p=Path("results/phase212_geneva_geometry")
           r=json.loads((p/"report.json").read_text())
           assert r["complete"] and r["native_executed"]
-          assert len(r["rows"])==241 and len(r["parts"])==3
+          assert len(r["rows"])==721 and len(r["parts"])==3
           assert 0<=r["lock_fraction"]<=1 and r["lock_samples"]
           assert not any(r[k] for k in ("continuous_lock_proven","physical_contact_certified","manufacturing_certified"))
           assert r["geometry_gate"]==(all(q["passed"] for q in r["parts"].values()) and r["evaluation"]["status"]=="pass" and all(r["controls"].values()))
-          if r["geometry_gate"]:assert (p/"geneva_geometry_preview.blend").stat().st_size>0
+          assert r["lock_target"]==.98 and r["sampled_lock_gate"]==(r["lock_fraction"]>=r["lock_target"])
+          if r["geometry_gate"] and r["sampled_lock_gate"]:assert (p/"geneva_geometry_preview.blend").stat().st_size>0
           print("Geneva geometry gate:",r["geometry_gate"],"dwell lock fraction:",r["lock_fraction"])
           PY
       - uses: actions/upload-artifact@v4
