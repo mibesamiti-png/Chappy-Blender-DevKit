@@ -74,3 +74,22 @@ class IntegrationReviewTests(unittest.TestCase):
             for name in ('../escape.py', str(base / 'outside.py')):
                 with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'provider_path'):
                     checked_provider_folder(alias, [name])
+
+
+class R29PanelBoundaryRegressionTests(unittest.TestCase):
+    def test_existing_review_and_panel_evidence_do_not_authorize_mesh_commit(self):
+        from test_joint_panel_evidence_r29 import observations, evaluate
+        base = measure()
+        best = score(base, 4.)
+        accepted = review(base, measure(4.), 4., best)
+        self.assertTrue(accepted["accepted_for_review"])
+        self.assertFalse(accepted["auto_apply"])
+        self.assertFalse(accepted["approved"])
+        args = observations(mode="stub")
+        result = evaluate(args)
+        self.assertTrue(result["stub_contract_verified"])
+        self.assertFalse(result["native_fixed_panel_evidence_verified"])
+        self.assertFalse(any(result["safety"].values()))
+        # A good review is not authorization for stale panel adoption.
+        args[0][2]["steps"][0]["view_before"]["enabled_actions"].append("ADOPT")
+        self.assertEqual(evaluate(args)["status"], "rejected")
