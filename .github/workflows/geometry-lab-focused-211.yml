@@ -539,3 +539,65 @@ jobs:
           path: research/native_bevel_phase112/results/phase211_integrated/
           if-no-files-found: warn
           retention-days: 14
+
+  phase211-separated-diagnosis:
+    if: github.head_ref == 'research/native-bevel-phase112'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: research/native_bevel_phase112
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile research sources
+        run: python -m compileall -q .
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Acquire and verify pinned Blender archive
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Compare identical separated fixtures with motor enabled and disabled
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python phase211_separated_diagnosis.py
+          python - <<'PY'
+          import json,math
+          from pathlib import Path
+          p=Path("results/phase211_separated_diagnosis")
+          d=json.loads((p/"phase211_separated_diagnosis.json").read_text())
+          assert d["complete"] and d["native_executed"] and d["diagnosis_only"] and not d["approved"]
+          assert not any(d[k] for k in ("geometry_changed","gravity_changed","criteria_changed","physical_walk_certified"))
+          a,b=d["cases"]
+          assert a["enabled"] and not b["enabled"]
+          for c in (a,b):
+              assert c["separated"] and c["integrated"] and len(c["rows"])==601
+              assert all(math.isfinite(v) for r in c["rows"] for v in r.values())
+          assert d["raw_d3_separated_passed"]==a["passed"]
+          assert len(d["metrics"])==8
+          assert [q["axis"] for q in d["metrics"]]==[f"L{j}_{k}_" for j in range(4) for k in ("stride","lift")]
+          for q in d["metrics"]:
+              k=q["axis"]
+              for field in ("output","coupling"):
+                  assert q[field+"_difference"]==max(abs(x[k+field]-y[k+field]) for x,y in zip(a["rows"],b["rows"]))
+              assert q["min_axial"]==min(r[k+"axial"] for c in (a,b) for r in c["rows"])
+              assert q["passed"]==(q["output_difference"]<=.015 and q["coupling_difference"]<=.015 and q["min_axial"]>.5)
+          assert d["checks"]==dict(driven_full_cycle=a["travel"]<=-math.tau,undriven_no_rotation=abs(b["travel"])<=.4,paired_outputs=all(q["passed"] for q in d["metrics"]),shaft_drift=all(c["checks"]["shaft_drift"] for c in (a,b)))
+          assert d["causal_isolation_gate"]==all(d["checks"].values())
+          print("Paired separated-control causal isolation gate:",d["causal_isolation_gate"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase211-separated-diagnosis-${{ github.sha }}
+          path: research/native_bevel_phase112/results/phase211_separated_diagnosis/
+          if-no-files-found: warn
+          retention-days: 14
