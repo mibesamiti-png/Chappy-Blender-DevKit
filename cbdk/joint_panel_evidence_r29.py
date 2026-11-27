@@ -43,13 +43,13 @@ CASES = {
     "adopt_restore": ("START", "COMPLETE", "ADOPT", "RESTORE"),
     "rejected_candidate": ("ADOPT",),
     "stale_candidate": ("ADOPT",),
-    "cancel_retry": ("START", "CANCEL", "INTERRUPT", "RETRY", "COMPLETE"),
-    "failed_retry": ("START", "FAIL", "RETRY", "COMPLETE"),
+    "cancel_retry": ("START", "ADOPT", "RESTORE", "CANCEL", "INTERRUPT", "RETRY"),
+    "failed_retry": ("START", "FAIL", "RETRY"),
     "blocked": ("START", "CANCEL", "RETRY", "REJECT", "ADOPT", "RESTORE"),
     "explicit_reject": ("REJECT",),
 }
 IDENTITY = {"run_id", "blender_version", "fixture_id", "mode"}
-SNAPSHOT = {"status", "reason", "diameter", "fresh", "selected", "candidates", "scene_sha"}
+SNAPSHOT = {"status", "reason", "diameter", "fresh", "selected", "candidates", "scene_sha", "target", "policy", "cancel_requested"}
 VIEW = {"fixture_id", "part_ids", "recipe_id", "status", "reason", "available",
         "candidates", "selected", "enabled_actions"}
 ROW = {"candidate_id", "diameter", "decision", "score", "accepted_for_review"}
@@ -57,7 +57,7 @@ STEP = {"index", "action", "operator", "method", "explicit", "result", "before",
         "after", "view_before", "view_after"}
 CASE_FIELDS = IDENTITY | {"case", "steps"}
 LIFECYCLE = {"registered", "duplicate_rejected", "unregistered",
-             "existing_registration_unchanged", "scene_before", "scene_after"}
+             "existing_registration_unchanged", "scene_before", "scene_after", "fixture_settings", "draw_method", "projection_source"}
 MODES = ("stub", "native")
 METHODS = ("stub", "native_operator", "native_iterator", "callback_simulation")
 
@@ -106,7 +106,9 @@ def _snapshot(s, scene_sha):
     if not _enum(s["status"], STATES) or not _enum(s["reason"], REASONS):
         _fail("state_invalid")
     _dimension(s["diameter"])
-    _flags(s, {"fresh"})
+    if _dimension(s["target"]) != 4. or s["policy"] != "FREE":
+        _fail("fixture_settings_mismatch")
+    _flags(s, {"fresh", "cancel_requested"})
     _rows(s["candidates"])
     selected = s["selected"]
     if selected is not None and (type(selected) is not int or not 0 <= selected < len(s["candidates"])):
@@ -140,6 +142,8 @@ def _view(v, s):
         _fail("projection_mismatch")
     if s["status"] == "READY" and not s["fresh"] and v["available"]:
         _fail("stale_projection")
+    if s["fresh"] and not v["available"]:
+        _fail("projection_mismatch")
     enabled = v["enabled_actions"]
     if (type(enabled) is not list or any(not _enum(x, ACTIONS) for x in enabled)
             or len(set(enabled)) != len(enabled)):
@@ -208,6 +212,9 @@ def _step(step, index, action, case, identity, scene_sha):
     if case == "blocked":
         if (a,b,result) != ("BLOCKED","BLOCKED","CANCELLED") or before["fresh"] or after["fresh"]:
             _fail("blocked_operation")
+    elif case == "cancel_retry" and action in ("ADOPT", "RESTORE"):
+        if (a,b,result) != ("RUNNING","RUNNING","CANCELLED") or after["cancel_requested"] != before["cancel_requested"]:
+            _fail("busy_operation")
     elif case in ("rejected_candidate", "stale_candidate"):
         if (a != "READY" or _can_adopt(before) or result != "CANCELLED"
                 or b not in ("FAILED", "READY") or after["fresh"] and b != "READY"):
@@ -218,10 +225,15 @@ def _step(step, index, action, case, identity, scene_sha):
                 _fail("invalid_adoption")
         elif before["fresh"]:
             _fail("invalid_adoption")
-    elif action in ("START", "RETRY"):
-        allowed_before = ("IDLE",) if action == "START" else ("FAILED","CANCELLED")
-        if a not in allowed_before or b != "RUNNING" or result != "RUNNING_MODAL":
+    elif action == "START":
+        if (a,b,result) != ("IDLE","RUNNING","RUNNING_MODAL") or after["cancel_requested"]:
             _fail("state_transition_invalid")
+    elif action == "RETRY":
+        # Existing joint_action(RETRY) is synchronous, unlike joint_start.
+        if a not in ("FAILED","CANCELLED") or b != "READY" or result != "FINISHED" or not after["fresh"]:
+            _fail("state_transition_invalid")
+        if after["cancel_requested"] or [r["decision"] for r in after["candidates"]] != ["regression","observed_improvement","target_reached"]:
+            _fail("fixed_review_mismatch")
     elif action == "COMPLETE":
         if (a,b,result) != ("RUNNING","READY","FINISHED") or not after["fresh"]:
             _fail("state_transition_invalid")
@@ -237,11 +249,11 @@ def _step(step, index, action, case, identity, scene_sha):
         if (a,b,result) != ("ADOPTED_DIMENSION_ONLY","RESTORED","FINISHED") or (diameter_before,diameter_after)!=(4.,5.):
             _fail("restoration_invalid")
     elif action == "CANCEL":
-        if (a,b,result) != ("RUNNING","RUNNING","FINISHED"):
+        if (a,b,result) != ("RUNNING","RUNNING","FINISHED") or not after["cancel_requested"]:
             _fail("state_transition_invalid")
     elif action in ("INTERRUPT","FAIL"):
         expected = "CANCELLED" if action == "INTERRUPT" else "FAILED"
-        if (a,b,result) != ("RUNNING",expected,"CANCELLED"):
+        if (a,b,result) != ("RUNNING",expected,"CANCELLED") or (action == "INTERRUPT" and not before["cancel_requested"]):
             _fail("state_transition_invalid")
     elif action == "REJECT":
         if (a,b,result) != ("READY","REJECTED","FINISHED"):
@@ -291,9 +303,22 @@ def reduce_panel_evidence(records, *, run_id, blender_version, mode, scene_sha,
                 continue
             _record(value, IDENTITY | LIFECYCLE)
             _bound(value, identity)
-            _flags(value, LIFECYCLE-{"scene_before","scene_after"})
-            if not all(value[k] for k in LIFECYCLE-{"scene_before","scene_after"}):
+            boolean_fields = {"registered", "duplicate_rejected", "unregistered", "existing_registration_unchanged"}
+            _flags(value, boolean_fields)
+            if not all(value[k] for k in boolean_fields):
                 _fail("lifecycle_unverified")
+            fixture = value["fixture_settings"]
+            _record(fixture, {"axis", "origin", "unit_scale", "axle_diameter", "clearance", "mode"})
+            if (fixture["axis"] != "Z" or fixture["mode"] != "OBJECT"
+                    or type(fixture["origin"]) is not list or len(fixture["origin"]) != 3
+                    or any(type(x) not in (int, float) or x != 0 for x in fixture["origin"])
+                    or any(type(fixture[k]) not in (int, float) or abs(fixture[k]-expected)>1e-6
+                           or not isfinite(fixture[k]) for k,expected in (("unit_scale",1.),("axle_diameter",2.),("clearance",.4)))):
+                _fail("fixture_settings_mismatch")
+            draw = "native_panel_draw_recording_layout" if mode == "native" else "stub"
+            projection = "real_projection" if mode == "native" else "stub"
+            if value["draw_method"] != draw or value["projection_source"] != projection:
+                _fail("method_invalid")
             if any(value[k] != scene_sha for k in ("scene_before","scene_after")):
                 _fail("scene_changed")
         if lifecycle is not None and measured_lifecycle is not None and lifecycle != measured_lifecycle:
