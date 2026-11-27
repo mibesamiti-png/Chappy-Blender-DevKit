@@ -192,7 +192,10 @@ def _step(step, index, action, case, identity, scene_sha):
         if method != "stub":
             _fail("method_invalid")
     elif action in OPERATORS:
-        if method != "native_operator":
+        # A controlled modal-start invocation may use callback simulation
+        # with real RNA; it must not be called a native operator invocation.
+        allowed_methods = ("native_operator", "callback_simulation") if action == "START" else ("native_operator",)
+        if method not in allowed_methods:
             _fail("method_invalid")
     elif method not in ("native_iterator", "callback_simulation"):
         _fail("method_invalid")
