@@ -11,9 +11,11 @@ def rotate(p,a):
     x,y=p;c=math.cos(a);s=math.sin(a)
     return x*c-y*s,x*s+y*c
 
-def profiles(g):
+def profiles(g,relief_degrees=35):
     if g.slots!=4 or g.center_distance!=10 or g.phase_offset!=0 or g.pin_radius!=.3 or g.clearance!=.05:
         raise ValueError("fixed four-slot fixture only")
+    if relief_degrees not in (25,30,35,40,45,50,55,60,65,70,75,80,90):
+        raise ValueError('predeclared relief angle required')
     C=g.center_distance;R=7.4;L=3.45;D=3.4;w=g.pin_radius+g.clearance
     inner=C-g.crank_radius
     ds=math.asin(w/R)
@@ -45,10 +47,10 @@ def profiles(g):
     for i in range(360):
         a=math.tau*i/360
         d=abs(math.atan2(math.sin(a-math.pi),math.cos(a-math.pi)))
-        q=max(0.,min(1.,(d-math.pi/2)/math.radians(5)))
+        q=max(0.,min(1.,(d-math.radians(relief_degrees))/math.radians(5)))
         r=1.2+(D-1.2)*q
         driver.append((r*math.cos(a),r*math.sin(a)))
-    return tuple(wheel),tuple(driver),dict(wheel_radius=R,locking_radius=D,recess_radius=L,slot_half_width=w)
+    return tuple(wheel),tuple(driver),dict(wheel_radius=R,locking_radius=D,recess_radius=L,slot_half_width=w,relief_degrees=relief_degrees)
 
 def pin_clearance(g,wheel,u):
     p=rotate(g.pin(u),-g.sample(u)[0])
