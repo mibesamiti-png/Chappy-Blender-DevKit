@@ -655,5 +655,127 @@ class R28FixedCandidateReviewTests(unittest.TestCase):
         out=self.review(self.baseline,self.target,rows)
         self.assertTrue(out["observed_target_reached"])
 
+
+
+class R29JointPanelProjectionTests(unittest.TestCase):
+    def setUp(self):
+        from cbdk.joint_panel_view_r29 import project_joint_panel
+        self.project = project_joint_panel
+        self.rows = [
+            dict(id="negative_control",diameter=5.5,decision="regression",
+                 score=1.5,accepted_for_review=False),
+            dict(id="midpoint",diameter=4.5,decision="observed_improvement",
+                 score=.5,accepted_for_review=True),
+            dict(id="declared_target",diameter=4.,decision="target_reached",
+                 score=0.,accepted_for_review=True),
+        ]
+        self.payload = dict(original=5.,target=4.,policy="FREE",signature="a"*64,
+                            baseline={},rows=[],best=2)
+        for row in self.rows:
+            self.payload["rows"].append(dict(id=row["id"],diameter=row["diameter"],
+                measurement={},review=dict(decision=row["decision"],score=row["score"],
+                    accepted_for_review=row["accepted_for_review"],auto_apply=False,
+                    approved=False,printable=False,continuous_collision_checked=False)))
+
+    def view(self, status="READY", reason="", result=None, rows=None, fresh=True, index=2):
+        return self.project(status,reason,json.dumps(self.payload) if result is None else result,
+                            self.rows if rows is None else rows,
+                            current_inputs_match=fresh,selected_index=index)
+
+    def enabled(self, view):
+        return {k for k,v in view["actions"].items() if v}
+
+    def test_r29_fixed_display_and_selected_candidate_only(self):
+        before=copy.deepcopy(self.rows)
+        for index in range(3):
+            out=self.view(index=index)
+            self.assertEqual(out["fixture_id"],"joint_rotary_fixture_v1")
+            self.assertEqual(out["part_ids"],["rotary_outer","rotary_axle"])
+            self.assertEqual(out["recipe_label"],"固定人工回転関節")
+            self.assertEqual(out["availability"],"available")
+            self.assertEqual(out["candidates"],self.rows)
+            self.assertIs(out["actions"]["ADOPT"],index != 0)
+        out=self.view()
+        out["candidates"][0]["diameter"]=99
+        self.assertEqual(self.rows,before)
+        self.assertNotIn("signature",out)
+        self.assertNotIn("baseline",out)
+
+    def test_r29_busy_blocked_take_precedence(self):
+        for status,actions in (("RUNNING",{"CANCEL"}),("BLOCKED",set())):
+            out=self.view(status,reason="unknown/private/path",result="{broken",fresh=1)
+            self.assertEqual(self.enabled(out),actions)
+            self.assertEqual(out["candidates"],[])
+            self.assertFalse(out["actions"]["ADOPT"])
+
+    def test_r29_explicit_retry_restore_and_no_implicit_adopt(self):
+        for status,expected in (("IDLE",{"RUN"}),("RESTORED",{"RUN"}),
+            ("FAILED",{"RETRY","RESTORE"}),("CANCELLED",{"RETRY","RESTORE"}),
+            ("REJECTED",{"RETRY","RESTORE"}),("ADOPTED_DIMENSION_ONLY",{"RESTORE"})):
+            out=self.view(status)
+            self.assertEqual(self.enabled(out),expected)
+            self.assertEqual(out["candidates"],[])
+        out=self.view(status="unknown")
+        self.assertEqual(out["availability"],"unavailable")
+        self.assertEqual(self.enabled(out),set())
+
+    def test_r29_stale_missing_and_conflicting_sources(self):
+        for fresh in (False,1,"true",None):
+            out=self.view(fresh=fresh)
+            self.assertEqual(out["availability"],"unavailable")
+            self.assertFalse(out["actions"]["ADOPT"])
+        for bad in ([],self.rows[:2],list(reversed(self.rows)),[self.rows[0]]*3,
+                    self.rows+[self.rows[-1]]):
+            out=self.view(rows=bad)
+            self.assertEqual(out["availability"],"unavailable")
+            self.assertFalse(out["actions"]["ADOPT"])
+        out=self.project("READY","","",None,current_inputs_match=True)
+        self.assertEqual(out["availability"],"unavailable")
+        self.assertFalse(out["actions"]["ADOPT"])
+        for index in (True,-1,3,2.0):
+            self.assertFalse(self.view(index=index)["actions"]["ADOPT"])
+        self.assertFalse(self.view(status="NO_CANDIDATE")["actions"]["ADOPT"])
+
+    def test_r29_bad_numeric_enum_and_forged_acceptance(self):
+        for key,value in (("score",float("nan")),("score",float("inf")),
+                          ("score",True),("score",-1),("diameter",False),
+                          ("diameter",float("inf")),("diameter",3.5),
+                          ("decision","invented"),("accepted_for_review",True),
+                          ("id","invented")):
+            bad=copy.deepcopy(self.rows)
+            bad[0][key]=value
+            out=self.view(rows=bad)
+            self.assertEqual(out["availability"],"unavailable")
+            self.assertFalse(out["actions"]["ADOPT"])
+
+    def test_r29_invalid_json_and_saved_approval_are_not_displayed(self):
+        for result in ("", "[]", "{", '{"rows":[],"rows":[]}', '{"x":NaN}', "x"*(1024*1024+1)):
+            out=self.view(result=result)
+            self.assertEqual(out["availability"],"unavailable")
+            self.assertFalse(out["actions"]["ADOPT"])
+        for key,value in (("best",True),("best",0),("original",6.),("target",5.),
+                          ("policy","UNKNOWN")):
+            bad=copy.deepcopy(self.payload);bad[key]=value
+            self.assertFalse(self.view(result=json.dumps(bad))["actions"]["ADOPT"])
+        bad=copy.deepcopy(self.payload);bad["rows"][2]["review"]["approved"]=True
+        self.assertFalse(self.view(result=json.dumps(bad))["actions"]["ADOPT"])
+        out=self.view(reason="unexpected/private/path")
+        self.assertEqual(out["reason"],"reason_unavailable")
+        self.assertFalse(out["actions"]["ADOPT"])
+
+    def test_r29_locked_and_rejected_only_have_no_adopt(self):
+        locked=dict(self.payload,policy="LOCKED",rows=[],best=None)
+        out=self.view(status="NO_CANDIDATE",result=json.dumps(locked),rows=[])
+        self.assertEqual(out["availability"],"available")
+        self.assertFalse(out["actions"]["ADOPT"])
+        rows=copy.deepcopy(self.rows);payload=copy.deepcopy(self.payload)
+        for i in range(3):
+            rows[i].update(decision="uncertain",accepted_for_review=False)
+            payload["rows"][i]["review"].update(decision="uncertain",accepted_for_review=False)
+        payload["best"]=None
+        out=self.view(status="NO_CANDIDATE",result=json.dumps(payload),rows=rows)
+        self.assertEqual(out["availability"],"available")
+        self.assertFalse(out["actions"]["ADOPT"])
+
 if __name__ == "__main__":
     unittest.main()
