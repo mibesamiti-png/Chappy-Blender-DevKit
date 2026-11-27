@@ -33,9 +33,10 @@ jobs:
           python test_refinement.py
           python test_shell.py
           python test_garment.py
+          python test_rounded_garment.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-r7-${{ github.sha }}
+          name: phase213-r7b-${{ github.sha }}
           path: research/organic_shape_phase213/results/
           if-no-files-found: warn
