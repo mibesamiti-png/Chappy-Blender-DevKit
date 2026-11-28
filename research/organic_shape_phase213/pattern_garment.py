@@ -18,7 +18,7 @@ WAIST=.40;BOTTOM=-.70
 def smooth(t):return t*t*(3-2*t)
 
 def mesh(case,method="original"):
-    if method not in ("original","round_rim"):raise ValueError("fixed outline methods")
+    if method not in ("original","round_rim","trimmed_rim"):raise ValueError("fixed outline methods")
     if case not in CASES:raise ValueError("fixed pattern fixtures")
     _,hip,front,rear,side,width,length=case
     p=[];q=[];groups=[];shared={}
@@ -47,6 +47,17 @@ def mesh(case,method="original"):
             x=w*((1-blend)*math.sin(math.pi*u/2)+blend*u)
             y=sign*(ey+(cy-ey)*math.cos(math.pi*u/2))
             zz=z
+            if not upper and method=="trimmed_rim":
+                # Every lower row is a horizontal section. Trim its angular
+                # range, rather than pulling only the rim upward.
+                trim=(math.pi/2)*math.sqrt(t)
+                span=max(.15,math.pi/2-trim)
+                w=width/2+(hip-width/2)*(1-t)**1.4
+                cy=length/2+(d-length/2)*math.cos(math.pi*t/2)
+                ey=cy*math.sin(trim)
+                x=w*math.sin(span*u)/math.sin(span)
+                y=sign*(ey+(cy-ey)*(math.cos(span*u)-math.cos(span))/(1-math.cos(span)))
+                zz=side_z-(side_z-BOTTOM)*t
             if not upper and method=="round_rim":
                 # Only the outer rim needs a horizontal tangent at the side join.
                 # Keep the middle of the panel on its original height profile.
