@@ -126,6 +126,8 @@ jobs:
           persist-credentials: false
       - name: Compare frozen generic branching form methods
         run: python form_first_pilot.py
+      - name: Isolate effect of identical fairing on direct extraction
+        run: python form_first_ablation.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
