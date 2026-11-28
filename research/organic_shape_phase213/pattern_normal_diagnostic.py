@@ -40,14 +40,30 @@ def classify(record):
     if max(i,j)>=UP+DOWN-3:return "near_crotch:"+a
     return "lower:"+a
 
+def quad_folds(p,q):
+    records=[]
+    for i,f in enumerate(q):
+        a,b,c,d=(p[j] for j in f)
+        n=cross(sub(b,a),sub(c,a));m=cross(sub(c,a),sub(d,a))
+        den=norm(n)*norm(m)
+        cosine=dot(n,m)/den if den else -1.
+        records.append(dict(face=i,vertices=list(f),band=face_band(i),
+            midpoint=[sum(p[j][k] for j in f)/4 for k in range(3)],cosine=cosine))
+    return sorted(records,key=lambda r:(r["cosine"],r["face"]))
+
 def diagnose(case,method):
     p,q,l,g,a,b=mesh(case,method)
     rows=locate(p,q)
     m=audit(p,q,l,p)
     if abs(rows[0]["angle"]-m["max_normal_jump"])>1e-9:raise ValueError("normal audit disagreement")
+    folds=quad_folds(p,q)
+    if abs(folds[0]["cosine"]-m["min_quad_cos"])>1e-9:raise ValueError("quad audit disagreement")
     regions=defaultdict(list)
     for r in rows:regions[classify(r)].append(r["angle"])
     return dict(method=method,max_normal_jump=rows[0]["angle"],
         high_angle_edges=sum(r["angle"]>55 for r in rows),
+        min_quad_cos=folds[0]["cosine"],folded_quads=sum(r["cosine"]<=0 for r in folds),
+        fold_bands=dict(Counter("|".join(map(str,r["band"])) for r in folds if r["cosine"]<=0)),
+        worst_quads=folds[:12],
         regions={k:dict(count=len(v),maximum=max(v),above_55=sum(x>55 for x in v)) for k,v in sorted(regions.items())},
         worst=[dict(r,region=classify(r)) for r in rows[:12]])
