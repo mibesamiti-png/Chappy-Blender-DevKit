@@ -34,7 +34,23 @@ def field(p,case):
         return .45*(math.sqrt(((x-sign*sep)/r)**2+((y+.035)/d)**2+(max(0.,z+.48)/.68)**2)-1)
     return smooth_min(pelvis,smooth_min(leg(-1),leg(1)))
 
-def extract(case):
+def edge_root(a,b,fa,fb,case):
+    """Bracket a root on the same lattice edge, without moving off the edge."""
+    if fa==0:return a
+    if fb==0:return b
+    if (fa<0)==(fb<0):raise ValueError("root not bracketed")
+    lo,hi=0.,1.
+    for _ in range(24):
+        t=(lo+hi)/2
+        v=tuple(x+t*(y-x) for x,y in zip(a,b))
+        fv=field(v,case)
+        if fv==0:return v
+        if (fv<0)==(fa<0):lo=t
+        else:hi=t
+    return tuple(x+(lo+hi)/2*(y-x) for x,y in zip(a,b))
+
+def extract(case,method="linear"):
+    if method not in ("linear","bracketed"):raise ValueError("fixed extraction methods")
     if case not in CASES:raise ValueError("fixed fixtures only")
     nx,ny,nz=RES
     grid={k:tuple(lo+(hi-lo)*i/n for i,n,(lo,hi) in zip(k,RES,BOUNDS))
@@ -47,7 +63,7 @@ def extract(case):
             a,b=key;fa,fb=values[a],values[b]
             t=fa/(fa-fb)
             cache[key]=len(p)
-            p.append(tuple(x+t*(y-x) for x,y in zip(grid[a],grid[b])))
+            p.append(edge_root(grid[a],grid[b],fa,fb,case) if method=="bracketed" else tuple(x+t*(y-x) for x,y in zip(grid[a],grid[b])))
         return cache[key]
     def emit(t,normal):
         a,b,c=(p[i] for i in t)
