@@ -1,0 +1,540 @@
+{
+  "schema_version": 1,
+  "plan_id": "CBDK-FUTURE-019-022",
+  "status": "ACTIVE_V021",
+  "active": true,
+  "approved_on": "2026-11-07",
+  "approval_basis": "User explicitly approved the future plan and transition policy; finish automatable v0.18 work and record remaining human blockers first.",
+  "transition_authorized": true,
+  "repeat_transition_approval_required": false,
+  "canonical_current_state": "docs/project/STATE.json",
+  "activation_gates": {
+    "v018_automatable_work_completed": true,
+    "human_blockers_documented": true,
+    "latest_pr25_code_checks_reviewed": true,
+    "integration_policy_recorded": true
+  },
+  "integration_policy": "Continue development on feature branches; keep PR #25 draft until appropriate review. Main merge and formal release require separate explicit approval and are not implicitly authorized by transition approval.",
+  "blocker_inventory": "docs/V018_COMPLETION_GATES.md",
+  "separate_approval_required": [
+    "merge_to_main",
+    "formal_release_or_public_distribution",
+    "adoption_of_unapproved_code_or_parts",
+    "use_or_execution_of_private_user_data_or_addons",
+    "material_scope_or_safety_changes"
+  ],
+  "phases": [
+    {
+      "version": "0.19",
+      "status": "scoped_milestones_accepted",
+      "goal": "Practical GLB analysis and conservative part correspondence",
+      "candidates": [
+        "Expand the 512-triangle research limit gradually with explicit computational budgets",
+        "Partition large meshes, reuse BVHs and cache bounded calculations",
+        "Suggest matches using dimensions, position, centroid and surface features",
+        "Represent competing or ambiguous part candidates explicitly",
+        "Measure detection limits for holes, thin walls, joints and internal cavities",
+        "Prioritize regions with large observed differences"
+      ],
+      "acceptance": "Evaluate accuracy and resources on authored synthetic models and explicitly permitted real models; test reordered parts and different triangulations without unnecessary false positives. Sample agreement is not exact geometry."
+    },
+    {
+      "version": "0.20",
+      "status": "scoped_milestones_accepted",
+      "goal": "Blender addon generation engine",
+      "candidates": [
+        "Declarative panels, buttons, properties and operators",
+        "Compose only permitted parts and validate dependency/API compatibility",
+        "Verify operator mode, selection and Undo requirements",
+        "Automatically register, enable and function-test generated previews",
+        "Support multiple recipes and prepare Blender Extensions formatting"
+      ],
+      "acceptance": "Generate multi-feature addons and verify registration, operation and disabling on supported Blender versions. Do not adopt unapproved parts or redistribute license-unreviewed code."
+    },
+    {
+      "version": "0.21",
+      "status": "scoped_milestones_accepted",
+      "goal": "Safe repair and improvement candidate experiments",
+      "candidates": [
+        "Strengthen diagnostic-to-setting/code hypotheses",
+        "Generate narrowly scoped change candidates with diffs and restoration",
+        "Regenerate and compare only in permitted validation environments",
+        "Classify improvement, regression and uncertainty across candidates",
+        "Protect previously good parts and record reasons, metrics and decisions"
+      ],
+      "acceptance": "Validate detection, proposed changes, regeneration and comparison on CBDK-managed safe sample addons. Applying changes to real user addons requires separate explicit permission/review; no arbitrary code execution, automatic adoption or merge."
+    },
+    {
+      "version": "0.22",
+      "status": "not_started",
+      "goal": "Integrated Blender UI and practical delivery",
+      "candidates": [
+        "Blender development panel and part/recipe/test visualization",
+        "Side-by-side GLB review and navigation to observed differences",
+        "Candidate confirmation and approval interface",
+        "Interrupt, failure display and explicit rerun assistance",
+        "Real Windows GUI and Undo/Redo verification",
+        "Packaging, usage documentation and compatibility checks"
+      ],
+      "acceptance": "Operate feature selection, addon generation, testing, shape comparison and candidate review consistently from Blender. Formal distribution requires license, safety and user approvals."
+    }
+  ],
+  "shared_principles": [
+    "Preserve compatibility and measure quality, safety and performance",
+    "Never change original sources or private projects without permission",
+    "Keep private GLBs, source and personal data out of public GitHub/Notion",
+    "Separate synthetic success, sampled similarity, causal hypotheses and verified effects",
+    "Use relevant tests during work and necessary milestone CI",
+    "Keep GitHub canonical and Notion as an actual-status mirror",
+    "Do not claim fully autonomous creation or repair of arbitrary addons"
+  ],
+  "current_requirements_or_priorities_modified_by_future_plan": false,
+  "last_current_code_evidence": {
+    "code_sha": "d4aa43016ad85159584a0d88b33e7cbb58368b97",
+    "blender_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45560603365",
+    "result": "success",
+    "activation_decision": "Bounded v0.18 foundation accepted after R19 and #148 independent 7CI. Existing unfinished requirements remain partial; generic expansion belongs to approved F019–F022; private/GUI/rights blockers remain. v0.19 activation candidate; no specialist dispatch until activation PR and dev CI pass."
+  },
+  "activation_evidence": {
+    "date": "2026-11-25",
+    "verified_base_sha": "d4aa43016ad85159584a0d88b33e7cbb58368b97",
+    "workflow_runs": {
+      "python": 45560603306,
+      "windows": 45560603301,
+      "blender": 45560603365,
+      "chromium": 45560603489,
+      "handoff": 45560603287,
+      "kit": 45560603398,
+      "skill": 45560603308
+    },
+    "pr25_draft": true,
+    "scope": "Bounded v0.18 development foundation, not product release or all requirements complete",
+    "dispatch": "A prepares F019 baseline and bounded assignments after activation validation; B/C/D paused until separately verified dispatch."
+  },
+  "phase_progress": {
+    "0.19": {
+      "F019-01": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "7e8bd21994a3b12dc1282fedc3ceceb4230e6860",
+        "blender_run": 45566806341,
+        "scope": "Explicit standalone surface review 2048 triangles per scene; legacy 512 default; finite budgets; authored synthetic GLB only. Larger/general mesh, partitioning needs, native memory and actual user models remain unverified."
+      },
+      "F019-02": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "b45549ca8e502d6e9ba22365f4dfd28e791a4d41",
+        "blender_run": 45577551663,
+        "scope": "Explicit expanded_2048_parts schema3, synthetic 2048 triangles / 64 parts per scene; spatial candidate guards, bounded local surface evidence demotes only, ambiguous/unmeasured retained; 64 reverse-order suggestions, one false suggestion demoted, 65 cap exit2, SHA unchanged, 3 Blender versions. Legacy schemas/viewer unchanged. General identity, native memory/local exhaustion, near-small/far-large separate contrast, arbitrary user models and larger viewer remain unverified; motion/split/merge Python controls only."
+      },
+      "F019-03": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "a816d5ec0f08456c469af134b4b7dc1b69987258",
+        "blender_run": 45636769495,
+        "scope": "Measurement-only: 16 authored synthetic cases, all three Blender versions; fixed 8/10 and adaptive 9/10 known positive sampled surface differences, both 0/5 false warnings, 1 information absent. Narrow opening missed; physical thickness/contact/void topology, native memory, held-out/general models and user data unverified. No production or GL adoption, existing profiles unchanged. Artifact finalize retry on same HEAD succeeded."
+      }
+    },
+    "0.20": {
+      "F020-01": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "7b16aed6dbdf422cbea069adb4b240b8de4dc2c1",
+        "blender_run": 45698148477,
+        "scope": "Explicit bounded schema2 two-panel UI; grouped/mixed four-feature fixtures with two typed inputs, placement, RNA, native operators, refusal, registration rollback and cleanup on Blender 4.4.3/4.5.15/5.2.1. Existing schema1 panel preserved; arbitrary UI/types and real GUI not verified."
+      },
+      "F020-02": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc",
+        "blender_run": 45708363884,
+        "scope": "Fixed test-only nonempty diamond: requested 1 -> ordered 4 features, 5 unique parts; legacy and Extension executable payload equal after legacy metadata removal; same ZIP official validate, actual native register/reverse and controlled midpoint rollback, typed read/edit, cleanup, unchanged SHA on 3 versions. Reproduced narrower min/max mismatch rejected before build. Actual catalog edges remain empty; no arbitrary graph/code execution or semantic dependencies claimed."
+      },
+      "F020-03": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "1f8235589363e7ddbee89b6fff3599402e1d6aec",
+        "blender_run": 45722761515,
+        "scope": "R23 read/edit/grouped trusted generation and same ZIP official validate, isolated manual local repo bl_ext enable/draw/read/edit/disable; R24 fixed dependency closure/order/rollback and conservative manifest range rejection; R25 actual six-stage observations across three fixed recipes and Blender 4.4.3/4.5.15/5.2.1 (9 cases, 54 gates), strict case/version/run/SHA consistency and synthetic missing/failure/mismatch controls. Grouped same registered ZIP explicit ed.undo_push single/multi Undo/Redo, exact topology/selection/cancel and cleanup, unchanged SHA. Normal background Undo unavailable/Redo not_attempted; actual GUI, official installer, arbitrary inputs, authenticity, rights and distribution unverified. Scoped phase goals accepted, not full product completion."
+      }
+    },
+    "0.21": {
+      "F021-01": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "08f63ce8b4f9f045eb03675db5bb48c4031c6fa3",
+        "blender_run": 45750425757,
+        "scope": "Fixed repository-authored parameter fixture only: two FloatProperties, seven unchanged variants, static AST counts/API, actual RNA registration/readback, generated/reimported target changes and unrelated invariance, source/GLB/report digests, cleanup and parent run identity. Three Blender versions; actual sphere size diagnostic matched; bevel displacement does not prove a diagnostic cause. Nine A candidate/independent/push runs, 18 property matches, 63 GLB observations; specialist 9 native regressions separate. No general addon causality, authenticity, optimum, arbitrary execution, automatic application, adoption, or distribution."
+      },
+      "F021-02": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "ed7e2d828c4f4aee336d7129d9329c740c79b2f5",
+        "blender_run": 45768313332,
+        "scope": "Fixed repository-authored source fixture only; pinned original and candidate SHA, exact single-token sphere_radius default 0.75 to 1.15, isolated copy, actual three-stage RNA registration/readback, generated/reimported geometry, unrelated mesh invariance, exact reverse bytes, cleanup and same-job R26 references. A candidate/independent/push nine distinct runs, 27 new GLBs and 63 reference GLBs; three Blender versions. Windows actual checkout LF pinned; one unrelated R13 Windows failure passed unchanged retry, root cause unconfirmed. No general addon causality, optimum, arbitrary input or execution, auto-application, authenticity, legal approval, adoption or distribution."
+      },
+      "F021-03": {
+        "status": "scoped_milestone_accepted",
+        "verified_dev_sha": "d2b64cc27ec3741c0dada504bbda60163c82ba18",
+        "blender_run": 45784528324,
+        "scope": "Fixed repository-authored fixture only. Four fixed independent source candidates from pinned original, sole two-token cross-part negative control; per-trial original/candidate/restored native RNA, generated/reimported mesh, source/GLB SHA and exact inverse; same-job seven R26 reference GLBs, R27 evidence preserved. Generated/imported dimension scores 0.8 baseline, 1.2/0/0.4/0; reject target regression and protected-part regression even at zero error, intermediate virtual best then target stop. Nine distinct A candidate/independent/push runs: 540 callback observations, 108 new stage GLBs, 63 R26 reference GLB observations, 36 restored trials, 36 B/D budget-history comparisons; specialist 9 native jobs separate. Prefix replay is not physical early stopping; no arbitrary source, general equivalence, optimum, automatic application/adoption, authenticity, license or native failure injection claim."
+      }
+    }
+  },
+  "v020_transition_evidence": {
+    "date": "2026-11-26",
+    "verified_base_sha": "1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791",
+    "workflow_runs": {
+      "python": 45644535642,
+      "windows": 45644535499,
+      "blender": 45644535704,
+      "chromium": 45644535823,
+      "handoff": 45644535761,
+      "kit": 45644535523,
+      "skill": 45644535575
+    },
+    "pr25_draft": true,
+    "scope": "F019 scoped milestones 3/3 accepted; general/real model accuracy, native memory, physical defect classification and viewer remain incomplete. No release.",
+    "dispatch": "R23 candidate only; merge and independent seven CI plus #125 revision before implementation."
+  },
+  "v020_r23_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "7b16aed6dbdf422cbea069adb4b240b8de4dc2c1",
+    "workflow_runs": {
+      "python": 45698148532,
+      "windows": 45698148921,
+      "blender": 45698148477,
+      "chromium": 45698148381,
+      "handoff": 45698148674,
+      "kit": 45698148611,
+      "skill": 45698148654
+    },
+    "specialist_prs": {
+      "C": 164,
+      "D": 163
+    },
+    "combined_pr": 165,
+    "all_workflow_families": 22,
+    "retries": 0,
+    "native_jobs": [
+      139500883727,
+      139500884434,
+      139500883166
+    ],
+    "dispatch": "revision 15 paused; next assignment not issued",
+    "notion": "success 2026-11-26 JST existing page 410948b7-4937-8144-9462-ca76e9567e75, insert at start; no new page/private data",
+    "milestone_sync": {
+      "pr": 166,
+      "verified_dev_sha": "74458b072db5bf55090d3a85e275d40114a445a5",
+      "workflow_runs": {
+        "python": 45700815698,
+        "windows": 45700815565,
+        "blender": 45700815591,
+        "chromium": 45700815541,
+        "handoff": 45700815542,
+        "kit": 45700815896,
+        "skill": 45700815567
+      }
+    }
+  },
+  "v020_r24_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc",
+    "workflow_runs": {
+      "python": 45708363907,
+      "windows": 45708363838,
+      "blender": 45708363884,
+      "chromium": 45708363947,
+      "handoff": 45708363876,
+      "kit": 45708363916,
+      "skill": 45708364079
+    },
+    "specialist_prs": {
+      "C": 169,
+      "D": 168
+    },
+    "combined_pr": 170,
+    "final_workflow_families": 22,
+    "final_native_jobs": 12,
+    "final_retries": 0,
+    "initial_c_blender": "path filter omitted; meaningful UI regression added; final 5 succeeded",
+    "initial_d_reproduction": {
+      "head": "ee560372781f780db9886d49220a1a4c5ef143e4",
+      "python_run": 45704973518,
+      "expected_failures_per_python": 2,
+      "python_versions": 3
+    },
+    "native_jobs": [
+      139536058053,
+      139536058263,
+      139536058201
+    ],
+    "dispatch": "revision 17 paused; R25 not issued",
+    "notion": "pending milestone sync after verified docs integration"
+  },
+  "v020_r25_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "1f8235589363e7ddbee89b6fff3599402e1d6aec",
+    "workflow_runs": {
+      "python": 45722761380,
+      "windows": 45722761395,
+      "blender": 45722761515,
+      "chromium": 45722761433,
+      "handoff": 45722761411,
+      "kit": 45722761407,
+      "skill": 45722761464
+    },
+    "additional_push_blender": 45722754722,
+    "specialist_prs": {
+      "C": 174,
+      "D": 173
+    },
+    "combined_pr": 175,
+    "final_workflow_families": 22,
+    "additional_workflows": 1,
+    "final_native_jobs": 15,
+    "final_retries": 0,
+    "native_jobs": [
+      139584896572,
+      139584896865,
+      139584896896
+    ],
+    "push_native_jobs": [
+      139584871617,
+      139584872011,
+      139584872006
+    ],
+    "fixed_cases": 9,
+    "passed_stages": 54,
+    "initial_c": "all three legacy probe cleanup failed on transient None; corrected with view-layer update and fresh live objects",
+    "initial_d": "Blender path filter omitted; existing manifest diagnostic regression expanded",
+    "dispatch": "revision 19 paused; v0.21 and R26 not started",
+    "notion": "pending milestone sync after verified docs integration"
+  },
+  "v021_transition_evidence": {
+    "date": "2026-11-26",
+    "verified_base_sha": "972736be66515f558c2ba9ef07ba6c5947047118",
+    "workflow_runs": {
+      "python": 45725920249,
+      "windows": 45725920191,
+      "blender": 45725920198,
+      "chromium": 45725920203,
+      "handoff": 45725920193,
+      "kit": 45725920338,
+      "skill": 45725920526
+    },
+    "pr25_draft": true,
+    "scope": "v0.20 scoped milestones 3/3 accepted; GUI/normal Undo/installer/arbitrary source/rights/distribution unverified. Existing Notion synchronized. No release.",
+    "dispatch": "R26 candidate only; merge and independent seven CI plus revision 20 active before implementation."
+  },
+  "v021_r26_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "08f63ce8b4f9f045eb03675db5bb48c4031c6fa3",
+    "pr": 182,
+    "workflow_runs": {
+      "python": 45750425779,
+      "windows": 45750425767,
+      "blender": 45750425757,
+      "chromium": 45750425701,
+      "handoff": 45750425759,
+      "kit": 45750425706,
+      "skill": 45750425690
+    },
+    "extra_push_blender": 45750420669,
+    "specialist_prs": {
+      "B": 178,
+      "C": 180,
+      "D": 179
+    },
+    "candidate_head": "37306a81de4a0cd194e96488ff8cdf22b2540efb",
+    "candidate_blender": 45749196784,
+    "native_jobs": {
+      "candidate": [
+        139672618144,
+        139672617867,
+        139672618170
+      ],
+      "independent": [
+        139676607930,
+        139676607649,
+        139676607936
+      ],
+      "push": [
+        139676591449,
+        139676591483,
+        139676591031
+      ]
+    },
+    "source_sha256": "e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3",
+    "comparison_sha256": "e3d0645e759c1a2428d0b36315f59a68bdec492f996269a3f9d4675b6643a9b8",
+    "final_required_workflows": 27,
+    "extra_workflows": 1,
+    "native_jobs_total": 18,
+    "joined_runs": 9,
+    "joined_property_matches": 18,
+    "joined_glb_observations": 63,
+    "dispatch": "revision 21 paused; no automatic R27",
+    "scope": "Fixed repository-authored parameter fixture only: two FloatProperties, seven unchanged variants, static AST counts/API, actual RNA registration/readback, generated/reimported target changes and unrelated invariance, source/GLB/report digests, cleanup and parent run identity. Three Blender versions; actual sphere size diagnostic matched; bevel displacement does not prove a diagnostic cause. Nine A candidate/independent/push runs, 18 property matches, 63 GLB observations; specialist 9 native regressions separate. No general addon causality, authenticity, optimum, arbitrary execution, automatic application, adoption, or distribution."
+  },
+  "v021_r27_allocation": {
+    "date": "2026-11-26",
+    "verified_base_sha": "0b0418729295649c2cadd7bdacb1ca9fe8cfb64b",
+    "workflow_runs": {
+      "python": 45752209622,
+      "windows": 45752209655,
+      "blender": 45752209618,
+      "chromium": 45752209661,
+      "handoff": 45752209582,
+      "kit": 45752209700,
+      "skill": 45752209593
+    },
+    "pr25_draft": true,
+    "prior_milestone": 183,
+    "scope": "R27 fixed authored source only, exact SHA e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3. Change sphere_radius FloatProperty default 0.75 to 1.15 on a temporary copy; unchanged bevel default 0.08. Existing seven R26 variants remain unchanged; reference is existing sphere_radius_changed, not an optimized value. B exact single-token candidate/diff/reverse, C default readback and actual native original/candidate/restored GLB generation/import and cleanup, D strict evidence/rollback checks, A independent parent identity and fixed artifacts. No arbitrary source/paths/patch execution or approval. Formal dispatch required.",
+    "dispatch": "candidate only, revision 21 paused; allocation merge + independent seven CI + revision 22 active before implementation"
+  },
+  "v021_r27_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "ed7e2d828c4f4aee336d7129d9329c740c79b2f5",
+    "pr": 188,
+    "workflow_runs": {
+      "python": 45768313422,
+      "windows": 45768313401,
+      "blender": 45768313332,
+      "chromium": 45768313535,
+      "handoff": 45768313368,
+      "kit": 45768313348,
+      "skill": 45768313484
+    },
+    "extra_push_blender": 45768307034,
+    "specialist_prs": {
+      "B": 186,
+      "C": 185,
+      "D": 187
+    },
+    "candidate_head": "a5e5fcef4948afaf56b561e3c1dcc4c77b0a5d3a",
+    "candidate_blender": 45767477252,
+    "native_jobs": {
+      "candidate": [
+        139731768829,
+        139731768455,
+        139731768695
+      ],
+      "independent": [
+        139734541335,
+        139734541453,
+        139734541550
+      ],
+      "push": [
+        139734520045,
+        139734519568,
+        139734519875
+      ]
+    },
+    "source_sha256": "e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3",
+    "candidate_sha256": "edde3abe885bf40830052068fcdd6cab57d3d945fdccbc5f3625cff4594c72d7",
+    "final_required_workflows": 27,
+    "extra_workflows": 1,
+    "native_jobs_total": 18,
+    "joined_runs": 9,
+    "joined_new_glb_observations": 27,
+    "joined_reference_glb_observations": 63,
+    "windows_retry": {
+      "attempt": 2,
+      "failed_job": 139734541050,
+      "passed_job": 139736211570,
+      "artifact": 15093221147,
+      "test": "test_r13_windows_root_case_alias_canonicalizes_but_source_case_denied",
+      "observed": "inconclusive_reference_changed",
+      "expected": "stable_repo_bytes",
+      "root_cause": "unconfirmed"
+    },
+    "dispatch": "revision 23 paused; no automatic R28",
+    "scope": "Fixed repository-authored source fixture only; pinned original and candidate SHA, exact single-token sphere_radius default 0.75 to 1.15, isolated copy, actual three-stage RNA registration/readback, generated/reimported geometry, unrelated mesh invariance, exact reverse bytes, cleanup and same-job R26 references. A candidate/independent/push nine distinct runs, 27 new GLBs and 63 reference GLBs; three Blender versions. Windows actual checkout LF pinned; one unrelated R13 Windows failure passed unchanged retry, root cause unconfirmed. No general addon causality, optimum, arbitrary input or execution, auto-application, authenticity, legal approval, adoption or distribution."
+  },
+  "v021_r28_allocation": {
+    "date": "2026-11-26",
+    "verified_base_sha": "0e62d85f0c657f909ea3336d81378cf24ae2c42f",
+    "workflow_runs": {
+      "python": 45771553334,
+      "windows": 45771553321,
+      "blender": 45771553369,
+      "chromium": 45771553315,
+      "handoff": 45771553377,
+      "kit": 45771553314,
+      "skill": 45771553459
+    },
+    "pr25_draft": true,
+    "prior_milestone": 189,
+    "scope": "R28 fixed authored source only. Independent candidates from pinned original: wrong_direction sphere 0.55; cross_part sphere 1.15 + bevel 0.20 (sole two-token negative control); intermediate sphere 0.95; target sphere 1.15. Baseline sphere 0.75/bevel 0.08 and reference sphere 1.15/bevel 0.08. Per-trial isolated original/candidate/restored native stages, exact bytes/inverse, same-job R26 references, generated/imported target dimensional scores and exact protected-part summaries, strict improvement, veto, uncertainty, virtual best, max four attempts, budget prefixes and target stop. B pure evaluation, C actual source-copy/RNA/GLB, D independent evidence and replay, A parent join. Reuse R26/R27 and GLB-022 rules; no arbitrary code/source/values or actual adoption. Formal dispatch required.",
+    "dispatch": "candidate only, revision 23 paused; allocation merge + independent seven CI + revision 24 active before implementation"
+  },
+  "v021_r28_evidence": {
+    "date": "2026-11-26",
+    "verified_dev_sha": "d2b64cc27ec3741c0dada504bbda60163c82ba18",
+    "pr": 194,
+    "workflow_runs": {
+      "python": 45784528480,
+      "windows": 45784528566,
+      "blender": 45784528324,
+      "chromium": 45784528327,
+      "handoff": 45784528563,
+      "kit": 45784528476,
+      "skill": 45784528412
+    },
+    "extra_push_blender": 45784519573,
+    "specialist_prs": {
+      "B": 192,
+      "C": 191,
+      "D": 193
+    },
+    "candidate_head": "08b5004718b4b2d60eaf2e54e68323bf5c78cede",
+    "candidate_blender": 45782504442,
+    "native_jobs": {
+      "candidate": [
+        139781121267,
+        139781121606,
+        139781121493
+      ],
+      "independent": [
+        139787842022,
+        139787842150,
+        139787841605
+      ],
+      "push": [
+        139787810265,
+        139787810638,
+        139787810594
+      ]
+    },
+    "source_sha256": "e645723ff89a99530841e1ccd37ea8d059952eec0f980ac1782d8228e46588e3",
+    "candidate_sha256": {
+      "wrong_direction": "b8a70b569e5004a43842d31c6799bf13c18730b1a06a6a511691e720ec92566f",
+      "cross_part": "b029567c83fa1f1aaf527fd9d24e5fa864c1ec6d67c861e7940e814c69c8428f",
+      "intermediate": "8da8748483ec5c318bd951fee5766860fb7f4e4027e617227e6509527177db2a",
+      "target": "edde3abe885bf40830052068fcdd6cab57d3d945fdccbc5f3625cff4594c72d7"
+    },
+    "final_required_workflows": 27,
+    "extra_workflows": 1,
+    "native_jobs_total": 18,
+    "joined_runs": 9,
+    "joined_callback_observations": 540,
+    "joined_new_glb_observations": 108,
+    "joined_reference_glb_observations": 63,
+    "joined_prior_r27_glbs_preserved": 27,
+    "joined_restorations": 36,
+    "joined_budget_history_comparisons": 36,
+    "retries": 0,
+    "dispatch": "revision 25 paused; no automatic v0.22/R29",
+    "scope": "Fixed repository-authored fixture only. Four fixed independent source candidates from pinned original, sole two-token cross-part negative control; per-trial original/candidate/restored native RNA, generated/reimported mesh, source/GLB SHA and exact inverse; same-job seven R26 reference GLBs, R27 evidence preserved. Generated/imported dimension scores 0.8 baseline, 1.2/0/0.4/0; reject target regression and protected-part regression even at zero error, intermediate virtual best then target stop. Nine distinct A candidate/independent/push runs: 540 callback observations, 108 new stage GLBs, 63 R26 reference GLB observations, 36 restored trials, 36 B/D budget-history comparisons; specialist 9 native jobs separate. Prefix replay is not physical early stopping; no arbitrary source, general equivalence, optimum, automatic application/adoption, authenticity, license or native failure injection claim."
+  },
+  "v022_r29_allocation": {
+    "date": "2026-11-27",
+    "verified_base_sha": "9969c848f48b0c1be99a5c8c19bc032cf77a97f5",
+    "workflow_runs": {
+      "python": 45983042573,
+      "windows": 45983042767,
+      "blender": 45983042567,
+      "chromium": 45983042677,
+      "handoff": 45983042614,
+      "kit": 45983042541,
+      "skill": 45983042508
+    },
+    "integrated_pr": 196,
+    "verification_pr": 198,
+    "scope": "Fixed opt-in rotary preview only; B read-only evidence projection, C Blender integrated view and delegation to existing actions, D independent lifecycle/evidence validation, A joins. No default registration, arbitrary recipe/provider, new geometry solver, source or mesh commit, distribution, Windows GUI claim.",
+    "dispatch": "candidate only; rev25 paused; allocation merged + independent seven CI + rev26 active before specialist work"
+  }
+}

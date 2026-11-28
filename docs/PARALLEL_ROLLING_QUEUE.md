@@ -1,0 +1,497 @@
+# CBDK 並行開発 — 先読みキュー（A司令塔管理）
+
+**目的:** B・C・Dが現ラウンドを実装している間に、Aが次の仕事を用意する。Codex上限でも進行可能。仕様は暫定で、GitHubの現在のPR・CI・最新STATEが常に優先。
+
+## 現在の作業とゲート（2026-11-08 JST初版）
+
+- 基点: `work/v018-integration-bcd`、SHA `e445b12c9a66541ba13bfb10ee6bc0007078c24b`。初回統合候補 [PR #29](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/29) はドラフト未マージ。
+- **B：R2** `work/v018-glb-analysis-r2`、[PR #31](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/31)。境界エッジ数が同数でも穴の位置が違う合成GLBの対応判定。HEAD・CIは変わり得る。redならR2修正優先。
+- **C：R2** `work/v018-ui-builder-r2`。誤有効のUIと登録/解除失敗復旧。PRの有無・HEAD・CIを開始時に再確認。
+- **D：R2** `work/v018-extension-quality-r2`、[PR #30](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/30)。連結ZIP/ローカルヘッダー/extra/comment/provenance。TDD red phaseは想定内でも**完了とはみなさず**、最終の修正/成功まで担当を維持。
+- Aは各PR出現時に差分とCIを先行レビューし、必要なら独立 `work/v018-integration-r2` で緑の変更だけ先行検証。B/C/Dの開発を全員停止させて統合する必要はない。
+- 個別ブランチへのコミット/PR/CIの状態は変化する。**記載したPRを完成済みと自動判定しない**。
+
+## 先読み済み：R3候補（R2がgreenになった担当から）
+
+次の仕事は**1つだけ小さく選ぶ**。R2のテストが赤い間は新しいコード修正ではなく、R3負例の**読み取り専用設計**まで。R2成功時に、GitHubの現状と担当パスを再確認する。
+
+### B / NEXT-008：輪郭の違いを追加負例で測る
+
+- **目的:** 現行R2の境界レイアウト比較が、対称配置、穴の連結成分、細い切れ込み、再三角分割、スケール違いで不必要に同一判定/誤警告を出さないか検証し、最も重要な1種の見逃しに保守的な対応をする。
+- 先行成果: 自作GLBの正常/負例の表、現行R2の `suggested/ambiguous` と処理コスト。根拠なく「同じ輪郭=同じ部品」と判定しない。
+- 編集可: `cbdk/glb_*`、GLB専有テスト/fixture/文書。現行R2を壊さず必要最小差分。新パフォーマンス計測は予算/上限付き。
+- 新ブランチ候補: `work/v018-glb-analysis-r3`。R2 green後に **R2 HEADから分岐し、PR baseはR2ブランチ**。
+
+### C / UI-001・BUILD-001：失敗復旧とモード切替の反復回帰
+
+- **目的:** 現行R2で修正した読み取り専用のUI readiness判定が、再登録、mode切替、複数回の解除/再登録と、Sceneの他アドオン保有プロパティに対して誤って成功を表示・破壊しないか調べ、明確な負例を最小修正。
+- 先行成果: CBDK自作previewの反復登録/解除と foreign property 保護テスト。合成inject failureは本物のOOM/Windows GUIテストではないことを明記。
+- 編集可: UI-owned `cbdk/ui_layout.py`, `templates/modular_preview/`, UI固有テスト/文書。共通 `scripts/blender_modular_addon_smoke.py` はAへ変更要求だけ。既存5機能・6レシピ維持。
+- 新ブランチ候補: `work/v018-ui-builder-r3`。R2 green後にR2 HEADから、ドラフトPR baseはR2ブランチ。
+
+### D / EXT-001：manifest・公式validatorログの誤分類防止
+
+- **目的:** R2のZIP構造安全性とは別の **manifest/official validator観測** の未知/重複/矛盾したログが `complete_diagnostic_agreement=true` に誤昇格しないか、Blender 4.4.3・4.5.15・5.2.1の**合成データ**で比較する。
+- 先行成果: 有効な公式ログと拒否すべき合成ログを別々に保存（秘密/パス/自由入力値は記録しない）。R2の正常legacy/modular ZIPを拒否しない。
+- 編集可: `cbdk/extension_*`、Extensions専用Pythonテスト/文書。共通 `scripts/verify_extension_manifest.py`、CI YAML、STATE/HANDOFF/NotionはA管理。
+- 新ブランチ候補: `work/v018-extension-quality-r3`。R2 green後にR2 HEADから、ドラフトPR baseはR2ブランチ。
+
+## Aの仕事を常に先回りで進める
+
+1. 少なくとも各チームに「今の仕事＋次の仕事」が1件ずつあることを維持する（ただし次の仕事は未承認/未着手でもよい）。
+2. PRが提出されるたびにファイル差分・head SHA・CI・依存先を確認し、全員の完了を待たずレビューを開始。
+3. CIが赤い理由をTDD意図・回帰失敗・環境不良に分類。意図的なredを不正にmergeしない。
+4. 安全なgreenの成果だけ独立統合候補に反映して、結合後のCIを実測。元ブランチ/PRの履歴を勝手に書き換えない。
+5. 次のキュー項目を先に更新。R3からR4への指示もR3が進行している間に用意。
+6. Codexが利用可能なら複雑な独立問題だけを割り当て、利用不可でも工程を止めない。
+
+## 作業チャット共通の継続指示（次ターンにそのまま使う）
+
+> 現在の担当PRの実装・失敗修正・必要CIを完了し、HEAD SHA/未検証を記録してください。完了後は `docs/PARALLEL_ROLLING_QUEUE.md` の自チームの次の項目を読み、**現在PRがgreenかつ担当境界と依存が明確な場合だけ**、現在PR HEADからR3専用ブランチを作り、R2ブランチ宛てのスタックされたドラフトPRを提出してください。green未達なら現在PRの修正を優先し、R3は設計のみ。Codex不要、共有STATE/Notion/mainや他担当ファイルを変更せず、実際のテスト結果と未確認を必ず分けること。
+
+このキューをもとにAは次サイクルで実測や優先度を更新する。手順の正本は[PARALLEL_DEVELOPMENT.md](PARALLEL_DEVELOPMENT.md)。
+
+
+## 更新 2026-11-08 JST — R2統合検証とR3実装進捗
+
+- [R2統合PR #33](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/33): `23f002eafa86b431cbf379990f09b8d165d9eb18`、各R2の12変更ファイルを含む結合コードで**Python・Windows・Blender3版・Chromium・handoffの5系統成功**。個別PR #30/#31/#32は引き続きドラフト・未マージ。
+- [Aの最新版開発ブランチ向け統合候補PR #37](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/37): 初回R1とR2の累積21ファイルを最新のv0.18ドキュメント/スキル正本に合成。候補SHA `3dde041a8a487a59714fc1cff34cb2d6dc6f16c1`。**この候補自身の全CI結果を別途確認すること**。旧コードとR1/R2の合格は新SHAの検証を代替しない。
+- [D R3 PR #34](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/34): validatorの未知/矛盾/重複ログを保守的に拒否。新規テスト後のCIを確認し、redなら修正優先。
+- [B R3 PR #35](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/35): 同数境界の接触/非接触コンポーネント差異。レビュー専用、構造の真の同一性は未証明。
+- [C R3 PR #36](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/36): foreign Sceneプロパティ保護、UIモード切替、登録解除反復の負例。
+- R3はすべてR2への**スタックされたドラフトPR**であり、この段階ですでに各担当の追加PR上限1件を使用。**Aがスタックを解消し、次の基点とPR baseを再指定するまでは、R4の新ブランチ/PRを作らないこと。** B/C/Dは以下のR4を設計・調査するだけなら進行可。
+
+## 先読み済み：R4候補（設計のみ・着手ゲートあり）
+
+### B / NEXT-008：境界部品対応の計算予算と実用性
+
+- **現行R3を尊重:** 境界グラフの connected-components 値は局所的なレビュー信号で、部品の同一性/穴の物理的存在を証明しない。
+- **候補:** 自作合成GLBの複数部品で、256辺上限・512面上限・微小隙間・再三角化・相似スケールの組合せを設計し、時間・メモリ予算超過を安全に ambiguous とすることを確認。既に検出済みの差分に新しい理由コードを増やさない。
+- **受け入れ条件:** R3の判定を壊さず、負例/正例/上限超過の再現可能な入力と処理コストを記録。1つでも実際の見逃しが再現した場合のみ最小修正。新しい座標・実データの公開は禁止。
+- **所有:** `cbdk/glb_*`、GLB専用テスト/合成fixture/専用文書。共有CLI、CI、STATEはA管理。
+
+### C / UI-001・BUILD-001：生成UI宣言と実動作の整合
+
+- **現行R3を尊重:** foreign property 保護・mode snapshot・register/unregister失敗復旧を維持。助言UIと実operator成功を混同しない。
+- **候補:** 既存5機能/6レシピの declarative UI plan → 生成プレビュー → 実Blender実行で、無効コンテキスト時の disabled 理由と実operatorの拒否結果が矛盾しないか調査。あわせて登録と解除を反復して他アドオン保有プロパティを破壊しないことを確認。
+- **受け入れ条件:** 既存5機能/6レシピを維持し、空mesh/複数data/mode変更/失敗注入の各負例が通る。headless Blenderは人間のWindows GUI操作確認ではない。
+- **所有:** `cbdk/ui_layout.py`、`cbdk/modular_builder.py`、`templates/modular_preview/`、UI専用テスト/文書。共通 `scripts/blender_modular_addon_smoke.py` の追加はAに依頼（勝手に編集しない）。
+
+### D / EXT-001：安全診断の互換性と正常入力の維持
+
+- **現行R3を尊重:** 公式validatorログの未知/矛盾は未分類として安全側に倒す。Blender版ごとの無害な行だけを許可し、入力値・パス・秘匿キーをレポートに出さない。
+- **候補:** legacy/modularの有効な自作ZIP、問題のない合成manifest/officialログを使った正例を追加し、R2の構造拒否とR3の未知ログ拒否が**正常プレビューを誤って拒否しないか**を優先的に確認する。
+- **受け入れ条件:** 壊れたZIP/未知ログはfail-closed、有効入力は従来の`blocked_for_extension_release`（公開準備未完了）を維持。実部品ライセンスや真正性を自動承認しない。
+- **所有:** `cbdk/extension_*`、Extensions専用テスト/文書。共有公式validator fixtureスクリプトはAに変更要求だけ。
+
+### 司令塔Aの並行タスク
+
+1. PR #37の全CIと21ファイル累積差分を照合し、開発本流への統合可否を別途判断。個別PR #26〜32の**二重取り込みはしない**。
+2. R3 (#34/#35/#36) は**各PRの厳密なHEAD SHA**でCIを確認し、赤い状態が解消されたら独立したR3結合候補で検証。#37の固定基点や専門R2/R3を無断force-pushしない。
+3. その後、スタックされたR3の統合方式を確定し、R4を編集可能にする新基点SHAを通知。**上記R4はAの通知までは設計のみ**。
+4. v0.18の未検証GUI/実ユーザーGLB/ライセンス/正式Extensions、v0.19以降の未有効条件を維持。Codexが上限でもこの運用は止めない。
+
+
+## 2026-11-08 JST — A統合完了・R4実装への切替指示（旧ゲートより本節優先）
+
+- AがR1〜R3の開発コードを統合：**[PR #38](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/38) merged**、開発コードSHA `12ddcfeef935a805f7316ffb3698c141328aac88`。このコミットの7CI系統（Python897件×3版、Windows、Blender3版、Kit、Chromium、Skill、Handoff）は全成功。正式`main`やv0.17.0リリースは変えていない。
+- **R4新基点**: `feature/v0.18-shape-diagnostics` の**着手時点の最新HEAD**を確認し、`12ddcfeef935a805f7316ffb3698c141328aac88` が祖先であることを確認する。正本更新のため、後続のdocs-onlyコミットが増えてもその最新HEADから分岐する。古い統合実験 `work/v018-integration-bcd` やR2/R3専用ブランチからR4を始めない。
+- R4ブランチ: B `work/v018-glb-analysis-r4`、C `work/v018-ui-builder-r4`、D `work/v018-extension-quality-r4`。それぞれ **base `feature/v0.18-shape-diagnostics` のドラフトPR**。追加R4 PRは1担当につき1件、担当外ファイルを編集しない。
+- **旧PR #26〜37はPR #38によってコード内容が統合済みの履歴資料**。勝手に二重merge/force-push/closeしない。旧スタックを新規R4作業の基点にはしない。Aの明示的な新基点割り当てにより、旧R3の「追加1件」は新サイクルへ持ち越さない。
+- R4の具体的なB/C/Dタスクと負例・受け入れ条件は直前の「先読み済み：R4候補（設計のみ）」節を使用。本節により**設計のみの制限を解除**する。ただし実装時は最新`STATE.json`/担当パス/PR依存を読み直し、未検証の実データ・GUI・ライセンスを自動で完了扱いしない。
+- Codexが利用不可でも専門チームの小実装とPython/Blender/Windows CIを続ける。共通STATE/HANDOFF/Notion/共通CI、`main`、正式公開はA/所有者の別ゲート。
+
+
+## 2026-11-08 JST — A R4統合結果・R5割当（post-merge CIゲート付き）
+
+**R4統合記録:** AがB [#41](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/41) HEAD `e94febeb557be52474d5c17a08271d164cbef2d6`、C [#42](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/42) HEAD `ae6ad0b77feafc5db052eb658538adf5ec50691d`、D [#39](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/39) HEAD `f0fa73531ad3892040f5f01a64cb110fdb80e6b8` の各5系統CI成功を確認。11ファイルはチーム間で重複0。A統合候補 [#43](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/43) HEAD `667f2e4c9e4ad4b4e2b026c7fe1fd2464d2ca957` のPython3版、Windows2版、Blender3版、Chromium、Handoffの**5系統すべて成功**を確認した上で、v0.18開発ブランチにsquash merge済み。**統合コミットSHA: `a9a0a76a963ab4ae41b68126f419546b80871e2b`。** `main`、公開版v0.17.0、旧PR #26〜42は変更しない。
+
+**重要な追加ゲート:** 上記CIはPR #43の結合HEADでの実測。squash統合後SHA `a9a0a76...` に対する7系統（Python、Windows、Blender3版、Chromium、Handoff、Kit、Skill）の**別のpush CIが成功したことをAが確認した時だけ**、下記R5着手許可を有効化する。これが未確認・赤の場合、B/C/DはR5設計/fixture調査のみ。Aは不足ジョブを確認し失敗を修正する。
+
+### R5担当と受け入れ条件（#40の設計を正式キュー化する候補）
+
+- **B / NEXT-008:** 既存の256境界・512面上限前後、面/部品順序入替と微小座標摂動で、判定の決定性・予算超過時の安全な`ambiguous`を検証。まず合成負例を再現し、再現した場合だけ最小修正。許可: `cbdk/glb_*`、GLB専用テスト/fixture/文書。共通スクリプト・STATE・CIはA所有。実GLB同一性・物理穴の証明は禁止。
+- **C / UI-001・BUILD-001:** 生成previewの登録→mode変更→operator拒否→解除→再登録の反復と、foreign Scene property維持をBlender実機で追加観測。Python mockと実Blender/GUIを区別し、既存5機能/6レシピを維持。許可: `cbdk/ui_layout.py`、`cbdk/modular_builder.py`、`templates/modular_preview/`、UI専用テスト/文書。共通 `scripts/blender_modular_addon_smoke.py` の更新はAへの変更要求（直接編集しない）。
+- **D / EXT-001:** R4の正常ZIP正例を保持しつつ、公式Blender 3版の既知validator出力と未知/矛盾ログの安定した区別・サニタイズの回帰を拡充。観測された誤分類がなければ製品コードに変更を加えない。許可: `cbdk/extension_*`、Extensions専用テスト/文書。共有validator/CIはA所有。正式Extensionの配布/権利承認なし。
+
+### R5作業ゲート・ブランチ指示
+
+1. Aが最新GitHubの `feature/v0.18-shape-diagnostics` HEADと、`a9a0a76a963ab4ae41b68126f419546b80871e2b` が祖先であることを確認。Aのdocs-only更新が後続にある場合は**新しい最新HEAD**を起点にする。旧R2/R3/R4のHEADから分岐しない。
+2. post-mergeの実行済み7系統CIが成功し、各担当のR4 PRがgreenであることを確認後に着手。R5案は各担当1タスクだけ、追加未統合PR上限1件、Codex不要。
+3. B: `work/v018-glb-analysis-r5`、C: `work/v018-ui-builder-r5`、D: `work/v018-extension-quality-r5`。いずれも新しい開発HEADから作成、ドラフトPRのbaseは `feature/v0.18-shape-diagnostics`。依存を跨ぐファイル変更/共有スモークはAに報告。
+4. Python3版/Windows2版/Blender3版・Chromium・Handoff、および変更内容に必要なKit/Skillを**各R5厳密HEADで**実測し、失敗/中止/未実行を明確に分ける。合成fixture、実GUI、私有GLB、権利、公開に関する未検証を保持。
+5. AはB/C/D稼働中にR6負例/受け入れ条件を先読みで設計し、R5 PRの差分・CIを先行レビュー。R5はv0.18開発ブランチ内のみであり、mainマージやv0.19有効化を意味しない。
+
+
+## 2026-11-08 JST — R5統合完了・R6ローリング正式割当（post-merge CI確認後に実装可）
+
+- **R5実装統合:** B [#47](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/47) `0d388155bf5c10e6dc76b1c73b51dc7d04adfc80`、C [#48](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/48) `c56b64178798796e5c1e8bbb9e4f57ccf09bb95e`、D [#46](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/46) `a86ebdb74dfb099398dd96fe8a5c03de99465a25`。各独立5系統CI全成功、専門領域9ファイルの重複0。
+- A統合 [PR #49](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/49)：A所有Blender CIにCの新しい実機R5ライフサイクル検証を追加。**初回統合HEAD `b300e74356848ffbd9131c2c0d651991f7c10cbf` はBlender3版で失敗**（パネルの無効ボタンが非表示になるというテスト誤認）。実際は無効表示なのでテストのみ修正。**修正HEAD `106bf2504923346ac4cd25b51ebaaa87da9e7d7b` に対するPython/Windows/Chromium/Handoff/Blender3版の5系統すべて成功**。各Blender版で新設 `CBDK_R5_UI_LIFECYCLE_PASS` を確認し、R5をv0.18開発ブランチへsquashマージ。**統合コードSHA `a1c2f84715acce1f8cd33abaf003556708c13c07`**。旧R1〜R4 PR再取り込み禁止、main/正式v0.17.0変更なし。
+- **R6実装許可の追加ゲート:** 上記統合後コードSHA `a1c2f847...` で、独立したpush CI **7系統**（Python3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1、Chromium、Handoff、Kit、Skill）がすべて実行完了・successしたことをAが確認した場合にだけR6着手可能。それ以前やCI赤の場合はR6設計・レビューのみ。PR #49の5系統成功を統合後7系統の代替にしない。
+
+### R6担当タスク（既存安全境界・失敗再現優先）
+
+- **B / GLB NEXT-008**: 境界256辺でR4に約数百msの観測があったため、厳密に同一な無向境界線分の**安全で上限付きの署名による高速経路**を設計/測定し、R2空間距離・R3連結成分ガードを絶対に省略しない。微小摂動・向き/順序入替・再三角化・スケール・255/256/257辺・64部品512面の合成対照で、誤一致/性能悪化がないか先に再現。明確な改善がなければ実装せずテスト/文書のみ。`auto_apply=false`、実部品同一性未証明を維持。所有 `cbdk/glb_*`、GLB専用tests/fixtures/docs。共有CI/スモークはA。
+- **C / UI-001・BUILD-001**: R5でBlender3版実機合格した登録/解除とScene所有権を起点に、CBDK自作生成previewのモジュール再読込、descriptor入替、継承/影プロパティ、登録途中の明示的失敗、モード切替・共有mesh時の拒否を**実Blenderで**追加検証。外部アドオンを実行せず合成foreign宣言のみを使う。UI5機能/6レシピ保持、操作不可で変更・登録漏れ・foreign削除0。GUI/Undoホットキー未検証。所有 `templates/modular_preview/`、`cbdk/ui_layout.py`、`cbdk/modular_builder.py`、C専用tests/docs。共有 `scripts/blender_modular_addon_smoke.py`/CIはAに依頼。
+- **D / EXT-001**: 既存公開停止フラグを維持し、CBDK自作7正例ZIPとともにZIPの総容量16MiB/各要素2MiB/64要素、および公式ログ200,000文字上限前後・不正局所/中央記録/未知/重複/矛盾出力の合成負例を厳密に評価。誤判定・過剰CPU/メモリ・値やパス漏洩が再現された場合のみ最小修正。公式出力許可リストを憶測で緩めない。所有 `cbdk/extension_*`、D専用tests/docs。共通validator/CI/STATEはA。
+
+### R6ブランチと統合条件
+
+1. **7系統CIの事後確認が成立した後のみ**、着手時の最新版 `feature/v0.18-shape-diagnostics` HEADを取得して、`a1c2f84715acce1f8cd33abaf003556708c13c07` の子孫であることを確認。R6作業を旧R5 PR #46〜49のHEADから始めない。Aの共有docs更新が先に入った場合はその後の最新HEADを優先。
+2. B: `work/v018-glb-analysis-r6`、C: `work/v018-ui-builder-r6`、D: `work/v018-extension-quality-r6`。1チーム1専用ブランチ・未統合追加ドラフトPR最大1件。baseは `feature/v0.18-shape-diagnostics`。
+3. 担当パス外変更禁止。実測Python 3版、Windows 2版、Blender 3版の実ジョブ、Chromium、Handoff、必要なKit/Skillと**R6専用の新規負例が実際に走ったか**を分けて報告。共有スモークを追加する必要があれば先にAへ依頼。個別CI成功は結合CIではない。
+4. B/C/D稼働中にAがR6 PR先行レビュー・競合とCI資源を点検しR7を設計する。実ユーザーGLB、実Windows GUI/Undo、ライセンス、正式Extension発行、private data、main、v0.19以降のゲートは従来のまま。Codexは任意、なくても停止しない。
+
+
+## 2026-11-08 JST — R7正式割当（R6統合後7CI検証済）
+
+R6 B [#54](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/54) `0c2936874c9759242d262512685ec616705993f4`、C [#55](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/55) `4624c83c1161c4a26761f92494a8ab96743bd47a`、D [#53](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/53) `d6263f4dc8029930ddfe76d647e984059a5ee846` は各5系統CI成功（Kit/Skillは未実行）。Aが専用統合PR [#56](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/56)を作成し、候補初期HEAD `7400516a9ab8230eda60a0daea8141e0c03c2844` でB4/C5/D3の12ファイルを結合した。**上記ゲートは実測通過済み。** 本節のR7タスクは正式に割当済み。各チームは開始時に最新dev HEADとR6統合SHA祖先関係を再確認して、担当専用ブランチ・ドラフトPRを1件だけ作成する。
+
+**正式発効の検証記録:** AがR6統合PR #56の正確な候補SHA `7400516a9ab8230eda60a0daea8141e0c03c2844` の5系統全成功を確認してdevへsquash merge、**統合コードSHA `e2f09e593d9c7bdff66695c7e8972eea98e160ca`** でpost-mergeの**7系統全成功**を別途確認：[Python #42410463309](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463309)、[Windows #42410463276](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463276)、[Blender 3版 #42410463269](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463269)、[Chromium #42410463349](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463349)、[Handoff #42410463353](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463353)、[Kit #42410463251](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463251)、[Skill #42410463244](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42410463244)。R7作業はこのR6統合SHAの**子孫である着手時点の最新 `feature/v0.18-shape-diagnostics` HEAD**から開始する。Aによるキュー統合・節目文書追記でHEADが進んだ場合はその新しいHEADを優先し、R6の旧個別PRから分岐しない。
+
+### R7候補・所有範囲
+
+- **B / NEXT-008（GLB-fastpathの負例強化）:** R6の厳密無向線分署名高速経路で、同数線分の分割位置変更、同じ輪郭に異なる連結構造、near-degenerate/zero-length、端点のfloat32量子化、64部品の重複motif、255/256/257辺の分岐と負荷を合成データで調査。R2双方向距離fallbackとR3境界連結チェックの実行を明示証明。誤一致/超過負荷が再現した場合に限り最小変更。速度倍率は合成matcher局所の観測であり実GLBへの汎化なし。 `auto_apply=false`、`cross_file_part_identity_proven=false`維持。担当 `cbdk/glb_*`・GLB専用test/docs、共通CIはA。
+- **C / UI-001・BUILD-001（ネイティブ登録失敗回復）:** 部分的なoperatorクラス登録失敗後にScene宣言が欠落/外部差替されたとき、reload/enable-disableを繰り返してもCBDK所有物の漏れやforeign削除がないことをBlender 4.4.3/4.5.15/5.2.1の**実機ジョブで実測**。C自身の `tests/blender_ui_lifecycle_r5.py` にR7マーカー追加可能（既存A共通CIの実行を維持）。生成プレビュー5機能6レシピ、fail-closed、入力不変。第三者実アドオン/Windows GUI/Undoホットキーは未検証のまま。担当 `templates/modular_preview/`・C専用test/docs、共有CI/STATEはA。
+- **D / EXT-001（TOMLレビュー上限）:** 現状の静的TOML manifest reviewの32KiBファイル/64項目周辺、UTF-8不正、入れ子/重複/未知キー、出力先symlink/逸脱のケースをCBDK自作合成データだけで検証。正常な固定ZIP preview 7例とBlender公式validator既知ログ正例を維持し、値・private path/maintainer等を漏らさない。未確認ライセンス・所有者・署名/公開を新たに承認しない。不具合を再現するまではテスト/文書のみ。担当 `cbdk/extension_*`・D専用test/docs、validator共有script/CI/STATEはA。
+
+### R7正式許可に必要なAの確認
+
+1. R6統合PR #56の**正確な最後のHEAD**でPython3/Windows2/Blender3/Chromium/Handoffが成功。特にCの新規R6ネイティブマーカーをBlender3版の実際のジョブログで確認。途中失敗・未完了・skipを成功と誤記しない。
+2. R6の結合コミットだけを `feature/v0.18-shape-diagnostics` へ統合。旧R1〜R6個別PRは歴史参照として二重マージしない。開発SHAの**post-squash 7系統CI（Kit/Skill含む）**が全成功。
+3. Aが最新開発HEAD SHA（R6統合後およびこのdocs-only変更の後続を含む）とR6統合コミットの祖先関係を確認し、R7の基点を正式確定。B `work/v018-glb-analysis-r7`、C `work/v018-ui-builder-r7`、D `work/v018-extension-quality-r7` はそこで初めて作成。各専用draft PRは未統合最大1件。
+4. Codexは任意。privateソース/GLB、main、正式v0.17.0、将来v0.19有効化、Windows GUI、ライセンス/正式Extensions配布は触らない。AはR6節目STATE/生成Handoff/PROGRESS/既存Notionを追って同期し、R7開発中R8を先読みする。
+
+
+## 2026-11-08 JST — R7統合完了・R8ローリング正式割当（post-merge 7CI成功確認済み）
+
+- **R7入力:** B [PR #61](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/61) 最終 `182ae87a47ddd127c3ef1a2afc3c1ce502880722`、C [PR #62](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/62) 最終 `eef6bcea675f3198a19d9aea973c7dbeecf4e814`、D [PR #60](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/60) 最終 `040036c785d47229f735342352a2881157bd36ed`。各担当の5系統CI全成功、11ファイル重複0。
+- **重要な失敗と修正:** Bの初期テスト専用SHA `fff82a6d67e6b531d5f9da6244a3e91bc1f5522d` でゼロ長境界線分がR6 exact fastpathに誤って流れるケースを再現（Python負例失敗）。Bが生産matcherに厳密な正長ガードを追加し、ゼロ長時はR2保守的fallbackを使用、R3独立連結ガードは維持。実ユーザーGLBの穴位置/部品IDを証明しない。
+- **A結合:** [PR #63](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/63) 候補HEAD `52dea171587888be2c26045808bbaf24a76bee7c` にB4/C4/D3件を正確に取り込み、[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415247)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415263)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415266)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415159)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413415103) の5系統全成功を確認。R7開発統合コミット `687b2acdc920253d69eda8c5e9c1c102d02aaef3`。
+- **R8実装許可ゲートは確認済み:** R7開発統合コミット `687b2acdc920253d69eda8c5e9c1c102d02aaef3` に対する**別系統のpush CI全7系統success**：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646111) 3.11/3.12/3.13、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646149) 3.11/3.13、[Blender 3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646135) 4.4.3/4.5.15/5.2.1、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646129)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646222)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646126)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42413646165)。統合候補#63の5系統とは厳密に別に確認した。**本PR #64がv0.18開発ブランチにマージされ次第、R8正式実装可。**
+
+### R8候補 — B / GLB NEXT-008
+
+R7のゼロ長誤一致を修正済みのmatcherを基点に、最悪O(256²)の**非厳密一致時のR2双方向線分距離fallback**が安全な限定フィルタで早くなるかを合成ベンチマークで検証。セグメントbbox・距離下界などの候補除外は「R2許容範囲内の真陽性を一切捨てない」ことを先に数学的/負例で示し、形状が複雑/近接/非有限/退化した場合は元R2へfail-closed fallback。retriangulation、同一境界で異なる内部形状、near-notch、float32量子化、255/256/257辺、64部品・512面で差分辞書一致と測定。実測利得が無ければテスト/設計のみ（必ずしも本体実装を要求しない）。`auto_apply=false`、`cross_file_part_identity_proven=false`、R3グラフ検証と予算保持。担当 `cbdk/glb_*`・GLB専用tests/docs。共有CIや他担当に変更が必要ならAへ。
+
+### R8候補 — C / UI-001・BUILD-001
+
+R7のBlender実機・登録途中fail-closedを基に、**unregister_class途中の人工的失敗**、Scene property差替後のcleanup再試行、enable/disable・モジュールreload反復においてCBDK所有クラス・登録済みSceneを漏らさないか検証。加えてCBDK自作プレビューの編集operatorが検証/例外でキャンセルされた場合の**入力mesh/selection/modeの不変性**をheadless Blenderで計測。実際に再現した不具合のみ担当範囲で最小変更。R7の4つの `native_r7_*` markerを残し、R8専用マーカーをBlender3版の実ジョブで観測（`tests/blender_ui_lifecycle_r5.py` の既存呼び出しを活用）。5機能/6レシピ保持。GUI Ctrl+Z実機確認や第三者Addon実併用は未検証。担当 `templates/modular_preview/`、C専用test/docs、A管理の共通smoke/CIは変更禁止。
+
+### R8候補 — D / EXT-001
+
+CBDK自作fixtureのみを使い、**ビルド形式の妥当性、公式validator結果、作者の同意、SPDX/再配布権限、公開承認を独立した証拠**として保持する静的provenance判定の負例を設計・テスト。TOMLでの64項目はトップレベルに限る既存実装、32KiB byte予算、過度な入れ子・相反するログ・ZIPパス・manifestの不明な権利主張などで、`blocked_for_extension_release` を誤って解除しないことを検証。正式パッケージの署名や実インストールを捏造せず、未承認コードを実行しない。安全性の欠陥が観測されるまでは本体修正せずデータだけのtests/docs。担当 `cbdk/extension_*`・D専用tests/docs。公式validator共通CI/STATEはA管理。
+
+### ローリング規則
+
+1. **R7 post-merge 7CI実測合格後、Aがこの割当PRをマージしたときにR8正式有効。** BCDは着手の瞬間に最新の `feature/v0.18-shape-diagnostics` のHEAD SHAを取得し、`687b2acdc920253d69eda8c5e9c1c102d02aaef3` の子孫であることを確認。#60〜63や旧R7ソースSHAから再利用・スタック禁止。
+2. B: `work/v018-glb-analysis-r8`、C: `work/v018-ui-builder-r8`、D: `work/v018-extension-quality-r8`。各チーム未統合の追加ドラフトPR最大1件。targetは `feature/v0.18-shape-diagnostics`、担当専用ブランチと変更所有範囲を守る。共有STATE/Handoff/PROGRESS/Notion/CI/mainはA担当。
+3. Python/Windows/Blender3版の正確なHEAD CIを新規負例が**実際に走ったか**まで確認。個別成功とA結合成功、統合後7CIは別ゲート。Codexが使えなくても継続、基点・依存や所有権が不明なら実装せずAに設計を報告。
+4. 実ユーザーGLB、Windows GUI/Undoホットキー、第三者アドオン実併用、正式Extensionsの所有権・権利・ライセンス・公開許可、`main`と正式v0.17.0は引き続き承認待ち。R8はv0.18開発ブランチの範囲に限定。
+
+
+## 2026-11-08 JST — R8統合完了・R9ローリング正式割当（post-merge 7CI成功）
+
+**正式許可ゲート検証済み:** A R8結合 [PR #73](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/73) はB/C/Dの13ファイル（担当重複0）を候補HEAD `f5fd6585488e7d69501caf2ed48c54ec81e0cc2a` に集約し、Python/Windows/Blender3版/Chromium/Handoffの5系統success（新規 `native_r8_*` 5項目を各Blender実機ジョブログで確認）。v0.18開発ブランチへsquash SHA **`ded947f85f46fb8cce0943314d6e1a9fb41717ef`** として統合後、**独立した7系統CIもすべてsuccess**：[Python #42419734167](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734167)、[Windows #42419734210](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734210)、[Blender3版 #42419734261](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734261)、[Chromium #42419734226](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734226)、[Handoff #42419734193](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734193)、[Kit #42419734233](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734233)、[Skill #42419734172](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42419734172)。**本PR #74を開発ブランチにマージした時点でR9が正式に有効**。着手時点の最新版dev HEADを利用し、旧R8個別PRを再マージしない。
+
+- B [#66](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/66) 正確なソースSHA `0c81b10cf1010b967b3a9b8dd8fd572dbf2b010c`、4パス、個別5系統CI success。R8のR2 AABB事前棄却はpadded 2tで非厳密R2の安全な最適化、同じ数学的R2結果を元のunpruned scannerと合成テストで比較。少数のmatcher局所性能測定を実GLB全体性能に拡大解釈しない。
+- C [#70](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/70) 正確なソースSHA `07a742f124bda35d3474be45a461eef48df64d64`、6パス、個別5系統CI success。native headless Blender3版で5つの `native_r8_*` の実行確認が必要。
+- D [#67](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/67) 正確なソースSHA `a8f1b28204f88169e0a581939b5114fc570a47c7`、3パス、個別5系統CI success。自作合成fixtureのZIP構造・validator観測・著作権/再配布/配布許可を分離し、根拠なき承認を阻止。
+- R8統合時の本体変更はBの保守的GLB prefilterが中心。C/Dは合成・ネイティブの安全回帰を主とする。実GLB・Windows GUI・第三者実Addon・正式Extensions公開の証拠にはならない。
+
+### R9 B：GLB（安全なR2 AABB最適化の「効かないケース」を可視化）
+
+- **目標:** 256辺密集・重複motif・near-coincident/float32許容境界・非多様体near-weld/退化線分など、R8のbbox候補除外が利得を得られない／誤棄却しやすい条件を先に計測。R8の**全結果辞書と強制unpruned R2の一致**、R6 exact/R7ゼロ長guard/R3独立連結成分判定、256辺/64部品/512面の上限とfail-closedを維持する。
+- 複雑なAABB事前計算や小型空間インデックスは**数学的にsafeで測定利益と予算を実測できる場合のみ**試作し、利得なしなら回帰テスト・性能記録だけ提出。メモリ消費・Python 3バージョン差を測定。ユーザーGLBによる精度/物理的穴位置/部品同一性の主張、`auto_apply`は引き続き禁止。担当はB所有の `cbdk/glb_*`、GLB専用tests/docsのみ。
+
+### R9 C：Blender UI（Scene削除失敗と登録解除の再試行）
+
+- **目標:** R8でクラスの `unregister_class` 失敗を試験できたので、今度は**クラス正常detach後のScene RNA属性削除だけを人工的に失敗させる**負例をCBDK自作fixtureで追加。cleanup ledger/tokenを欠損/誤消去せず、live reload拒否・foreign Scene property保全・再試行解除・新規登録の衝突拒否がBlender 4.4.3/4.5.15/5.2.1ヘッドレス実CIで成立するかを確認。
+- 新規 `native_r9_*` 固有マーカーで3版実行を確認。問題が再現する場合のみ最小本体修正。R7/R8既存マーカーと5機能/6レシピを壊さない。合成失敗テストを「Windows GUI Ctrl+Z保証」「実第三者Addon併用保証」と取り違えない。担当は `templates/modular_preview/`、Cのtests/docs。A管理CI・STATE等は触らない。
+
+### R9 D：Extensions（自己申告hashの整合性とソース真正性の差）
+
+- **目標:** CBDK自作の既知ZIPを使用し、(a) 1部だけ変更してSHAを更新しない不整合、(b) 変更後にアーカイブ `files_sha256` と対応するsource SHAを**両方更新して自己整合にしたZIP**を合成。前者は静的構造/ハッシュ不整合としてfail-closed、後者は自己整合を認めても**真正性・作者同意・再配布/公開承認を絶対に昇格しない**ことを証明。
+- ZIPの構造安全性、固定7件positive、実Blenderの合成official validator正例、未知/矛盾ログの保守的処理を保持。新しい未知コード実行や実Addonインストール、私有ソース・個人path使用は禁止。観測した不具合のみD所有 `cbdk/extension_*` で最小修正。その他D専用test/docs。
+
+### ローリングR9の安全規則（本PR #74統合後に正式発効）
+
+1. R8結合#73の正確なHEAD 5系統とdev squash SHA `ded947f85f46fb8cce0943314d6e1a9fb41717ef` の独立7系統は**既に全success確認済み**。本PR #74を正式統合した後のみ、R9担当専用ブランチを作成可能。
+2. 着手の瞬間に最新 `feature/v0.18-shape-diagnostics` HEADを読み、**R8統合SHAを祖先に持つこと**を確認。B `work/v018-glb-analysis-r9`、C `work/v018-ui-builder-r9`、D `work/v018-extension-quality-r9`。各自の未統合追加ドラフトPRは最大1件。旧B #66/C #70/D #67をstack/再マージしない。
+3. 担当専用ファイルのみ変更。共有 `STATE.json`・Handoff・PROGRESS・Notion・共通CI・mainはA管理。新負例が実際のCIで実行されたか検証し、未実行をgreenと扱わない。Codex不在でも継続。
+4. 実ユーザーGLB、実Windows GUI/Undo、第三者Addonとの実共存、作者/ライセンス、公式Extensions公開、main、正式v0.17.0はすべて別承認。上記の正式統合前はR9実装禁止。
+
+
+## 2026-11-08 JST — R10 プレ設計 — R9統合ゲート未達なら**設計のみ・実装禁止**
+
+**Aの先読み案であって正式割当ではない。** R9個別 B [#78](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/78) / C [#77](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/77) / D [#76](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/76) は、各正確なHEADでPython / Windows / Blender3版 / Chromium / Handoffの5系統CIがsuccess。AのR9統合候補 [#81](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/81) はB3/C4/D3の10ファイルを担当重複0で最新devから独立結合。**以下の条件をすべてAが実測してから**R10の編集許可・ブランチ基点を正式発効すること。途中でCIがred / canceled / pendingなら設計・レビューのみ、PR追加なし。
+
+1. R9統合PR #81の**最終厳密HEAD**に対し、Python 3.11/3.12/3.13、Windows 3.11/3.13、Blender 4.4.3/4.5.15/5.2.1（実際の `native_r9_*` ログ）、Chromium、Handoffの**5つの独立workflow系統がすべてsuccess**。R9個別CIは統合CIの代用にしない。
+2. #81を`feature/v0.18-shape-diagnostics`に**一度だけsquash統合**、開発統合コミットSHAを記録する。過去R1〜R9個別PRや古い統合PRを二重mergeしない。
+3. 上記**統合後SHAそのもの**に対して別のpush CI **7系統**（Python、Windows、Blender3版、Chromium、Handoff、Kit、Skill）がすべてsuccessし、Aがジョブと対象SHAを確認する。
+4. Aが最新の`docs/project/STATE.json`、生成`docs/PROJECT_HANDOFF.md`、`docs/PROGRESS.md`を節目同期し、R10正式割当文書を承認・統合した後のみ、各チームは**その時点の最新dev HEAD**を基点に新担当専用ブランチを作る。R9専門ブランチからstackしない。未統合追加PRは担当1件まで。
+
+### R10 B候補 / NEXT-008：低選別率R2-AABBの適応判定を安全側で調査
+
+- **出発点:** R8のpadded 2×t AABBは疎な合成輪郭で速度向上。R9密集128辺のmatcher局所では、AABB判定がほぼ全部通過し、3つのPython版で強制unprunedより遅い場合を観測。これは一般GLB全体の速度断定ではない。
+- **設計:** 疎/密/境界許容値付近の対照を同一Python版で反復計測し、全結果辞書・R2距離述語・独立R3連結ガード・R6 exact署名・R7ゼロ長guard・256辺/64部品/512面・review_onlyを保持できる「適応的に不要なAABB処理を迂回」する安全な条件があるか検証。単なる速度推測で製品本体を変更しない。数学的保証と3版の独立測定が無ければtest/docsのみ。
+- **許可候補:** `cbdk/glb_*`、GLB専用tests/docs。共通CI/スクリプト/STATEはA。ユーザーGLB、物理穴、部品同一性、auto applyは未証明。
+
+### R10 C候補 / UI-001・BUILD-001：二重失敗の所有権ledger回復
+
+- **設計:** CBDK自作生成previewで、同じ`unregister()`中にoperatorクラス解除とScene RNA削除が共に失敗する合成負例、失敗間にforeign Scene宣言が差替られる負例を実Blender 3版で試す。成功した除去だけledgerから消し、残りの正確なtokenと名前を保全、reload/再登録を安全に拒否、次の明示retryで完全回復して初めて成功とする。
+- **検証:** R5〜R9既存nativeマーカー・5機能6レシピを保持し、R10専用nativeマーカーをBlender 4.4.3/4.5.15/5.2.1の実ジョブログで確認。合成foreign物のみ、実第三者アドオンやGUI Ctrl+Zは未検証。
+- **許可候補:** `templates/modular_preview/`、C専用tests/docs。`scripts/`、CI、STATEはA。
+
+### R10 D候補 / EXT-001：自己hashと別管理の既知ソース照合
+
+- **設計:** R9はZIP自身が改変後のhash一覧を書き直しても「自己整合」は証明できる一方、作者真正性・同意・ライセンス・正式公開権限は証明しないと確認。R10は**リポジトリ内の明示された既知CBDK自作source**と生成ZIPのhelper bytesを、allowlistとサイズ・件数制限を設けて**読み取り専用で比較する候補**を検証。元を更新した場合の正例、再hash改変の負例、未知root・path逸脱・値/パス漏洩の負例を含む。
+- **安全:** 比較一致ですら作者同意/SPDX/著作権/署名/公式validator/公開承認にはならない。未知Pythonはimport/exec/installせず、私有ソースを公開しない。問題が再現しなければtests/docsのみ、`blocked_for_extension_release`維持。既知7 ZIP正例も保持。
+- **許可候補:** `cbdk/extension_*`、D専用tests/docs。公式validator共通script・CI・STATEはA。
+
+**R10はまだNOT ACTIVE。** Aが上記ゲート後に正式基点・ブランチ名・受入基準を再公布するまで、B/C/Dは現在のR9 PR以外に新たな実装PRを作らない。Codex不在でも設計/負例候補調査は可能。main、正式v0.17.0、GitHub Pages、実ユーザー資産、Windows GUI、権利決定は変更しない。
+
+## 2026-11-08 JST — R9統合成功・R10正式割当（本PR #82の開発ブランチ統合後に有効）
+
+**R9のゲートは成立済み:** B [#78](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/78) SHA `60fcda39`、C [#77](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/77) SHA `a525fa8e`、D [#76](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/76) SHA `b29de167` は各5系統CIが成功し、変更10ファイル重複0。A結合 [#81](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/81) 最終HEAD `b5978eac7fde14387ca50e36569a1128fae9610d` の別5系統CIも成功（Blender3版の`native_r9_*`四項目を実ジョブログ確認）。開発squash SHA **`914f1c8ab8cf8dfe104f46054bfd4c84fc101e61`** の独立7系統CIもすべてsuccess：[Python #42423898180](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898180)、[Windows #42423898189](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898189)、[Blender3版 #42423898177](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898177)、[Chromium #42423898202](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898202)、[Handoff #42423898215](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898215)、[Kit #42423898188](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898188)、[Skill #42423898183](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42423898183)。これらは開発統合後に実行されたGitHubの`pull_request`イベントで、旧個別PRのCIではない。
+
+**正式な実装開始条件:** このA所有のR10正式割当PR #82が`feature/v0.18-shape-diagnostics`へマージされ、担当者が着手直前に最新dev HEADと `914f1c8ab8cf8dfe104f46054bfd4c84fc101e61` が祖先であることを確認した場合に限りR10を開始。#82がdraft/CI赤/未統合なら上のプレ設計どおり**設計のみ**。専門R9個別PR #76–#78は統合済みコードの履歴資料で、二重マージ/force-pushをしない。各チームに新しい未統合ドラフトPRは最大1件。
+
+- **B / NEXT-008:** 新ブランチ `work/v018-glb-analysis-r10`。上記プレ設計の疎/密AABB合成モデルで、危険な誤棄却がない適応的R2 AABB回避の数学的条件とPython3版同条件メモリ/時間測定を先に検証。密集モデルで繰り返し利益がなければtest/docsのみ。 `cbdk/glb_*`、GLB専用tests/docsだけ。R2/R3/256辺・64部品・512面、`auto_apply=false`維持。
+- **C / UI-001・BUILD-001:** 新ブランチ `work/v018-ui-builder-r10`。クラス解除とScene RNA削除の二重失敗、失敗途中のforeign差替、所有token/ledgerを保持した複数retryを合成して、Blender 4.4.3/4.5.15/5.2.1の実ジョブで`native_r10_*`を確認。R5〜R9マーカー、既存5機能6レシピ保持。 `templates/modular_preview/`、C専用tests/docsだけ。
+- **D / EXT-001:** 新ブランチ `work/v018-extension-quality-r10`。CBDK自作のrepo管理helperソースと、生成プレビューZIPのhash自己申告を、読み取り専用・上限付き・trusted-root固定で照合する負例/正例を検討。一致も真正性/作者同意/公開権限にならず、`blocked_for_extension_release`維持。実行/インストール・私有ソース公開禁止。 `cbdk/extension_*`、D専用tests/docsだけ。
+
+各チームは着手時の最新dev SHAと作業対象ファイルをPR本文へ明記。正確なHEADでPython3.11/3.12/3.13、Windows3.11/3.13、Blender4.4.3/4.5.15/5.2.1、Chromium、Handoffの発火5系統CIを実測し、追加負例が本当に実行されたか区別する。Aが統合ブランチで再度5CIを確認し、開発squash後7CIで次ラウンドを許可。共通STATE/HANDOFF/PROGRESS/CI/Notionと`main`、正式リリースはA所有。Codex不在でも専門チームを止めない。Windows GUI/Undo、実ユーザーGLB、真の第三者Addon、ライセンス、正式Extensions、Pagesは引き続き別承認。
+
+## 2026-11-08 JST — R11 プレ設計 — R10統合が成立するまで設計のみ
+
+**これはAによる先読み案であり、実装開始許可ではない。** R10個別B [#85](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/85) / C [#83](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/83) / D [#84](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/84) は各厳密HEADで5発火workflow系統すべてsuccess、変更は計12パス・担当重複0。A結合 [#86](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/86) は別SHAの独立CI検証が必要。R11の専門新ブランチや第2の未統合PRは禁止し、以下の負例と適用範囲を検討するだけなら可。
+
+### R11 B候補 / GLB NEXT-008：冒頭64サンプルへの偏りを負例で検証
+
+- R10適応AABBでは**最初の最大64回のbbox判定**だけを見て、除外8回以上ならフィルタを保持、未満なら途中から停止する。この選別は速さのみを変え、R2の元の最近接距離述語とR3独立連結判定は変えてはならない。
+- 先頭64回が非代表的な「密集→疎」「疎→密集」、同じ線分群の候補順入替、float32で近接した細帯、ゼロ長、255/256/257辺、64部品/512面などCBDK自作合成ケースを用意。固定R8と完全unpruned R2との**全結果辞書一致**、計算回数、Python3版の中央値、peak traced heap上限、順序依存の速度変動を観測。意味的に異なる出力なら即修正。性能利得や安全性の証拠が乏しければ本体の変更はしない。
+- 担当候補：`cbdk/glb_*`、GLB専用tests/docs。共通スクリプト・CI/STATEはA。実GLB同一性、穴証明、自動適用は禁止。
+
+### R11 C候補 / UI-001・BUILD-001：pending ledger中の所有者交代と安全なdisable失敗
+
+- R10で同じunregister呼び出し中のclassとSceneの同時失敗を観測。R11は別クラスledgerがpendingの最中、Scene RNAが「失われる・第三者の同名宣言に差し替わる・見かけがCBDK ownedに似る」負例を、CBDK自作の合成スタブのみで追加。名前だけでforeignを削除せず**原tokenの同一性**を比較し、未解放のclass/Sceneの台帳を保持。reload・duplicate registerの拒否とexplicit retryに偽の成功がないことを確認。
+- `addon_utils.disable`途中に1回だけ人工的解除失敗を発生させ、次の明示的な回復で漏れ0、5機能/6レシピ、既存R5〜R10のnativeマーカー保持をBlender 4.4.3/4.5.15/5.2.1実ジョブで検証。Windows GUI Ctrl+Zや外部アドオン実共存は証明しない。
+- 担当候補：`templates/modular_preview/`、C専用tests/docs。Aの共通`scripts/`・CI/STATEは編集しない。
+
+### R11 D候補 / EXT-001：参照スナップショット鮮度・パス整合・改行揺れ
+
+- R10のrepo source比較は**テスト専用**で、外部から来たコードの真正性や公開権限を認定しない。R11は合成一時checkoutで、ZIP作成後に元sourceが合法的に更新された時の差分と、自己rehashed ZIPによる差分が、単なるbyte比較だけでは識別不能なことを明示的に試験。スナップショット/コミット基準を明示し、CRLF/LFによる差・大文字小文字パスエイリアス・symlink親抜け・未知root/allowlistを保守的に拒否。ファイル名・パス・payload・PII等をログに出さない。
+- 最大16MiB ZIP/2MiB member/64 member・既存7合法プレビューと既知公式Blender synthetic validator正例を維持。真正性・作者同意・再配布・ライセンス・公開・署名・インストールを承認しない。実装問題が再現するまではtests/docsのみ。
+- 担当候補：`cbdk/extension_*`、D専用tests/docs。共通validatorスクリプト/CI/STATEはA。
+
+### R11を開始できる厳格なゲート
+
+1. A統合 [#86](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/86) の**最終HEAD**でPython 3版、Windows 2版、Blender3版（`native_r10_*`実ジョブログ）、Chromium、Handoffの5発火系統すべてsuccess。個別R10 CIを代替として使わない。
+2. Aが上記を確認して**v0.18開発ブランチだけ**にR10結合コードをsquash mergeし、そのSHAを新たに記録。旧R9/R10個別PRは履歴であり二重mergeしない。
+3. 開発ブランチのR10統合SHAで**独立した7系統CI**（Python、Windows、Blender3版、Chromium、Handoff、Kit、Skill）が全success。PRの5系統成功や前のR9 push/PR結果で代用しない。
+4. AがSTATE.json・生成Handoff・PROGRESSと本キューにR10の証拠を同期し、**R11正式割当PRを開発ブランチに統合した後**にだけR11新ブランチを作成可能。着手直前の最新dev SHAを基点にする。B/C/Dは各担当1未統合追加ドラフトPRまで、旧PR stack禁止、Codex不在でも安全な作業のみ継続。
+
+main、正式v0.17.0、実ユーザー私有GLB、GUI/Ctrl+Z、第三者Addon実行、著作権/SPDX/再配布承認、Blender Extensions公開、GitHub Pagesのゲートは従来どおり。
+
+## 2026-11-08 JST — R10統合完了・R11正式割当（#87統合後のみ有効、旧R11プレ設計より本節優先）
+
+**R10ゲート実測成立:** B [#85](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/85) `a3c57d9b8450e18033741c87d9ba41625dd7ac2a` 5パス、C [#83](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/83) `9f3df76df7356acb3670d6c44a53325f7bda6eba` 4パス、D [#84](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/84) `262d646dc6de394755349fab6fdc864e3ae4a3b5` 3パス。個別最終HEADでPython/Windows/Blender3版/Chromium/Handoff各5系統すべてsuccess、12パス重複0。A結合 [#86](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/86) 最終HEAD `6a12b7fa1926912f501c80b133d0d457cdc19999` も別5系統success（Blender4.4.3/4.5.15/5.2.1各版で`native_r10_*`5項目実行ログ確認）。開発ブランチへのsquash SHA **`a3ae6da1771bd4aaefd06186a587ba94eaea5736`** に対する独立7系統CIも全success：[Python](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258493)、[Windows](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258509)、[Blender3版](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258621)、[Chromium](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258600)、[Handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258438)、[Kit](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258568)、[Skill](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42426258440)。7系統のeventは`pull_request`。これらは専門個別やA結合PRの5CIとは別。
+
+**R11作業許可:** A本PR #87が専用CI合格後に`feature/v0.18-shape-diagnostics`へ正式マージされた後でのみ、着手時の最新dev HEADを確認し、上記R10統合SHAが祖先であることを検証して新専用ブランチ作成。#87の未マージ/赤/未確認中は上記R11候補を設計するだけ。旧R10専門PR #83/#84/#85、R9以前を重ねて/二重マージしない。未統合の追加専門ドラフトPRは各担当1件まで。
+
+- **B / NEXT-008:** `work/v018-glb-analysis-r11`。適応AABBの冒頭64判定が偏るdense→sparse/sparse→dense、候補順入替、float32、ゼロ長、255/256/257辺、64部品/512面の合成負例。固定R8/完全unpruned R2との全辞書同一性とR3独立チェックを維持し、Python3版でピークheap/同条件中央値/上限を観測。不具合や反復利益がなければtests/docsのみ、安易に本体を複雑化しない。B所有`cbdk/glb_*`、GLB専用tests/docsのみ。
+- **C / UI-001・BUILD-001:** `work/v018-ui-builder-r11`。未解放クラスledger中のScene descriptor missing/foreign/owned-looking差替、`addon_utils.disable`の一時解除失敗に対し正確なtoken identity、foreign保全、reload/register拒否、明示retryでの完全回復をBlender実CI3版で検証。新`native_r11_*`実ジョブログ、R5〜R10既存マーカーと5機能6レシピ保持。C所有`templates/modular_preview/`、C専用tests/docsのみ。
+- **D / EXT-001:** `work/v018-extension-quality-r11`。ZIPとcheckoutスナップショットの更新時差、CRLF/LF、大小文字alias、symlink-parent、未知rootやallowlistを合成一時checkoutで負例化。真正性/作者同意・SPDX/ライセンス・公式Extension公開を新たに認定しない。既知7正例とBlender synthetic validatorの従来確認を保持。D所有`cbdk/extension_*`、D専用tests/docsのみ。
+
+担当外のSTATE/Handoff/PROGRESS/Notion、A共通CI/scripts/main・正式v0.17.0は変更禁止。各R11 PRは正確な最終HEADでPython3版、Windows2版、Blender3版、Chromium、Handoffの発火5系統を実測し、専用新負例の実行をログで確認する。Aは全員を別統合SHAで再検証し、開発本流統合後の別7CIを確認して次ラウンドへ。実ユーザー私有GLB、GUI/Ctrl+Z、第三者Addon、ライセンス/署名/公式Extensions配布・GitHub Pages・正式公開は承認しない。Codex利用不能でも専門チームを停止しない。
+
+## 2026-11-08 JST — R11/R12統合・R13正式割当（#99統合後に有効）
+
+R11/R12累積13ファイルを#98で一度だけdevへ統合（ab42913d300efd003450027a2697586e15ca76ad）。候補8b3edebの5系統・統合SHAの独立7系統CI成功。Blender4.4.3/4.5.15/5.2.1でnative_r11/native_r12各4件。R13は#99統合後に正式開始。実GUI/私有GLB/権利未確認、v0.19未有効。
+
+統合後7系統（すべてab42913、pull_request）: [durable handoff](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260441)、[Windows kit package](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260440)、[Agent Skill package](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260362)、[offline 3D browser interaction smoke](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260376)、[Python tests](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260317)、[Windows PowerShell launcher regression](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260329)、[Blender multi-version runtime smoke](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42433260358)
+
+R13の担当枝・所有パス・負例・受け入れ条件・共通開始プロンプトは[R13_ABCD_START.md](R13_ABCD_START.md)。B: GLB中間密度/seed/閾値の独立一致、C: module evictionと旧ledgerの回復、D: snapshot/inventoryとパスaliasのfail-closed。共通台帳/CI/NotionはA所有。各担当1追加draft PR、旧PR二重取り込み禁止。R13実装は本セッション対象外。
+
+## 2026-11-08 JST — R13統合完了・R14正式割当ゲート
+
+R13 B[#100](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/100) / C[#102](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/102) / D[#103](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/103)をA統合[#104](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/104)の1コミット/9ファイルで一度だけdevへ結合。統合候補 `7d7933d` の5系統CI成功、dev squash `0a306a85d6f84ef434eb6b54f12cb4ce93251a6c` に対する独立7系統CI（Python、Windows、Blender3版、Chromium、Handoff、Kit、Skill）全success。詳細URLは[PROGRESS](PROGRESS.md)、R14の指示は[R14_ABCD_START.md](R14_ABCD_START.md)。古いR11/R12と個別R13 PRを二重取り込みしない。
+
+**R14を実装開始できるのは、Aの本マイルストーン同期PRがCIを通過してv0.18開発ブランチへ正式統合され、その新SHAの独立7系統CIが確認されてから。** R14 B/C/Dは最新dev SHAを共通基点に独立した専用PRを1件ずつ作る。新規CIの自動発火をまず確認し、不足分のみ手動起動。main/v0.17.0/私有アドオン・GLB/ライセンス/Extensions公開/Pages/保留中の直接インストールは変更しない。
+
+- **B P1 / GLB NEXT-008・GLB-020/021/022:** 合成GLBの診断・境界・距離・ASTの証拠を匿名レビュー用triageに統一し、差分と未観測の区別、原因の確定拒否を数値回帰で検証。コード候補 `cbdk/glb_*`、B専用tests/docs。
+- **C P1 / UI-001・BUILD-001:** 旧module参照の複数generation失敗時にもforeign Sceneプロパティと未解放クラスを損なわず、明示cleanup可否/未確認を安全に表す。コード候補 `templates/modular_preview/`、C専用tests/docs。実GUI保証は禁止。
+- **D P1 / EXT-001:** source rootのreparse確認とopenとの間のTOCTOU等を安全な合成fixtureで負例化し、配布不可の理由を機密値なしコードで提示する改善候補。実機安全を示せなければ本体挙動は変えない。コード候補 `cbdk/extension_*`、D専用tests/docs。
+
+AのみSTATE/Handoff/PROGRESS/共通CI/Notionを管理。各専門最終HEADの独立5系統CI→A結合の独立5系統CI→dev統合の独立7系統CI→節目文書の別CIを厳格に区別する。
+
+## 2026-11-11 JST — R14受入完了、R15先読みキュー（実装は節目ゲート後）
+
+A統合PR [#117](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/117)でB#107/C#108/D#106の専門11パスと長期ビジョン5パスを一度だけ統合。dev `db25585342e19e629fc32e2cc94ceae5d2e3d7b4` で独立7系統CIすべて成功。詳細は[正式R15割当](R15_ABCD_START.md)。
+
+- Bは複数GLBレビュー証拠の同試行整合性、未知/衝突の安全な拒否。
+- Cは既存自作5機能・6レシピのUI表示可否と実operatorの一致、実不具合がなければ無理に実装を増やさない。
+- Dは合成同inode書換え検出の限界・不確実性。Windows任意ファイル読取安全の証明とは分ける。
+- Aは速度改善 #109 のキャッシュ効果実測と既存NEXTの未検証管理を継続。
+
+**実装停止ゲート:** 本節とR15割当を含むAの節目同期PRが開発devに統合され、その**新dev HEADに対する独立7系統CI全成功**をAが確認するまで各R15作業は設計のみ。研究PR #114/#115は独立、v0.19は未有効。Codexは必須でない。
+
+
+## 2026-11-11 JST — R15一回統合完了、R16候補（節目ゲートまで設計限定）
+
+- B#120 / C#121 / D#119 各最終HEADの5CI成功、A [#122](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/122) 結合5CI成功、dev `08ddb3e3a51e526ddfe857268f31b2de443c0fec` の**独立7CI成功**。11ファイルの担当重複0。旧PRの重複採用禁止。
+- R16 B: 自己申告だけで同一試行を証明しない前提で、偽/再利用/古いローカル測定basisの負例を追加。既存のunknown/review_onlyを維持し、検証できない真正性のために大規模manifestを作らない。
+- R16 C: Panel.drawからexecuteまでの間にmode/selectionが変わる現実のBlender負例で、不正な操作をCANCELLEDしメッシュを壊さないことを実証。失敗再現なしならtest/docsのみ。
+- R16 D: 同じinodeの読み取り間レースを合成2回サンプルで試し、二度読んでも現在の安定性は保証不能な限界を記録。実ファイルの検証済み安全リーダーや配布承認に昇格しない。
+- 正式な所有パス、受け入れ基準、次への指示は [R16正式割当](R16_ABCD_START.md) に従う。**R16は本節を含むA同期PRがdevへ反映され、その統合後HEADの独立7CI全成功まで実装着手不可。** main/正式公開/私有資産/研究は別ゲート。Codex必須でない。
+
+## 2026-11-25 JST — R16受入、R17完成優先（開始ゲート前は設計限定）
+
+A統合[#130](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/pull/130)の10パスを一度だけdev `b9936b35a17ec538c61e82622eabaf8bfcf3bc35` へ統合。専門3PR各5CI、結合5CI、独立7CI全成功、再試行0。証拠は[PROGRESS](PROGRESS.md)。旧専門PRの重複採用禁止。R17は[正式割当](R17_ABCD_START.md)へ。B: GLB改善レビューの実用的な次アクション、C: 既存機能の安全なレシピ別宣言UI、D: optional manifest構造/公式診断。新規研究や反復安全負例を増やさず、受入成立または権限/実環境ブロッカーの特定で停止。A: 完成条件と人間確認項目を区別して統合。**節目同期PRのdev統合、新dev独立7CI成功、Issue #125 R17更新までは実装禁止。**
+
+
+## 2026-11-25 JST — R17限定受入、追加ラウンド自動発行停止
+
+#135/#136統合dev `236b9a3254928d7cb69d5c415fd8a3e792ee5de7` 独立7CI成功。B/C/DのR17限定成果を受入、旧専門PRの二重統合禁止。次の正式割当はなし。Aが[V018_COMPLETION_GATES](V018_COMPLETION_GATES.md)の既存残条件を確認し、実環境/権利待ちを自動化と区別する。B/C/Dは新規実装/PRを開始せず、Aの正式割当を優先。次期active=false、main/研究変更なし。
+
+
+## 2026-11-25 JST — R18生成経路限定（開始ゲート前は設計のみ）
+
+[正式割当候補](R18_ABCD_START.md)：Cはコード所有descriptorによる第6自作機能の追加・生成・実行、Dは合成Extensions ZIP生成・公式検証。B待機。Aは共有CLI/統合担当。#138 dev 91d8cdcbf3950203b945afdbc84ede3beffd7c7a 独立7CI成功、3版キャッシュHIT。割当文書の統合・独立7CI・Issue #125更新までは開始禁止。既存完成条件の2件だけ、R19自動発行なし。
+
+
+## 2026-11-25 JST — R18限定受入・専門チーム停止
+
+#142統合dev `36d4090402f66f49d5644fbef91f1c03d95a6b34` 独立7CI成功。C/Dの正式割当完了、旧PRを再統合しない。B/C/Dは次の正式割当まで新規実装/PR/CI不要。Aが[完成ゲート](V018_COMPLETION_GATES.md)の実機能Extension化と型付きUIの未達を限定確認。R19自動発行なし。main/正式版/研究/次期active=false維持。
+
+
+## 2026-11-25 JST — R19完成直結の限定割当候補
+
+#143節目同期dev `2696a9b8e171a218b67865ba5caf47f1786164bf` 独立7CI全成功（Blender45549944774の3版成功）。[R19正式割当候補](R19_ABCD_START.md)：Cは既存6機能で型付き入力の共通化、Dは固定自作生成物の隔離Extension実行経路、Aは同一生成物の縦断統合検証。B待機。割当文書統合・独立7CI・Issue #125更新まで着手禁止。R20自動発行なし。次期active=false/正式版/状態数維持。
+
+
+## 2026-11-25 JST — R19限定受入、現行生成基盤の区切り候補
+
+#147 dev `538e0b58a9d4c05fce49de617a7d84342e5290cd` 独立7CI成功。C/D担当完了・同一ZIP縦断成功、旧専門PRを再統合しない。B/C/Dは新規PR/CI不要。Aが[完成ゲート](V018_COMPLETION_GATES.md)に既存将来計画との対応を記録。節目同期の独立7CI後にv0.18自動化完了条件を最終判断。R20自動発行なし、次期active=false、main/正式版/研究変更なし。
+
+
+## 2026-11-25 JST — 次期移行候補
+
+#148 dev `d4aa43016ad85159584a0d88b33e7cbb58368b97` 独立7CI成功。R19で限定基盤を区切る判断。次期独立計画v0.19有効化候補。B/C/D待機、R20自動発行なし。移行PR統合と独立CI後、AがF019-01〜03の既存実装と独立GL研究を読取比較して必要最小限の担当割当を決める。v0.20以降未着手。正式v0.17.0/main/私有データ/別承認維持。
+
+
+## 2026-11-25 JST — v0.19最初のB限定割当候補
+
+#149 dev `1b32541dd425e1d1555f9612d766fbbdad3b6b25` 独立7CI成功、future active=true。GL #114と既存GLB実装を読取照合し、重複する研究の再実装を避ける。F019-01をB限定の1PRで、既存512面経路を保持し明示選択・有限予算の512超（目標2048/scene）表面比較を実測する。[R20正式割当候補](R20_ABCD_START.md)。R20はv0.19内のラウンド番号。C/D待機、GL/DIL独立。割当候補統合と独立7CIおよび#125更新前は全専門チーム停止。R21自動発行なし。
+
+
+## 2026-11-25 JST — R20 / F019-01限定受入
+
+#151 B `0ab8defe358c6928f6df00da03836a9638c82eb7` 5CI、#152候補 `910ada89ecf3285d1a45559e39542229fadd0639` 5CI、統合dev `7e8bd21994a3b12dc1282fedc3ceceb4230e6860` 独立7CI成功。Python45566806276、Windows45566806261、Blender45566806341、Chromium45566806269、Handoff45566806324、Kit45566806376、Skill45566806258。実Blender jobs139043471425/139043471439/139043471125、3版各69 lifecycle、R19保持、R20 expanded/CLI marker・archive SHA検証。
+
+2048/sceneの合成GLBのZ=.25/別分割/開口、既定512維持、2049超過と密集4M評価停止、CLI exit2・元SHA不変を確認。2048面中央値（親roundtrip warmup+3）3.904/4.057/4.303秒、131872 samples/2241824 node visits/1054976 exact evals。上限131872/8M/4M、BVH2構築共有。密集停止時測定値なし。速度比較の保証やnative memory、任意実モデルは未確認。旧glb-regression、matcher/viewer上限は不変。研究採用なし。F019-01の今回の限定目標は達成したが、v0.19全体は未完、F019-02/03は残る。#125 rev9 paused、B/C/D待機。次ラウンド自動発行なし。正式v0.17.0/main/last_verified/44要件/24 NEXT状態不変。
+
+
+## 2026-11-25 JST — R21 / F019-02 B限定割当候補
+
+#153節目同期dev `26eeeb02ac3ee75d6f1dbbbbcb5892e00f3e32e4` 独立7CI成功（Python45568640215、Windows45568640035、Blender45568640113、Chromium45568640092、Handoff45568640031、Kit45568640146、Skill45568640071）。実3版69 lifecycle/R19/R20 CLI/SHAを確認。F019-02は既存空間候補・境界guardとR20有限表面距離を再利用し、匿名部品候補の局所形状証拠と競合/未測定を明示。目標2048面/64部品、精密候補を有限総予算に限定、旧schema/viewer保持。 [R21割当候補](R21_ABCD_START.md)。Bのみ1PR、C/D待機、GL/DIL独立。割当統合・独立7CI・#125更新まで専門実装禁止。R22自動発行なし。
+
+## 2026-11-25 JST — R21 / F019-02限定受入
+
+#155 B 96b3bf3 5CI、#156 A 946de66 5CI、dev b45549ca8e502d6e9ba22365f4dfd28e791a4d41 独立7CI（Python45577551917、Windows45577551636、Blender45577551663、Chromium45577551853、Handoff45577551821、Kit45577551711、Skill45577551854）。実3版2048面/64部品、64候補、旧誤suggestion 1→0、競合曖昧、65部品skip/exit2、SHA不変。親中央値5.615/5.812/7.349秒。全体+局所上限263744 samples/16M node/8M eval、130 BVH、精密128 pairs、境界予約2M。未測定/曖昧を保持、近小/遠大対照未独立実証、移動/split/merge Pythonのみ、native局所予算枯渇・任意identity・実データ・viewer拡張・GL採用未確認。F019-03残、R22自動発行なし。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
+
+実Blender jobs139079123453/139079123607/139079123003。全体 counts 131232/2230944/1049856、局所98304/491520/786432（samples/node/eval）、64精密pair、128局所BVH、境界予約98304。既定512・R20 schema2互換。専門チーム待機、B #155を二重統合しない。詳細 [R21検証](GLB_PART_REVIEW_R21.md)。節目同期PRの検証後に次の正式割当を判断。Notion最終同期未確認。
+
+## 2026-11-25 JST — R22 / F019-03 B限定割当候補
+
+#157節目同期dev `3d916d7585297c731e9f515eab82b07e871cbd41` 独立7CI成功（Python45627337180、Windows45627337341、Blender45627337202、Chromium45627337195、Handoff45627337163、Kit45627337178、Skill45627337387）。実3版R21 native/CLI marker確認。既存境界/特徴/追加probeとR20/21の有限表面距離を再利用し、穴・薄壁・接合・内部空洞の合成検出限界を独立期待で測定する。改善は再現した場合のみ、GL exact研究は読取評価に限定・採用なし。 [R22割当候補](R22_ABCD_START.md)。Bのみ1PR、C/D待機、#125 rev11 paused。割当文書統合・独立7CI・#125更新前は実装禁止。R23自動発行なし。正式版/44要件/24 NEXT/last_verified不変。
+
+## 2026-11-26 JST — R22 / F019-03測定限定受入
+
+#159 B dfe61bee 5CI、#160 A d11839ec 5CI、dev a816d5ec0f08456c469af134b4b7dc1b69987258 独立7CI（Python45636769946、Windows45636769714、Blender45636769495 attempt2、Chromium45636769899、Handoff45636769741、Kit45636769989、Skill45636769864）。3版16ケース固定8/10・適応9/10、誤警告0/5、情報欠落1。小穴見逃し、境界ヒントは物理証明でない。旧profile・入力SHA維持。初回4.4.3 artifact確定失敗は同一HEAD失敗job再試行成功。測定のみ、製品変更・GL採用なし。限定3目標受入、実データ/一般精度/物理診断/native memory/viewer未確認。#125 rev13 paused、R23/v0.20自動開始なし、正式版/44要件/24 NEXT/last_verified維持。
+
+実Blender jobs139299743712 (4.4.3 retry)/139284224979 (4.5.15)/139284225490 (5.2.1)。4.4.3初回139284225529は全形状検査成功後、artifact finalize HTML/JSON応答異常で失敗、同一run attempt2の失敗jobのみ再実行しartifact15035179114保存成功。代表親中央値553.366/460.909/564.990 ms（異なるrunner、速度保証なし）。B #159は#160に包含済みのため別マージせずclosed。詳細 [R22測定](GLB_DETECTION_LIMITS_R22.md)。3/3は限定目標のみであり、v0.19全体の完成・正式公開ではない。節目同期候補CIおよび統合後独立CIを確認して区切り判断。Notion最終同期未実施。
+
+## 2026-11-26 JST — v0.20移行・R23 C/D限定割当候補
+
+dev 1540ad4e7d7e41304b81cbdcc8ee65d3ac8b2791 独立7CI（Python45644535642、Windows45644535499、Blender45644535704、Chromium45644535823、Handoff45644535761、Kit45644535523、Skill45644535575）。実3版R22/R21 marker、#25同HEAD draft。既存Notion節目追記成功。F019限定3/3を区切るが実データ/一般精度/物理診断/native memory/viewer未完。既承認F020へ進む候補、R23はCの明示複数panelとDの既存レシピからの非配布Extension準備に限定。F020-02は統合後別判断。割当文書統合・独立7CI・#125更新前は実装禁止。44要件/24 NEXT・正式v0.17.0/main/last_verified維持。
+
+R19既存基盤の6機能/7部品、2型入力、単一panel内の宣言sectionと固定2機能Extension試験を再利用。CはF020-01の明示複数panel、DはF020-03の安全な複数既存レシピからのローカルpreview Extension生成準備。Aは契約・CLI・同一生成物の縦断検証を担当。F020-02は既存依存/登録経路との差分をR23受入後に判断。[R23割当候補](R23_ABCD_START.md)。B待機、GL/DIL独立。v0.19の実モデル等は未完了として維持。Notion既存ページ410948b7-4937-8144-9462-ca76e9567e75へ#161節目追記成功（新規ページ/私有データなし）。
+
+## 2026-11-26 JST — R23 / F020-01・03限定受入
+
+R23 #165 dev 7b16aed6dbdf422cbea069adb4b240b8de4dc2c1 独立7CI成功（Python45698148532、Windows45698148921、Blender45698148477、Chromium45698148381、Handoff45698148674、Kit45698148611、Skill45698148654）。C #164/D #163/A #165各5CIと合わせ22/22、再試行0。3版で同一CLI生成ZIP公式validate・隔離bl_ext登録・2panel/4機能/2型のdraw/操作/解除・SHA不変、artifact保存。F020-01限定受入、F020-03限定実装受入（全体partial）、F020-02残。#125 rev15 paused、B/C/D待機。実GUI/Undo/公式installer/任意コード/権利・正式配布未確認。正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
+
+C #164 `8b872c61040faadc404baa538745c1be0fba95ed`、D #163 `b1b15306b304013cee41ec86a5c5a94906e7c8ff`、A #165候補 `52066fa0db30172a5f7e674140539a2a3860174e`。統合12ファイル、専門PRは包含済みのため個別mergeせずclosed。native jobs 139500883727/139500884434/139500883166、artifact 15061868289/15060608920/15060479125。R19・C grouped/mixed・D read/edit markerも維持。詳細 [R23 A](R23_A_GENERATION_VERTICAL.md)。F020-02は既存依存/登録経路と未達差分を次に判断、R24未発行。Notion同期は節目文書統合・独立CI後、未実施。
+
+## 2026-11-26 JST — R24 / F020-02 C/D限定割当候補
+
+R23節目#166 dev 74458b072db5bf55090d3a85e275d40114a445a5 独立7CI（Python45700815698、Windows45700815565、Blender45700815591、Chromium45700815541、Handoff45700815542、Kit45700815896、Skill45700815567）成功、3版R23 marker、Notion既存ページ追記成功。F020-02既存6機能のrequires_featuresは全空。既存plannerの推移/循環Python検査は再利用し、R24 Cはテスト専用の非空依存閉包・登録/逆順解除/rollbackの実機縦断、Dはroot ZIPの依存閉包とmanifest互換範囲の独立照合/過大表示拒否。A同一物縦断。正式割当統合・独立7CI・#125更新前は着手禁止。B待機、GL/DIL独立、44要件/24 NEXT/正式版/main/last_verified維持。
+
+既存plannerは非空依存のPython試験を持つが実カタログ6機能は全空。製品に意味のない依存を追加せず、テスト専用の固定合成グラフで共有閉包・順序・拒否・復旧を測る。DのR23固定manifest min4.4.0/maxなしは将来狭い閉包条件に対して過大表示しないことを検証し、再現した最小不具合のみ修正。両者の固定グラフはAが統合。同時インストール、外部root/metadata/Python、権利/配布、実GUI/Undoは対象外。[R24割当候補](R24_ABCD_START.md)。R25自動開始なし。
+
+## 2026-11-26 JST — R24限定受入 / F020-02
+
+R24 #170 dev 3e447d19dcc82a6d56d0f594c0e8acc5b11c2bbc 独立7CI（Python45708363907、Windows45708363838、Blender45708363884、Chromium45708363947、Handoff45708363876、Kit45708363916、Skill45708364079）成功。C #169/D #168/A #170各5CI含む最終22/22、実Blender12/12、最終再試行0。C初回Blender未発火はUI回帰追加、D初回狭いmin/max各2件×3 Python版の再現後に固定manifest範囲外を生成前拒否。合成要求1→4機能/5部品、legacyとExtension実行payload一致、同一ZIP公式validate・実順序登録/逆順解除/途中rollback・read/edit・SHA不変。F020-02限定受入、F020-03 partial維持。#125 rev17 paused、実カタログ依存全空維持。Undo/実GUI/公式installer/権利/配布未確認、次は残条件調査。44要件/24 NEXT・正式版/main/last_verified維持。
+
+C/D専門PRはA結合済みのため個別マージせずclosed。C/D/A/統合後の最終22系統、3版×4段階=12 native jobs、最終再試行0。初回のD再現失敗を最終成功数から除外し、初回C未起動も別記録。R24 Aの実測ログは[統合Blender run](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45708363884)（jobs139536058053/139536058263/139536058201、artifact15066038396/15065549446/15066852296）。F020-03のUndo・実GUI・公式installer等は受入未拡大。v0.20はin_progressのまま。次は既存operator Undo契約・失敗理由/自動検証・複数レシピの既存証拠を読取調査し残りを限定判断。R25自動開始なし。Notionは文書統合後に同期。
+
+## 2026-11-26 JST — R25 / F020-03 限定割当候補
+
+R24節目#171 dev 54bfd42b5e5b466b284f066e1411e13ea4f9d147 独立7CI成功（Python45712768029、Windows45712768042、Blender45712768257、Chromium45712767969、Handoff45712767974、Kit45712767942、Skill45712768072）、Notion既存ページ同期済み。R24最終35/35。F020-03残条件は既存Undo probe・事前検査失敗分類・静的行列・R23/R24同一ZIP縦断を再利用し、R25 Cは同一生成物の明示Undo/Redoと通常背景/GUI境界、Dは固定stage証拠・失敗分類・欠落矛盾拒否、Aは同一grouped ZIPで統合。正式割当統合・独立7CI・#125更新前は専門着手禁止。B待機、GL/DIL独立、44要件/24 NEXT・正式v0.17.0/main/last_verified維持。v0.21/R26自動開始なし。
+
+[R25割当候補](R25_ABCD_START.md)。
+
+## 2026-11-26 JST — R25限定受入 / v0.20限定3目標
+
+R25 #175 dev 1f8235589363e7ddbee89b6fff3599402e1d6aec 独立7CI（Python45722761380、Windows45722761395、Blender45722761515、Chromium45722761433、Handoff45722761411、Kit45722761407、Skill45722761464）成功、追加push Blender45722754722成功。C #174/D #173/A #175各5CI含む最終22/22系統＋追加1、3版×5段階=15 native jobs、最終再試行0。C初回probe cleanup参照エラーを再取得で修正、D初回Blender未発火は既存診断回帰追加。固定read/edit/grouped 3版×6工程54/54、同一ZIP SHA一致、grouped明示Undo/Redo単一/複数・接続/選択復元・取消/解除成功。通常背景Undo unavailable/Redo not_attempted、実GUI未検証。失敗/欠落/矛盾の負例はPython制御試験。F020-03限定受入、v0.20限定3/3目標受入。#125 rev19 paused、B/C/D待機。公式installer/任意コード/権利/配布未確認、正式v0.17.0/main/last_verified/44要件/24 NEXT維持、v0.21/R26自動開始なし。
+
+C #174/D #173 専門9ファイルはdevと完全一致、重複マージせずclosed。A #175候補83c1da51ac27f19fdf79774b52675f2b613fa7e9、C最終b027c6868c5e108b16aa5944bd0f6cce8731a2c8、D最終757b2465f77ff2bbb87e3b000f81bfbea17207df。dev PR Blender jobs139584896572/139584896865/139584896896、artifact15072419558/15073715645/15072304345。追加push jobs139584871617/139584872011/139584872006、artifact15072912297/15073112851/15072199388。read SHA 0dbd4c9ae445c4b1b002a6c441a2d4e3f764f116f987aa3dc481d4fb5321866b、edit SHA 35a3277471251b5c79b55c3c3947afa600bf2ecca70d6833f89d072a415d80eb、grouped SHA 6bddc22fa3d455bc1e63888aa4494ea544fa66e963c57b81d8de1a8cd7b903b5。全3版で6段階の観測・run ID/版/case/SHA一致、同一grouped登録中のC probeと後続cleanup、旧R23/R24 marker維持。独立C probeをA縦断と二重集計しない。構造化集約は真正性・権利・GUI・Undo自動履歴を証明しない。限定フェーズ判定は成立、全用途の製品完成ではない。Notionは文書統合・独立CI後に既存ページへ同期。
+
+## 2026-11-26 JST — v0.21移行 / R26限定割当候補
+
+v0.20節目#176 dev 972736be66515f558c2ba9ef07ba6c5947047118 独立7CI成功、Notion同期済み、最終35/35＋追加push1。既承認方針に従いv0.21 F021-01のR26限定割当候補を作成。旧GLB-012の7 variant・GLB-021 AST/測定元照合・GLB-022比較/停止を再利用。B静的候補、C実登録/読値/効果、D厳格照合、A同一固定source/run/版の診断縦断。正式割当統合・独立7CI・#125 rev20 active前は着手禁止。実ユーザー/任意コード/自動適用/配布なし。44要件/24 NEXT・正式版/main/last_verified維持、GL/DIL独立。F021-02/03未着手。
+
+[R26割当候補](R26_ABCD_START.md)。v0.20は限定目標受入済み、実GUI/通常Undo/公式installer/権利は未確認。既承認移行方針に基づく候補で、正式開始は統合後の独立7CIと掲示板発行が条件。
+
+## 2026-11-26 JST — R26 / F021-01限定受入
+
+R26 #182 dev 08f63ce8b4f9f045eb03675db5bb48c4031c6fa3 独立7CI＋追加push成功。B #178/C #180/D #179/A #182各5CI含む最終27/27＋1、18 native jobs、最終再試行0。C初回変数衝突修正。A候補・独立・pushの9実験で2設定×9=18照合、7GLB×9=63、3版radius診断・RNA読値・対象変化/非対象不変・SHA/cleanup確認。bevel変位は診断原因証明でない。専門11blob一致・個別mergeなしclosed。F021-01限定受入、#125 rev21 paused。任意コード/最適値/自動適用/真正性/権利未確認。F021-02/03/R27自動開始なし。44要件/24 NEXT・正式版/main/last_verified維持。
+
+独立CI: Python45750425779、Windows45750425767、Blender45750425757、Chromium45750425701、Handoff45750425759、Kit45750425706、Skill45750425690。追加push Blender45750420669。候補Blender45749196784、独立native jobs139676607930/139676607649/139676607936、push jobs139676591449/139676591483/139676591031。3版で同一run/source/版の静的・実RNA・実測証拠とradius診断、全7 GLB/legacy report SHA再確認、元ソース不変・cleanup・非対象不変。6統合後ログを直接照合、候補3ログも照合済み。各run ID独立。C初回修正は最終成功数に含めない。専門9 nativeは旧/専門実験、A結合9 nativeとは別。v0.21はin_progress、F021-02/03未着手、R27自動開始なし。Notion同期は節目文書統合・独立CI後。
+
+## 2026-11-26 JST — R27 / F021-02 限定割当候補
+
+R26節目#183 dev 0b0418729295649c2cadd7bdacb1ca9fe8cfb64b 独立7CI・Notion同期成功、最終40/40＋追加push1。既存GLB-012/R26 RNA・形状計測、GLB-021測定元照合、GLB-022固定候補/退行拒否を再利用。R27は固定fixtureのsphere_radius default 0.75→1.15のみ、参照は既存sphere_radius_changed。B候補差分/逆変換、C隔離コピーの既定値実登録・再生成・復元、D厳格検査、A親接続。元ソース不変、任意入力/最適値/自動採用なし。割当統合・独立7CI・#125 rev22 active前は実装禁止。F021-03未着手、44要件/24 NEXT・正式版/main/last_verified維持。GL/DIL独立。
+
+R26節目独立CI: Python45752209622、Windows45752209655、Blender45752209618、Chromium45752209661、Handoff45752209582、Kit45752209700、Skill45752209593。既存7 variant・GLB-022の比較/停止を保持。R27はソース変更・コピー保全・復元を新たに測る限定実験で、F021-03の複数候補の採否評価には進まない。
+
+[R27割当候補](R27_ABCD_START.md)。
+
+## 2026-11-26 JST — R27 / F021-02限定受入
+
+R27 #188 dev ed7e2d828c4f4aee336d7129d9329c740c79b2f5 独立7CI＋追加push成功。B #186/C #185/D #187/A #188各5CI含む最終27/27＋追加1、18 native jobs。専門初回Windows CRLFテスト修正、A対象fixture LF固定、統合後Windows旧R13 case-alias検査初回1件失敗・同一HEAD再試行1回成功、原因未確定。A候補/独立/push 9実験で27新規GLB＋63参照GLB、固定source単一トークン0.75→1.15、実RNA・元/候補/復元の形状・非対象不変・同一job参照・SHA/cleanup・D厳格照合を3版確認。専門12blob完全一致、個別mergeなしclosed。固定fixture限定F021-02受入、#125 rev23 paused。任意ソース/最適値/自動適用/真正性/権利未確認、F021-03/R28未開始、正式v0.17.0/main/last_verified/44要件/24 NEXT維持。
+
+独立CI: Python45768313422、Windows45768313401 attempt2、Blender45768313332、Chromium45768313535、Handoff45768313368、Kit45768313348、Skill45768313484。追加push Blender45768307034。候補Blender45767477252、独立native jobs139734541335/139734541453/139734541550、push jobs139734520045/139734519568/139734519875。候補3＋独立3＋push3の実ログ直接照合、各run ID独立、重複ログは二重計上しない。Windows初回失敗job139734541050 artifact15093221147でR13 case-aliasテストのinconclusive_reference_changedを確認、同一HEAD再試行job139736211570 1339 tests OK(skipped=16)。原因未確定、再試行で通過したことは根治の証明ではない。B/D専門nativeは既存回帰、C専門nativeは別実験でAの9実験に含めない。実機失敗復元注入は未検証、Python制御負例と通常復元を区別。Notionは節目文書統合・独立CI後。
+
+## 2026-11-26 JST — R28 / F021-03 限定割当候補
+
+R27節目#189 dev 0e62d85f0c657f909ea3336d81378cf24ae2c42f 独立7CI・Notion同期成功、最終40/40＋追加push1。F021-03 R28は固定fixtureの4候補（逆方向0.55、副作用1.15＋bevel0.20、中間0.95、目標1.15）だけを、元0.75/bevel0.08から独立生成・隔離コピー復元し、同一job R26参照とgenerated/imported寸法・非対象測定で比較。唯一の2トークン負例は副作用拒否専用。B評価、C実測、D独立replay、A親接続。既存GLB-022判定原則・R26/R27を再利用。予算1..4、棄却best不変、目標時停止、同点/混合は不確実。任意ソース/最適値/自動適用なし。割当統合・独立7CI・#125 rev24 active前は実装禁止。F021-03未実装、v0.22/R29自動開始なし、44要件/24 NEXT・正式版/main/last_verified維持、GL/DIL独立。
+
+R27節目独立CI: Python45771553334、Windows45771553321、Blender45771553369、Chromium45771553315、Handoff45771553377、Kit45771553314、Skill45771553459。既存7 variant・R27固定ソース実験維持。新規R28は候補の実測選別で、一般形状等価/最適化や自動適用ではない。
+
+[R28割当候補](R28_ABCD_START.md)。
+
+## 2026-11-26 JST — R28 / F021-03限定受入・v0.21限定目標3/3
+
+R28 #194 dev d2b64cc27ec3741c0dada504bbda60163c82ba18 独立7CI＋追加push成功。B #192/C #191/D #193/A #194各5CI含む最終27/27＋追加1、18 native jobs、修正コミット/再試行0。A候補/独立/push9実験、540独立観測、108新規GLB＋63同一job R26参照GLB、R27既存27GLB保全、36復元、36予算履歴B/D照合。逆方向1.2棄却、副作用あり0棄却、中間0.4改善、目標0停止（初期0.8、生成/再import各）。3版で実RNA/全固定形状測定・元/候補/復元SHA・非対象・同一job参照・cleanup・判定/仮想best・安全flag確認。専門12blob完全一致、個別mergeなしclosed。F021-03固定fixture限定受入、v0.21限定3/3、#125 rev25 paused。prefix replayは実機途中停止の証明ではない。任意ソース/一般形状等価/最適値/自動適用/真正性/権利/実機失敗復元注入未確認。v0.22/R29自動開始なし、正式v0.17.0/main/last_verified/44要件/24 NEXT維持、GL/DIL独立。
+
+独立CI: Python45784528480、Windows45784528566、Blender45784528324、Chromium45784528327、Handoff45784528563、Kit45784528476、Skill45784528412。追加push Blender45784519573。候補Blender45782504442、候補native jobs139781121267/139781121606/139781121493、独立139787842022/139787842150/139787841605、push139787810265/139787810638/139787810594。9実ログを直接照合、各run ID独立、重複marker非二重計上。専門B/Dは旧R26/R27回帰、C専門の36新規GLB・12復元はA統合9実験と別集計。予算1/2/3は既測定prefixの独立再計算、物理途中停止未検証。節目候補CI・独立CI後にNotion同期。v0.22はnot_startedのまま。
+
+
+## 2026-11-27 JST — R29 / F022-01 限定割当候補
+
+PR #196 dev 9969c848f48b0c1be99a5c8c19bc032cf77a97f5、独立7CI（Python45983042573、Windows45983042767、Blender45983042567、Chromium45983042677、Handoff45983042614、Kit45983042541、Skill45983042508）。4環境provider各18、Linux 4.5.15 GUI 5/5、Windows kit研究provider除外。#198は検証専用でclosed/unmerged。既承認F022-01の限定割当候補を作成。固定人工回転関節の読取ビュー・既存操作・証拠/状態境界を一つの開発UIに接続し、R28/GLB-022/CJM/GLの既存処理を再実装しない。#125 rev25 paused、割当統合・独立7CI・rev26 active前は専門実装禁止。v0.22全体完了・任意モデル・Windows GUI・正式配布は未承認/未検証。main/正式版/last_verified/44要件/24 NEXT不変。
+
+[R29割当候補](R29_ABCD_START.md)。

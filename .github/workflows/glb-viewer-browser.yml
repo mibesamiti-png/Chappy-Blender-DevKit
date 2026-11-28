@@ -1,0 +1,47 @@
+name: CBDK offline 3D browser interaction smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  chromium-offline-viewer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium browser smoke dependency
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Create local-only synthetic viewer fixture
+        run: |
+          PYTHONPATH=. python scripts/glb_viewer_browser_fixture.py reports/ci/browser_synthetic.html
+          test -f reports/ci/browser_synthetic.html
+      - name: Exercise real browser rotation, zoom, part suggestion and filtering
+        run: |
+          node scripts/glb_viewer_browser_smoke.mjs reports/ci/browser_synthetic.html
+      - name: Capture actual Chromium screenshot gallery (CBDK synthetic fixture only)
+        run: |
+          node scripts/glb_viewer_screenshot_gallery.mjs \
+            reports/ci/browser_synthetic.html reports/ci/browser_screenshot_gallery
+          test -s reports/ci/browser_screenshot_gallery/index.html
+          test -s reports/ci/browser_screenshot_gallery/manifest.json
+          test "$(find reports/ci/browser_screenshot_gallery -maxdepth 1 -name '*.png' | wc -l)" -eq 4
+      - name: Publish only safe synthetic Chromium PNG screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: cbdk-chromium-screenshots-${{ github.run_id }}
+          path: reports/ci/browser_screenshot_gallery/
+          retention-days: 14
+          if-no-files-found: error
+      # Never upload browser_synthetic.html or any private GLB-derived viewer.
+

@@ -1,0 +1,9 @@
+{
+  "head": "6cdb85f4c97bf4cdbb4693a7b1bc180149b4ca2b",
+  "files": {
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "cbdk_geometry/exact.py": "16a1f366883809889a2e0b6c34f22fd5b46a9f034f15c53bc82a3b55097e889d",
+    "cbdk_geometry/accelerated.py": "3541dcf7805ecdb1378ea714960516691c5a254f632f890ce29a4e122113ce39"
+  }
+}

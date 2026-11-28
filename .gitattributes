@@ -1,0 +1,2 @@
+# R27: preserve the exact bytes of the fixed synthetic source fixture.
+fixtures/cbdk_parameter_experiment.py text eol=lf

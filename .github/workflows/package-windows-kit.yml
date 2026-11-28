@@ -4,10 +4,15 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - 'cbdk/joint_integration.py'
+      - 'parts/blender/joint_preview.py'
+      - 'scripts/blender_joint_integration_smoke.py'
+      - 'tests/test_joint_integration.py'
       - 'pyproject.toml'
       - 'docs/project/STATE.json'
       - 'scripts/windows_run_blender_tests.ps1'
       - 'scripts/package_windows_kit.py'
+      - 'experiments/team_a_staged/providers/**'
       - 'run_blender_tests_windows.bat'
       - 'docs/TEST_ENVIRONMENT.md'
       - '.github/workflows/package-windows-kit.yml'
@@ -46,6 +51,7 @@ jobs:
               assert 'Chappy-Blender-DevKit/run_blender_tests_windows.bat' in names
               assert 'Chappy-Blender-DevKit/scripts/windows_run_blender_tests.ps1' in names
               assert not any('/input_sources_private/' in s or '/reports/latest/' in s or '/reports/ci/' in s for s in names)
+              assert not any('/experiments/team_a_staged/providers/' in s for s in names)
               print('Verified Windows kit, files:', len(names))
           PY
       - uses: actions/upload-artifact@v4

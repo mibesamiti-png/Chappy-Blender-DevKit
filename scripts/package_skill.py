@@ -12,7 +12,7 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 SKILL_NAME = "chappy-blender-devkit"
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_ROOT = REPO_ROOT / ".agents" / "skills" / SKILL_NAME
 
@@ -23,6 +23,7 @@ def source_files() -> dict[str, bytes]:
         "agents/openai.yaml",
         "references/WORKFLOW.md",
         "references/QUALITY_GATES.md",
+        "references/MILESTONE.md",
         "references/EXAMPLES.md",
     ]
     files = {}

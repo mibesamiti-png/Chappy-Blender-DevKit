@@ -1,0 +1,271 @@
+"""Safe declarative panel layout for CBDK-authored preview features.
+
+UI JSON controls labels, grouping, fixed visibility and bounded defaults.
+It NEVER selects Python modules,
+operator class names, source paths, or executes user-supplied expressions.
+"""
+from __future__ import annotations
+
+import json
+import math
+from pathlib import Path
+
+from .addon_builder import _trusted_read
+from .feature_catalog import TRUSTED_FEATURES, INPUT_SPECS
+
+UI_CATALOG = "catalog/ui_layouts.json"
+MAX_BYTES = 20_000
+PANEL_SLOTS = {"primary": "VIEW3D_PT_cbdk_modular_primary",
+               "secondary": "VIEW3D_PT_cbdk_modular_secondary"}
+NUDGE_PARAMETER = {key: INPUT_SPECS["offset"][key]
+                   for key in ("type", "size", "min", "max", "default")}
+
+
+def validate_nudge_default(value):
+    if (not isinstance(value, (tuple, list)) or len(value) != NUDGE_PARAMETER["size"]
+            or any(type(v) not in (int, float)
+                   or not NUDGE_PARAMETER["min"] <= v <= NUDGE_PARAMETER["max"]
+                   or not math.isfinite(v) for v in value)
+            or all(v == 0 for v in value)):
+        raise ValueError("Nudge default must be three finite nonzero-vector components within +/-10")
+    return tuple(float(v) for v in value)
+
+
+def validate_nudge_settings(value):
+    """Code-owned type/size; declarative bounds may only narrow safe limits.
+
+    Legacy vector-only defaults remain valid. No arbitrary RNA names, types,
+    expressions or expanded operator limits can enter the generated package.
+    """
+    settings = dict(NUDGE_PARAMETER)
+    if type(value) is dict:
+        if set(value) != {"default", "min", "max"}:
+            raise ValueError("Expected default/min/max for authored nudge settings")
+        for bound in (value["min"], value["max"]):
+            if (type(bound) not in (int, float)
+                    or not NUDGE_PARAMETER["min"] <= bound <= NUDGE_PARAMETER["max"]
+                    or not math.isfinite(bound)):
+                raise ValueError("Nudge bounds may only narrow the finite +/-10 range")
+        if not value["min"] <= 0 <= value["max"] or value["min"] >= value["max"]:
+            raise ValueError("Nudge bounds must be ordered and include zero")
+        settings.update(min=float(value["min"]), max=float(value["max"]))
+        value = value["default"]
+    settings["default"] = validate_nudge_default(value)
+    if any(not settings["min"] <= component <= settings["max"] for component in settings["default"]):
+        raise ValueError("Nudge default lies outside declared bounds")
+    return settings
+
+
+def validate_input_settings(parameter, value):
+    """Two authored types; callers cannot select an RNA name or property type."""
+    spec = INPUT_SPECS[parameter]
+    if spec["type"] == "float_vector":
+        return validate_nudge_settings(value)
+    if spec["type"] != "int":
+        raise ValueError("Unsupported authored input type")
+    settings = {key: spec[key] for key in ("type", "min", "max", "default")}
+    if type(value) is dict:
+        if set(value) != {"default", "min", "max"}:
+            raise ValueError("Expected default/min/max for authored integer settings")
+        settings.update(value)
+    else:
+        settings["default"] = value
+    lo, hi, default = (settings[key] for key in ("min", "max", "default"))
+    if (any(type(v) is not int for v in (lo, hi, default))
+            or not spec["min"] <= lo <= default <= hi <= spec["max"]):
+        raise ValueError("Integer input must narrow authored bounds and contain integer default")
+    return settings
+
+
+def plan_input_registration(parameter, value):
+    """Literal, code-owned RNA metadata plus validated numeric settings."""
+    return {**INPUT_SPECS[parameter], **validate_input_settings(parameter, value)}
+
+
+def _strict_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate key in authored UI layout: " + key)
+        result[key] = value
+    return result
+
+
+def _label(value, *, limit=72):
+    return (
+        isinstance(value, str)
+        and 1 <= len(value) <= limit
+        and value.isprintable()
+    )
+
+
+def _flatten_panel_layout(data):
+    """Schema 2 opt-in: two fixed slots and a shared four-section budget."""
+    if (type(data) is not dict or set(data) != {
+            "schema_version", "kind", "preview_only", "panels"}
+            or type(data["schema_version"]) is not int or data["schema_version"] != 2
+            or data["kind"] != "cbdk_authored_preview_ui_layout"
+            or data["preview_only"] is not True):
+        raise ValueError("Unsupported authored multi-panel layout schema")
+    panels = data["panels"]
+    if type(panels) is not list or len(panels) != 2:
+        raise ValueError("Expected exactly two authored panel slots")
+    seen = set()
+    flat = []
+    planned = []
+    for panel in panels:
+        if type(panel) is not dict or set(panel) != {"slot", "label", "sections"}:
+            raise ValueError("Unexpected authored panel fields")
+        slot = panel["slot"]
+        if type(slot) is not str or slot not in PANEL_SLOTS or slot in seen:
+            raise ValueError("Unknown or repeated authored panel slot")
+        if not _label(panel["label"]):
+            raise ValueError("Invalid authored panel label")
+        sections = panel["sections"]
+        if type(sections) is not list or not 1 <= len(sections) <= 4:
+            raise ValueError("Expected nonempty authored panel sections")
+        if len(flat) + len(sections) > 4:
+            raise ValueError("Expected at most four authored UI sections across panels")
+        seen.add(slot)
+        indices = tuple(range(len(flat), len(flat) + len(sections)))
+        flat.extend(sections)
+        planned.append({"slot": slot, "panel_id": PANEL_SLOTS[slot],
+                        "label": panel["label"], "section_indices": indices})
+    return {"schema_version": 1, "kind": data["kind"], "preview_only": True,
+            "sections": flat}, tuple(planned)
+
+
+def validate_ui_layout(data: object, *, expected_features=None) -> tuple:
+    """Validate exact feature coverage; default is the complete authored catalog."""
+    expected = set(TRUSTED_FEATURES) if expected_features is None else set(expected_features)
+    if not expected or not expected <= set(TRUSTED_FEATURES):
+        raise ValueError("Invalid authored UI coverage")
+    if type(data) is dict and type(data.get("schema_version")) is int and data["schema_version"] == 2:
+        data, _ = _flatten_panel_layout(data)
+    if (type(data) is not dict or set(data) != {
+            "schema_version", "kind", "preview_only", "sections"}
+            or type(data["schema_version"]) is not int
+            or data["schema_version"] != 1
+            or data["kind"] != "cbdk_authored_preview_ui_layout"
+            or data["preview_only"] is not True):
+        raise ValueError("Unsupported authored UI layout schema")
+    sections = data["sections"]
+    if type(sections) is not list or not 1 <= len(sections) <= 4:
+        raise ValueError("Expected 1..4 authored UI sections")
+    seen_section_ids = set()
+    seen_features = set()
+    output = []
+    for section in sections:
+        if (type(section) is not dict or not {"id", "title", "controls"} <= set(section)
+                or set(section) - {"id", "title", "controls", "layout", "boxed", "visible_in"}):
+            raise ValueError("Invalid authored UI section")
+        if section.get("layout", "column") not in ("column", "row") or type(section.get("boxed", True)) is not bool:
+            raise ValueError("Unsupported authored section presentation")
+        if section.get("visible_in", "always") not in ("always", "object", "edit_mesh"):
+            raise ValueError("Section visibility must be always/object/edit_mesh")
+        section_id = section["id"]
+        title = section["title"]
+        if (not isinstance(section_id, str)
+                or not section_id.isascii() or not section_id.isidentifier()
+                or not 1 <= len(section_id) <= 32
+                or section_id in seen_section_ids or not _label(title)):
+            raise ValueError("Invalid or repeated authored UI section")
+        seen_section_ids.add(section_id)
+        controls = section["controls"]
+        if type(controls) is not list or not 1 <= len(controls) <= len(TRUSTED_FEATURES):
+            raise ValueError("Invalid authored UI section controls")
+        entries = []
+        for control in controls:
+            if (type(control) is not dict or not {"feature_id", "label"} <= set(control)
+                    or set(control) - {"feature_id", "label", "parameters", "visible_in"}):
+                raise ValueError("Unexpected authored UI control fields")
+            feature_id = control["feature_id"]
+            if (not isinstance(feature_id, str)
+                    or feature_id not in TRUSTED_FEATURES
+                    or feature_id in seen_features
+                    or not _label(control["label"])):
+                raise ValueError("Unknown, repeated or invalid authored UI control")
+            seen_features.add(feature_id)
+            required_mode = TRUSTED_FEATURES[feature_id]["mode"].lower()
+            control_mode = control.get("visible_in", "always")
+            if type(control_mode) is not str or control_mode not in ("always", required_mode):
+                raise ValueError("Control visibility must be always or its authored operator mode")
+            if section.get("visible_in", "always") not in ("always", required_mode):
+                raise ValueError("Section visibility would make an authored control unreachable")
+            if "parameters" in control:
+                parameters = control["parameters"]
+                parameter = TRUSTED_FEATURES[feature_id]["input"]
+                if parameter is None or type(parameters) is not dict or set(parameters) != {parameter}:
+                    raise ValueError("Only the authored input parameter is configurable")
+                validate_input_settings(parameter, parameters[parameter])
+            entries.append((feature_id, control["label"]))
+        output.append((title, tuple(entries)))
+    if seen_features != expected:
+        raise ValueError("Authored UI layout must cover exactly all allowed features for this plan")
+    return tuple(output)
+
+
+def plan_ui_layout(requested_features: object, *, root: Path, include_options=False,
+                   layout_data=None) -> tuple:
+    """Return a legacy catalog or explicit recipe layout; no paths are accepted."""
+    if (not isinstance(requested_features, (tuple, list))
+            or not 1 <= len(requested_features) <= len(TRUSTED_FEATURES)
+            or any(type(f) is not str or f not in TRUSTED_FEATURES
+                   for f in requested_features)
+            or len(set(requested_features)) != len(requested_features)):
+        raise ValueError("Invalid authored UI feature selection")
+    chosen = set(requested_features)
+    panels = None
+    if layout_data is None:
+        source = _trusted_read(UI_CATALOG, root=root.resolve())
+        if len(source) > MAX_BYTES:
+            raise ValueError("Authored UI layout exceeds size limit")
+        data = json.loads(source.decode("utf-8"), object_pairs_hook=_strict_object)
+        if type(data) is not dict or data.get("schema_version") != 1:
+            raise ValueError("Global catalog must retain schema 1; panels are inline opt-in only")
+        layout = validate_ui_layout(data)
+    else:
+        # The inline recipe is data only. Every resolved feature appears
+        # exactly once; no hidden/unselected operator or external path.
+        data = layout_data
+        layout = validate_ui_layout(data, expected_features=chosen)
+        if len(json.dumps(data, ensure_ascii=False, allow_nan=False).encode("utf-8")) > MAX_BYTES:
+            raise ValueError("Authored recipe UI layout exceeds size limit")
+        if data["schema_version"] == 2:
+            data, panels = _flatten_panel_layout(data)
+    visible = tuple(
+        (title, tuple((feature_id, label) for feature_id, label in controls
+                      if feature_id in chosen))
+        for title, controls in layout
+    )
+    result = tuple((title, controls) for title, controls in visible if controls)
+    if not include_options:
+        return result
+    styles = tuple({"layout": s.get("layout", "column"), "boxed": s.get("boxed", True),
+                    "visible_in": s.get("visible_in", "always")}
+                   for s in data["sections"] if any(c["feature_id"] in chosen for c in s["controls"]))
+    # Historical nudge Scene property is always registered, even in a reader
+    # subset. New inputs are registered only for selected features.
+    values = {"offset": INPUT_SPECS["offset"]["default"]}
+    for section in data["sections"]:
+        for control in section["controls"]:
+            if control["feature_id"] in chosen:
+                parameter = TRUSTED_FEATURES[control["feature_id"]]["input"]
+                if parameter is not None:
+                    values[parameter] = control.get("parameters", {}).get(
+                        parameter, INPUT_SPECS[parameter]["default"])
+    typed = tuple(plan_input_registration(key, value) for key, value in values.items())
+    control_visibility = tuple(
+        tuple(control.get("visible_in", "always") for control in section["controls"]
+              if control["feature_id"] in chosen)
+        for section in data["sections"]
+        if any(control["feature_id"] in chosen for control in section["controls"])
+    )
+    options = {"section_styles": styles,
+               "control_visibility": control_visibility,
+               "nudge_offset": validate_nudge_settings(values["offset"]),
+               "typed_inputs": typed}
+    if panels is not None:
+        # Inline exact coverage means no filtering/reindexing of these sections.
+        options["panels"] = panels
+    return result, options

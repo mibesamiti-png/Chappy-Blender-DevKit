@@ -2,7 +2,11 @@
 import bpy
 
 from ..helpers.context import BlenderContextError
-from ..helpers.edit_transform import translate_selected_vertices
+from ..helpers.edit_transform import translate_selected_vertices, translation_unavailable_reason
+
+
+def ui_unavailable_reason(context):
+    return translation_unavailable_reason(context, tuple(context.scene.cbdk_modular_nudge_offset))
 
 
 class CBDK_OT_modular_vertex_nudge(bpy.types.Operator):

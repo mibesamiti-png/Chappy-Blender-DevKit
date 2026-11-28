@@ -16,26 +16,70 @@ from .addon_builder import _read_catalog, _trusted_read
 CATALOG_PATH = "catalog/addon_features.json"
 TRUSTED_FEATURES = {
     "edit_selection": {
+        "mode": "EDIT_MESH", "ui_hint": "single_edit",
+        "operator": "cbdk.modular_edit_selection", "input": None,
         "source": "templates/modular_preview/features/edit_selection.py",
         "parts": frozenset({"BLCTX-001", "BME-001"}),
     },
     "object_selection": {
+        "mode": "OBJECT", "ui_hint": "selected_objects",
+        "operator": "cbdk.modular_selected_meshes", "input": None,
         "source": "templates/modular_preview/features/object_selection.py",
         "parts": frozenset({"BLCTX-001", "BLCTX-002"}),
     },
     "vertex_nudge": {
+        "mode": "EDIT_MESH", "ui_hint": "nudge",
+        "operator": "cbdk.modular_vertex_nudge", "input": "offset",
         "source": "templates/modular_preview/features/vertex_nudge.py",
         "parts": frozenset({"BLCTX-001", "BME-002", "BME-003"}),
     },
     "mesh_bounds": {
+        "mode": "OBJECT", "ui_hint": "bounds",
+        "operator": "cbdk.modular_mesh_bounds", "input": None,
         "source": "templates/modular_preview/features/mesh_bounds.py",
         "parts": frozenset({"BLCTX-001", "BLGEO-001"}),
     },
     "modifier_summary": {
+        "mode": "OBJECT", "ui_hint": "mesh",
+        "operator": "cbdk.modular_modifier_summary", "input": None,
         "source": "templates/modular_preview/features/modifier_summary.py",
         "parts": frozenset({"BLCTX-001", "BLMOD-001"}),
     },
 }
+# The existing six legacy recipes deliberately retain these five features.
+LEGACY_FEATURE_IDS = frozenset({"edit_selection", "object_selection", "vertex_nudge",
+                                "mesh_bounds", "modifier_summary"})
+TRUSTED_FEATURES["mesh_center"] = {
+    "source": "templates/modular_preview/features/mesh_center.py",
+    "parts": frozenset({"BLCTX-001", "BLGEO-001"}),
+    "mode": "OBJECT", "ui_hint": "bounds",
+    "operator": "cbdk.modular_mesh_center", "input": "precision",
+}
+
+
+# Code-owned input specs. Recipe data may provide only bounded numeric values.
+INPUT_SPECS = {
+    "offset": {"type": "float_vector", "size": 3, "min": -10.0, "max": 10.0,
+               "default": (0.0, 0.0, 0.1),
+               "rna": "cbdk_modular_nudge_offset", "name": "Local Nudge XYZ",
+               "description": "Local-space offset for selected vertices",
+               "label": "XYZ", "subtype": "TRANSLATION", "operator_arg": "offset"},
+    "precision": {"type": "int", "min": 0, "max": 6, "default": 3,
+                  "rna": "cbdk_modular_center_precision", "name": "Center decimal places",
+                  "description": "Number of decimal places in the bounds center result",
+                  "label": "Decimals", "operator_arg": None},
+}
+
+
+def feature_runtime_contract(features):
+    """Code-owned, literal-only runtime metadata for the selected feature modules."""
+    return {feature: {**{key: TRUSTED_FEATURES[feature][key]
+                      for key in ("mode", "ui_hint", "operator", "input")},
+                      "input_spec": dict(INPUT_SPECS[TRUSTED_FEATURES[feature]["input"]])
+                      if TRUSTED_FEATURES[feature]["input"] else None}
+            for feature in features}
+
+
 TRUSTED_PART_SOURCES = {
     "BLCTX-001": "parts/blender/context.py",
     "BLCTX-002": "parts/blender/context.py",

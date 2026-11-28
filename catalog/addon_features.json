@@ -28,6 +28,18 @@
       "max_blender": null
     },
     {
+      "id": "mesh_center",
+      "name": "Inspect Mesh Bounds Center",
+      "source": "templates/modular_preview/features/mesh_center.py",
+      "required_parts": [
+        "BLCTX-001",
+        "BLGEO-001"
+      ],
+      "requires_features": [],
+      "min_blender": "4.4.0",
+      "max_blender": null
+    },
+    {
       "id": "modifier_summary",
       "name": "Inspect Modifier Stack",
       "source": "templates/modular_preview/features/modifier_summary.py",

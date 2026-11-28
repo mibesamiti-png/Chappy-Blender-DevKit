@@ -1,41 +1,56 @@
-# CBDK verification / release gates
+# CBDK verification and release gates
 
-Separate evidence from approvals. Treat missing evidence as **not tested**, not as success.
+Do not confuse tests, analysis, permission and release.
 
-| Level | Evidence | What it does NOT prove |
-|---|---|---|
-| Static inspection | AST inventory, dependency closure, hash consistency, API audit | Correct runtime behavior, legal redistribution |
-| Python unit tests | Actual test logs with Python version and pass/fail count | Blender API integration |
-| Blender smoke | Actual official/tested Blender version, CI run or local evidence JSON, part/check IDs | Compatibility across versions, all addon behaviors |
-| Manual review | Documented behavior, edge cases, performance and ownership review | Automatically granted redistribution permission |
-| Approved reusable part | Explicit project-approved provenance, license clearance, compatibility evidence and necessary tests | Future unchanged behavior after code changes |
+| Evidence layer | Verified fact | Never infer |
+| --- | --- | --- |
+| AST / static review | Parsed source, candidate dependencies, hashes | Runtime behavior, equivalent semantics |
+| Python unit suite | Test cases passed in a specified Python version | Blender context and GUI |
+| Trusted Blender CI | CBDK-authored fixture/recipe passed on a named Blender version and matching commit | Other versions, private addons, manual GUI |
+| Chromium smoke / screenshot | Browser displayed and interacted with a synthetic local viewer | Blender GUI behavior or private model accuracy |
+| Headless `Panel.draw` / Undo probe | Recorded Blender invocation under test conditions | Windows clicks, Ctrl+Z/Ctrl+Shift+Z or real-world crash recovery |
+| Extension preflight | Legacy ZIP integrity and missing release requirements | Valid Extension ZIP or license/owner approval |
+| Human approval | Explicit reviewed rights and adoption decision | Permission to auto-merge or release without separate authorization |
 
-## Implementation review checklist
+## Required checks for code changes
 
-- Identify existing helpers by searching `parts/`, `catalog/` and private catalog when accessible.
-- Document function arguments/outputs, explicit context needs, side effects, supported Blender version and error handling.
-- Distinguish selected Object/Edit mode and single/multi-mesh Edit Mode. Test empty/missing selections and problematic meshes.
-- Keep old source behavior unchanged unless requested, with regression tests for known bugs.
-- Do not execute untrusted import-time Python. Inspect with AST first; test newly authored, reviewed code in a disposable scene.
-- Never silently combine similar/identically structured functions; analyze external state and compatibility.
-- Update source and test evidence together; changing the source invalidates previous SHA-based verification.
-- Review data/rights before sharing: original addons, source-derived reports, proprietary functions and third-party licenses.
+1. Inspect `AGENTS.md` and the live status. Check for a compatible
+   helper in `parts/`, `catalog/` and the recipe/test matrix before adding
+   code. Record affected requirements and an acceptance criterion.
+2. Run focused negative and regression tests (invalid context, duplicate
+   registration/IDs, ZIP traversal, skipped visual assertions, etc.) for
+   the changed capability. Retain pre-existing behavior and error controls.
+3. Run the relevant actual local/CI matrix. The baseline is Python 3.11,
+   3.12, 3.13; Windows 3.11/3.13; Blender 4.4.3, 4.5.15, 5.2.1; kit;
+   handoff; Chromium. **This can change**: read current workflow YAML
+   instead of treating this list as a guaranteed run.
+4. Capture test result and exact code SHA, real Actions URL, source/hash
+   scope and failed/skipped/unverified rows. Distinguish green CI from
+   actual feature or user-geometry testing.
+5. Confirm no private `input_sources_private/`, real GLBs, derived HTML,
+   auth tokens, machine paths or reports leak into public repository
+   commits, public artifacts or Notion.
+6. Preserve ``preview_only=true`` and `approved=false` where required.
+   Pass `--preview-unapproved` only for an explicitly requested local
+   CBDK-authored development preview, never as a release bypass.
+7. Do not merge draft PRs, release, grant licensing, auto-install, or
+   start future phases before current gates and separate approvals.
 
-## CI and status rules
+## Visual evidence accuracy
 
-- Local unit-test success is distinct from GitHub Actions success.
-- The repository's cloud Blender workflow uses Blender 4.5.15 LTS and checks BLCTX-001, BLCTX-002 and BME-001 only, unless the workflow/tests are extended.
-- A green job without checking the target commit or changed paths is not sufficient evidence.
-- `catalog/authored_parts.json` may still say `blender_runtime: not_recorded` despite a separate CI run; don't silently rewrite approval state. Cross-reference evidence explicitly.
-- Missing Blender locally means `not_run`, not `failed` or `passed`.
-- Never report arbitrary extracted code as Blender-tested because the three built-in helpers passed.
+- Reference **real** screenshot or render artifacts from the exact
+  synthetic fixture and code SHA. Label their origin and limits.
+- Keep `screenshot_gallery` of Blender-produced PNGs distinct from
+  `browser_screenshot_gallery` of real headless Chromium UI screenshots.
+- A passed JavaScript/browser smoke proves only the tested interactions,
+  not a full graphics or accessibility certification. Do not guess
+  unseen image details from filenames.
+- Make user-model screenshots **private/local only** without new explicit
+  permission. Do not upload GLB-derived viewer HTML from private sources.
 
-## End-of-task report template
+## End-of-task report
 
-1. **Implemented:** feature IDs, affected files and what behavior changed.
-2. **Checks:** Python tests, Blender runtime run URL/version, what was not run.
-3. **Privacy/provenance:** whether original source files or reports stayed uncommitted.
-4. **GitHub:** branch/PR/commit and whether merged into `main`.
-5. **Remaining:** limitations, open risks and next useful task.
-
-Do not fabricate test counts, CI URLs, measured performance or version claims. Obtain them from the actual tools/logs.
+State: changed feature IDs and concrete results; commit/PR and merge
+state; actual Python/Windows/Blender/browser successes and failures;
+Notion sync attempted/succeeded/pending; unknown GUI/license/real-data
+claims; remaining tasks, prioritized next action and next-phase gate.
