@@ -17,7 +17,8 @@ WAIST=.40;BOTTOM=-.70
 
 def smooth(t):return t*t*(3-2*t)
 
-def mesh(case):
+def mesh(case,method="original"):
+    if method not in ("original","round_rim"):raise ValueError("fixed outline methods")
     if case not in CASES:raise ValueError("fixed pattern fixtures")
     _,hip,front,rear,side,width,length=case
     p=[];q=[];groups=[];shared={}
@@ -37,7 +38,7 @@ def mesh(case):
             a=math.pi*t/2
             w=width/2+(hip-width/2)*math.cos(a)**2
             cy=length/2+(d-length/2)*math.cos(a)
-            ey=cy*math.sin(a)**2
+            ey=cy*(math.sin(a) if method=="round_rim" else math.sin(a)**2)
             z=side_z-(side_z-BOTTOM)*math.sin(a)
             blend=smooth(t)
         out=[]
@@ -45,13 +46,19 @@ def mesh(case):
             u=2*i/N-1
             x=w*((1-blend)*math.sin(math.pi*u/2)+blend*u)
             y=sign*(ey+(cy-ey)*math.cos(math.pi*u/2))
+            zz=z
+            if not upper and method=="round_rim":
+                # Only the outer rim needs a horizontal tangent at the side join.
+                # Keep the middle of the panel on its original height profile.
+                weight=abs(u)**6
+                zz=(1-weight)*z+weight*(side_z-(side_z-BOTTOM)*smooth(t))
             if i in (0,N) and upper:
                 key=(j,i)
                 if key not in shared:shared[key]=add((x,0.,z))
                 idx=shared[key]
             elif j==UP+DOWN:
                 idx=add((width/2*u,sign*length/2,BOTTOM))
-            else:idx=add((x,y,z))
+            else:idx=add((x,y,zz))
             out.append(idx)
         return out
     def connect(a,b,role,reverse=False):
