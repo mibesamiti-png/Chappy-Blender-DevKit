@@ -1,0 +1,144 @@
+name: Geometry Lab organic shape Phase 213
+on:
+  pull_request:
+    paths:
+      - 'research/organic_shape_phase213/**'
+      - '.github/workflows/geometry-lab-organic-213.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-organic-213-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  boundary:
+    if: github.head_ref == 'research/organic-shape-phase213'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    defaults:
+      run:
+        working-directory: research/organic_shape_phase213
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run pure Python boundary checks
+        run: python -m unittest discover -v -p 'test_*.py'
+      - name: Export measured boundary evidence
+        run: |
+          python test_boundary.py
+          python test_patch.py
+          python test_junction.py
+          python test_tangent_junction.py
+          python test_fitting.py
+          python test_refinement.py
+          python test_shell.py
+          python test_garment.py
+          python test_rounded_garment.py
+          python test_cut_garment.py
+          python test_fair_garment.py
+          python test_intersection.py
+          python test_variations.py
+          python test_side_width.py
+          python test_coverage_profile.py
+          python test_rim_wrap.py
+          python test_tip_fairing.py
+          python test_silhouette_cap.py
+          python test_cap_fairing.py
+          python visibility_diagnostic.py
+          python test_rim_local.py
+          python test_pelvis_field.py
+          python test_pelvis_root.py
+          python test_pattern_garment.py
+          python test_pattern_split.py
+          python test_pattern_reimport.py
+          python test_pattern_rim.py
+          python test_pattern_trim.py
+          python test_pattern_ellipse.py
+          python test_pattern_coverage.py
+          python test_pattern_bridge.py
+          python test_pattern_bridge_roundtrip.py
+          python test_pattern_normal_diagnostic.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r10e-input-${{ github.sha }}
+          path: research/organic_shape_phase213/results/
+          if-no-files-found: warn
+
+  native_blender:
+    needs: boundary
+    if: github.head_ref == 'research/organic-shape-phase213'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: research/organic_shape_phase213
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: phase213-r10e-input-${{ github.sha }}
+          path: research/organic_shape_phase213/results/
+      - name: Install distribution Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends blender
+          blender --version
+      - name: Simple editable quad cage prototype
+        run: blender --background --factory-startup --python-exit-code 1 --python simple_quad_cage.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r14a-simple-cage-${{ github.sha }}
+          path: research/organic_shape_phase213/results/simple_cage/
+          if-no-files-found: warn
+      - name: Native mesh and Solidify readback
+        run: blender --background --factory-startup --python-exit-code 1 --python native_blender.py
+      - name: Native qualification of R12H outlines
+        run: blender --background --factory-startup --python-exit-code 1 --python native_pattern_coverage.py
+      - name: Native qualification of R12J bridge outlines
+        run: blender --background --factory-startup --python-exit-code 1 --python native_pattern_bridge.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r10e-native-${{ github.sha }}
+          path: research/organic_shape_phase213/results/native_rim_local/
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r12i-native-${{ github.sha }}
+          path: research/organic_shape_phase213/results/native_pattern_coverage/
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r12k-native-${{ github.sha }}
+          path: research/organic_shape_phase213/results/native_pattern_bridge/
+          if-no-files-found: warn
+
+  form_first_pilot:
+    if: github.head_ref == 'research/organic-shape-phase213'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: research/organic_shape_phase213
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compare frozen generic branching form methods
+        run: python form_first_pilot.py
+      - name: Isolate effect of identical fairing on direct extraction
+        run: python form_first_ablation.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r13b-form-first-${{ github.sha }}
+          path: research/organic_shape_phase213/results/form_first/
+          if-no-files-found: warn
