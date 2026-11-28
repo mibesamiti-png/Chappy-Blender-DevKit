@@ -1,15 +1,15 @@
-"""R10A: native Blender readback of accepted R9F surfaces and optional Solidify.
+"""R10E: native Blender readback of accepted R10D surfaces and optional Solidify.
 Run in Blender background with --python-exit-code 1. No addons or user files.
 """
-import json,math,sys
+import json,math,sys,hashlib
 from pathlib import Path
 import bpy,bmesh
 from mathutils.bvhtree import BVHTree
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from intersection import triangle_hit,audit as grid_audit
 
-SOURCE=Path("results/cap_fairing")
-DEST=Path("results/native_blender")
+SOURCE=Path("results/rim_local")
+DEST=Path("results/native_rim_local")
 NAMES=("standard","front_wrap","rear_wrap","both_wrap")
 THICKNESS=.012
 
@@ -73,7 +73,9 @@ def controls():
 
 def run_case(name):
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    p,q=read_obj(SOURCE/(name+".obj"))
+    source_path=SOURCE/(name+".obj")
+    source_sha256=hashlib.sha256(source_path.read_bytes()).hexdigest()
+    p,q=read_obj(source_path)
     mesh=bpy.data.meshes.new(name+"_surface")
     mesh.from_pydata(p,[],q);mesh.update()
     corrected=mesh.validate(verbose=False)
@@ -110,7 +112,7 @@ def run_case(name):
     reopen_gate=(reopened is not None and len(reopened.data.vertices)==len(p)
         and len(reopened.data.polygons)==len(q) and len(reopened.modifiers)==1
         and not reopened.modifiers[0].show_viewport)
-    return dict(name=name,source_vertices=len(p),source_faces=len(q),readback_max_error=readback,
+    return dict(name=name,source_sha256=source_sha256,source_vertices=len(p),source_faces=len(q),readback_max_error=readback,
         surface=s,surface_validate_changed=corrected,surface_contacts=contacts,surface_gate=surface_gate,
         shell=shell,shell_validate_changed=shell_corrected,shell_contacts=shell_contacts,shell_gate=shell_gate,
         reopen_gate=reopen_gate,passed=surface_gate and shell_gate and reopen_gate)
@@ -119,10 +121,10 @@ def main():
     DEST.mkdir(parents=True,exist_ok=True)
     source=json.loads((SOURCE/"report.json").read_text())
     if not source["fixture_gate"] or {c["name"] for c in source["cases"] if c["passed"]}!=set(NAMES):
-        raise ValueError("R9F input gate not satisfied")
+        raise ValueError("R10D input gate not satisfied")
     control_results=controls()
     results=[run_case(name) for name in NAMES]
-    report=dict(complete=True,blender_version=bpy.app.version_string,thickness=THICKNESS,
+    report=dict(complete=True,source_stage="R10D",source_report_sha256=hashlib.sha256((SOURCE/"report.json").read_bytes()).hexdigest(),blender_version=bpy.app.version_string,thickness=THICKNESS,
         cases=results,controls=control_results,
         grid_control_gate=all(c["grid_pass"] for c in control_results),
         bvh_control_gate=all(c["bvh_pass"] for c in control_results),surface_gate=all(c["surface_gate"] for c in results),
