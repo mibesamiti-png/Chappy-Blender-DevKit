@@ -55,6 +55,7 @@ jobs:
           python test_pattern_trim.py
           python test_pattern_ellipse.py
           python test_pattern_coverage.py
+          python test_pattern_bridge.py
           python test_pattern_normal_diagnostic.py
       - uses: actions/upload-artifact@v4
         if: always()
