@@ -49,7 +49,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-capfair-${{ github.sha }}
+          name: phase213-r10e-input-${{ github.sha }}
           path: research/organic_shape_phase213/results/
           if-no-files-found: warn
 
@@ -67,7 +67,7 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
-          name: phase213-capfair-${{ github.sha }}
+          name: phase213-r10e-input-${{ github.sha }}
           path: research/organic_shape_phase213/results/
       - name: Install distribution Blender
         run: |
@@ -79,6 +79,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-native-${{ github.sha }}
-          path: research/organic_shape_phase213/results/native_blender/
+          name: phase213-r10e-native-${{ github.sha }}
+          path: research/organic_shape_phase213/results/native_rim_local/
           if-no-files-found: warn
