@@ -50,6 +50,7 @@ jobs:
           python test_pelvis_root.py
           python test_pattern_garment.py
           python test_pattern_split.py
+          python test_pattern_reimport.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
