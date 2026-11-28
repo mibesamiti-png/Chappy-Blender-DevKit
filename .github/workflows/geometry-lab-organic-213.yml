@@ -48,6 +48,7 @@ jobs:
           python test_rim_local.py
           python test_pelvis_field.py
           python test_pelvis_root.py
+          python test_pattern_garment.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
