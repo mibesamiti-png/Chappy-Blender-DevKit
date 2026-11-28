@@ -50,3 +50,33 @@ jobs:
           name: phase213-capfair-${{ github.sha }}
           path: research/organic_shape_phase213/results/
           if-no-files-found: warn
+
+  native_blender:
+    needs: boundary
+    if: github.head_ref == 'research/organic-shape-phase213'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: research/organic_shape_phase213
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: phase213-capfair-${{ github.sha }}
+          path: research/organic_shape_phase213/results/
+      - name: Install distribution Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends blender
+          blender --version
+      - name: Native mesh and Solidify readback
+        run: blender --background --factory-startup --python-exit-code 1 --python native_blender.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-native-${{ github.sha }}
+          path: research/organic_shape_phase213/results/native_blender/
+          if-no-files-found: warn
