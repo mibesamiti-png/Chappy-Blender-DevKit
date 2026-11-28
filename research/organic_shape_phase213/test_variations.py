@@ -47,7 +47,7 @@ class VariationTests(unittest.TestCase):
             self.assertIsNone(r["nonincident_intersection"])
             self.assertFalse(r["passed"])
     def test_reject_invalid(self):
-        for kwargs in (dict(cut=8),dict(waist=.7),dict(depth=.2),dict(ylo=0),dict(yhi=16)):
+        for kwargs in (dict(cut=8),dict(waist=.7),dict(depth=.2),dict(ylo=-1),dict(yhi=17)):
             with self.assertRaises(ValueError):base(**kwargs)
 
 def evidence():
