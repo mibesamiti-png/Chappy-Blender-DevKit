@@ -31,7 +31,7 @@ def chart_point(key,target=TARGET,waist=.40,depth=.82):
     return (r*math.cos(theta),r*math.sin(theta),height)
 
 def base(target=TARGET,waist=.40,depth=.82,cut=6,ylo=4,yhi=14):
-    if not (.28<=waist<=.55 and .72<=depth<=.94 and type(cut) is int and 4<=cut<=7 and type(ylo) is int and type(yhi) is int and 2<=ylo<=5 and 11<=yhi<=14):
+    if not (.28<=waist<=.55 and .72<=depth<=.94 and type(cut) is int and 4<=cut<=7 and type(ylo) is int and type(yhi) is int and (ylo==0 or 2<=ylo<=5) and (yhi==N or 11<=yhi<=14)):
         raise ValueError("bounded chart configuration")
     points=[];faces=[];keys=[];ids={}
     def add(k):
@@ -53,6 +53,9 @@ def base(target=TARGET,waist=.40,depth=.82,cut=6,ylo=4,yhi=14):
                 # Openings traverse the side/bottom edge rather than a tube end.
                 if name=="bottom" and (k[0]<cut or k[0]>=N-cut) and ylo<=k[1]<yhi:continue
                 if name in ("left","right") and k[2]<cut and ylo<=k[1]<yhi:continue
+                # Optional wrap across the front/rear chart edge. The
+                # matching bottom and side cuts share exactly the same lattice.
+                if ((name=="front" and yhi==N) or (name=="rear" and ylo==0)) and (k[0]<cut or k[0]>=N-cut) and k[2]<cut:continue
                 faces.append(tuple(add(fn(a,b)) for a,b in ((u,v),(u+1,v),(u+1,v+1),(u,v+1))))
     edge=defaultdict(list)
     for f in faces:
