@@ -12,29 +12,31 @@ from test_rounded_garment import shape_metrics
 
 N=16
 
-def chart_point(key):
+def chart_point(key,target=TARGET,waist=.40,depth=.82):
     x,y,z=(2*k/N-1 for k in key)
     length=math.sqrt(x*x+y*y+z*z)
     a,b,c=x/length,y/length,z/length
     if math.hypot(a,b)<1e-12:
-        return (0.,0.,-.82)
+        return (0.,0.,-depth)
     theta=math.atan2(b,a)
     if c>=0:
         top=1/math.sqrt(1+1/max(math.cos(theta)**2,math.sin(theta)**2))
         u=c/top
-        height=u*(.40+WAIST.latitude((theta-math.pi/2)/math.tau))
+        height=u*(waist+WAIST.latitude((theta-math.pi/2)/math.tau))
         scale=1.
     else:
-        height=.82*c
+        height=depth*c
         scale=math.sqrt(max(0.,1-c*c))
-    r=(TARGET.ray(theta,height)+GAP)*scale
+    r=(target.ray(theta,height)+GAP)*scale
     return (r*math.cos(theta),r*math.sin(theta),height)
 
-def base():
+def base(target=TARGET,waist=.40,depth=.82,cut=6,ylo=4,yhi=14):
+    if not (.28<=waist<=.55 and .72<=depth<=.94 and type(cut) is int and 4<=cut<=7 and type(ylo) is int and type(yhi) is int and 2<=ylo<=5 and 11<=yhi<=14):
+        raise ValueError("bounded chart configuration")
     points=[];faces=[];keys=[];ids={}
     def add(k):
         if k not in ids:
-            ids[k]=len(points);keys.append(k);points.append(chart_point(k))
+            ids[k]=len(points);keys.append(k);points.append(chart_point(k,target,waist,depth))
         return ids[k]
     # parameter directions chosen so cross(du,dv) is outward
     charts=(
@@ -49,8 +51,8 @@ def base():
             for v in range(N):
                 k=fn(u,v)
                 # Openings traverse the side/bottom edge rather than a tube end.
-                if name=="bottom" and (k[0]<6 or k[0]>=10) and 4<=k[1]<14:continue
-                if name in ("left","right") and k[2]<6 and 4<=k[1]<14:continue
+                if name=="bottom" and (k[0]<cut or k[0]>=N-cut) and ylo<=k[1]<yhi:continue
+                if name in ("left","right") and k[2]<cut and ylo<=k[1]<yhi:continue
                 faces.append(tuple(add(fn(a,b)) for a,b in ((u,v),(u+1,v),(u+1,v+1),(u,v+1))))
     edge=defaultdict(list)
     for f in faces:
@@ -70,8 +72,8 @@ def base():
         loops.append(loop)
     def role(l):
         if all(keys[i][2]==N for i in l):return 0
-        if all(keys[i][0]<=6 for i in l):return 1
-        if all(keys[i][0]>=10 for i in l):return 2
+        if all(keys[i][0]<=cut for i in l):return 1
+        if all(keys[i][0]>=N-cut for i in l):return 2
         raise ValueError("ambiguous loop role")
     loops=tuple(sorted(loops,key=role))
     if [role(l) for l in loops]!=[0,1,2]:raise ValueError("missing cut")
@@ -88,8 +90,8 @@ def round_hem(points,loops):
                 out[i]=tuple(.5*x+.25*(y+z) for x,y,z in zip(src[i],a,b))
     return out
 
-def inspect_cut(p,q,l,ref):
-    m=inspect(p,q,l,ref)
+def inspect_cut(p,q,l,ref,target=TARGET):
+    m=inspect(p,q,l,ref,target=target)
     # A corner quad can touch two rim edges. Count edges separately from faces.
     edges=Counter(tuple(sorted((a,b))) for f in q for a,b in zip(f,f[1:]+f[:1]))
     declared={tuple(sorted((a,b))) for loop in l for a,b in zip(loop,loop[1:]+loop[:1])}
