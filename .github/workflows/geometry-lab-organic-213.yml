@@ -41,9 +41,10 @@ jobs:
           python test_side_width.py
           python test_coverage_profile.py
           python test_rim_wrap.py
+          python test_tip_fairing.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-wrap-${{ github.sha }}
+          name: phase213-tip-${{ github.sha }}
           path: research/organic_shape_phase213/results/
           if-no-files-found: warn
