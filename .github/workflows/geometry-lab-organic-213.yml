@@ -56,6 +56,7 @@ jobs:
           python test_pattern_ellipse.py
           python test_pattern_coverage.py
           python test_pattern_bridge.py
+          python test_pattern_bridge_roundtrip.py
           python test_pattern_normal_diagnostic.py
       - uses: actions/upload-artifact@v4
         if: always()
@@ -89,6 +90,8 @@ jobs:
         run: blender --background --factory-startup --python-exit-code 1 --python native_blender.py
       - name: Native qualification of R12H outlines
         run: blender --background --factory-startup --python-exit-code 1 --python native_pattern_coverage.py
+      - name: Native qualification of R12J bridge outlines
+        run: blender --background --factory-startup --python-exit-code 1 --python native_pattern_bridge.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -101,4 +104,11 @@ jobs:
         with:
           name: phase213-r12i-native-${{ github.sha }}
           path: research/organic_shape_phase213/results/native_pattern_coverage/
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r12k-native-${{ github.sha }}
+          path: research/organic_shape_phase213/results/native_pattern_bridge/
           if-no-files-found: warn
