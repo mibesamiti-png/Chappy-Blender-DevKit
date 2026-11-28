@@ -53,6 +53,7 @@ jobs:
           python test_pattern_reimport.py
           python test_pattern_rim.py
           python test_pattern_trim.py
+          python test_pattern_ellipse.py
           python test_pattern_normal_diagnostic.py
       - uses: actions/upload-artifact@v4
         if: always()
