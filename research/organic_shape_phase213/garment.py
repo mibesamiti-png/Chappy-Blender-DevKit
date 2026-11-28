@@ -75,14 +75,14 @@ def edge_groups(faces,loops):
     roles={tuple(sorted((a,b))):role for role,l in zip(("waist","left_leg","right_leg"),loops) for a,b in zip(l,l[1:]+l[:1])}
     return [next((roles[e] for e in (tuple(sorted((a,b))) for a,b in zip(f,f[1:]+f[:1])) if e in roles),"fabric") for f in faces]
 
-def inspect(p,q,l,ref):
+def inspect(p,q,l,ref,target=TARGET):
     m=audit(p,q,l,ref)
     waist,left,right=l
     gaps=[]
     def sample(x):
         a,b,z=x
         if z>=.04:
-            gaps.append(math.hypot(a,b)-TARGET.reference_radius(math.atan2(b,a),z))
+            gaps.append(math.hypot(a,b)-target.reference_radius(math.atan2(b,a),z))
     for x in p:sample(x)
     for f in q:
         for t in ((f[0],f[1],f[2]),(f[0],f[2],f[3])):
