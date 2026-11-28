@@ -1,0 +1,36 @@
+name: Geometry Lab fast cage preview
+on:
+  pull_request:
+    paths:
+      - 'research/organic_shape_phase213/simple_quad_cage_r14b.py'
+      - '.github/workflows/geometry-lab-fast-cage.yml'
+permissions:
+  contents: read
+concurrency:
+  group: geometry-fast-cage-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  preview:
+    if: github.head_ref == 'research/organic-shape-phase213'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: research/organic_shape_phase213
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Blender
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends blender
+          blender --version
+      - name: Generate editable R14B cage and previews
+        run: blender --background --factory-startup --python-exit-code 1 --python simple_quad_cage_r14b.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r14b-simple-cage-${{ github.sha }}
+          path: research/organic_shape_phase213/results/simple_cage_r14b/
+          if-no-files-found: error
