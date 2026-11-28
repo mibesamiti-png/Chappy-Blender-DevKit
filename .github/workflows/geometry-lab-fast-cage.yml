@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'research/organic_shape_phase213/simple_quad_cage_r14b.py'
+      - 'research/organic_shape_phase213/simple_quad_cage_r15a.py'
       - '.github/workflows/geometry-lab-fast-cage.yml'
 permissions:
   contents: read
@@ -26,11 +27,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends blender
           blender --version
-      - name: Generate editable R14B cage and previews
-        run: blender --background --factory-startup --python-exit-code 1 --python simple_quad_cage_r14b.py
+      - name: Generate editable R15A cage and previews
+        run: blender --background --factory-startup --python-exit-code 1 --python simple_quad_cage_r15a.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-r14b-simple-cage-${{ github.sha }}
-          path: research/organic_shape_phase213/results/simple_cage_r14b/
+          name: phase213-r15a-simple-cage-${{ github.sha }}
+          path: research/organic_shape_phase213/results/simple_cage_r15a/
           if-no-files-found: error
