@@ -86,6 +86,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends blender
           blender --version
+      - name: Simple editable quad cage prototype
+        run: blender --background --factory-startup --python-exit-code 1 --python simple_quad_cage.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r14a-simple-cage-${{ github.sha }}
+          path: research/organic_shape_phase213/results/simple_cage/
+          if-no-files-found: warn
       - name: Native mesh and Solidify readback
         run: blender --background --factory-startup --python-exit-code 1 --python native_blender.py
       - name: Native qualification of R12H outlines
