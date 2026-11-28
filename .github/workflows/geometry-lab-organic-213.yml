@@ -35,9 +35,10 @@ jobs:
           python test_garment.py
           python test_rounded_garment.py
           python test_cut_garment.py
+          python test_fair_garment.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-r7c-${{ github.sha }}
+          name: phase213-r7d-${{ github.sha }}
           path: research/organic_shape_phase213/results/
           if-no-files-found: warn
