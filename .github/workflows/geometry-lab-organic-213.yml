@@ -44,6 +44,7 @@ jobs:
           python test_tip_fairing.py
           python test_silhouette_cap.py
           python test_cap_fairing.py
+          python visibility_diagnostic.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
