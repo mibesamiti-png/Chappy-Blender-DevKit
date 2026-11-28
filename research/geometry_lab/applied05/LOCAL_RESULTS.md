@@ -1,0 +1,11 @@
+# Applied05 — INK04 game controller (2026-11-25)
+
+Owner requested a controller after approving the flashlight silhouette and criticizing GLB fan triangulation. Scope: low-poly recognizable visual proxy, editable quad topology; no real electronics, tolerances, UV, manufacturing or functional assembly.
+
+Previous Applied04 native CI confirmed success at job 138948222668: 592 vertices, 1172 triangles, three closed/nondegenerate CGAL-clean parts, exact save/reopen, profile error 1.7285e-9 m. [CI](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45537654395/job/138948222668).
+
+Applied05 independently generated locally (Python/trimesh and VTK), 146 mm width, 12 separate parts. The shell is a structured 21x9 top and bottom grid, joined by four perimeter rings; shape stations explicitly concentrate controls at grips. D-pad caps use five tiled quads rather than a triangulation fan. Cylindrical sticks/buttons and chamfered rectangular menu/shoulder buttons are separate, with planar ngon caps. Editable OBJ preserves quads; GLB deliberately triangulates. Both are distinct outputs, not a claim that GLB preserves editing topology.
+
+Measured locally: 1058 vertices, 962 polygon faces, 942 quads, 20 ngons, zero base triangles; evaluated triangulated count 2068. Shell 602 vertices, 600 quads. All twelve triangulated components are watertight, consistently oriented, positive-volume, and have nonzero triangle areas according to trimesh. GLB reimport yields 12 geometries. VTK three-quarter and top renders generated; three-quarter inspected: recognizable controller, visible angular grip outline and simplified button details. Decorative components intentionally overlap shell; no interpart clearance or self-intersection oracle claim. No native Blender execution or save/reopen test in this turn.
+
+User received editable OBJ/MTL and Python generator in ZIP, GLB and actual preview in chat. This record does not imply the model files or exact generator were uploaded to GitHub. No private input. Next: if requested, archive generator and execute native Blender and CGAL tests, then consider local topology refinement. No product adoption or main/ABCD/DIL changes. approved=false.

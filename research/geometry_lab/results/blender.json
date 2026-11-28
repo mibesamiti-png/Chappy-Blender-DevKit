@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "synthetic_only": true,
+  "blender": "4.3.2",
+  "source_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5"
+  },
+  "cases": [
+    {
+      "case": "overlap",
+      "distance": 1.0,
+      "method": "exact",
+      "voxel_size": null,
+      "status": "error",
+      "error_type": "ValueError",
+      "reason": "degenerate or nearly degenerate triangle"
+    },
+    {
+      "case": "overlap",
+      "distance": 1.0,
+      "method": "voxel",
+      "voxel_size": 0.2,
+      "status": "failed",
+      "quality": {
+        "triangles": 1268,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 6.6799523685309055,
+        "min_triangle_quality": 5.158192712136217e-06
+      },
+      "volume_relative_error": 0.0549800541599041,
+      "intersection_pairs": 8,
+      "detector_status": "measured",
+      "detection_ms": 4528.703878999977,
+      "samples_ms": [
+        26.827249000007214,
+        60.68708200001538,
+        49.64578299995992
+      ],
+      "median_ms": 49.64578299995992,
+      "repeats": 3
+    },
+    {
+      "case": "overlap",
+      "distance": 1.0,
+      "method": "voxel",
+      "voxel_size": 0.1,
+      "status": "failed",
+      "quality": {
+        "triangles": 5516,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 6.836138837373053,
+        "min_triangle_quality": 1.0317899706471245e-05
+      },
+      "volume_relative_error": 0.032884188772974283,
+      "intersection_pairs": 8,
+      "detector_status": "measured",
+      "detection_ms": 34627.600744999996,
+      "samples_ms": [
+        66.80861899997126,
+        46.56938200002969,
+        67.86943500003417
+      ],
+      "median_ms": 66.80861899997126,
+      "repeats": 3
+    },
+    {
+      "case": "thin_neck",
+      "distance": 1.95,
+      "method": "exact",
+      "voxel_size": null,
+      "status": "failed",
+      "quality": {
+        "triangles": 1076,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 8.13990271767104,
+        "min_triangle_quality": 3.879308091231565e-07
+      },
+      "volume_relative_error": 0.027918818785045568,
+      "intersection_pairs": 5,
+      "detector_status": "measured",
+      "detection_ms": 6640.784356999973,
+      "samples_ms": [
+        327.46064799999886,
+        348.0818550000322,
+        327.2258160000092
+      ],
+      "median_ms": 327.46064799999886,
+      "repeats": 3
+    },
+    {
+      "case": "thin_neck",
+      "distance": 1.95,
+      "method": "voxel",
+      "voxel_size": 0.2,
+      "status": "failed",
+      "quality": {
+        "triangles": 1716,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 7.900777357803409,
+        "min_triangle_quality": 5.763962364176261e-06
+      },
+      "volume_relative_error": 0.05647558049841966,
+      "intersection_pairs": 4,
+      "detector_status": "measured",
+      "detection_ms": 10366.691984999989,
+      "samples_ms": [
+        71.36440199997196,
+        38.23379400000704,
+        65.8207710000056
+      ],
+      "median_ms": 65.8207710000056,
+      "repeats": 3
+    },
+    {
+      "case": "thin_neck",
+      "distance": 1.95,
+      "method": "voxel",
+      "voxel_size": 0.1,
+      "status": "failed",
+      "quality": {
+        "triangles": 7220,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 8.102731398229468,
+        "min_triangle_quality": 1.0704485360555982e-05
+      },
+      "volume_relative_error": 0.032357881678468044,
+      "intersection_pairs": 4,
+      "detector_status": "measured",
+      "detection_ms": 58583.13025399997,
+      "samples_ms": [
+        159.39135100001067,
+        113.1104670000127,
+        116.44396999997753
+      ],
+      "median_ms": 116.44396999997753,
+      "repeats": 3
+    },
+    {
+      "case": "tangent",
+      "distance": 2.0,
+      "method": "exact",
+      "voxel_size": null,
+      "status": "ambiguous_contact",
+      "quality": {
+        "triangles": 1056,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 2,
+        "volume": 8.141104781522666,
+        "min_triangle_quality": 0.4052235757468483
+      },
+      "volume_relative_error": 0.028227198843702252,
+      "intersection_pairs": 36,
+      "detector_status": "measured",
+      "detection_ms": 2534.4485460000215,
+      "samples_ms": [
+        114.89202900003193,
+        147.6880870000059,
+        139.04987500001198
+      ],
+      "median_ms": 139.04987500001198,
+      "repeats": 3
+    },
+    {
+      "case": "tangent",
+      "distance": 2.0,
+      "method": "voxel",
+      "voxel_size": 0.2,
+      "status": "ambiguous_contact",
+      "quality": {
+        "triangles": 1724,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 7.848307153436032,
+        "min_triangle_quality": 5.158964485956065e-06
+      },
+      "volume_relative_error": 0.06317734122037984,
+      "intersection_pairs": 8,
+      "detector_status": "measured",
+      "detection_ms": 4768.9983930000035,
+      "samples_ms": [
+        24.61771299999782,
+        22.313087999975778,
+        26.843330000019705
+      ],
+      "median_ms": 24.61771299999782,
+      "repeats": 3
+    },
+    {
+      "case": "tangent",
+      "distance": 2.0,
+      "method": "voxel",
+      "voxel_size": 0.1,
+      "status": "ambiguous_contact",
+      "quality": {
+        "triangles": 7356,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 8.078826897661827,
+        "min_triangle_quality": 1.0317899706471245e-05
+      },
+      "volume_relative_error": 0.03566107364001884,
+      "intersection_pairs": 8,
+      "detector_status": "measured",
+      "detection_ms": 19990.343203000008,
+      "samples_ms": [
+        52.053672999988976,
+        54.64002900004061,
+        70.94543200003045
+      ],
+      "median_ms": 54.64002900004061,
+      "repeats": 3
+    },
+    {
+      "case": "gap",
+      "distance": 2.2,
+      "method": "exact",
+      "voxel_size": null,
+      "status": "passed",
+      "quality": {
+        "triangles": 1056,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 2,
+        "volume": 8.14110471711019,
+        "min_triangle_quality": 0.4052233492779188
+      },
+      "volume_relative_error": 0.02822720653237514,
+      "intersection_pairs": 0,
+      "detector_status": "measured",
+      "detection_ms": 2454.788140000005,
+      "samples_ms": [
+        155.0136750000206,
+        139.76028299998688,
+        121.47564800000055
+      ],
+      "median_ms": 139.76028299998688,
+      "repeats": 3
+    },
+    {
+      "case": "gap",
+      "distance": 2.2,
+      "method": "voxel",
+      "voxel_size": 0.2,
+      "status": "failed",
+      "quality": {
+        "triangles": 1748,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 1,
+        "volume": 7.9321032262274,
+        "min_triangle_quality": 5.158964485956065e-06
+      },
+      "volume_relative_error": 0.05317492182305396,
+      "intersection_pairs": 8,
+      "detector_status": "measured",
+      "detection_ms": 3966.0690860000045,
+      "samples_ms": [
+        21.669229999986328,
+        21.380204999957186,
+        20.675749000020005
+      ],
+      "median_ms": 21.380204999957186,
+      "repeats": 3
+    },
+    {
+      "case": "gap",
+      "distance": 2.2,
+      "method": "voxel",
+      "voxel_size": 0.1,
+      "status": "failed",
+      "quality": {
+        "triangles": 7416,
+        "boundary_edges": 0,
+        "nonmanifold_edges": 0,
+        "components": 2,
+        "volume": 8.053716923254205,
+        "min_triangle_quality": 1.0317899706471245e-05
+      },
+      "volume_relative_error": 0.038658356050931826,
+      "intersection_pairs": 8,
+      "detector_status": "measured",
+      "detection_ms": 19893.14080700001,
+      "samples_ms": [
+        49.388435000025765,
+        47.45753700001387,
+        45.64326700000265
+      ],
+      "median_ms": 47.45753700001387,
+      "repeats": 3
+    }
+  ],
+  "success_count": 1,
+  "failure_count": 8,
+  "ambiguous_count": 3,
+  "scene_preserved": true,
+  "detector_certified": false
+}

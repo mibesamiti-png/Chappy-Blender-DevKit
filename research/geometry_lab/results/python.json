@@ -1,0 +1,913 @@
+{
+  "schema_version": 1,
+  "synthetic_only": true,
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "platform": "Linux",
+  "source_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5"
+  },
+  "detection": [
+    {
+      "case": "cross",
+      "scale": 1e-06,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.5374890000098276,
+        0.3427700000315781,
+        0.4607650000139074
+      ],
+      "median_ms": 0.4607650000139074,
+      "repeats": 3
+    },
+    {
+      "case": "cross",
+      "scale": 1e-06,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.5103430000303888,
+        0.5265679999979511,
+        0.5897529999856488
+      ],
+      "median_ms": 0.5265679999979511,
+      "repeats": 3
+    },
+    {
+      "case": "separate",
+      "scale": 1e-06,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.36096700000598503,
+        0.3931119999833754,
+        0.36853799997516035
+      ],
+      "median_ms": 0.36853799997516035,
+      "repeats": 3
+    },
+    {
+      "case": "separate",
+      "scale": 1e-06,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.15302000002748173,
+        0.10607299998355302,
+        0.0863000000208558
+      ],
+      "median_ms": 0.10607299998355302,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar",
+      "scale": 1e-06,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.4173680000008062,
+        0.37046600004941865,
+        0.38419399999156667
+      ],
+      "median_ms": 0.38419399999156667,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar",
+      "scale": 1e-06,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.4949819999637839,
+        0.3856750000181819,
+        0.345972999980404
+      ],
+      "median_ms": 0.3856750000181819,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar_separate",
+      "scale": 1e-06,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.25019800000336545,
+        0.7297529999732433,
+        0.6947509999690737
+      ],
+      "median_ms": 0.6947509999690737,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar_separate",
+      "scale": 1e-06,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.2071300000352494,
+        0.09137600000030943,
+        0.45892399998592737
+      ],
+      "median_ms": 0.2071300000352494,
+      "repeats": 3
+    },
+    {
+      "case": "touch",
+      "scale": 1e-06,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.3087970000024143,
+        0.6859310000209007,
+        0.42508799998586255
+      ],
+      "median_ms": 0.42508799998586255,
+      "repeats": 3
+    },
+    {
+      "case": "touch",
+      "scale": 1e-06,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        1.2710430000311135,
+        0.3896790000226247,
+        0.5399140000008629
+      ],
+      "median_ms": 0.5399140000008629,
+      "repeats": 3
+    },
+    {
+      "case": "near_miss",
+      "scale": 1e-06,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.3849750000313179,
+        0.5462049999778174,
+        0.4954060000272875
+      ],
+      "median_ms": 0.4954060000272875,
+      "repeats": 3
+    },
+    {
+      "case": "near_miss",
+      "scale": 1e-06,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        1.1724610000101165,
+        0.17277000000603948,
+        0.47872199996845666
+      ],
+      "median_ms": 0.47872199996845666,
+      "repeats": 3
+    },
+    {
+      "case": "cross",
+      "scale": 1,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.7840540000074725,
+        0.5302440000036768,
+        0.6987830000184658
+      ],
+      "median_ms": 0.6987830000184658,
+      "repeats": 3
+    },
+    {
+      "case": "cross",
+      "scale": 1,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.3817889999595536,
+        0.4215979999457886,
+        0.4234489999817015
+      ],
+      "median_ms": 0.4215979999457886,
+      "repeats": 3
+    },
+    {
+      "case": "separate",
+      "scale": 1,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.4332980000185671,
+        0.2922749999925145,
+        2.104586999962521
+      ],
+      "median_ms": 0.4332980000185671,
+      "repeats": 3
+    },
+    {
+      "case": "separate",
+      "scale": 1,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.3690160000360265,
+        0.20346000002291476,
+        0.10362500000837827
+      ],
+      "median_ms": 0.20346000002291476,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar",
+      "scale": 1,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.46268100004454027,
+        0.37845399998559515,
+        0.49309100000982653
+      ],
+      "median_ms": 0.46268100004454027,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar",
+      "scale": 1,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.658044000033442,
+        0.40054099997632875,
+        0.3431709999972554
+      ],
+      "median_ms": 0.40054099997632875,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar_separate",
+      "scale": 1,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.33495099995661803,
+        0.3286379999849487,
+        0.4851429999916945
+      ],
+      "median_ms": 0.33495099995661803,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar_separate",
+      "scale": 1,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.09461399997690023,
+        0.08293500002309884,
+        0.07930900000019392
+      ],
+      "median_ms": 0.08293500002309884,
+      "repeats": 3
+    },
+    {
+      "case": "touch",
+      "scale": 1,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.4189779999705934,
+        0.27445900002476264,
+        0.25318799998785835
+      ],
+      "median_ms": 0.27445900002476264,
+      "repeats": 3
+    },
+    {
+      "case": "touch",
+      "scale": 1,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.7475369999951909,
+        0.8663830000159578,
+        0.787732999981472
+      ],
+      "median_ms": 0.787732999981472,
+      "repeats": 3
+    },
+    {
+      "case": "near_miss",
+      "scale": 1,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.5806480000387637,
+        1.2842709999745239,
+        0.7347339999910218
+      ],
+      "median_ms": 0.7347339999910218,
+      "repeats": 3
+    },
+    {
+      "case": "near_miss",
+      "scale": 1,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.09246400003348754,
+        0.08589200001551944,
+        0.08328500001653083
+      ],
+      "median_ms": 0.08589200001551944,
+      "repeats": 3
+    },
+    {
+      "case": "cross",
+      "scale": 1000000.0,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.4970229999798903,
+        0.28972599994858683,
+        0.26092100000596474
+      ],
+      "median_ms": 0.28972599994858683,
+      "repeats": 3
+    },
+    {
+      "case": "cross",
+      "scale": 1000000.0,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.5548910000356955,
+        1.5842120000115756,
+        0.47311700001273493
+      ],
+      "median_ms": 0.5548910000356955,
+      "repeats": 3
+    },
+    {
+      "case": "separate",
+      "scale": 1000000.0,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.45948899997938497,
+        0.43869400002449765,
+        0.27772800001457654
+      ],
+      "median_ms": 0.43869400002449765,
+      "repeats": 3
+    },
+    {
+      "case": "separate",
+      "scale": 1000000.0,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.08845600001450293,
+        0.08362400001260539,
+        0.08123700001760881
+      ],
+      "median_ms": 0.08362400001260539,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar",
+      "scale": 1000000.0,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.44397199997092684,
+        0.2929119999635077,
+        0.4529149999825677
+      ],
+      "median_ms": 0.44397199997092684,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar",
+      "scale": 1000000.0,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.48694100001966945,
+        0.41091699995376985,
+        0.35893299997269423
+      ],
+      "median_ms": 0.41091699995376985,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar_separate",
+      "scale": 1000000.0,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.2543649999893205,
+        0.36667099999476704,
+        2.7528910000000906
+      ],
+      "median_ms": 0.36667099999476704,
+      "repeats": 3
+    },
+    {
+      "case": "coplanar_separate",
+      "scale": 1000000.0,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.10601299999279945,
+        0.08680600001298444,
+        0.08010899995269938
+      ],
+      "median_ms": 0.08680600001298444,
+      "repeats": 3
+    },
+    {
+      "case": "touch",
+      "scale": 1000000.0,
+      "method": "brute",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        1.5945349999810787,
+        0.33396499998161744,
+        3.3096689999752016
+      ],
+      "median_ms": 1.5945349999810787,
+      "repeats": 3
+    },
+    {
+      "case": "touch",
+      "scale": 1000000.0,
+      "method": "sweep",
+      "expected": true,
+      "success": true,
+      "status": "measured",
+      "pairs": [
+        [
+          0,
+          1
+        ]
+      ],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.8601569999768799,
+        1.804364000008718,
+        0.9515560000181722
+      ],
+      "median_ms": 0.9515560000181722,
+      "repeats": 3
+    },
+    {
+      "case": "near_miss",
+      "scale": 1000000.0,
+      "method": "brute",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 1,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.5117590000054406,
+        2.1526900000026217,
+        0.33892999999807216
+      ],
+      "median_ms": 0.5117590000054406,
+      "repeats": 3
+    },
+    {
+      "case": "near_miss",
+      "scale": 1000000.0,
+      "method": "sweep",
+      "expected": false,
+      "success": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.0932620000071438,
+        0.8770590000040102,
+        0.13534300001083466
+      ],
+      "median_ms": 0.13534300001083466,
+      "repeats": 3
+    }
+  ],
+  "performance": [
+    {
+      "triangles": 32,
+      "method": "brute",
+      "parity": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 496,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        143.8383049999743,
+        137.78903399997944,
+        140.05466399999023
+      ],
+      "median_ms": 140.05466399999023,
+      "repeats": 3
+    },
+    {
+      "triangles": 32,
+      "method": "sweep",
+      "parity": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.09898600001179148,
+        0.09237800003347729,
+        0.1267079999820453
+      ],
+      "median_ms": 0.09898600001179148,
+      "repeats": 3
+    },
+    {
+      "triangles": 128,
+      "method": "brute",
+      "parity": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 8128,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        2400.2976099999955,
+        2401.7283539999994,
+        3037.2199519999867
+      ],
+      "median_ms": 2401.7283539999994,
+      "repeats": 3
+    },
+    {
+      "triangles": 128,
+      "method": "sweep",
+      "parity": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        0.9971899999641209,
+        1.2469159999568546,
+        1.5977429999907145
+      ],
+      "median_ms": 1.2469159999568546,
+      "repeats": 3
+    },
+    {
+      "triangles": 256,
+      "method": "brute",
+      "parity": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 32640,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        13705.42786699997,
+        13546.60062199997,
+        18881.39366400003
+      ],
+      "median_ms": 13705.42786699997,
+      "repeats": 3
+    },
+    {
+      "triangles": 256,
+      "method": "sweep",
+      "parity": true,
+      "status": "measured",
+      "pairs": [],
+      "tested": 0,
+      "adjacent_tests": 0,
+      "certified": false,
+      "samples_ms": [
+        8.405670999991344,
+        8.395178999990094,
+        43.45167799999672
+      ],
+      "median_ms": 8.405670999991344,
+      "repeats": 3
+    }
+  ],
+  "motion": {
+    "case": "endpoint_clean_tunneling",
+    "status": "accepted",
+    "alpha": 0.25,
+    "endpoint_hits": 0,
+    "midpoint_hits": 1,
+    "samples_ms": [
+      0.3261119999820039,
+      0.3443630000106168,
+      0.289569000017309
+    ],
+    "median_ms": 0.3261119999820039,
+    "repeats": 3
+  },
+  "success_count": 36,
+  "failure_count": 0
+}

@@ -1,0 +1,48 @@
+{
+  "cycle": "R14",
+  "status": "local_retrospective_audit_complete_ci_reproduction_pending",
+  "approved": false,
+  "diagnostic_only": true,
+  "synthetic_only": true,
+  "parent_head": "71c1594232f0f5e135b3a93bac89cac15b43c38d",
+  "local_environment": {
+    "python": "3.13.5",
+    "numpy": "2.3.5",
+    "shapely": "2.1.2"
+  },
+  "source_sha256": "c2fcbaefb7863739882dea8248ca3d6183f3fecb0929b81979a16c4e819b87f6",
+  "input_hashes": {
+    "R11": "fd64528395e2c6efcb497060447d616261ade0e24edd8b3959d99360e36aec5d",
+    "R12": "5ad9d3688662c1c1183e30e90bfa6c0eb26ebfcc17738a4ba9696d6eeb7d210e",
+    "R13": "52068ec5a47ea13caa86fd5fc2a175e2375cc1cc2b5ef681e3c8570aba68597a"
+  },
+  "controls_passed": 9,
+  "normal_audits": 76,
+  "uv_audits": 48,
+  "uv_overlap_outputs": 48,
+  "uv_overlap_outputs_threshold_1e_minus6": 48,
+  "mixed_winding_outputs": 48,
+  "uv_degenerate_faces": 0,
+  "R11_normal_crosscheck_max_delta_deg": 0.000005292646758192632,
+  "normal_max_deg": {
+    "R11": 66.92976942608277,
+    "R12": 62.00377225724539,
+    "R13": 61.3476839980893
+  },
+  "R13_same_corpus": {
+    "R12": {
+      "overlap_pairs": 8164,
+      "same_island_pairs": 1814,
+      "same_island_pairs_gt_1e_minus6": 1755,
+      "same_island_pair_area": 3.36153076054587
+    },
+    "R13": {
+      "overlap_pairs": 7646,
+      "same_island_pairs": 4765,
+      "same_island_pairs_gt_1e_minus6": 4653,
+      "same_island_pair_area": 7.947106925127513
+    }
+  },
+  "decision": "diagnostic_complete_uv_quality_blocked_not_approved",
+  "next": "R15 not started; isolate angular wrap and test constrained UV mapping with explicit incompatibility rejection"
+}

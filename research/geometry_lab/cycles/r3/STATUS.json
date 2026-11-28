@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "cycle": "R3",
+  "parent_commit": "66306b4c43f793bea2992adf9b8565008584b1b3",
+  "state": "implemented_and_locally_verified",
+  "decision": "add_optional_accelerated_api_keep_R2_default",
+  "budgets": {
+    "mesh_cases": 7,
+    "analytic_cases": 90,
+    "join_candidates": 14,
+    "repeats": 3,
+    "max_benchmark_runs": 2,
+    "per_process_seconds": 300,
+    "per_detector_seconds": 60,
+    "face_limit": 2048,
+    "pair_limit": 2000000,
+    "ci_minutes": 10
+  },
+  "stop_conditions": [
+    "any independent mismatch blocks adoption",
+    "incomplete is never clean",
+    "one isolated rerun after contention only"
+  ],
+  "evidence": [
+    "results.json",
+    "pilot_results.json",
+    "reevaluation.json",
+    "environment.json"
+  ],
+  "known_failure": "sparse input cache overhead",
+  "unverified": [
+    "target Blender versions",
+    "native memory",
+    "GUI",
+    "CCD"
+  ],
+  "next_priority": "target-version join reproduction and degeneracy/contact attribution",
+  "approved": false
+}

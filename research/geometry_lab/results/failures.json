@@ -1,0 +1,58 @@
+{
+  "synthetic_only": true,
+  "blender": "4.3.2",
+  "source_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "blender_failure_probe.py": "4d48704a2fc5ca579fc74dd979e53f4db8418f4d5bb478990d38b608ad885ca3",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "dense_benchmark.py": "92bfae6bc201233ca826bc4b6f42aaf77433f5f3f28e9777bffdd221cdb38fc0",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5",
+    "tests/test_motion.py": "e13366c5409f46fb684c070ec1f771b776c1fd87b3b44067113ef529a1fab510"
+  },
+  "cases": [
+    {
+      "case": "symmetric_exact",
+      "status": "expected_rejection",
+      "samples": [
+        {
+          "ms": 144.8321660000147,
+          "reason": "degenerate or nearly degenerate triangle"
+        },
+        {
+          "ms": 181.25328900009663,
+          "reason": "degenerate or nearly degenerate triangle"
+        },
+        {
+          "ms": 182.76541499994892,
+          "reason": "degenerate or nearly degenerate triangle"
+        }
+      ],
+      "median_ms": 181.25328900009663
+    },
+    {
+      "case": "grid_budget",
+      "status": "expected_rejection",
+      "samples": [
+        {
+          "ms": 7.5055869999687275,
+          "reason": "voxel grid budget exceeded"
+        },
+        {
+          "ms": 4.196362000016052,
+          "reason": "voxel grid budget exceeded"
+        },
+        {
+          "ms": 3.5500580000871196,
+          "reason": "voxel grid budget exceeded"
+        }
+      ],
+      "median_ms": 4.196362000016052
+    }
+  ],
+  "cleanup_preserved": true
+}

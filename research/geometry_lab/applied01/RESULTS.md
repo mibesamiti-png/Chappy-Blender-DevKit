@@ -1,0 +1,28 @@
+# Applied 01 — first observed results (2026-11-25)
+
+Frozen first HEAD 219c9a11cca3945fa3e6822b32198978dc2bc0f3; run 45529124004, job [138919746132](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45529124004/job/138919746132), success. Artifact [14982534860](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45529124004/artifacts/14982534860), 1,290,246 bytes; downloaded and extracted; both native Blender files, four views, spec, raw and evaluation present. Native save/reopen comparison passed in CI; no separate local Blender reopening. 14/14 parts pass base/solidified per-part CGAL, topology, UV overlap and exact source geometry. All 22 declared interface measurements zero. Right cup + right strap only change XYZ; five unrelated parts unchanged. No base triangle contact on non-allowlisted pairs. Cross-part seam-local and evaluated thickness contact remain unproven. Total baseline 739 vertices, 546 quads (corrected arithmetic; first report incorrectly summed 642) (sum by part). Three-quarter render inspected: identifiable simple garment, but pointed cups and minimal strap/closure construction; no fit or aesthetic approval.
+
+Important failure of quality beyond the initial gate: UV anisotropy p95 on band 27.3294, right strap 181.2739 (changed 187.1407), left strap 171.3505. Uniform [0,1] square per part disregards physical width and length. R14 diagnostic caught this although overlap was zero. Planning/integration gap in UV choice, not a failed CGAL operation. No comparative total time or DIL speedup measured.
+
+## Bounded correction within the same task (not a new lab or R23)
+Use mean 3D edge lengths per grid column/row and cumulative coordinates divided by max(total width,total length) within each panel. No geometry edits. Preliminary NumPy computation from actual raw triangles: baseline band 27.33 -> 1.00, bridge 4.00 -> 1.01, right cup 3.98 -> 2.56, left cup 3.99 -> 2.51, right strap 181.27 -> 8.47, left strap 171.35 -> 9.59, closure 1.44 -> 1.00; changed right strap 187.14 -> 8.48. These are local preliminary computations, not Blender-confirmed results. Freeze new gate: all 14 actual charts pass original checks, no p95 regression, band/strap >=90% relative reduction, all original geometry and dependency checks pass. Original uniform generator retained; independent CI rebuild and native reopen, rerun audit. Do not claim uniform global texel density or packed UV atlas; residual strap distortion remains. Stop this task after evaluating correction, document remaining issues rather than expand scope. No product approval.
+
+
+## Final bounded correction — native Blender verified
+
+Run [45529514481](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45529514481), job [138921043534](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45529514481/job/138921043534) passed at frozen head 5746fb3dae5cdd4d9d8d7776e63e55bfd3c40023. Artifact [14983454448](https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/45529514481/artifacts/14983454448), 1,299,627 bytes, downloaded; ZIP CRC passed, all ten expected files present, both evaluation gates true. Both .blend states were saved and reopened in CI, not independently reopened locally. Actual UV improvement 14/14, unchanged XYZ and face arrays 14/14, all declared 22 interface checks zero, no per-part base or evaluated CGAL hits, no UV overlap within individual panels, no non-allowlisted base cross-part contacts. Only right cup and right strap geometry changed when right cup depth changed by 20 mm.
+
+| Part | Uniform p95 | Metric p95 (baseline arm) |
+|---|---:|---:|
+| band | 27.3294 | 1.000004 |
+| bridge | 3.9958 | 1.009323 |
+| right cup | 3.9788 | 2.556083 |
+| right strap | 181.2739 | 8.467924 |
+| left cup | 3.9912 | 2.505464 |
+| left strap | 171.3505 | 9.589182 |
+| closure | 1.4357 | 1.000000 |
+
+Changed right cup 4.0262 -> 2.3637, changed right strap 187.1407 -> 8.4770. All three strap states and band states exceed 90% reduction (four strap part-states including repeated unchanged left). Actual counts per state: 739 base vertices, 546 base quads = 1092 triangulated base faces, 2928 evaluated triangles after thickness. Earlier 642 quad total was arithmetic error; corrected against downloaded evaluation. No vertex budget target, LOD test, performance benchmark or production game suitability established. User observed PS2-like style; this is qualitative feedback, not measured game asset readiness.
+
+## Decision and lessons
+Close this single applied task as a scoped success, not a finished garment. The useful evidence is method-specific part generation, sparse editable base surfaces, explicit interface constraints, local dependency regeneration, independent R2 and R14 diagnostics detecting a real UV weakness and validating correction. Planning error: default square UV per component ignored physical aspect ratio. Remaining geometry/visual weakness: pointed and simplistic cup silhouette, residual strap anisotropy, no fabric fitting. Integration weakness: no live Blender dependency graph, no packed atlas/consistent texel density, no seam-local cross-part thickness penetration audit, closure tab not functional hardware. Goal-dependent completion criteria should include appearance and budget when needed; do not optimize metrics indefinitely. No evidence of DIL causal speedup or generalization to other garments; no DIL-side planner execution claimed. No automatic second task or R23. Existing DIL ownership/stop rule remains. R19 historical negative gate is the only failed research job in this run; three other workflows succeeded. No production approval, merge, private asset use or release. Final documentation CI separate.

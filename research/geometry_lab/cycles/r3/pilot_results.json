@@ -1,0 +1,358 @@
+{
+  "schema_version": 3,
+  "cycle": "R3",
+  "synthetic_only": true,
+  "cgal": "6.0.1.post202410241521",
+  "source_sha256": {
+    "benchmark.py": "885f29142d39a5ec163da80d751128df95ba9d38f1144bff9e90c35fb9527b32",
+    "blender_benchmark.py": "48b8a8c9deb5f262288a955acc899463c09742f96954a2526ecc132f1271efd8",
+    "blender_failure_probe.py": "4d48704a2fc5ca579fc74dd979e53f4db8418f4d5bb478990d38b608ad885ca3",
+    "cbdk_geometry/__init__.py": "c49b416a220e8c8332b61a0313618fd926031af095753976274fef4a0f4fb2aa",
+    "cbdk_geometry/accelerated.py": "3541dcf7805ecdb1378ea714960516691c5a254f632f890ce29a4e122113ce39",
+    "cbdk_geometry/blender_backend.py": "f15589d02d655f07b0e89f951c78a345e195ab6b3c6db44f0ed8732579243ab0",
+    "cbdk_geometry/exact.py": "16a1f366883809889a2e0b6c34f22fd5b46a9f034f15c53bc82a3b55097e889d",
+    "cbdk_geometry/fixtures.py": "50b95972c4e36ef8b652719935bcf44757c22b468ebf396a7d64a3f4e455a053",
+    "cbdk_geometry/geometry.py": "695c7a4d139ff0be28e7f31df362d6368bd2ca4392cfc6149687aa1865120f75",
+    "cycles/r2/benchmark.py": "caa8a31bdb1f7b2eba671ee229b22ac1e903fc79b18d090198704f01efde2a04",
+    "cycles/r2/export_blender.py": "957c079ab28daafcdc137fe2764c51a52870f1b194e4dba1f67bf01e5c7df2ee",
+    "cycles/r2/fixtures.py": "c57fa2b561225cb9d5469dff1098b160e0b4d85d6a96ec06d1c975edde93be70",
+    "cycles/r2/oracle.py": "11eca15f6b24254c9b14020e62e2b14e5198294809aed21eaf5a2a0e8bc13ee6",
+    "cycles/r2/recheck_blender.py": "8891f812120f737cb20fac46d96f40781fa410c1f58a32f6c5b84afa2da2dbb9",
+    "cycles/r3/benchmark.py": "070aea558a6474affe6b29b570eff0a1f9d3c1cd847a030e0449040c09346c6a",
+    "cycles/r3/export_joins.py": "748a22b9a8b26262c97ee8e963bf1bc665b226f833cd95926ebe5bdd2854c774",
+    "cycles/r3/fixtures.py": "322695c092617323888edb34bd4203cd339e57f517600695ca5ffab3d00dc3bb",
+    "cycles/r3/reevaluate.py": "33f2f4057ffd3670651b70924fa484e765828593fd4126caa7a52bb84d3ec7b6",
+    "dense_benchmark.py": "92bfae6bc201233ca826bc4b6f42aaf77433f5f3f28e9777bffdd221cdb38fc0",
+    "probe_rotated.py": "fb8e2f22fa5cfea6e18ab9f9579019e80735d043f3fc9f7f3fa698aee9923552",
+    "tests/test_accelerated.py": "012a42f21b37605924192c0350153cfc73b550e8c33f7d2e50eab0c99c8b4199",
+    "tests/test_cgal_oracle.py": "a3cd6e48fd16c1846d078829c3e2a970c1e07c70cddf9e8ede6cf1d0a54131a3",
+    "tests/test_exact.py": "3a5c07bacd0f836302160bd8982751a13abb3f3486034972f8dffdf6de455c8e",
+    "tests/test_geometry.py": "a77a3122a2bda3e82aabd78d3925e4e26bb8c96096e19781df270881d4ca9cc5",
+    "tests/test_motion.py": "e13366c5409f46fb684c070ec1f771b776c1fd87b3b44067113ef529a1fab510"
+  },
+  "repeats": 3,
+  "warmup": 0,
+  "timing_order": "rotating_method_order",
+  "cases": [
+    {
+      "case": "torus",
+      "triangles": 256,
+      "oracle_hits": 0,
+      "methods": {
+        "r2": {
+          "median_seconds": 2.4406636000003346,
+          "samples_seconds": [
+            2.4406636000003346,
+            2.3997549450000406,
+            2.445895203999953
+          ],
+          "hits": 0,
+          "paths": null,
+          "oracle_match": true
+        },
+        "cached": {
+          "median_seconds": 2.0694625299997824,
+          "samples_seconds": [
+            2.0684770879997814,
+            2.2442646189997504,
+            2.0694625299997824
+          ],
+          "hits": 0,
+          "paths": {
+            "clip": 1813
+          },
+          "oracle_match": true
+        },
+        "shortcut": {
+          "median_seconds": 0.4371971619998476,
+          "samples_seconds": [
+            0.4241725970000516,
+            0.45101065499966353,
+            0.4371971619998476
+          ],
+          "hits": 0,
+          "paths": {
+            "shared_edge_nonplanar": 384,
+            "shared_vertex_one_side": 1056,
+            "clip": 373
+          },
+          "oracle_match": true
+        }
+      }
+    },
+    {
+      "case": "saddle",
+      "triangles": 242,
+      "oracle_hits": 0,
+      "methods": {
+        "r2": {
+          "median_seconds": 2.7202315290001025,
+          "samples_seconds": [
+            1.9122134419999384,
+            2.7202315290001025,
+            7.601360139000008
+          ],
+          "hits": 0,
+          "paths": null,
+          "oracle_match": true
+        },
+        "cached": {
+          "median_seconds": 1.6204351549999956,
+          "samples_seconds": [
+            1.5785057389998656,
+            1.6204351549999956,
+            8.693247907000114
+          ],
+          "hits": 0,
+          "paths": {
+            "clip": 1586
+          },
+          "oracle_match": true
+        },
+        "shortcut": {
+          "median_seconds": 0.6379721519997474,
+          "samples_seconds": [
+            0.6379721519997474,
+            0.592749098999775,
+            10.132392740999876
+          ],
+          "hits": 0,
+          "paths": {
+            "shared_edge_coplanar": 45,
+            "shared_vertex_one_side": 710,
+            "shared_edge_nonplanar": 296,
+            "clip": 535
+          },
+          "oracle_match": true
+        }
+      }
+    },
+    {
+      "case": "folded",
+      "triangles": 242,
+      "oracle_hits": 53,
+      "methods": {
+        "r2": {
+          "median_seconds": 2.2216856430000007,
+          "samples_seconds": [
+            13.972378330999618,
+            2.2216856430000007,
+            2.1512200959996335
+          ],
+          "hits": 53,
+          "paths": null,
+          "oracle_match": true
+        },
+        "cached": {
+          "median_seconds": 1.8002914460003012,
+          "samples_seconds": [
+            2.7688304690000223,
+            1.8002914460003012,
+            1.790554135000093
+          ],
+          "hits": 53,
+          "paths": {
+            "clip": 2049
+          },
+          "oracle_match": true
+        },
+        "shortcut": {
+          "median_seconds": 0.9895949619999556,
+          "samples_seconds": [
+            1.276675381000132,
+            0.9859805000000961,
+            0.9895949619999556
+          ],
+          "hits": 53,
+          "paths": {
+            "shared_edge_coplanar": 231,
+            "clip": 1188,
+            "shared_vertex_one_side": 520,
+            "shared_edge_nonplanar": 110
+          },
+          "oracle_match": true
+        }
+      }
+    },
+    {
+      "case": "sparse",
+      "triangles": 64,
+      "oracle_hits": 0,
+      "methods": {
+        "r2": {
+          "median_seconds": 0.0018389919996479875,
+          "samples_seconds": [
+            0.0018389919996479875,
+            0.0020706000000245695,
+            0.0017119960002673906
+          ],
+          "hits": 0,
+          "paths": null,
+          "oracle_match": true
+        },
+        "cached": {
+          "median_seconds": 0.005115656999805651,
+          "samples_seconds": [
+            0.005031364999922516,
+            0.005115656999805651,
+            0.005384912999943481
+          ],
+          "hits": 0,
+          "paths": {},
+          "oracle_match": true
+        },
+        "shortcut": {
+          "median_seconds": 0.005027773999700003,
+          "samples_seconds": [
+            0.005027773999700003,
+            0.004647194999961357,
+            0.005145671999798651
+          ],
+          "hits": 0,
+          "paths": {},
+          "oracle_match": true
+        }
+      }
+    },
+    {
+      "case": "voxel_overlap",
+      "triangles": 1268,
+      "oracle_hits": 0,
+      "methods": {
+        "r2": {
+          "median_seconds": 14.413299612000174,
+          "samples_seconds": [
+            14.413299612000174,
+            15.537624608999977,
+            9.430520493000131
+          ],
+          "hits": 0,
+          "paths": null,
+          "oracle_match": true
+        },
+        "cached": {
+          "median_seconds": 13.183575885999744,
+          "samples_seconds": [
+            15.17473616999996,
+            13.183575885999744,
+            7.357483397999658
+          ],
+          "hits": 0,
+          "paths": {
+            "clip": 9126
+          },
+          "oracle_match": true
+        },
+        "shortcut": {
+          "median_seconds": 1.226868908999677,
+          "samples_seconds": [
+            1.226868908999677,
+            1.2833490359998905,
+            1.1641954829997303
+          ],
+          "hits": 0,
+          "paths": {
+            "shared_edge_nonplanar": 1752,
+            "shared_vertex_one_side": 5744,
+            "clip": 1480,
+            "shared_edge_coplanar": 150
+          },
+          "oracle_match": true
+        }
+      }
+    },
+    {
+      "case": "exact_thin_neck",
+      "triangles": 1076,
+      "oracle_hits": 3,
+      "methods": {
+        "r2": {
+          "median_seconds": 10.846527540999887,
+          "samples_seconds": [
+            8.462591535000229,
+            15.742964247000145,
+            10.846527540999887
+          ],
+          "hits": 3,
+          "paths": null,
+          "oracle_match": true
+        },
+        "cached": {
+          "median_seconds": 6.4833677050000915,
+          "samples_seconds": [
+            6.485418523000135,
+            6.466394112000216,
+            6.4833677050000915
+          ],
+          "hits": 3,
+          "paths": {
+            "clip": 8150
+          },
+          "oracle_match": true
+        },
+        "shortcut": {
+          "median_seconds": 0.693069320000177,
+          "samples_seconds": [
+            0.693069320000177,
+            0.7225223860000369,
+            0.6710226019999936
+          ],
+          "hits": 3,
+          "paths": {
+            "shared_vertex_one_side": 5521,
+            "shared_edge_nonplanar": 1614,
+            "clip": 1015
+          },
+          "oracle_match": true
+        }
+      }
+    },
+    {
+      "case": "exact_rotated",
+      "triangles": 1078,
+      "oracle_hits": 4,
+      "methods": {
+        "r2": {
+          "median_seconds": 8.987457540999912,
+          "samples_seconds": [
+            8.987457540999912,
+            8.890229223999995,
+            14.911733707000167
+          ],
+          "hits": 4,
+          "paths": null,
+          "oracle_match": true
+        },
+        "cached": {
+          "median_seconds": 7.426431076999961,
+          "samples_seconds": [
+            7.5376209159999235,
+            7.128697361999912,
+            7.426431076999961
+          ],
+          "hits": 4,
+          "paths": {
+            "clip": 8478
+          },
+          "oracle_match": true
+        },
+        "shortcut": {
+          "median_seconds": 0.8363368029999947,
+          "samples_seconds": [
+            0.8562868559997696,
+            0.8363368029999947,
+            0.825041536000299
+          ],
+          "hits": 4,
+          "paths": {
+            "shared_vertex_one_side": 5835,
+            "shared_edge_nonplanar": 1617,
+            "clip": 1026
+          },
+          "oracle_match": true
+        }
+      }
+    }
+  ],
+  "elapsed_seconds": 271.268185294
+}

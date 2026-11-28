@@ -1,0 +1,52 @@
+{
+  "cycle": "R6",
+  "theme": "native_bridge_vs_radial_loft",
+  "status": "complete_research_advantage_not_product_adoption",
+  "source_head_at_experiment": "6d78ce00818198712773338bec18f25c4ac80fce",
+  "pr": 114,
+  "blender": "4.4.3",
+  "build_hash": "802179c51ccc",
+  "held_out_cases": 5,
+  "previously_seen_cases": 15,
+  "methods": [
+    "r5_radial",
+    "native_0_path",
+    "native_3_linear",
+    "native_3_path",
+    "native_3_surface"
+  ],
+  "repeats": 3,
+  "warmup": 1,
+  "blender_generated_combinations": 100,
+  "independent_evaluated_combinations": 100,
+  "holdout_passes": {
+    "r5_radial": 5,
+    "native_0_path": 3,
+    "native_3_linear": 3,
+    "native_3_path": 1,
+    "native_3_surface": 2
+  },
+  "seen_passes": {
+    "r5_radial": 13,
+    "native_0_path": 11,
+    "native_3_linear": 11,
+    "native_3_path": 6,
+    "native_3_surface": 7
+  },
+  "fresh_native_best": 3,
+  "improvement_cases": 2,
+  "oracle_unavailable": 0,
+  "comparison_includes_actual_blender_operator": true,
+  "cgal_verified": true,
+  "synthetic_only": true,
+  "r5_algorithm_changed": false,
+  "r6_holdout_changed_after_first_run": false,
+  "official_blender_archive_sha256": "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946",
+  "generator_sha256": "546c11dd28ba4db3187860739d351d5b583df4f71524d6922d448047157f69b5",
+  "fixture_sha256": "43ed2215c3bf9b0a3aeb652cba476cf357a9785d045013624e528e9599c8fa1a",
+  "evaluator_sha256": "e6bdff6a063f451cd0aa7ab841c2252b7844ae2fce96c67406ba8c01b8172272",
+  "ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42905626479",
+  "decision": "Keep narrow radial loft research candidate. Do not merge/adopt into CBDK. A commander approval required.",
+  "approved": false,
+  "next_candidate": "Independent nonplanar+real artifact validation or narrow targeted fallback; do not auto start R7"
+}

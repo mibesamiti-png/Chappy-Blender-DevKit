@@ -1,0 +1,98 @@
+{
+  "cycle": "R10",
+  "status": "complete_preregistered_research_and_speed_gate_passed_not_product_approved",
+  "parent_head": "05df776b90a310a390d12765c44c00068fccb295",
+  "candidate": "cbdk_geometry.quality_router.conditional_flip_loft",
+  "approved": false,
+  "synthetic_only": true,
+  "blender": "4.4.3",
+  "official_blender_archive_sha256": "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946",
+  "cgal": "6.0.1.post202410241521",
+  "case_counts": {
+    "old_development": 22,
+    "new_holdout": 8,
+    "methods": 4,
+    "generated": 120,
+    "independently_evaluated": 120,
+    "timed_repeats_per_combo": 3,
+    "warmup_per_combo": 1
+  },
+  "thresholds": {
+    "R8_quality_trigger": 0.1,
+    "min_holdout_passes": 5,
+    "min_new_rescues": 1,
+    "fast_count_min": 3,
+    "fast_median_time_ratio_max": 0.65,
+    "all_holdout_mean_time_ratio_max": 0.8,
+    "prior_r9_outcomes_must_match": true,
+    "CGAL_self_intersections_allowed": 0,
+    "original_boundary_modifications_allowed": 0
+  },
+  "results": {
+    "seen_passes": {
+      "conditional_r10": 21,
+      "tapered_r8": 19,
+      "flipped_r9": 21,
+      "native_3_linear": 13
+    },
+    "new_holdout_passes": {
+      "conditional_r10": 8,
+      "tapered_r8": 6,
+      "flipped_r9": 8,
+      "native_3_linear": 4
+    },
+    "fast_cases": [
+      "r10_circle_mild",
+      "r10_lobed_waves",
+      "r10_slender_forward",
+      "r10_far_lobed",
+      "r10_skew_ellipse",
+      "r10_wave_circle"
+    ],
+    "repair_cases": [
+      "r10_slender_reversed",
+      "r10_narrow_opposed"
+    ],
+    "newly_rescued_cases": [
+      "r10_slender_reversed",
+      "r10_narrow_opposed"
+    ],
+    "regressions": [],
+    "prior_r9_outcomes_matched_all_22": true,
+    "route_output_matches_frozen_R8_or_R9_all_30": true,
+    "original_boundary_preserved": true,
+    "all_r10_topologies_valid": true,
+    "CGAL_self_intersection_pairs_all_120": 0,
+    "oracle_unavailable": 0,
+    "fast_subset_median_ms": {
+      "conditional_r10": 6.8095465,
+      "flipped_r9": 40.595182
+    },
+    "fast_subset_ratio_r10_over_r9": 0.16774272621797123,
+    "all_holdout_mean_ms": {
+      "conditional_r10": 34.60669125,
+      "flipped_r9": 68.935141375,
+      "tapered_r8": 6.859306125,
+      "native_3_linear": 2.754316125
+    },
+    "all_holdout_mean_ratio_r10_over_r9": 0.5020181370448422,
+    "new_holdout_mean_min_quality": {
+      "conditional_r10": 0.3644977370562189,
+      "flipped_r9": 0.40301245020142706,
+      "tapered_r8": 0.35134679372200206
+    },
+    "known_failure_remaining": "r9_reverse_narrow"
+  },
+  "research_gate_met": true,
+  "speed_gate_met": true,
+  "source_or_fixtures_edited_after_first_holdout": false,
+  "source_sha256": {
+    "cbdk_geometry/quality_router.py": "2aab08686733f487203510f0e52da8afcbef12cfe6a7f5254ac9c6ddb5cae66b",
+    "cycles/r10/fixtures.py": "eb08b4d37a5442724f9cae69aad4fe70af49c2e7741253dce58255c4c2a6e931",
+    "cycles/r10/blender_run.py": "e6f86d6b627f0b16cd2d2ab98280432e0231513beabf1e11e93f077af9d18f5b",
+    "cycles/r10/evaluate.py": "df13204d4817af32f0c49e7db4f035c978a2cbc7f1152e2a61d4bf65aedf4f33"
+  },
+  "ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42915469986",
+  "decision": "Research-only passing-quality/time fallback. No general topology, UV, normals, or real-model guarantee. Review by A required before product integration.",
+  "next": "One cycle complete. No auto R11; prioritize independent real modeling and topology/UV assessment."
+}

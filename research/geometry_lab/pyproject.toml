@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cbdk-geometry-research"
+version = "0.1.0"
+description = "Review-only synthetic geometry experiments, independent of CBDK runtime"
+requires-python = ">=3.11"
+dependencies = ["numpy==2.3.5"]
+
+[tool.setuptools]
+packages = ["cbdk_geometry"]

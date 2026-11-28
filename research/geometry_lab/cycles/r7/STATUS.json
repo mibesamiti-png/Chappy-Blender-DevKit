@@ -1,0 +1,60 @@
+{
+  "cycle": "R7",
+  "status": "complete_research_gate_passed_not_product_adoption",
+  "parent_head": "1e24aa1551032279917437db550864e82fa0ece5",
+  "theme": "mildly_nonplanar_boundary_loft",
+  "candidate": "cbdk_geometry.warped_loft.warped_radial_loft",
+  "synthetic_only": true,
+  "blender_version": "4.4.3",
+  "cgal_version": "6.0.1.post202410241521",
+  "development_cases": 4,
+  "holdout_cases": 6,
+  "blender_generated_and_independently_evaluated": 30,
+  "warmup_per_combo": 1,
+  "repeats_per_combo": 3,
+  "thresholds": {
+    "min_triangle_quality": 0.1,
+    "analytic_3d_rms": 0.12,
+    "analytic_3d_max": 0.28,
+    "min_holdout_passes": 4,
+    "min_delta_over_native3": 1,
+    "oracle_intersections": 0
+  },
+  "results": {
+    "development": {
+      "warped_r7": 4,
+      "native_3_linear": 4,
+      "native_0_path": 4
+    },
+    "holdout": {
+      "warped_r7": 5,
+      "native_3_linear": 4,
+      "native_0_path": 4
+    },
+    "holdout_delta_vs_native3": 1,
+    "all_input_boundaries_preserved": true,
+    "all_topologies_valid": true,
+    "all_cgal_self_intersection_pairs": 0,
+    "oracle_unavailable": 0,
+    "single_failure": {
+      "name": "r7_slender_offset",
+      "reason": "min_triangle_quality",
+      "candidate": 0.06183,
+      "native_3_linear": 0.08456
+    }
+  },
+  "source_sha256": {
+    "cbdk_geometry/warped_loft.py": "5422e828dec0f09d59dc75dd14ac63c0170385b30e95e6f67fc95b1047c81266",
+    "cycles/r7/fixtures.py": "a455b44b8a5b1205995a0cd40c4dc063731681cb5b5a980a35cf0b7e582a8663",
+    "cycles/r7/blender_run.py": "12fadfec37c322cc447d7e85c0b76b7fac5b99a8a15ba1af45d883304e9ccfcb",
+    "cycles/r7/evaluate.py": "c572b8acf62f64ee1cf72fca879dc036951ca216727c637e0f431d557aa91173"
+  },
+  "blender_archive_verified_sha256": "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946",
+  "research_gate_met": true,
+  "algorithm_changed_after_holdout": false,
+  "fixture_changed_after_holdout": false,
+  "approved": false,
+  "ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42907699732",
+  "decision": "Review-only success on 6 synthetic mildly nonplanar holdouts. Not a general 3D bridge or product integration.",
+  "next": "Independent real-model quality/UV/normal assessment or skinny-triangle remedy, separate R8 cycle only"
+}

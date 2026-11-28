@@ -1,0 +1,15 @@
+{
+  "stage": "before_first_holdout_execution",
+  "split": "4 development / 6 held-out parametric families",
+  "sha256": {
+    "cbdk_geometry/bridge.py": "2ed8600dc667a15ce2c554174bfa549c05476d55130d118bfb6a50a41312422d",
+    "cycles/r4/fixtures.py": "0bccee5f4b24144492c29dd9c0fec10fdb08416004fd1e26c6dabdcab70d729a",
+    "cycles/r4/evaluate.py": "338db13d6d6ab49cc274b83768bdfcb5f87a3fb58ace7b3c68d121deacb1cfc8"
+  },
+  "thresholds": {
+    "min_triangle_quality": 0.1,
+    "sampled_loft_rms": 0.08,
+    "sampled_loft_max": 0.2
+  },
+  "max_model_revision_after_holdout": 0
+}

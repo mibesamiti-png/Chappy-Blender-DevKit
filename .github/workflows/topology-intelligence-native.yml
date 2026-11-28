@@ -1,0 +1,2803 @@
+name: Topology Intelligence native Grid Fill
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/topology-intelligence-native.yml'
+permissions:
+  contents: read
+concurrency:
+  group: ti-native-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  phase32-native-grid-fill:
+    if: startsWith(github.head_ref, 'research/geometry-lab-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/blender.tar.xz
+          key: geometry-lab-blender-4.4.3-linux-x64-8d3be07d2bc412b5
+      - name: Verify pinned Blender
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "$RUNNER_TEMP/blender.tar.xz" ]; then
+            curl --fail --location --retry 3 --max-time 400 "https://download.blender.org/release/Blender4.4/blender-4.4.3-linux-x64.tar.xz" -o "$RUNNER_TEMP/blender.tar.xz"
+          fi
+          echo "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946  $RUNNER_TEMP/blender.tar.xz" | sha256sum --check
+          tar -xJf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+      - name: Native 144-call benchmark on synthetic boundaries
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti32.py" <<'PY'
+          import bpy, numpy as np, json, time
+          from pathlib import Path
+          from collections import Counter, defaultdict
+          CASES=[(.19,.15,.12,.02),(.23,.12,.16,.045),(.15,.19,.09,-.035)]
+          ANGLES=np.arange(16)*np.pi/8-3*np.pi/4
+          B=np.column_stack((np.cos(ANGLES),np.sin(ANGLES)))
+          X,Y=np.meshgrid(np.linspace(-.99,.99,201),np.linspace(-.99,.99,201))
+          S=np.column_stack((X.ravel(),Y.ravel()))
+          S=S[np.all(S@np.column_stack((np.cos(ANGLES+np.pi/16),np.sin(ANGLES+np.pi/16))).T<np.cos(np.pi/16)-1e-8,axis=1)]
+          def target(p,c):
+              x,y=p.T;w,h,b,t=c
+              return np.column_stack((w*x,h*y,b*(1-.60*x*x-.85*y*y)+t*x*y+.04*x))
+          def coons(shift,c):
+              border=[(i,0) for i in range(4)]+[(4,j) for j in range(4)]+[(i,4) for i in range(4,0,-1)]+[(0,j) for j in range(4,0,-1)]
+              G=np.zeros((5,5,2));ids=np.zeros((5,5),int);P=list(B)
+              for k,(i,j) in enumerate(border): G[i,j]=B[(k+shift)%16];ids[i,j]=(k+shift)%16
+              for i in range(1,4):
+                  for j in range(1,4):
+                      u,v=i/4,j/4
+                      g=(1-v)*G[i,0]+v*G[i,4]+(1-u)*G[0,j]+u*G[4,j]-((1-u)*(1-v)*G[0,0]+u*(1-v)*G[4,0]+u*v*G[4,4]+(1-u)*v*G[0,4])
+                      G[i,j]=g;ids[i,j]=len(P);P.append(g)
+              return target(np.array(P),c),[[int(ids[i,j]),int(ids[i+1,j]),int(ids[i+1,j+1]),int(ids[i,j+1])] for i in range(4) for j in range(4)]
+          def req(ok,msg):
+              if not ok: raise ValueError(msg)
+          def assess(V,F,c):
+              V=np.asarray(V,float);F=[list(map(int,f)) for f in F]
+              req(V.ndim==2 and V.shape[1]==3 and np.isfinite(V).all(),'coordinates')
+              req(len(F)>0 and all(len(f)==4 and len(set(f))==4 and min(f)>=0 and max(f)<len(V) for f in F),'invalid quad')
+              req(len({tuple(sorted(f)) for f in F})==len(F),'duplicate face')
+              E=Counter(tuple(sorted((a,b))) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              req(max(E.values())<=2 and len({i for f in F for i in f})==len(V) and len(V)-len(E)+len(F)==1,'edge incidence/Euler')
+              boundary=[e for e,n in E.items() if n==1];bids=sorted({i for e in boundary for i in e})
+              req(len(bids)==16 and len(boundary)==16,'boundary count')
+              d=np.linalg.norm(V[bids,None,:]-target(B,c)[None,:,:],axis=2);match=d.argmin(axis=1)
+              req(len(set(match))==16 and d.min(axis=1).max()<1e-6,'boundary moved')
+              mapping=dict(zip(bids,match));req({tuple(sorted((mapping[a],mapping[b]))) for a,b in boundary}=={tuple(sorted((i,(i+1)%16))) for i in range(16)},'boundary cycle')
+              adj=defaultdict(set);links=defaultdict(list)
+              for f in F:
+                  for i,v in enumerate(f):
+                      a,b=f[i-1],f[(i+1)%4];links[v].append((a,b));adj[v].update((a,b))
+              def reach(graph,start):
+                  seen={start};todo=[start]
+                  while todo:
+                      for j in graph[todo.pop()]:
+                          if j not in seen:seen.add(j);todo.append(j)
+                  return seen
+              req(len(reach(adj,0))==len(V),'disconnected mesh')
+              for v,ls in links.items():
+                  graph=defaultdict(set)
+                  for a,b in ls:graph[a].add(b);graph[b].add(a)
+                  deg=[len(x) for x in graph.values()]
+                  req(len(reach(graph,next(iter(graph))))==len(graph) and all(x in (1,2) for x in deg) and deg.count(1)==(2 if v in bids else 0),'nonmanifold vertex')
+              P=V[:,:2]/np.array(c[:2]);F2=[]
+              for f in F:
+                  q=P[f];area=np.sum(q[:,0]*np.roll(q[:,1],-1)-q[:,1]*np.roll(q[:,0],-1))
+                  req(abs(area)>1e-10,'zero projected area')
+                  F2.append(f if area>0 else f[::-1])
+              directed=Counter((a,b) for f in F2 for a,b in zip(f,f[1:]+f[:1]))
+              req(all(n==1 for n in directed.values()),'orientation')
+              tris=[[],[]]
+              for f in F2:
+                  i=min(range(4),key=lambda k:tuple(P[f[k]]));a,b,c0,d0=f[i:]+f[:i]
+                  tris[0].extend(((a,b,c0),(a,c0,d0)));tris[1].extend(((a,b,d0),(b,c0,d0)))
+              errors=[];angles=[]
+              for ts in tris:
+                  T=np.array(ts);Q=V[T];U=np.roll(Q,-1,axis=1)-Q;L=np.linalg.norm(U,axis=2)
+                  req(np.min(L)>1e-12,'zero edge')
+                  A=np.degrees(np.arccos(np.clip(-np.sum(U*np.roll(U,1,axis=1),axis=2)/(L*np.roll(L,1,axis=1)),-1,1)));angles.append(float(A.min()))
+                  Z=np.zeros(len(S));hits=np.zeros(len(S),int);strict=np.zeros(len(S),int);q=P[T]
+                  det=(q[:,1,0]-q[:,0,0])*(q[:,2,1]-q[:,0,1])-(q[:,1,1]-q[:,0,1])*(q[:,2,0]-q[:,0,0])
+                  req(np.min(det)>1e-10,'folded projection')
+                  req(abs(det.sum()/2-8*np.sin(np.pi/8))<1e-5,'projected area mismatch')
+                  for ti,(a,b,d0) in enumerate(q):
+                      M=np.column_stack((b-a,d0-a));W=(S-a)@np.linalg.inv(M).T;W=np.column_stack((1-W.sum(axis=1),W));mask=(W>=-1e-9).all(axis=1);strict+=((W>1e-9).all(axis=1));Z[mask]+=W[mask]@Q[ti,:,2];hits[mask]+=1
+                  req(hits.min()>0 and strict.max()<=1,'missing or overlapping samples')
+                  errors.append(float(np.quantile(np.abs(Z/hits-target(S,c)[:,2]),.95)))
+              return dict(vertices=len(V),quads=len(F),boundary=16,samples=len(S),p95_both=errors,p95_worst=max(errors),min_angle=min(angles),gate_angle15=min(angles)>=15)
+          def fill(c,span,offset,simple):
+              m=bpy.data.meshes.new('TI32_boundary');o=bpy.data.objects.new('TI32_boundary',m)
+              bpy.context.collection.objects.link(o)
+              try:
+                  bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+                  m.from_pydata(target(B,c).tolist(),[(i,(i+1)%16) for i in range(16)],[]);m.update()
+                  bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+                  bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
+                  t=time.perf_counter();status=bpy.ops.mesh.fill_grid(span=span,offset=offset,use_interp_simple=simple);elapsed=time.perf_counter()-t
+                  bpy.ops.object.mode_set(mode='OBJECT')
+                  if 'FINISHED' not in status:raise RuntimeError(str(status))
+                  return [tuple(v.co) for v in m.vertices],[list(f.vertices) for f in m.polygons],elapsed
+              finally:
+                  if o.mode!='OBJECT':bpy.ops.object.mode_set(mode='OBJECT')
+                  bpy.data.objects.remove(o,do_unlink=True);bpy.data.meshes.remove(m)
+          assert bpy.app.background
+          rows=[];baseline=[];raw=[]
+          for k,c in enumerate(CASES):
+              for shift in range(4):
+                  v,f=coons(shift,c);baseline.append(dict(case=k,shift=shift,**assess(v,f,c)))
+              for span in (3,4,5):
+                  for offset in range(8):
+                      for simple in (False,True):
+                          row=dict(case=k,span=span,offset=offset,simple=simple)
+                          try:
+                              v,f,elapsed=fill(c,span,offset,simple)
+                              raw.append(dict(**row,vertices=v,faces=f))
+                              row.update(operator_seconds=elapsed,**assess(v,f,c),status='valid')
+                          except Exception as exc:row.update(status='rejected',reason=str(exc))
+                          rows.append(row)
+          comparison=[]
+          for k in range(len(CASES)):
+              ref=min((r for r in baseline if r['case']==k),key=lambda r:r['p95_worst'])
+              matched=[r for r in rows if r['case']==k and r['status']=='valid' and r['vertices']==ref['vertices'] and r['quads']==ref['quads']]
+              passed=[r for r in matched if r['gate_angle15'] and r['p95_worst']<=1.10*ref['p95_worst']]
+              comparison.append(dict(case=k,reference=ref,matched_valid=len(matched),matched_pass=len(passed),best_native=min(matched,key=lambda r:r['p95_worst']) if matched else None))
+          out=dict(blender=bpy.app.version_string,approved=False,baseline=baseline,native=rows,valid=sum(r['status']=='valid' for r in rows),matched_comparison=comparison)
+          Path('ti32-results').mkdir(exist_ok=True)
+          Path('ti32-results/results.json').write_text(json.dumps(out,indent=2))
+          Path('ti32-results/raw.json').write_text(json.dumps(raw))
+          print('TI32_SUMMARY',json.dumps(dict(blender=out['blender'],valid=out['valid'],calls=len(rows),comparison=comparison,rejections=dict(Counter(r.get('reason','') for r in rows if r['status']=='rejected')))),flush=True)
+          assert len(rows)==144 and out['valid']>0, 'native benchmark did not complete valid cases'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti32.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti32-grid-fill-${{ github.sha }}
+          path: ti32-results/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Phase33 native projection and smoothing
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti33.py" <<'PY'
+          from pathlib import Path
+          # Reuse exact Phase32 geometry and evaluator without rerunning its top-level driver.
+          import os
+          source=Path(os.environ['RUNNER_TEMP'])/'ti32.py'
+          exec(source.read_text().split('\nassert bpy.app.background',1)[0])
+          assert bpy.app.background
+          old=json.loads(Path('ti32-results/results.json').read_text())
+          raw=json.loads(Path('ti32-results/raw.json').read_text())
+          assert old['valid']==144 and len(raw)==144
+          MODES=[('project',0,1),('smooth1_project',1,1),('smooth3_project',3,1),('smooth6_project',6,1),('smooth_project_x3',1,3)]
+          def make_obj(name,V,F):
+              m=bpy.data.meshes.new(name);m.from_pydata(V,[],F);m.update()
+              o=bpy.data.objects.new(name,m);bpy.context.collection.objects.link(o)
+              return o
+          def remove(o):
+              m=o.data;bpy.data.objects.remove(o,do_unlink=True);bpy.data.meshes.remove(m)
+          def guide(c):
+              n=81
+              x,y=np.meshgrid(np.linspace(-1.1,1.1,n),np.linspace(-1.1,1.1,n))
+              V=target(np.column_stack((x.ravel(),y.ravel())),c).tolist()
+              F=[(i*n+j,i*n+j+1,(i+1)*n+j+1,(i+1)*n+j) for i in range(n-1) for j in range(n-1)]
+              return make_obj('TI33_analytic_guide',V,F)
+          def patch(V,F,g,smooth,cycles,c):
+              E=Counter(tuple(sorted((a,b))) for face in F for a,b in zip(face,face[1:]+face[:1]))
+              b=sorted({i for e,n in E.items() if n==1 for i in e})
+              interior=sorted(set(range(len(V)))-set(b))
+              o=make_obj('TI33_patch',V,F)
+              try:
+                  bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+                  vg=o.vertex_groups.new(name='INTERIOR_ONLY');vg.add(interior,1.0,'REPLACE');group_name=str(vg.name)
+                  original=np.array([tuple(v.co) for v in o.data.vertices]);faces=[list(f.vertices) for f in o.data.polygons]
+                  t=time.perf_counter();boundary_drift=0.0
+                  for _ in range(cycles):
+                      if smooth:
+                          mod=o.modifiers.new('NativeSmooth','SMOOTH');mod.vertex_group=group_name;mod.factor=.5;mod.iterations=smooth
+                          req('FINISHED' in bpy.ops.object.modifier_apply(modifier=mod.name),'smooth failed')
+                          current=np.array([tuple(v.co) for v in o.data.vertices]);req(len(current)==len(original),'smooth vertex count changed')
+                          boundary_drift=max(boundary_drift,float(np.max(np.abs(current[b]-original[b]))))
+                          for i in b:o.data.vertices[i].co=original[i].tolist()
+                          o.data.update()
+                      mod=o.modifiers.new('NativeProject','SHRINKWRAP');mod.target=g;mod.vertex_group=group_name
+                      mod.wrap_method='PROJECT';mod.use_project_x=False;mod.use_project_y=False;mod.use_project_z=True;mod.use_positive_direction=True;mod.use_negative_direction=True;mod.offset=0
+                      req('FINISHED' in bpy.ops.object.modifier_apply(modifier=mod.name),'project failed')
+                  dt=time.perf_counter()-t
+                  result=np.array([tuple(v.co) for v in o.data.vertices]);outfaces=[list(f.vertices) for f in o.data.polygons]
+                  req(outfaces==faces and len(result)==len(original),'connectivity changed')
+                  req(np.array_equal(result[b],original[b]),'boundary changed')
+                  q=result[interior,:2]/np.array(c[:2]);residual=float(np.max(np.abs(result[interior,2]-target(q,c)[:,2])))
+                  req(residual<.00015,'guide projection residual too large')
+                  return result.tolist(),outfaces,dict(modifier_seconds=dt,boundary_exact=True,pre_restore_boundary_drift=boundary_drift,interior_residual=residual)
+              finally:remove(o)
+          rows=[];meshes=[];comparisons=[]
+          for k,c in enumerate(CASES):
+              ref=old['matched_comparison'][k]['reference']
+              matched=[m for m in raw if m['case']==k and len(m['vertices'])==25 and len(m['faces'])==16]
+              assert len(matched)==16
+              g=guide(c)
+              try:
+                  for m in matched:
+                      v,f=m['vertices'],m['faces']
+                      original=assess(v,f,c)
+                      for mode,n,cycles in MODES:
+                          row=dict(case=k,span=m['span'],offset=m['offset'],simple=m['simple'],mode=mode)
+                          try:
+                              V,F,extra=patch(v,f,g,n,cycles,c)
+                              a=assess(V,F,c)
+                              row.update(**a,**extra,status='valid',raw_p95=original['p95_worst'],raw_min_angle=original['min_angle'])
+                              row['shape_pass']=a['p95_worst']<=1.10*ref['p95_worst']
+                              row['joint_pass']=row['shape_pass'] and a['gate_angle15']
+                              meshes.append(dict(case=k,offset=m['offset'],simple=m['simple'],mode=mode,vertices=V,faces=F))
+                          except Exception as exc:row.update(status='rejected',reason=str(exc))
+                          rows.append(row)
+              finally:remove(g)
+              valid=[r for r in rows if r['case']==k and r['status']=='valid']
+              modes={}
+              for mode,_,_ in MODES:
+                  subset=[r for r in valid if r['mode']==mode]
+                  modes[mode]=dict(valid=len(subset),shape_pass=sum(r['shape_pass'] for r in subset),joint_pass=sum(r['joint_pass'] for r in subset),best_error=min(subset,key=lambda r:r['p95_worst']) if subset else None,best_angle=max(subset,key=lambda r:r['min_angle']) if subset else None)
+              comparisons.append(dict(case=k,coons_p95=ref['p95_worst'],raw_best_p95=old['matched_comparison'][k]['best_native']['p95_worst'],modes=modes))
+          out=dict(blender=bpy.app.version_string,approved=False,guide_grid=81,rows=rows,comparisons=comparisons,valid=sum(r['status']=='valid' for r in rows))
+          d=Path('ti33-results');d.mkdir(exist_ok=True)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'raw.json').write_text(json.dumps(meshes))
+          compact=[]
+          for c in comparisons:
+              x=dict(case=c['case'],coons_p95=c['coons_p95'],raw_best_p95=c['raw_best_p95'],modes={})
+              for mode,m in c['modes'].items():
+                  x['modes'][mode]={a:m[a] for a in ('valid','shape_pass','joint_pass')}
+                  for key in ('best_error','best_angle'):
+                      a=m[key]
+                      x['modes'][mode][key]={q:a[q] for q in ('offset','simple','p95_worst','min_angle','interior_residual','pre_restore_boundary_drift')} if a else None
+              compact.append(x)
+          print('TI33_SUMMARY',json.dumps(dict(blender=out['blender'],calls=len(rows),valid=out['valid'],shape_pass=sum(r.get('shape_pass',False) for r in rows),joint_pass=sum(r.get('joint_pass',False) for r in rows),comparisons=compact,rejections=dict(Counter(r.get('reason','') for r in rows if r['status']=='rejected')))),flush=True)
+          assert len(rows)==240 and all(any(r['case']==k and r['mode']==mode and r['status']=='valid' for r in rows) for k in range(3) for mode,_,_ in MODES),'incomplete native comparison'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti33.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti33-native-composite-${{ github.sha }}
+          path: ti33-results/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Phase35 native extrusion collar and Grid Fill
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti35.py" <<'PY'
+          from pathlib import Path
+          import os,bmesh
+          # Reuse the exact Phase32/33 fixtures, evaluator and pinned-boundary modifier routine.
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti32.py').read_text().split('\nassert bpy.app.background',1)[0])
+          exec('MODES='+ (root/'ti33.py').read_text().split('MODES=',1)[1].split('\nrows=[];',1)[0])
+          previous=json.loads(Path('ti32-results/results.json').read_text())
+          prev33=json.loads(Path('ti33-results/results.json').read_text())
+          assert previous['valid']==144 and prev33['valid']==240
+          SQUARE=np.array([[-1+2*i/4,-1] for i in range(4)]+[[1,-1+2*i/4] for i in range(4)]+[[1-2*i/4,1] for i in range(4)]+[[-1,1-2*i/4] for i in range(4)])
+          def collar(c,width,blend,offset):
+              outer=target(B,c)
+              inner=target(width*((1-blend)*np.sqrt(2)*B+blend*SQUARE),c)
+              m=bpy.data.meshes.new('TI35_boundary');o=bpy.data.objects.new('TI35_boundary',m)
+              bpy.context.collection.objects.link(o)
+              bm=bmesh.new()
+              try:
+                  old=[bm.verts.new(tuple(v)) for v in outer]
+                  edges=[bm.edges.new((old[i],old[(i+1)%16])) for i in range(16)]
+                  lookup={v:i for i,v in enumerate(old)}
+                  res=bmesh.ops.extrude_edge_only(bm,edges=edges,use_normal_flip=False)
+                  new=[v for v in res['geom'] if isinstance(v,bmesh.types.BMVert) and v not in lookup]
+                  req(len(new)==16,'extrusion vertex count')
+                  used=[]
+                  for v in new:
+                      ids=[lookup[e.other_vert(v)] for e in v.link_edges if e.other_vert(v) in lookup]
+                      req(len(ids)==1,'extrusion correspondence')
+                      v.co=tuple(inner[ids[0]]);used.append(ids[0])
+                  req(len(set(used))==16 and len(bm.faces)==16,'extrusion collar topology')
+                  bm.verts.index_update();inner_ids={v.index for v in new}
+                  bm.to_mesh(m);m.update()
+                  bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+                  for face in m.polygons:face.select=False
+                  for v in m.vertices:v.select=v.index in inner_ids
+                  for e in m.edges:e.select=all(i in inner_ids for i in e.vertices)
+                  bpy.context.tool_settings.mesh_select_mode=(False,True,False)
+                  bpy.ops.object.mode_set(mode='EDIT')
+                  status=bpy.ops.mesh.fill_grid(span=4,offset=offset,use_interp_simple=False)
+                  bpy.ops.object.mode_set(mode='OBJECT')
+                  req('FINISHED' in status,'grid fill status '+str(status))
+                  V=[tuple(v.co) for v in m.vertices];F=[list(f.vertices) for f in m.polygons]
+                  req(len(V)==41 and len(F)==32,'unexpected collar budget')
+                  return V,F
+              finally:
+                  bm.free()
+                  if o.mode!='OBJECT':bpy.ops.object.mode_set(mode='OBJECT')
+                  remove(o)
+          rows=[];raw=[];selected=[]
+          for k,c in enumerate(CASES):
+              g=guide(c)
+              try:
+                  for width in (.38,.48,.58):
+                      for blend in (.5,1.):
+                          for offset in range(4):
+                              try:
+                                  v,f=collar(c,width,blend,offset)
+                                  generation_error=None
+                              except Exception as exc:generation_error=str(exc)
+                              for smooth in (0,3):
+                                  row=dict(case=k,width=width,blend=blend,offset=offset,smooth=smooth)
+                                  try:
+                                      req(generation_error is None,'generation: '+str(generation_error))
+                                      V,F,extra=patch(v,f,g,smooth,1,c)
+                                      a=assess(V,F,c)
+                                      row.update(**a,**extra,status='valid')
+                                      row['shape_pass']=a['p95_worst']<=1.10*previous['matched_comparison'][k]['reference']['p95_worst']
+                                      row['joint_pass']=row['shape_pass'] and a['gate_angle15']
+                                      raw.append(dict(case=k,width=width,blend=blend,offset=offset,smooth=smooth,vertices=V,faces=F))
+                                  except Exception as exc:row.update(status='rejected',reason=str(exc))
+                                  rows.append(row)
+              finally:remove(g)
+              v=[r for r in rows if r['case']==k and r['status']=='valid']
+              passed=[r for r in v if r['joint_pass']]
+              keys=('case','width','blend','offset','smooth')
+              best=min(passed,key=lambda r:(r['p95_worst'],-r['min_angle'])) if passed else None
+              if best:
+                  m=next(x for x in raw if all(x[q]==best[q] for q in keys))
+                  selected.append(m)
+          summary=[]
+          for k in range(len(CASES)):
+              valid=[r for r in rows if r['case']==k and r['status']=='valid']
+              passed=[r for r in valid if r['joint_pass']]
+              summary.append(dict(case=k,valid=len(valid),shape_pass=sum(r['shape_pass'] for r in valid),joint_pass=len(passed),baseline_best_angle=max(r['min_angle'] for r in prev33['rows'] if r['case']==k and r['status']=='valid'),baseline_best_p95=min(r['p95_worst'] for r in prev33['rows'] if r['case']==k and r['status']=='valid'),best_angle=max(valid,key=lambda r:r['min_angle']) if valid else None,best_joint=min(passed,key=lambda r:r['p95_worst']) if passed else None))
+          d=Path('ti35-results');d.mkdir(exist_ok=True)
+          out=dict(blender=bpy.app.version_string,approved=False,rows=rows,summary=summary)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          (d/'raw.json').write_text(json.dumps(raw))
+          # Save editable selected results only; no private or user-provided assets.
+          if selected:
+              bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+              for m in selected:
+                  o=make_obj('Case_%d_native_collar'%m['case'],m['vertices'],m['faces'])
+                  o.location.x=m['case']*.6
+                  o.show_wire=True;o.show_all_edges=True
+              bpy.ops.wm.save_as_mainfile(filepath=str((d/'selected.blend').resolve()))
+          print('TI35_SUMMARY',json.dumps(dict(calls=len(rows),valid=sum(r['status']=='valid' for r in rows),joint_pass=sum(r.get('joint_pass',False) for r in rows),summary=summary,rejections=dict(Counter(r.get('reason','') for r in rows if r['status']=='rejected')))),flush=True)
+          assert len(rows)==144 and all(s['valid']>0 for s in summary),'incomplete collar comparison'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti35.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti35-native-collar-${{ github.sha }}
+          path: ti35-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase35 first-run evidence: run 45573477949, 117/144 structurally valid,
+      # 19/144 joint pass, 27 folded projections, three best use (.58,.5,0,3).
+      # Phase36 preregistered research gate: at least five of six new analytic
+      # fixtures pass the unchanged joint gate with the frozen collar settings.
+      # Same analytic family, not a blind third-party or real-asset holdout.
+      - name: Phase36 frozen collar holdout and direct-first selection
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti36.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          # Freeze all Phase35 generation and evaluation functions. No per-case tuning.
+          exec((root/'ti35.py').read_text().split('\nrows=[];raw=[];selected=[]',1)[0])
+          HOLDOUT=[(.18,.18,.045,0),(.22,.10,.13,-.025),(.11,.23,.14,.04),(.20,.16,.23,.06),(.25,.14,.06,-.055),(.14,.14,.17,-.07)]
+          rows=[];meshes=[]
+          for k,c in enumerate(HOLDOUT):
+              ref=min(assess(*coons(shift,c),c)['p95_worst'] for shift in range(4))
+              g=guide(c)
+              try:
+                  results=[]
+                  for arm,offset,simple in [('direct',o,s) for o in range(8) for s in (False,True)]+[('collar',0,False)]:
+                      row=dict(case=k,arm=arm,offset=offset,simple=simple)
+                      try:
+                          if arm=='direct':
+                              v,f,_=fill(c,4,offset,simple);smooth=6
+                          else:
+                              v,f=collar(c,.58,.5,0);smooth=3
+                          V,F,extra=patch(v,f,g,smooth,1,c)
+                          a=assess(V,F,c)
+                          req((a['vertices'],a['quads'])==((25,16) if arm=='direct' else (41,32)),'budget mismatch')
+                          row.update(**a,**extra,status='valid',shape_pass=a['p95_worst']<=1.10*ref)
+                          row['joint_pass']=row['shape_pass'] and a['gate_angle15']
+                          meshes.append(dict(case=k,arm=arm,offset=offset,simple=simple,vertices=V,faces=F))
+                      except Exception as e:row.update(status='rejected',reason=str(e))
+                      results.append(row)
+                  direct=[x for x in results if x['arm']=='direct' and x['status']=='valid']
+                  passing=[x for x in direct if x['joint_pass']]
+                  candidate=results[-1]
+                  chosen=min(passing,key=lambda x:x['p95_worst']) if passing else candidate if candidate.get('joint_pass',False) else None
+                  rows.append(dict(case=k,params=c,coons_reference=ref,direct_valid=len(direct),direct_pass=len(passing),direct_best_p95=min((x['p95_worst'] for x in direct),default=None),direct_best_angle=max((x['min_angle'] for x in direct),default=None),collar=candidate,selected_arm=chosen['arm'] if chosen else 'none',trials=results))
+              finally:remove(g)
+          d=Path('ti36-results');d.mkdir(exist_ok=True)
+          out=dict(blender=bpy.app.version_string,approved=False,holdout_count=len(HOLDOUT),collar_pass=sum(x['collar'].get('joint_pass',False) for x in rows),router_pass=sum(x['selected_arm']!='none' for x in rows),rows=rows)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'raw.json').write_text(json.dumps(meshes))
+          compact=[{k:v for k,v in x.items() if k!='trials'} for x in rows]
+          print('TI36_SUMMARY',json.dumps(dict(cases=compact,collar_pass=out['collar_pass'],router_pass=out['router_pass'],gate=out['collar_pass']>=5)),flush=True)
+          # Distinguish execution completeness from the research improvement gate.
+          assert len(rows)==6 and all(x['direct_valid']==16 and x['collar']['status']=='valid' for x in rows),'incomplete holdout'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti36.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti36-frozen-holdout-${{ github.sha }}
+          path: ti36-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase36 first-run: 5/6 frozen collar pass, 0/6 direct pass,
+      # all 102 valid. Case2 angle 14.477337 deg fails the 15 deg gate.
+      # Evidence: run 45574289345, job 139068247402, artifact 15004025069.
+      # Phase37: no false route selection on audited cases and two direct positive controls.
+      - name: Phase37 boundary-aware candidate routing
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti37.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti35.py').read_text().split('\nrows=[];raw=[];selected=[]',1)[0])
+          # Generalize only the evaluation domain and analytic area to convex XY boundaries.
+          # All existing thresholds, both triangle diagonals, and geometry checks remain.
+          src=(root/'ti32.py').read_text().split('def assess(',1)[1].split('\ndef fill(',1)[0]
+          assert '8*np.sin(np.pi/8)' in src
+          exec('def assess('+src.replace('8*np.sin(np.pi/8)','DOMAIN_AREA'))
+          CIRCLE=B.copy()
+          def set_domain(blend):
+              global B,S,DOMAIN_AREA
+              B=(1-blend)*CIRCLE+blend*SQUARE
+              e=np.roll(B,-1,axis=0)-B
+              DOMAIN_AREA=float(np.sum(B[:,0]*np.roll(B[:,1],-1)-B[:,1]*np.roll(B[:,0],-1))/2)
+              req(DOMAIN_AREA>0,'boundary orientation')
+              xx,yy=np.meshgrid(np.linspace(-.99,.99,201),np.linspace(-.99,.99,201))
+              pts=np.column_stack((xx.ravel(),yy.ravel()))
+              delta=pts[:,None,:]-B[None,:,:]
+              S=pts[np.all(e[None,:,0]*delta[:,:,1]-e[None,:,1]*delta[:,:,0]>1e-8,axis=1)]
+          def angle(a,b,c):
+              u=a-b;v=c-b
+              return float(np.degrees(np.arccos(np.clip(np.dot(u,v)/(np.linalg.norm(u)*np.linalg.norm(v)),-1,1))))
+          def corner_bound(c):
+              V=target(B,c).astype(np.float32).astype(float)
+              q=[]
+              for i,b in enumerate(V):
+                  a,d=V[(i-1)%16],V[(i+1)%16]
+                  q.append(min(angle(a,b,d),angle(b,a,d),angle(a,d,b)))
+              return sorted(q,reverse=True)[3]
+          def direct_corner_check(V,F,c):
+              V=np.asarray(V)
+              match=np.linalg.norm(V[:,None,:]-target(B,c)[None,:,:],axis=2).argmin(axis=0)
+              req(len(set(match))==16,'corner mapping')
+              corners=[]
+              for i,v in enumerate(match):
+                  incident=[f for f in F if int(v) in f]
+                  if len(incident)==1:
+                      req(int(match[(i-1)%16]) in incident[0] and int(match[(i+1)%16]) in incident[0],'corner premise')
+                      corners.append(i)
+              req(len(corners)==4,'not a four-corner grid')
+              return corners
+          # Seen cases are not fresh holdout; four new shapes test both sides of the decision.
+          prior=json.loads(Path('ti36-results/results.json').read_text())
+          fixtures=[('seen%d'%i,tuple(x['params']),0.) for i,x in enumerate(prior['rows'])]
+          fixtures += [('new_round',(.17,.20,.105,.028),0.),
+                       ('new_roundedsquare',(.19,.16,.08,-.015),.72),
+                       ('new_square',(.18,.18,.065,.01),1.),
+                       ('new_rectangle',(.23,.13,.095,-.02),1.)]
+          rows=[];raw=[]
+          for name,c,blend in fixtures:
+              set_domain(blend)
+              refs=[]
+              for shift in range(4):
+                  try:refs.append(assess(*coons(shift,c),c)['p95_worst'])
+                  except ValueError:pass
+              req(bool(refs),'no valid Coons reference')
+              ref=min(refs);bound=corner_bound(c)
+              # Conservative bound: use the four best distinct corners, regardless of routing.
+              # Only skip when clearly below the unchanged gate. Audit every candidate anyway.
+              skip=bound<15.-1e-4
+              g=guide(c);trials=[]
+              try:
+                  for arm,offset,simple in [('direct',o,s) for o in range(8) for s in (False,True)]+[('collar',0,False)]:
+                      row=dict(arm=arm,offset=offset,simple=simple)
+                      try:
+                          if arm=='direct':
+                              V,F,_=fill(c,4,offset,simple);smooth=6
+                          else:
+                              V,F=collar(c,.58,.5,0);smooth=3
+                          V,F,extra=patch(V,F,g,smooth,1,c)
+                          a=assess(V,F,c)
+                          req((a['vertices'],a['quads'])==((25,16) if arm=='direct' else (41,32)),'budget')
+                          if arm=='direct':
+                              row['corners']=direct_corner_check(V,F,c)
+                              req(a['min_angle']<=bound+1e-4,'angle bound contradicted')
+                          row.update(**a,**extra,status='valid')
+                          row['joint_pass']=a['gate_angle15'] and a['p95_worst']<=1.1*ref
+                          raw.append(dict(case=name,arm=arm,offset=offset,simple=simple,vertices=V,faces=F))
+                      except Exception as exc:row.update(status='rejected',reason=str(exc))
+                      trials.append(row)
+              finally:remove(g)
+              direct=[x for x in trials[:-1] if x.get('joint_pass',False)]
+              fallback=trials[-1]
+              exhaustive='direct' if direct else 'collar' if fallback.get('joint_pass',False) else 'none'
+              routed='direct' if direct and not skip else 'collar' if fallback.get('joint_pass',False) else 'none'
+              # Counts refer to hypothetical execution of the router, not actual CI savings.
+              rows.append(dict(case=name,blend=blend,bound=bound,skip_direct=skip,coons_p95=ref,direct_valid=sum(x['status']=='valid' for x in trials[:-1]),direct_pass=len(direct),direct_best=min(direct,key=lambda x:x['p95_worst']) if direct else None,collar=fallback,exhaustive=exhaustive,routed=routed,hypothetical_attempts=(0 if skip else 16)+(0 if routed=='direct' else 1),trials=trials))
+          d=Path('ti37-results');d.mkdir(exist_ok=True)
+          gate=all(x['routed']==x['exhaustive'] for x in rows) and all(x['routed']=='direct' for x in rows if x['case'] in ('new_square','new_rectangle')) and not any('angle bound contradicted' in t.get('reason','') or 'corner premise' in t.get('reason','') or 'not a four-corner grid' in t.get('reason','') for x in rows for t in x['trials'])
+          out=dict(approved=False,blender=bpy.app.version_string,rows=rows,gate=gate,audit_attempts=len(rows)*17,hypothetical_attempts=sum(x['hypothetical_attempts'] for x in rows))
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'raw.json').write_text(json.dumps(raw))
+          compact=[{k:v for k,v in x.items() if k!='trials'} for x in rows]
+          print('TI37_SUMMARY',json.dumps(dict(gate=gate,cases=compact,audit_attempts=out['audit_attempts'],hypothetical_attempts=out['hypothetical_attempts'])),flush=True)
+          assert len(rows)==10 and all(len(x['trials'])==17 for x in rows),'incomplete audit'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti37.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti37-boundary-router-${{ github.sha }}
+          path: ti37-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase37 verified run 45575543890 / job 139072452920:
+      # 10/10 route agreement, 3 direct, 6 collar, 1 reject; 71 vs 170 hypothetical calls.
+      # Actual Phase38 comparison uses direct-first in BOTH arms, not mandatory collar.
+      # First run 45576327369 failed strict array-order equality: 7/14; 120 vs 232 calls.
+      # Compare geometry with bijective vertex mapping and oriented cyclic face identity.
+      - name: Phase38 execute real prefilter and measure direct-first comparison
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti38.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti37.py').read_text().split('\nrows=[];raw=[]',1)[0])
+          # Frozen Phase37 generators and gate, with actual execution control.
+          # Same analytic surface family; the four extra shapes are new to this experiment.
+          fixtures += [('fresh_round',(.21,.12,.19,.035),0.),
+                       ('fresh_roundish',(.15,.21,.13,-.025),.4),
+                       ('fresh_rounded_rect',(.24,.12,.09,.02),.9),
+                       ('fresh_rectangle',(.26,.11,.07,-.035),1.)]
+          def run_route(c,g,ref,use_prefilter):
+              start=time.perf_counter()
+              bound=corner_bound(c)
+              skip=use_prefilter and bound<15.-1e-4
+              attempts=[]
+              best=None;mesh=None
+              def generate(arm,offset,simple):
+                  row=dict(arm=arm,offset=offset,simple=simple)
+                  t=time.perf_counter()
+                  try:
+                      if arm=='direct':
+                          V,F,_=fill(c,4,offset,simple);smooth=6
+                      else:
+                          V,F=collar(c,.58,.5,0);smooth=3
+                      V,F,extra=patch(V,F,g,smooth,1,c)
+                      a=assess(V,F,c)
+                      req((a['vertices'],a['quads'])==((25,16) if arm=='direct' else (41,32)),'budget')
+                      if arm=='direct':
+                          row['corners']=direct_corner_check(V,F,c)
+                          req(a['min_angle']<=bound+1e-4,'angle bound contradicted')
+                      row.update(**a,**extra,status='valid')
+                      row['joint_pass']=a['gate_angle15'] and a['p95_worst']<=1.1*ref
+                  except Exception as exc:
+                      row.update(status='rejected',reason=str(exc))
+                      V,F=None,None
+                  row['elapsed_seconds']=time.perf_counter()-t
+                  attempts.append(row)
+                  return row,(V,F)
+              if not skip:
+                  for offset in range(8):
+                      for simple in (False,True):
+                          row,m=generate('direct',offset,simple)
+                          if row.get('joint_pass',False) and (best is None or row['p95_worst']<best['p95_worst']):
+                              best,mesh=row,m
+              if best is None:
+                  row,m=generate('collar',0,False)
+                  if row.get('joint_pass',False):best,mesh=row,m
+              return dict(bound=bound,skip=skip,attempts=attempts,selected=best,elapsed_seconds=time.perf_counter()-start),mesh
+          def compare_mesh(ma,mb):
+              A=np.asarray(ma[0],float);B0=np.asarray(mb[0],float)
+              if A.shape!=B0.shape:return dict(ok=False,reason='vertex count')
+              distances=np.max(np.abs(A[:,None,:]-B0[None,:,:]),axis=2)
+              mapping=distances.argmin(axis=1)
+              delta=float(np.max(distances[np.arange(len(A)),mapping]))
+              unique=len(set(mapping.tolist()))==len(A)
+              def canonical(f):
+                  f=tuple(int(i) for i in f)
+                  return min(f[i:]+f[:i] for i in range(len(f)))
+              # Ignore list order and cyclic start only; do not ignore winding or changed connectivity.
+              mapped=Counter(canonical([mapping[i] for i in f]) for f in ma[1])
+              target_faces=Counter(canonical(f) for f in mb[1])
+              exact_order=ma[1]==mb[1] and np.allclose(A,B0,rtol=0,atol=1e-7)
+              return dict(ok=unique and delta<=1e-7 and mapped==target_faces,
+                          max_coordinate_delta=delta,bijection=unique,oriented_faces_match=mapped==target_faces,
+                          exact_order=bool(exact_order))
+          def same_result(a,b,ma,mb):
+              x,y=a['selected'],b['selected']
+              if x is None or y is None:
+                  ok=x is None and y is None and ma is None and mb is None
+                  return dict(ok=ok,reason='both rejected' if ok else 'selection mismatch')
+              d=compare_mesh(ma,mb)
+              setting=(x['arm'],x['offset'],x['simple'])==(y['arm'],y['offset'],y['simple'])
+              p95=abs(x['p95_worst']-y['p95_worst']);ang=abs(x['min_angle']-y['min_angle'])
+              d.update(settings_match=setting,p95_delta=p95,angle_delta=ang)
+              d['ok']=bool(d['ok'] and setting and p95<1e-7 and ang<1e-4)
+              return d
+          # Controls: same oriented mesh with reordered indices and face order passes;
+          # moved vertex, changed face, and reversed winding must fail.
+          a=([[0,0,0],[1,0,0],[1,1,0],[0,1,0]],[[0,1,2,3]])
+          b=([a[0][i] for i in (2,0,3,1)],[[0,2,1,3]])
+          assert compare_mesh(a,b)['ok'],'permuted control failed'
+          assert not compare_mesh(a,(b[0],[[3,1,2,0]]))['ok'],'winding control failed'
+          assert not compare_mesh(a,(b[0],[[0,1,2,3]]))['ok'],'connectivity control failed'
+          m=[list(v) for v in b[0]];m[0][2]=.001
+          assert not compare_mesh(a,(m,b[1]))['ok'],'coordinate control failed'
+          rows=[];selected=[]
+          for i,(name,c,blend) in enumerate(fixtures):
+              set_domain(blend)
+              refs=[]
+              for shift in range(4):
+                  try:refs.append(assess(*coons(shift,c),c)['p95_worst'])
+                  except ValueError:pass
+              req(bool(refs),'no valid reference')
+              g=guide(c)
+              try:
+                  # Alternate measurement order across fixtures, no per-case parameter changes.
+                  if i%2:
+                      fast,fm=run_route(c,g,min(refs),True);slow,sm=run_route(c,g,min(refs),False)
+                  else:
+                      slow,sm=run_route(c,g,min(refs),False);fast,fm=run_route(c,g,min(refs),True)
+                  equivalence=same_result(fast,slow,fm,sm);same=equivalence['ok']
+                  if fm is not None:selected.append(dict(case=name,vertices=fm[0],faces=fm[1]))
+                  violations=[t for x in (fast,slow) for t in x['attempts'] if any(e in t.get('reason','') for e in ('angle bound contradicted','corner premise','not a four-corner grid'))]
+                  rows.append(dict(case=name,params=c,blend=blend,reference=min(refs),same=same,equivalence=equivalence,premise_violations=len(violations),fast=fast,slow=slow))
+              finally:remove(g)
+          d=Path('ti38-results');d.mkdir(exist_ok=True)
+          gate=all(x['same'] and x['premise_violations']==0 for x in rows) and any(x['fast']['skip'] for x in rows) and any(x['fast']['selected'] and x['fast']['selected']['arm']=='direct' for x in rows)
+          counts={arm:sum(len(x[arm]['attempts']) for x in rows) for arm in ('fast','slow')}
+          times={arm:sum(x[arm]['elapsed_seconds'] for x in rows) for arm in ('fast','slow')}
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,counts=counts,seconds=times,rows=rows)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'selected.json').write_text(json.dumps(selected))
+          compact=[]
+          for x in rows:
+              a=x['fast'];b=x['slow'];v=a['selected']
+              compact.append(dict(case=x['case'],same=x['same'],equivalence=x['equivalence'],skip=a['skip'],bound=a['bound'],fast_calls=len(a['attempts']),slow_calls=len(b['attempts']),fast_seconds=a['elapsed_seconds'],slow_seconds=b['elapsed_seconds'],selected=v['arm'] if v else 'none',min_angle=v['min_angle'] if v else None,p95=v['p95_worst'] if v else None,premise_violations=x['premise_violations']))
+          print('TI38_SUMMARY',json.dumps(dict(gate=gate,counts=counts,seconds=times,cases=compact)),flush=True)
+          assert len(rows)==14 and gate,'actual routing gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti38.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti38-actual-router-${{ github.sha }}
+          path: ti38-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase38 verified run 45577236623: all 14 equivalent, 13 generated,
+      # 120 vs 232 candidates, 12.6664 vs 26.0164 s; 1 rejected in both arms.
+      # Phase39: isolate rigid-frame equivariance on frozen synthetic seeds.
+      - name: Phase39 inferred local frame rigid transform benchmark
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti39.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti38.py').read_text().split('\nrows=[];selected=[]',1)[0])
+          target0=target
+          def frame(V):
+              V=np.asarray(V,float)
+              req(V.shape==(16,3) and np.isfinite(V).all(),'invalid boundary')
+              o=V.mean(axis=0);D=V-o
+              scale=float(np.max(np.linalg.norm(D,axis=1)))
+              req(scale>1e-10,'zero extent')
+              pair=np.linalg.norm(V[:,None,:]-V[None,:,:],axis=2)
+              req(np.min(pair+np.eye(16)*scale*10)>scale*1e-8,'duplicate boundary')
+              n=np.sum(np.cross(D,np.roll(D,-1,axis=0)),axis=0)
+              req(np.linalg.norm(n)>scale*scale*1e-8,'degenerate normal')
+              n/=np.linalg.norm(n)
+              # Deterministic anchor from ordered boundary only, not world axes or fixture parameters.
+              x=V[6]-V[14];x-=np.dot(x,n)*n
+              req(np.linalg.norm(x)>scale*1e-8,'degenerate anchor')
+              x/=np.linalg.norm(x);y=np.cross(n,x)
+              Q=np.column_stack((x,y,n))
+              req(np.max(np.abs(Q.T@Q-np.eye(3)))<1e-10 and np.linalg.det(Q)>0,'bad frame')
+              return o,Q
+          def rotation(axis,degrees):
+              a=np.asarray(axis,float);a/=np.linalg.norm(a);t=np.radians(degrees)
+              x,y,z=a
+              K=np.array([[0,-z,y],[z,0,-x],[-y,x,0]])
+              return np.eye(3)+np.sin(t)*K+(1-np.cos(t))*(K@K)
+          TRANSFORMS=[('identity',np.eye(3),np.zeros(3)),
+                      ('vertical',rotation((0,1,0),90),np.array([.3,-.2,.4])),
+                      ('oblique',rotation((1,2,3),67),np.array([-.7,.4,.2])),
+                      ('inverted',rotation((1,1,0),173),np.array([.8,.5,-.6]))]
+          # Use existing native modifiers, but check guide projection against analytic
+          # truth AFTER undoing the fixture transform; the local Z axis differs from analytic Z.
+          patchsrc=(root/'ti33.py').read_text().split('def patch(',1)[1].split('\nrows=[];',1)[0]
+          old="q=result[interior,:2]/np.array(c[:2]);residual=float(np.max(np.abs(result[interior,2]-target(q,c)[:,2])))"
+          req(old in patchsrc,'patch helper changed')
+          exec('def patch_local('+patchsrc.replace(old,"truth=to_truth(result[interior]);q=truth[:,:2]/np.array(c[:2]);residual=float(np.max(np.abs(truth[:,2]-target0(q,c)[:,2])))"))
+          # Controls for invalid frames, independent from the benchmark.
+          controls=[]
+          for name,V in [('collinear',np.column_stack((np.arange(16),np.zeros((16,2))))),
+                         ('duplicate',np.zeros((16,3))),
+                         ('nonfinite',np.full((16,3),np.nan))]:
+              try:frame(V);controls.append(dict(case=name,rejected=False))
+              except ValueError as e:controls.append(dict(case=name,rejected=True,reason=str(e)))
+          prior=json.loads(Path('ti38-results/results.json').read_text())
+          req(prior['gate'],'Phase38 must pass')
+          selected_names=('seen0','seen2','seen3','new_square','fresh_rounded_rect')
+          rows=[];raw=[]
+          for record in prior['rows']:
+              name=record['case']
+              if name not in selected_names:continue
+              c=tuple(record['params']);set_domain(record['blend'])
+              ref=record['reference']
+              spec=record['fast']['selected'] or dict(arm='collar',offset=0,simple=False)
+              truth_boundary=target0(B,c)
+              base=None;base_mesh=None;base_frame=None
+              for label,R,T in TRANSFORMS:
+                  row=dict(case=name,transform=label,arm=spec['arm'],offset=spec['offset'],simple=spec['simple'])
+                  world_boundary=truth_boundary@R.T+T
+                  o,Q=frame(world_boundary)
+                  def to_local(world):return (world-o)@Q
+                  def to_world(local):return np.asarray(local)@Q.T+o
+                  def to_truth(local):return (to_world(local)-T)@R
+                  # Analytic target and collar seed remain synthetic fixture inputs.
+                  # No known transform is supplied to frame().
+                  def local_target(p,c):return to_local(target0(p,c)@R.T+T)
+                  if base_frame is None:base_frame=(o,Q)
+                  row['frame_error']=float(np.max(np.abs(Q-R@base_frame[1])))
+                  row['origin_error']=float(np.max(np.abs(o-(base_frame[0]@R.T+T))))
+                  g=None
+                  try:
+                      target=local_target
+                      g=guide(c)
+                      if spec['arm']=='direct':
+                          v,f,_=fill(c,4,spec['offset'],spec['simple']);smooth=6
+                      else:
+                          v,f=collar(c,.58,.5,0);smooth=3
+                      V,F,extra=patch_local(v,f,g,smooth,1,c)
+                      truth=to_truth(V)
+                      world=to_world(V)
+                      target=target0
+                      a=assess(truth,F,c)
+                      req((a['vertices'],a['quads'])==((25,16) if spec['arm']=='direct' else (41,32)),'budget mismatch')
+                      row.update(**a,**extra,status='valid')
+                      row['joint_pass']=a['gate_angle15'] and a['p95_worst']<=1.1*ref
+                      # Verify original world-space boundary against unmodified input coordinates.
+                      E=Counter(tuple(sorted((i,j))) for face in F for i,j in zip(face,face[1:]+face[:1]))
+                      bids=sorted({i for e,n in E.items() if n==1 for i in e})
+                      distances=np.linalg.norm(world[bids,None,:]-world_boundary[None,:,:],axis=2)
+                      row['world_boundary_error']=float(distances.min(axis=1).max())
+                      req(len(set(distances.argmin(axis=1)))==16 and row['world_boundary_error']<1e-6,'world boundary moved')
+                      mesh=(truth.tolist(),F)
+                      if label=='identity':base=row.copy();base_mesh=mesh
+                      req(base is not None,'identity reference failed')
+                      eq=compare_mesh(mesh,base_mesh)
+                      row['equivalence']=eq
+                      row['same']=bool(eq['ok'] and row['joint_pass']==base['joint_pass'] and abs(row['p95_worst']-base['p95_worst'])<1e-7 and abs(row['min_angle']-base['min_angle'])<1e-4 and row['frame_error']<1e-10 and row['origin_error']<1e-10)
+                      row['prior_pass']=bool(record['fast']['selected'])
+                      raw.append(dict(case=name,transform=label,vertices=world.tolist(),faces=F))
+                  except Exception as e:row.update(status='rejected',reason=str(e),same=False)
+                  finally:
+                      target=target0
+                      if g is not None:remove(g)
+                  rows.append(row)
+          d=Path('ti39-results');d.mkdir(exist_ok=True)
+          gate=len(rows)==20 and all(r.get('same',False) for r in rows) and all(x['rejected'] for x in controls)
+          # Rigid equivariance is separate from prior analytic-axis quality.
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'raw.json').write_text(json.dumps(raw))
+          compact=[{k:v for k,v in r.items() if k in ('case','transform','arm','status','reason','same','frame_error','origin_error','world_boundary_error','min_angle','p95_worst','joint_pass','prior_pass','equivalence')} for r in rows]
+          print('TI39_SUMMARY',json.dumps(dict(gate=gate,valid=sum(r['status']=='valid' for r in rows),same=sum(r.get('same',False) for r in rows),controls=controls,cases=compact)),flush=True)
+          assert gate,'local frame equivariance gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti39.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti39-local-frame-${{ github.sha }}
+          path: ti39-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase39 verified run 45578298715: 20/20 equivariant, 3/3 negative controls.
+      # Phase40 selected mesh only; synthetic fixture math is not part of route input.
+      - name: Phase40 selected mesh extraction and non-destructive patch generation
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti40.py" <<'PY'
+          from pathlib import Path
+          import os
+          from mathutils import Vector
+          from mathutils.bvhtree import BVHTree
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti39.py').read_text().split('\npatchsrc=',1)[0])
+          # Adapt the frozen operators and evaluator to geometry extracted from selected faces.
+          # No analytic surface formula or fixture parameters are used by the extraction/route.
+          def adapt(file,name,end,newname,replacements):
+              source=(root/file).read_text().split('def '+name+'(',1)[1].split(end,1)[0]
+              for a,b in replacements:
+                  req(a in source,'missing helper marker '+a)
+                  source=source.replace(a,b)
+              exec('def '+newname+'('+source,globals())
+          adapt('ti32.py','fill','\nassert bpy.app.background','fill_source',[('target(B,c)','BOUNDARY')])
+          adapt('ti35.py','collar','\nrows=[];raw=[];selected=[]','collar_source',[
+              ('outer=target(B,c)','outer=BOUNDARY'),
+              ('inner=target(width*((1-blend)*np.sqrt(2)*B+blend*SQUARE),c)','inner=inner_seed(width,blend)')])
+          adapt('ti33.py','patch','\nrows=[];','patch_source',[
+              ('q=result[interior,:2]/np.array(c[:2]);residual=float(np.max(np.abs(result[interior,2]-target(q,c)[:,2])))','residual=float(np.max(np.abs(result[interior,2]-sample_guide(result[interior,:2]))))')])
+          adapt('ti32.py','assess','\ndef fill(','assess_source',[
+              ('target(B,c)','BOUNDARY'),('P=V[:,:2]/np.array(c[:2])','P=V[:,:2]'),
+              ('8*np.sin(np.pi/8)','DOMAIN_AREA'),('target(S,c)[:,2]','GUIDE_Z')])
+          def snapshot(o):
+              return ([tuple(v.co) for v in o.data.vertices],[list(f.vertices) for f in o.data.polygons],[bool(f.select) for f in o.data.polygons],tuple(tuple(r) for r in o.matrix_world))
+          def extract(o):
+              m=o.data
+              selected=[p for p in m.polygons if p.select]
+              req(bool(selected),'empty selection')
+              fs=[list(p.vertices) for p in selected]
+              E=Counter(tuple(sorted((a,b))) for f in fs for a,b in zip(f,f[1:]+f[:1]))
+              req(max(E.values())<=2,'nonmanifold selected edge')
+              D=Counter((a,b) for f in fs for a,b in zip(f,f[1:]+f[:1]))
+              req(all(D[a,b]==1 and D[b,a]==1 for (a,b),n in E.items() if n==2),'inconsistent source winding')
+              used=sorted({i for f in fs for i in f})
+              req(len(used)-len(E)+len(fs)==1,'not a disk')
+              edgefaces=defaultdict(list)
+              for fi,f in enumerate(fs):
+                  for a,b in zip(f,f[1:]+f[:1]):edgefaces[tuple(sorted((a,b)))].append(fi)
+              adj=defaultdict(set)
+              for ids in edgefaces.values():
+                  if len(ids)==2:adj[ids[0]].add(ids[1]);adj[ids[1]].add(ids[0])
+              seen={0};todo=[0]
+              while todo:
+                  for j in adj[todo.pop()]:
+                      if j not in seen:seen.add(j);todo.append(j)
+              req(len(seen)==len(fs),'disconnected selection')
+              directed=[(a,b) for a,b in D if E[tuple(sorted((a,b)))]==1]
+              req(len(directed)==16,'unsupported boundary count')
+              nxt=dict(directed);req(len(nxt)==16 and len(set(nxt.values()))==16,'branched boundary')
+              order=[min(nxt)]
+              for _ in range(15):
+                  req(nxt[order[-1]] not in order,'multiple loops')
+                  order.append(nxt[order[-1]])
+              req(nxt[order[-1]]==order[0],'open loop')
+              world=np.asarray([tuple(o.matrix_world@v.co) for v in m.vertices],float)
+              bw=world[order];origin,Q=frame(bw)
+              scale=float(np.max(np.linalg.norm(bw-origin,axis=1)))
+              local=(world-origin)@Q/scale
+              remap={v:i for i,v in enumerate(used)}
+              ids={p.index for p in selected}
+              m.calc_loop_triangles()
+              tris=[tuple(remap[v] for v in t.vertices) for t in m.loop_triangles if t.polygon_index in ids]
+              return dict(boundary_ids=order,boundary_world=bw,boundary_local=local[order],V=local[used],F=tris,origin=origin,Q=Q,scale=scale,selected_faces=len(fs),source_vertices=len(used))
+          def inner_seed(width,blend):
+              b=BOUNDARY
+              square=np.array([(1-(i%4)/4)*b[(i//4)*4]+((i%4)/4)*b[((i//4+1)*4)%16] for i in range(16)])
+              # Seed only from actual boundary, no target interior oracle.
+              center=b.mean(axis=0)
+              return center+width*((1-blend)*np.sqrt(2)*(b-center)+blend*(square-center))
+          def sample_guide(P):
+              out=[]
+              for x,y in P:
+                  loc,_,_,_=TREE.ray_cast(Vector((float(x),float(y),3.)),Vector((0.,0.,-1.)),6.)
+                  req(loc is not None,'guide ray miss')
+                  out.append(loc.z)
+              return np.array(out)
+          def prepare(data):
+              global BOUNDARY,DOMAIN_AREA,S,GUIDE_Z,TREE
+              # Float32 boundary is the exact native input for both candidate generators.
+              BOUNDARY=data['boundary_local'].astype(np.float32).astype(float)
+              P=BOUNDARY[:,:2]
+              DOMAIN_AREA=float(np.sum(P[:,0]*np.roll(P[:,1],-1)-P[:,1]*np.roll(P[:,0],-1))/2)
+              req(DOMAIN_AREA>1e-8,'bad projected boundary area')
+              g=make_obj('TI40_extracted_guide',data['V'].tolist(),data['F'])
+              try:
+                  V=np.array([tuple(v.co) for v in g.data.vertices]);F=np.array([list(f.vertices) for f in g.data.polygons])
+                  q=V[F,:2];cross=(q[:,1,0]-q[:,0,0])*(q[:,2,1]-q[:,0,1])-(q[:,1,1]-q[:,0,1])*(q[:,2,0]-q[:,0,0])
+                  req(np.min(cross)>1e-9 and abs(cross.sum()/2-DOMAIN_AREA)<1e-5,'source not a supported height field')
+                  TREE=BVHTree.FromPolygons(V.tolist(),F.tolist(),all_triangles=True)
+                  xx,yy=np.meshgrid(np.linspace(P[:,0].min(),P[:,0].max(),121),np.linspace(P[:,1].min(),P[:,1].max(),121))
+                  pts=np.column_stack((xx.ravel(),yy.ravel()));x,y=pts.T
+                  inside=np.zeros(len(pts),bool);near=np.zeros(len(pts),bool)
+                  for a,b in zip(P,np.roll(P,-1,axis=0)):
+                      e=b-a;v=pts-a
+                      t=np.clip(v@e/np.dot(e,e),0.,1.)
+                      near|=np.linalg.norm(v-t[:,None]*e,axis=1)<1e-5
+                      if abs(e[1])>1e-15:
+                          inside^=((a[1]>y)!=(b[1]>y))&(x<a[0]+(y-a[1])*e[0]/e[1])
+                  S=pts[inside&~near];req(len(S)>500,'insufficient sample domain')
+                  GUIDE_Z=sample_guide(S)
+                  return g
+              except Exception:
+                  remove(g);raise
+          def source_bound():
+              q=[]
+              for i,b in enumerate(BOUNDARY):
+                  a,d=BOUNDARY[(i-1)%16],BOUNDARY[(i+1)%16]
+                  q.append(min(angle(a,b,d),angle(b,a,d),angle(a,d,b)))
+              return sorted(q,reverse=True)[3]
+          def materialize_candidate(data,V,F):
+              # Keep the original source boundary coordinates exactly in the output.
+              W=np.asarray(V)@data['Q'].T*data['scale']+data['origin']
+              E=Counter(tuple(sorted((a,b))) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              bids=sorted({i for e,n in E.items() if n==1 for i in e})
+              dist=np.linalg.norm(np.asarray(V)[bids,None,:]-BOUNDARY[None,:,:],axis=2)
+              match=dist.argmin(axis=1)
+              req(len(set(match))==16 and dist.min(axis=1).max()<1e-6,'output boundary mismatch')
+              W[bids]=data['boundary_world'][match]
+              # Orient output consistently in local projection; no topology edits.
+              faces=[]
+              for f in F:
+                  q=np.asarray(V)[f,:2]
+                  ar=np.sum(q[:,0]*np.roll(q[:,1],-1)-q[:,1]*np.roll(q[:,0],-1))
+                  faces.append(f if ar>0 else f[::-1])
+              o=make_obj('TI40_result',W.tolist(),faces)
+              actual=np.array([tuple(v.co) for v in o.data.vertices])
+              error=float(np.max(np.abs(actual[bids]-data['boundary_world'][match])))
+              req(error==0.,'stored output boundary changed')
+              o.show_wire=True;o.show_all_edges=True
+              return o,error
+          def route(data,g):
+              bound=source_bound();skip=bound<15.-1e-4
+              trials=[];best=None;mesh=None
+              def attempt(arm,offset,simple):
+                  nonlocal best,mesh
+                  row=dict(arm=arm,offset=offset,simple=simple)
+                  try:
+                      if arm=='direct':
+                          v,f,_=fill_source(None,4,offset,simple);smooth=6
+                      else:
+                          v,f=collar_source(None,.58,.5,0);smooth=3
+                      V,F,extra=patch_source(v,f,g,smooth,1,None)
+                      a=assess_source(V,F,None)
+                      req((a['vertices'],a['quads'])==((25,16) if arm=='direct' else (41,32)),'budget mismatch')
+                      # New source-mesh gate: P95 vertical error <= 0.06 boundary radius.
+                      # Separate from the analytic Coons-relative gate used in earlier phases.
+                      row.update(**a,**extra,status='valid',joint_pass=a['gate_angle15'] and a['p95_worst']<=.06)
+                      if row['joint_pass'] and (best is None or row['p95_worst']<best['p95_worst']):
+                          best=row;mesh=(V,F)
+                  except Exception as e:row.update(status='rejected',reason=str(e))
+                  trials.append(row)
+              if not skip:
+                  for offset in range(8):
+                      for simple in (False,True):attempt('direct',offset,simple)
+              if best is None:attempt('collar',0,False)
+              return dict(bound=bound,skip=skip,trials=trials,selected=best),mesh
+          # Synthetic source construction ONLY. The pipeline above consumes a Blender mesh selection.
+          def fixture(name,c,blend,axis,deg,translation):
+              set_domain(blend)
+              R=rotation(axis,deg);T=np.asarray(translation)
+              radii=(1.18,1.,.83,.66,.49,.32,.16)
+              V=np.vstack([target0(B*r,c) for r in radii]+[target0(np.zeros((1,2)),c)])
+              F=[]
+              for j in range(len(radii)-1):
+                  F.extend([[j*16+i,j*16+(i+1)%16,(j+1)*16+(i+1)%16,(j+1)*16+i] for i in range(16)])
+              F.extend([[(len(radii)-1)*16+i,(len(radii)-1)*16+(i+1)%16,len(V)-1] for i in range(16)])
+              o=make_obj('Source_'+name,(V@R.T+T).tolist(),F)
+              for p in o.data.polygons:p.select=p.index>=16
+              return o
+          specs=[('round',(.18,.18,.055,0.),0.,(0,1,0),90,(.4,0,0)),
+                 ('rounded',(.19,.16,.08,-.015),.72,(1,2,3),67,(-.4,.3,.1)),
+                 ('square',(.18,.18,.065,.01),1.,(1,1,0),173,(0.,-.5,.2)),
+                 ('curved',(.20,.16,.19,.045),0.,(1,0,1),43,(.2,.5,-.2))]
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];controls=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec);before=snapshot(o);g=None
+              row=dict(case=name)
+              try:
+                  data=extract(o)
+                  row.update(source_faces=data['selected_faces'],source_vertices=data['source_vertices'],boundary=len(data['boundary_ids']))
+                  g=prepare(data)
+                  result,m=route(data,g);row.update(result)
+                  if m is not None:
+                      new,error=materialize_candidate(data,*m);new.name='Result_'+name
+                      row.update(status='accepted',stored_boundary_error=error)
+                  else:row.update(status='rejected',reason='no candidate met gate')
+              except Exception as e:row.update(status='rejected',reason=str(e))
+              finally:
+                  if g is not None:remove(g)
+              row['source_unchanged']=snapshot(o)==before
+              rows.append(row)
+          # Isolated negative controls from the same source topology, without editing source examples.
+          for name,indices in [('empty',[]),('disconnected',[16,48]),('hole',[i for i in range(16,112) if i!=48]),('wrong_count',[16])]:
+              o=fixture('control',*specs[0][1:])
+              for p in o.data.polygons:p.select=p.index in indices
+              try:extract(o);controls.append(dict(case=name,rejected=False))
+              except ValueError as e:controls.append(dict(case=name,rejected=True,reason=str(e)))
+              finally:remove(o)
+          d=Path('ti40-results');d.mkdir(exist_ok=True)
+          gate=sum(r['status']=='accepted' for r in rows)>=3 and all(r['source_unchanged'] for r in rows) and all(r['rejected'] for r in controls) and any(r.get('selected') and r['selected']['arm']=='direct' for r in rows) and any(r.get('selected') and r['selected']['arm']=='collar' for r in rows)
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'source_and_results.blend').resolve()))
+          print('TI40_SUMMARY',json.dumps(dict(gate=gate,accepted=sum(r['status']=='accepted' for r in rows),cases=[{k:v for k,v in r.items() if k!='trials'} for r in rows],controls=controls)),flush=True)
+          assert gate,'source-selection research gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti40.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti40-selected-source-${{ github.sha }}
+          path: ti40-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase40 verified run 45624461136: 4/4 patches accepted, exact stored
+      # boundary, original mesh unchanged, 4/4 negative controls rejected.
+      # Phase41 copies only: selected interior UV/weights transfer and collision
+      # validation outside this limited synthetic disk fixture are not claimed.
+      - name: Phase41 replace selected faces on isolated copy and weld seam
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti41.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti40.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          def cycle(f):
+              f=tuple(f)
+              return min(f[i:]+f[:i] for i in range(len(f)))
+          def full_snapshot(o):
+              m=o.data
+              return (snapshot(o),[(p.material_index,p.use_smooth) for p in m.polygons],
+                      [(e.vertices[:],e.use_seam,e.use_edge_sharp) for e in m.edges],
+                      [(u.name,[tuple(x.uv) for x in u.data]) for u in m.uv_layers])
+          def outside_signature(m,face_ids,ids):
+              uv=m.uv_layers.active
+              result=[]
+              for i in face_ids:
+                  p=m.polygons[i]
+                  loops=[]
+                  for li in p.loop_indices:
+                      vi=m.loops[li].vertex_index
+                      loops.append((ids[vi],tuple(m.vertices[vi].co),tuple(uv.data[li].uv) if uv else ()))
+                  result.append((cycle(loops),p.material_index,p.use_smooth))
+              return Counter(result)
+          def audit_topology(m):
+              F=[list(p.vertices) for p in m.polygons]
+              req(len({tuple(sorted(f)) for f in F})==len(F),'duplicate faces')
+              E=Counter(tuple(sorted((a,b))) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              D=Counter((a,b) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              req(max(E.values())<=2,'nonmanifold edge')
+              req(all(D[a,b]==D[b,a]==1 for (a,b),n in E.items() if n==2),'inconsistent winding')
+              req(len(E)==len(m.edges) and len({i for f in F for i in f})==len(m.vertices),'loose geometry')
+              adj=defaultdict(set);links=defaultdict(list)
+              for f in F:
+                  for i,v in enumerate(f):
+                      a,b=f[i-1],f[(i+1)%len(f)];links[v].append((a,b));adj[v].update((a,b))
+              def reach(g,v):
+                  seen={v};todo=[v]
+                  while todo:
+                      for j in g[todo.pop()]:
+                          if j not in seen:seen.add(j);todo.append(j)
+                  return seen
+              req(len(reach(adj,0))==len(m.vertices),'disconnected result')
+              boundary={i for e,n in E.items() if n==1 for i in e}
+              for v,ls in links.items():
+                  graph=defaultdict(set)
+                  for a,b in ls:graph[a].add(b);graph[b].add(a)
+                  deg=[len(x) for x in graph.values()]
+                  req(len(reach(graph,next(iter(graph))))==len(graph) and all(x in (1,2) for x in deg) and deg.count(1)==(2 if v in boundary else 0),'nonmanifold vertex')
+              req(len(m.vertices)-len(E)+len(F)==1,'not a disk')
+              return E
+          def replace_copy(source,data,V,F):
+              # All checks run on a separate mesh copy. Original object is never mutated.
+              orig=source.data
+              E0=audit_topology(orig)
+              outside=[p.index for p in orig.polygons if not p.select]
+              req(bool(outside),'no outside context')
+              original_ids={i:i for i in range(len(orig.vertices))}
+              expected=outside_signature(orig,outside,original_ids)
+              outside_edges={tuple(sorted((a,b))) for i in outside for a,b in zip(list(orig.polygons[i].vertices),list(orig.polygons[i].vertices)[1:]+list(orig.polygons[i].vertices)[:1])}
+              edge_flags={tuple(sorted(e.vertices)):(bool(e.use_seam),bool(e.use_edge_sharp)) for e in orig.edges if tuple(sorted(e.vertices)) in outside_edges}
+              seam={tuple(sorted((data['boundary_ids'][i],data['boundary_ids'][(i+1)%16]))) for i in range(16)}
+              req(all(E0[e]==2 and e in outside_edges for e in seam),'boundary lacks outside neighbour')
+              # Recheck candidate against the frozen source guide, even for callers other than route().
+              quality=assess_source(V,F,None)
+              req(quality['gate_angle15'] and quality['p95_worst']<=.06,'candidate gate failed')
+              V=np.asarray(V,float)
+              PE=Counter(tuple(sorted((a,b))) for f in F for a,b in zip(f,f[1:]+f[:1]))
+              bids=sorted({v for e,n in PE.items() if n==1 for v in e})
+              dist=np.linalg.norm(V[bids,None,:]-BOUNDARY[None,:,:],axis=2)
+              match=dist.argmin(axis=1)
+              req(len(set(match))==16 and dist.min(axis=1).max()<1e-6,'candidate seam mismatch')
+              candidate_to_original={v:data['boundary_ids'][i] for v,i in zip(bids,match)}
+              world=V@data['Q'].T*data['scale']+data['origin']
+              inverse=source.matrix_world.inverted()
+              req(len({p.material_index for p in orig.polygons if p.select})==1,'mixed selected materials unsupported')
+              material=next(p.material_index for p in orig.polygons if p.select)
+              # New interior UVs are intentionally not transferred; outside UVs must remain exact.
+              new=source.copy();new.data=orig.copy();new.name='Replaced_'+source.name
+              bpy.context.collection.objects.link(new)
+              bm=bmesh.new()
+              try:
+                  bm.from_mesh(new.data);bm.verts.ensure_lookup_table();bm.faces.ensure_lookup_table()
+                  source_verts=list(bm.verts);source_faces=list(bm.faces)
+                  preserve=set(v for i in outside for v in source_faces[i].verts)
+                  bmesh.ops.delete(bm,geom=[f for i,f in enumerate(source_faces) if i not in outside],context='FACES_ONLY')
+                  loose=[e for e in bm.edges if not e.link_faces]
+                  req(all(tuple(sorted(v.index for v in e.verts)) not in outside_edges for e in loose),'outside edge deletion')
+                  if loose:bmesh.ops.delete(bm,geom=loose,context='EDGES')
+                  orphan=[v for v in bm.verts if not v.link_faces]
+                  req(not any(v in preserve for v in orphan),'outside vertex deletion')
+                  if orphan:bmesh.ops.delete(bm,geom=orphan,context='VERTS')
+                  pv={}
+                  for i,w in enumerate(world):
+                      if i in candidate_to_original:
+                          v=source_verts[candidate_to_original[i]]
+                          req(v.is_valid and v in preserve,'lost seam vertex')
+                      else:v=bm.verts.new(inverse@Vector(w.tolist()))
+                      pv[i]=v
+                  created=[]
+                  for f in F:
+                      q=V[f,:2];ar=np.sum(q[:,0]*np.roll(q[:,1],-1)-q[:,1]*np.roll(q[:,0],-1))
+                      ordered=f if ar>0 else f[::-1]
+                      face=bm.faces.new([pv[i] for i in ordered]);face.material_index=material;face.smooth=True;face.select=True
+                      created.append(face)
+                  bm.verts.index_update();bm.faces.index_update();bm.normal_update()
+                  old_to_new={i:v.index for i,v in enumerate(source_verts) if v.is_valid}
+                  new_to_old={j:i for i,j in old_to_new.items()}
+                  outside_new=[source_faces[i].index for i in outside]
+                  created_new=[f.index for f in created]
+                  bm.to_mesh(new.data);new.data.update()
+                  req(not new.data.validate(verbose=False),'Blender validation changed result')
+                  actual=outside_signature(new.data,outside_new,new_to_old)
+                  req(actual==expected,'outside face or UV changed')
+                  E=audit_topology(new.data)
+                  req(all(E[tuple(sorted((old_to_new[a],old_to_new[b]))) ]==2 for a,b in seam),'unwelded seam')
+                  actual_edges={tuple(sorted((new_to_old[e.vertices[0]],new_to_old[e.vertices[1]]))):(bool(e.use_seam),bool(e.use_edge_sharp)) for e in new.data.edges if all(v in new_to_old for v in e.vertices)}
+                  req(all(actual_edges.get(e)==flags for e,flags in edge_flags.items()),'outside edge flags changed')
+                  req(len(new.data.polygons)==len(outside)+len(F),'face budget mismatch')
+                  req(all(len(new.data.polygons[i].vertices)==4 for i in created_new),'new nonquad')
+                  boundary_error=max(float(np.max(np.abs(np.array(new.data.vertices[old_to_new[i]].co)-np.array(orig.vertices[i].co)))) for i in data['boundary_ids'])
+                  req(boundary_error==0.,'seam coordinate changed')
+                  return new,dict(outside_faces=len(outside),outside_edges=len(outside_edges),outside_exact=True,welded_edges=len(seam),boundary_error=boundary_error,faces_before=len(orig.polygons),faces_after=len(new.data.polygons),vertices_before=len(orig.vertices),vertices_after=len(new.data.vertices),new_quads=len(created_new),interior_uv_transferred=False)
+              except Exception:
+                  remove(new);raise
+              finally:bm.free()
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          materials=[bpy.data.materials.new('TI41_material_'+str(i)) for i in range(2)]
+          rows=[];controls=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec)
+              for mat in materials:o.data.materials.append(mat)
+              uv=o.data.uv_layers.new(name='OutsideUV')
+              for p in o.data.polygons:
+                  p.material_index=0 if p.select else p.index%2
+                  p.use_smooth=bool(p.index%2)
+                  for li in p.loop_indices:uv.data[li].uv=(li*.013%1,li*.031%1)
+              for e in o.data.edges:
+                  e.use_seam=bool(e.index%3==0);e.use_edge_sharp=bool(e.index%5==0)
+              before=full_snapshot(o);g=None
+              row=dict(case=name)
+              try:
+                  data=extract(o);g=prepare(data)
+                  decision,m=route(data,g)
+                  req(m is not None,'no candidate met gate')
+                  # Negative control: removing a candidate face must be rejected without publishing output.
+                  if name=='round':
+                      count=len(bpy.data.objects)
+                      try:
+                          bad,_=replace_copy(o,data,m[0],m[1][:-1]);remove(bad);controls.append(dict(case='missing_candidate_face',rejected=False))
+                      except ValueError as e:controls.append(dict(case='missing_candidate_face',rejected=True,reason=str(e),no_output=len(bpy.data.objects)==count))
+                  new,stats=replace_copy(o,data,*m);new.show_wire=True;new.show_all_edges=True
+                  row.update(status='accepted',selected=decision['selected'],**stats)
+              except Exception as e:row.update(status='rejected',reason=str(e))
+              finally:
+                  if g is not None:remove(g)
+              row['source_unchanged']=full_snapshot(o)==before
+              rows.append(row)
+          d=Path('ti41-results');d.mkdir(exist_ok=True)
+          gate=len(rows)==4 and all(r['status']=='accepted' and r['source_unchanged'] for r in rows) and len(controls)==1 and all(c['rejected'] and c.get('no_output',False) for c in controls)
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'replaced_copies.blend').resolve()))
+          print('TI41_SUMMARY',json.dumps(out),flush=True)
+          assert gate,'selected-region replacement gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti41.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti41-welded-replacement-${{ github.sha }}
+          path: ti41-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase41 verified run 45625925100: 4/4, 64 welded edges, exact outside audit.
+      # Phase42 scope: one continuous UV layer, normalized source vertex groups.
+      # Attribute interpolation/storage audit is not a rig deformation or UV distortion test.
+      - name: Phase42 transfer continuous UV and normalized weights
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti42.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti41.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          def weights(v):
+              return tuple(sorted((int(g.group),float(g.weight)) for g in v.groups))
+          def attributes(source,data,V,boundary_map):
+              m=source.data
+              req(len(m.uv_layers)==1,'exactly one UV layer supported')
+              req(m.shape_keys is None,'shape keys unsupported')
+              req(len(source.vertex_groups)>0,'no weight groups')
+              uv=m.uv_layers.active
+              selected=[p for p in m.polygons if p.select]
+              by_vertex={}
+              for p in selected:
+                  for li in p.loop_indices:
+                      vi=m.loops[li].vertex_index
+                      value=tuple(uv.data[li].uv)
+                      req(np.isfinite(value).all(),'nonfinite UV')
+                      if vi in by_vertex:req(by_vertex[vi]==value,'selected UV discontinuity')
+                      by_vertex[vi]=value
+              ids=sorted(by_vertex)
+              req(len(ids)==len(data['V']),'source vertex mapping')
+              U=np.array([by_vertex[i] for i in ids],float)
+              W=np.zeros((len(ids),len(source.vertex_groups)),float)
+              for j,i in enumerate(ids):
+                  for group,w in weights(m.vertices[i]):W[j,group]=w
+              req(np.isfinite(W).all() and np.min(W)>=0 and np.max(W)<=1 and np.max(np.abs(W.sum(axis=1)-1))<1e-6,'unsupported unnormalized weights')
+              points=np.asarray(data['V'],float)[:,:2];tris=np.asarray(data['F'],int)
+              Q=points[tris];A=Q[:,0];M=np.stack((Q[:,1]-A,Q[:,2]-A),axis=2)
+              inv=np.linalg.inv(M)
+              outuv=[];outw=[]
+              index={i:j for j,i in enumerate(ids)}
+              for i,p in enumerate(V):
+                  if i in boundary_map:
+                      j=index[boundary_map[i]];u=U[j];w=W[j]
+                  else:
+                      b=np.einsum('nij,nj->ni',inv,np.asarray(p[:2])-A)
+                      b=np.column_stack((1-b.sum(axis=1),b))
+                      candidates=np.where(b.min(axis=1)>=-1e-6)[0]
+                      req(len(candidates)>0,'attribute projection miss')
+                      j=int(candidates[0]);k=np.maximum(b[j],0);k/=k.sum()
+                      u=k@U[tris[j]];w=k@W[tris[j]]
+                  outuv.append(u);outw.append(w)
+              return np.array(outuv),np.array(outw),uv.name
+          # Reuse Phase41 transactional replacement, adding attribute transfer before commit.
+          src=(root/'ti41.py').read_text().split('def replace_copy(',1)[1].split('\nbpy.ops.object.select_all(action=',1)[0]
+          def inject(a,b):
+              global src
+              req(a in src,'missing replacement marker: '+a)
+              src=src.replace(a,b,1)
+          inject("world=V@data['Q'].T*data['scale']+data['origin']",
+                 "uv_values,weight_values,uv_name=attributes(source,data,V,candidate_to_original)\n    world=V@data['Q'].T*data['scale']+data['origin']")
+          inject('source_verts=list(bm.verts);source_faces=list(bm.faces)',
+                 "source_verts=list(bm.verts);source_faces=list(bm.faces)\n        uv_layer=bm.loops.layers.uv.get(uv_name);req(uv_layer is not None,'missing UV layer')\n        deform=bm.verts.layers.deform.verify()")
+          inject('else:v=bm.verts.new(inverse@Vector(w.tolist()))',
+                 "else:\n                v=bm.verts.new(inverse@Vector(w.tolist()))\n                for j,value in enumerate(weight_values[i]):\n                    if value>0:v[deform][j]=float(value)")
+          inject('created.append(face)',
+                 "for loop in face.loops:\n                i=next(j for j in ordered if pv[j]==loop.vert)\n                loop[uv_layer].uv=uv_values[i].tolist()\n            created.append(face)")
+          inject('created_new=[f.index for f in created]',
+                 "created_new=[f.index for f in created]\n        new_to_candidate={v.index:i for i,v in pv.items()}")
+          inject("req(boundary_error==0.,'seam coordinate changed')",
+                 """req(boundary_error==0.,'seam coordinate changed')
+                  req(all(weights(new.data.vertices[j])==weights(orig.vertices[i]) for i,j in old_to_new.items()),'outside weight changed')
+                  stored_uv=new.data.uv_layers.get(uv_name)
+                  uv_error=0.;weight_error=0.;sum_error=0.;new_uv_loops=0
+                  for fi in created_new:
+                      for li in new.data.polygons[fi].loop_indices:
+                          i=new_to_candidate[new.data.loops[li].vertex_index]
+                          uv_error=max(uv_error,float(np.max(np.abs(np.array(stored_uv.data[li].uv)-uv_values[i]))))
+                          new_uv_loops+=1
+                  for j,i in new_to_candidate.items():
+                      actual_weights=np.zeros(len(source.vertex_groups))
+                      for k,value in weights(new.data.vertices[j]):actual_weights[k]=value
+                      weight_error=max(weight_error,float(np.max(np.abs(actual_weights-weight_values[i]))))
+                      sum_error=max(sum_error,abs(float(actual_weights.sum())-1.))
+                  req(uv_error<1e-6 and weight_error<1e-6 and sum_error<1e-6,'attribute storage mismatch')""")
+          inject('interior_uv_transferred=False)',
+                 'interior_uv_transferred=True,uv_storage_error=uv_error,weight_storage_error=weight_error,weight_sum_error=sum_error,new_uv_loops=new_uv_loops,outside_weights_exact=True)')
+          exec('def replace_attributes('+src,globals())
+          def all_snapshot(o):
+              return full_snapshot(o),[weights(v) for v in o.data.vertices],[(g.name,g.index) for g in o.vertex_groups]
+          def init_attributes(o):
+              uv=o.data.uv_layers.new(name='TestUV')
+              g0=o.vertex_groups.new(name='Group_A');g1=o.vertex_groups.new(name='Group_B')
+              # Continuous, nonconstant source attributes, with arbitrary outside UV islands.
+              world=np.array([tuple(v.co) for v in o.data.vertices])
+              lo=world.min(axis=0);extent=np.maximum(world.max(axis=0)-lo,1e-8)
+              a=(world-lo)/extent
+              for v,p in zip(o.data.vertices,a):
+                  w=float(.15+.7*(.6*p[0]+.4*p[2]))
+                  g0.add([v.index],w,'REPLACE');g1.add([v.index],1-w,'REPLACE')
+              for face in o.data.polygons:
+                  for li in face.loop_indices:
+                      v=o.data.loops[li].vertex_index
+                      p=a[v]
+                      uv.data[li].uv=(.1+.7*p[0]+.15*p[2],.1+.65*p[1]+.1*p[2]) if face.select else (li*.017%1,li*.031%1)
+              for e in o.data.edges:
+                  e.use_seam=bool(e.index%3==0);e.use_edge_sharp=bool(e.index%5==0)
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];controls=[]
+          for spec in specs:
+              o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None;row=dict(case=spec[0])
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  if spec[0]=='round':
+                      uv=o.data.uv_layers.active
+                      p=next(p for p in o.data.polygons if p.select)
+                      li=p.loop_indices[0];saved=tuple(uv.data[li].uv)
+                      uv.data[li].uv=(saved[0]+.123,saved[1])
+                      count=len(bpy.data.objects)
+                      try:
+                          bad,_=replace_attributes(o,data,*m);remove(bad);controls.append(dict(case='UV discontinuity',rejected=False))
+                      except ValueError as e:controls.append(dict(case='UV discontinuity',rejected=str(e)=='selected UV discontinuity',reason=str(e),no_output=len(bpy.data.objects)==count))
+                      finally:uv.data[li].uv=saved
+                  new,stats=replace_attributes(o,data,*m);new.show_wire=True;new.show_all_edges=True
+                  row.update(status='accepted',**stats)
+              except Exception as e:row.update(status='rejected',reason=str(e))
+              finally:
+                  if g is not None:remove(g)
+              row['source_unchanged']=all_snapshot(o)==before
+              rows.append(row)
+          d=Path('ti42-results');d.mkdir(exist_ok=True)
+          gate=len(rows)==4 and all(r['status']=='accepted' and r['source_unchanged'] for r in rows) and len(controls)==1 and all(c['rejected'] and c.get('no_output',False) for c in controls)
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'attributes.blend').resolve()))
+          print('TI42_SUMMARY',json.dumps(out),flush=True)
+          assert gate,'attribute transfer gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti42.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti42-attribute-transfer-${{ github.sha }}
+          path: ti42-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase42 verified run 45627280114: 4/4 attribute transfer, 384 new UV loops.
+      # Phase43: actual two-bone linear skinning, fixed rest-surface correspondence,
+      # 4 shapes x 5 poses; normalized P95 displacement error <= .06.
+      # Not a full character rig, collision, or pose-dependent remeshing test.
+      - name: Phase43 compare actual armature deformation on remeshed patches
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti43.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti42.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          # Actual Blender Armature modifier, normalized linear skinning.
+          def rig_for(data,name):
+              arm=bpy.data.armatures.new('TI43_'+name)
+              o=bpy.data.objects.new('Rig_'+name,arm);bpy.context.collection.objects.link(o)
+              bpy.ops.object.select_all(action='DESELECT');o.select_set(True);bpy.context.view_layer.objects.active=o
+              bpy.ops.object.mode_set(mode='EDIT')
+              try:
+                  origin=data['origin'];Q=data['Q'];s=data['scale']
+                  for name,offset in [('Group_A',-.45),('Group_B',.45)]:
+                      bone=arm.edit_bones.new(name)
+                      bone.head=Vector((origin+Q@np.array([offset,-.65,0])*s).tolist())
+                      bone.tail=Vector((origin+Q@np.array([offset,.65,0])*s).tolist())
+              finally:bpy.ops.object.mode_set(mode='OBJECT')
+              return o
+          def attach(o,rig):
+              m=o.modifiers.new('TI43_Armature','ARMATURE');m.object=rig
+              m.use_vertex_groups=True;m.use_bone_envelopes=False;m.use_deform_preserve_volume=False
+          def coords(o):
+              return np.array([tuple(o.matrix_world@v.co) for v in o.data.vertices],float)
+          def evaluated(o):
+              dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+              try:
+                  req(len(m.vertices)==len(o.data.vertices) and [tuple(p.vertices) for p in m.polygons]==[tuple(p.vertices) for p in o.data.polygons],'evaluated topology changed')
+                  return np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+              finally:ev.to_mesh_clear()
+          def signature(o,p):
+              return cycle([tuple(o.data.vertices[v].co) for v in p.vertices])
+          def sampling(o,face_ids,data,points):
+              # Freeze material correspondences in the undeformed local projection.
+              V=(coords(o)-data['origin'])@data['Q']/data['scale']
+              o.data.calc_loop_triangles()
+              ids=np.array([tuple(t.vertices) for t in o.data.loop_triangles if t.polygon_index in face_ids],int)
+              req(len(ids)>0,'empty sampling faces')
+              index=np.full((len(points),3),-1,int);weight=np.zeros((len(points),3))
+              for tri in ids:
+                  q=V[tri,:2];M=np.column_stack((q[1]-q[0],q[2]-q[0]))
+                  req(abs(np.linalg.det(M))>1e-10,'degenerate rest triangle')
+                  b=(points-q[0])@np.linalg.inv(M).T
+                  b=np.column_stack((1-b.sum(axis=1),b))
+                  mask=(index[:,0]<0)&(b.min(axis=1)>=-1e-7)
+                  index[mask]=tri;weight[mask]=b[mask]
+              req(np.min(index)>=0,'rest sample miss')
+              return index,weight
+          def interpolate(V,map):
+              idx,w=map
+              return np.einsum('ni,nij->nj',w,V[idx])
+          POSES=[('rest',(0,0,0),(0,0,0),False),
+                 ('rigid_translation',(0,0,0),(0,0,0),True),
+                 ('bend',(0,0,25),(0,0,-20),False),
+                 ('twist',(0,25,0),(0,-30,0),False),
+                 ('mixed',(15,20,-20),(-20,-15,25),False)]
+          def set_pose(rig,data,spec):
+              name,a,b,translation=spec
+              move=data['Q']@np.array([.07,-.04,.12])*data['scale']
+              for bone,angles in zip(rig.pose.bones,(a,b)):
+                  bone.rotation_mode='XYZ';bone.rotation_euler=np.radians(angles).tolist()
+                  bone.location=bone.bone.matrix_local.to_3x3().inverted()@Vector(move.tolist()) if translation else (0,0,0)
+                  bone.scale=(1,1,1)
+              bpy.context.view_layer.update()
+              return move if translation else np.zeros(3)
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  # Map surviving outside faces and vertices by exact original coordinates.
+                  outside=[p for p in o.data.polygons if not p.select]
+                  expected={signature(o,p) for p in outside}
+                  outside_new=[p for p in new.data.polygons if signature(new,p) in expected]
+                  req(len(outside_new)==len(outside),'outside correspondence')
+                  old_ids={v for p in outside for v in p.vertices}
+                  new_by_coord={tuple(v.co):v.index for v in new.data.vertices}
+                  oi=sorted(old_ids);ni=[new_by_coord[tuple(o.data.vertices[i].co)] for i in oi]
+                  source_map=sampling(o,{p.index for p in o.data.polygons if p.select},data,S)
+                  result_map=sampling(new,{p.index for p in new.data.polygons if signature(new,p) not in expected},data,S)
+                  s0=coords(o);r0=coords(new)
+                  src_rest=interpolate(s0,source_map);dst_rest=interpolate(r0,result_map)
+                  rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                  for pose in POSES:
+                      move=set_pose(rig,data,pose)
+                      sv=evaluated(o);rv=evaluated(new)
+                      sd=interpolate(sv,source_map)-src_rest;rd=interpolate(rv,result_map)-dst_rest
+                      err=np.linalg.norm(sd-rd,axis=1)/data['scale']
+                      absolute=np.linalg.norm(interpolate(sv,source_map)-interpolate(rv,result_map),axis=1)/data['scale']
+                      outside_error=float(np.max(np.linalg.norm(sv[oi]-rv[ni],axis=1))/data['scale'])
+                      control_error=None
+                      if pose[0] in ('rest','rigid_translation'):
+                          control_error=float(max(np.linalg.norm(sv-s0-move,axis=1).max(),np.linalg.norm(rv-r0-move,axis=1).max())/data['scale'])
+                      # Prespecified exploratory threshold; displacement, not absolute shape error.
+                      row=dict(case=name,pose=pose[0],samples=len(S),p95_displacement=float(np.quantile(err,.95)),max_displacement=float(err.max()),p95_absolute=float(np.quantile(absolute,.95)),outside_error=outside_error,control_error=control_error,source_unchanged=all_snapshot(o)==before)
+                      row['pass']=row['p95_displacement']<=.06 and outside_error<1e-6 and row['source_unchanged'] and (control_error is None or control_error<1e-6)
+                      rows.append(row)
+                  # Keep the source and output in rest pose, with rig available for inspection.
+                  set_pose(rig,data,POSES[0]);new.show_wire=True;new.show_all_edges=True
+              except Exception as e:failures.append(dict(case=name,reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti43-results');d.mkdir(exist_ok=True)
+          gate=len(rows)==20 and not failures and all(x['pass'] for x in rows)
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'rigged_patches.blend').resolve()))
+          print('TI43_SUMMARY',json.dumps(out),flush=True)
+          assert gate,'deformation transfer research gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti43.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti43-deformation-${{ github.sha }}
+          path: ti43-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase43 verified run 45628160609: 20/20 deformation conditions passed.
+      # Phase44: discrete poses only; conservative contacts of nonincident
+      # triangles, not proof of no collision or exact penetration classification.
+      - name: Phase44 detect nonincident triangle contacts under actual armature poses
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti44.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti43.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          # Conservative contact test for nonincident triangles using separating axes.
+          # Coordinates normalized by fixture radius. Coplanar and near contacts count,
+          # not just proper penetration. This is not an exact-predicate general engine.
+          EPS=1e-7
+          def tri_contact(A,B):
+              ea=np.roll(A,-1,axis=0)-A;eb=np.roll(B,-1,axis=0)-B
+              na=np.cross(ea[0],ea[1]);nb=np.cross(eb[0],eb[1])
+              axes=[na,nb]
+              axes.extend(np.cross(a,b) for a in ea for b in eb)
+              # Additional in-plane edge normals handle coplanar disjoint triangles.
+              axes.extend(np.cross(na,a) for a in ea)
+              axes.extend(np.cross(nb,b) for b in eb)
+              for axis in axes:
+                  norm=np.linalg.norm(axis)
+                  if norm<1e-12:continue
+                  axis=axis/norm
+                  x=A@axis;y=B@axis
+                  if max(x.min()-y.max(),y.min()-x.max())>EPS:return False
+              return True
+          def contacts(V,F,face_ids):
+              F=np.asarray(F,int);V=np.asarray(V,float)
+              req(np.isfinite(V).all(),'nonfinite evaluated vertices')
+              T=V[F];lo=T.min(axis=1);hi=T.max(axis=1)
+              area=np.linalg.norm(np.cross(T[:,1]-T[:,0],T[:,2]-T[:,0]),axis=1)*.5
+              degenerate=np.where(area<1e-10)[0].tolist()
+              pairs=[];face_pairs=set();tested=0;excluded=0
+              for i in range(len(F)):
+                  j=np.where(np.all(lo[i]<=hi[i+1:]+EPS,axis=1)&np.all(lo[i+1:]<=hi[i]+EPS,axis=1))[0]+i+1
+                  for k in j:
+                      if face_ids[i]==face_ids[k] or len(set(F[i])&set(F[k])):
+                          excluded+=1;continue
+                      tested+=1
+                      if tri_contact(T[i],T[k]):
+                          pairs.append((i,int(k)));face_pairs.add(tuple(sorted((int(face_ids[i]),int(face_ids[k])))))
+              return dict(triangles=len(F),tested=tested,excluded_incident=excluded,degenerate=degenerate,contact_pairs=pairs,face_pairs=sorted(face_pairs))
+          def evaluated_contacts(o,data):
+              dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+              try:
+                  m.calc_loop_triangles()
+                  V=np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+                  V=(V-data['origin'])@data['Q']/data['scale']
+                  F=[tuple(t.vertices) for t in m.loop_triangles]
+                  ids=[t.polygon_index for t in m.loop_triangles]
+                  return contacts(V,F,ids)
+              finally:ev.to_mesh_clear()
+          A=np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.]])
+          controls=[]
+          for name,B,expected in [
+              ('proper_crossing',[[.2,.2,-.5],[.2,.2,.5],[.7,.2,0]],True),
+              ('parallel_gap',[[0,0,.01],[1,0,.01],[0,1,.01]],False),
+              ('coplanar_overlap',[[.1,.1,0],[.7,.1,0],[.1,.7,0]],True),
+              ('coplanar_disjoint_aabb_overlap',[[.8,.8,0],[1,.8,0],[.8,1,0]],False),
+              ('point_contact',[[1,0,0],[1.5,0,0],[1,.5,0]],True),
+              ('edge_contact',[[0,0,0],[1,0,0],[.5,-.5,0]],True)]:
+              B=np.asarray(B,float)
+              # Check classification under rigid rotations and translations.
+              for angle0 in (0,37,113):
+                  R=rotation((1,2,3),angle0);T=np.array([.31,-.2,.42])
+                  out=contacts(np.vstack((A@R.T+T,B@R.T+T)),[(0,1,2),(3,4,5)],[0,1])
+                  actual=bool(out['contact_pairs'])
+                  controls.append(dict(case=name,rotation=angle0,expected=expected,actual=actual,ok=actual==expected))
+          adjacent=contacts(np.array([[0.,0,0],[1,0,0],[0,1,0],[0,-1,0]]),[(0,1,2),(1,0,3)],[0,1])
+          controls.append(dict(case='shared_edge_excluded',ok=not adjacent['contact_pairs'] and adjacent['excluded_incident']==1))
+          deg=contacts(np.array([[0.,0,0],[1,0,0],[2,0,0]]),[(0,1,2)],[0])
+          controls.append(dict(case='degenerate_triangle',ok=deg['degenerate']==[0]))
+          STRESS=[('stress_bend45',(0,0,45),(0,0,-45),False),
+                  ('stress_bend90',(0,0,90),(0,0,-90),False),
+                  ('stress_bend120',(0,0,120),(0,0,-120),False),
+                  ('stress_twist90',(0,90,0),(0,-90,0),False),
+                  ('stress_mixed',(45,60,-60),(-45,-60,60),False)]
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[]
+          for spec in specs:
+              o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  rig=rig_for(data,spec[0]);attach(o,rig);attach(new,rig)
+                  for pose in POSES+STRESS:
+                      set_pose(rig,data,pose)
+                      a=evaluated_contacts(o,data);b=evaluated_contacts(new,data)
+                      a_bad=bool(a['contact_pairs'] or a['degenerate'])
+                      b_bad=bool(b['contact_pairs'] or b['degenerate'])
+                      state=('both_flagged' if b_bad else 'source_only') if a_bad else ('result_only' if b_bad else 'both_clear')
+                      rows.append(dict(case=spec[0],pose=pose[0],stress=pose in STRESS,classification=state,source=a,result=b,source_unchanged=all_snapshot(o)==before))
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=spec[0],reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti44-results');d.mkdir(exist_ok=True)
+          # A new flag on a previously clear baseline is a research failure.
+          # Stress outcomes are diagnostic; source and output tessellations differ,
+          # so counts cannot establish pair-by-pair equality or collision-free motion.
+          gate=len(rows)==40 and not failures and all(c['ok'] for c in controls) and all(x['source_unchanged'] for x in rows) and all(x['classification']!='result_only' for x in rows if not x['stress'])
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,rows=rows,controls=controls,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          compact=[dict(case=x['case'],pose=x['pose'],stress=x['stress'],classification=x['classification'],source_pairs=len(x['source']['face_pairs']),result_pairs=len(x['result']['face_pairs']),source_degenerate=len(x['source']['degenerate']),result_degenerate=len(x['result']['degenerate'])) for x in rows]
+          print('TI44_SUMMARY',json.dumps(dict(gate=gate,controls_pass=sum(c['ok'] for c in controls),controls_total=len(controls),cases=compact,failures=failures)),flush=True)
+          assert gate,'nonincident triangle contact gate failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti44.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti44-pose-contact-audit-${{ github.sha }}
+          path: ti44-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase44 run 45629134537: 20/20 controls, 31 both clear, 9 both flagged.
+      # Phase45: fixed 5-degree discrete sweep, compare prior sampled anchor poses.
+      # No continuous collision claim, and incident triangles remain excluded.
+      - name: Phase45 sample bend and twist contact transitions
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti45.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti44.py').read_text().split('\nA=np.array([[0.,0.,0.]',1)[0])
+          # Frozen nonincident contact detector, unchanged tolerance.
+          # Discrete sweep only: no continuous collision guarantee between samples.
+          ANGLES=list(range(0,121,5))
+          def classify(a,b):
+              x=bool(a['contact_pairs'] or a['degenerate'])
+              y=bool(b['contact_pairs'] or b['degenerate'])
+              return ('both_flagged' if y else 'source_only') if x else ('result_only' if y else 'both_clear')
+          def compact(a):
+              return dict(face_pairs=len(a['face_pairs']),triangle_pairs=len(a['contact_pairs']),degenerate=len(a['degenerate']),tested=a['tested'],excluded=a['excluded_incident'])
+          def runs(rows,field):
+              out=[];start=None;last=None
+              for row in rows:
+                  hit=row[field]['triangle_pairs']>0 or row[field]['degenerate']>0
+                  if hit and start is None:start=row['angle']
+                  if not hit and start is not None:out.append([start,last]);start=None
+                  last=row['angle']
+              if start is not None:out.append([start,last])
+              return out
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          prior=json.loads(Path('ti44-results/results.json').read_text())
+          req(prior['gate'],'Phase44 gate not met')
+          lookup={(r['case'],r['pose']):r['classification'] for r in prior['rows']}
+          rows=[];summaries=[];failures=[];evidence=[]
+          for spec in specs:
+              o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  rig=rig_for(data,spec[0]);attach(o,rig);attach(new,rig)
+                  for kind in ('bend','twist'):
+                      group=[]
+                      for deg in ANGLES:
+                          a,b=((0,0,deg),(0,0,-deg)) if kind=='bend' else ((0,deg,0),(0,-deg,0))
+                          set_pose(rig,data,('sweep',a,b,False))
+                          s=evaluated_contacts(o,data);t=evaluated_contacts(new,data)
+                          state=classify(s,t)
+                          anchor='rest' if deg==0 else 'stress_bend'+str(deg) if kind=='bend' and deg in (45,90,120) else 'stress_twist90' if kind=='twist' and deg==90 else None
+                          anchor_same=state==lookup[(spec[0],anchor)] if anchor else None
+                          row=dict(case=spec[0],motion=kind,angle=deg,classification=state,source=compact(s),result=compact(t),anchor=anchor,anchor_same=anchor_same,source_unchanged=all_snapshot(o)==before)
+                          group.append(row);rows.append(row)
+                          if state!='both_clear':
+                              evidence.append(dict(case=spec[0],motion=kind,angle=deg,source=s,result=t))
+                      summaries.append(dict(case=spec[0],motion=kind,source_runs=runs(group,'source'),result_runs=runs(group,'result'),result_only=[r['angle'] for r in group if r['classification']=='result_only'],source_only=[r['angle'] for r in group if r['classification']=='source_only'],both_flagged=[r['angle'] for r in group if r['classification']=='both_flagged']))
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=spec[0],reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti45-results');d.mkdir(exist_ok=True)
+          complete=len(rows)==200 and len(summaries)==8 and not failures and all(r['source_unchanged'] for r in rows)
+          anchors=[r for r in rows if r['anchor'] is not None]
+          anchor_gate=len(anchors)==24 and all(r['anchor_same'] for r in anchors)
+          risk=[r for r in rows if r['classification']=='result_only']
+          # Integrity is separate from the research improvement gate; preserve all risk cases.
+          gate=complete and anchor_gate and not risk
+          out=dict(approved=False,blender=bpy.app.version_string,gate=gate,complete=complete,anchor_gate=anchor_gate,rows=rows,summaries=summaries,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'contact_evidence.json').write_text(json.dumps(evidence,indent=2))
+          print('TI45_SUMMARY',json.dumps(dict(gate=gate,complete=complete,anchor_gate=anchor_gate,anchors=len(anchors),counts=dict(Counter(r['classification'] for r in rows)),summaries=summaries,failures=failures)),flush=True)
+          assert complete and anchor_gate,'sweep execution or prior anchor regression'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti45.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti45-contact-sweep-${{ github.sha }}
+          path: ti45-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase45 run 45630079248: integrity passed, research gate failed;
+      # 3 result-only flags: round twist 85/95, rounded twist 95.
+      # Phase46 NumPy basis enumeration checked locally against LP on 400 controls.
+      # Numerical tolerances and uncertain classifications, not exact predicates.
+      - name: Phase46 audit overlap beyond shared vertices and edges
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti46.py" <<'PY'
+          from pathlib import Path
+          import os
+          from itertools import combinations
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti44.py').read_text().split('\nA=np.array([[0.,0.,0.]',1)[0])
+          def incident_probe(V,ia,ib):
+              ia=list(ia);ib=list(ib);shared=set(ia)&set(ib)
+              if len(shared)==3:return 'duplicate_face'
+              if len(shared) not in (1,2):return 'unsupported'
+              V=np.asarray(V,float);P=V[ia];Q=V[ib];o=V[min(shared)]
+              s=max(np.linalg.norm(P-o,axis=1).max(),np.linalg.norm(Q-o,axis=1).max())
+              if not np.isfinite(s) or s<=0:return 'invalid'
+              P=(P-o)/s;Q=(Q-o)/s
+              if min(np.linalg.norm(np.cross(X[1]-X[0],X[2]-X[0])) for X in (P,Q))<1e-10:return 'invalid'
+              E=np.vstack((np.hstack((P.T,-Q.T)),[1,1,1,0,0,0],[0,0,0,1,1,1]));rhs=np.array([0,0,0,1,1.])
+              sv=np.linalg.svd(E,compute_uv=False);rank=int(np.sum(sv>1e-11))
+              if np.any((sv>1e-13)&(sv<1e-9)):return 'uncertain'
+              subsets=np.array(list(combinations(range(6),rank)))
+              mat=E.T[subsets].transpose(0,2,1)
+              U,S,Vh=np.linalg.svd(mat,full_matrices=False)
+              good=S[:,-1]>1e-11
+              if not good.any():return 'uncertain'
+              mat=mat[good];subsets=subsets[good];U=U[good];S=S[good];Vh=Vh[good]
+              x=np.einsum('nki,nk->ni',Vh,np.einsum('nik,i->nk',U,rhs)/S)
+              residual=np.max(np.abs(np.einsum('nik,nk->ni',mat,x)-rhs),axis=1)
+              ok=(residual<1e-9)&(x.min(axis=1)>=-1e-9)
+              if not ok.any():return 'uncertain'
+              mask=np.array([int(i not in shared) for i in ia+ib])
+              maximum=float(np.max(np.sum(x[ok]*mask[subsets[ok]],axis=1)))
+              return 'beyond_shared' if maximum>1e-6 else 'uncertain' if maximum>1e-9 else 'shared_only'
+          A=[[0.,0,0],[1,0,0],[0,1,0]]
+          cases=[
+           ('edge_opposite_coplanar',A+[[.5,-1,0]],(0,1,2),(1,0,3),'shared_only'),
+           ('edge_same_side_coplanar',A+[[.5,.5,0]],(0,1,2),(1,0,3),'beyond_shared'),
+           ('edge_folded_nonplanar',A+[[.5,.5,1]],(0,1,2),(1,0,3),'shared_only'),
+           ('vertex_opposite_coplanar',A+[[-1,0,0],[0,-1,0]],(0,1,2),(0,3,4),'shared_only'),
+           ('vertex_overlap_coplanar',A+[[.8,.1,0],[.1,.8,0]],(0,1,2),(0,3,4),'beyond_shared'),
+           ('vertex_crossing_nonplanar',A+[[.5,.2,1],[.5,.2,-1]],(0,1,2),(0,3,4),'beyond_shared'),
+           ('vertex_only_nonplanar',A+[[-.5,-.2,1],[-.5,-.2,-1]],(0,1,2),(0,3,4),'shared_only'),
+           ('vertex_ray_overlap',A+[[.5,0,0],[.25,0,1]],(0,1,2),(0,3,4),'beyond_shared'),
+           ('duplicate_face',A,(0,1,2),(2,1,0),'duplicate_face'),
+           ('degenerate',A+[[2,0,0]],(0,1,2),(0,1,3),'invalid')]
+          rng=np.random.default_rng(4602);controls=[]
+          for name,verts,ia,ib,want in cases:
+              for trial in range(40):
+                  R,_=np.linalg.qr(rng.normal(size=(3,3)));s=10.**rng.uniform(-2,2)
+                  V=np.asarray(verts)@R.T*s+rng.uniform(-5,5,3)*s
+                  a=list(rng.permutation(ia));b=list(rng.permutation(ib))
+                  actual=incident_probe(V,a,b)
+                  controls.append(dict(case=name,trial=trial,expected=want,actual=actual,ok=actual==want))
+          def audit(o,data):
+              dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+              try:
+                  m.calc_loop_triangles()
+                  V=np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+                  V=(V-data['origin'])@data['Q']/data['scale']
+                  F=[tuple(t.vertices) for t in m.loop_triangles]
+                  ids=[t.polygon_index for t in m.loop_triangles]
+                  baseline=contacts(V,F,ids)
+                  incident=defaultdict(list)
+                  for i,tri in enumerate(F):
+                      for v in tri:incident[v].append(i)
+                  pairs={tuple(sorted((a,b))) for group in incident.values() for a,b in combinations(group,2)}
+                  counts=Counter();flags=[]
+                  for i,j in sorted(pairs):
+                      # Include internal triangulation of a single polygon too.
+                      state=incident_probe(V,F[i],F[j]);counts[state]+=1
+                      if state!='shared_only':
+                          flags.append(dict(triangles=[i,j],faces=[ids[i],ids[j]],state=state))
+                  return dict(nonincident_pairs=len(baseline['contact_pairs']),degenerate=len(baseline['degenerate']),incident_counts=dict(counts),incident_tested=len(pairs),flags=flags)
+              finally:ev.to_mesh_clear()
+          prior=json.loads(Path('ti45-results/results.json').read_text())
+          req(prior['complete'] and prior['anchor_gate'],'Phase45 integrity failed')
+          risks={(x['case'],x['motion'],x['angle']) for x in prior['rows'] if x['classification']=='result_only'}
+          req(risks=={('round','twist',85),('round','twist',95),('rounded','twist',95)},'Phase45 risk set changed')
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[]
+          for spec in specs:
+              o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  rig=rig_for(data,spec[0]);attach(o,rig);attach(new,rig)
+                  poses=list(POSES)+[('twist'+str(a),(0,a,0),(0,-a,0),False) for a in (85,90,95)]
+                  for pose in poses:
+                      set_pose(rig,data,pose)
+                      a=audit(o,data);b=audit(new,data)
+                      rows.append(dict(case=spec[0],pose=pose[0],source=a,result=b,source_unchanged=all_snapshot(o)==before))
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=spec[0],reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti46-results');d.mkdir(exist_ok=True)
+          complete=len(rows)==32 and not failures and all(r['source_unchanged'] for r in rows)
+          controls_gate=all(c['ok'] for c in controls)
+          def bad(x):
+              return bool(x['nonincident_pairs'] or x['degenerate'] or x['flags'])
+          risks=[dict(case=r['case'],pose=r['pose']) for r in rows if bad(r['result']) and not bad(r['source'])]
+          out=dict(approved=False,blender=bpy.app.version_string,complete=complete,controls_gate=controls_gate,gate=complete and controls_gate and not risks,risks=risks,rows=rows,controls=controls,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          compact=[dict(case=r['case'],pose=r['pose'],source={k:v for k,v in r['source'].items() if k!='flags'},result={k:v for k,v in r['result'].items() if k!='flags'}) for r in rows]
+          print('TI46_SUMMARY',json.dumps(dict(gate=out['gate'],complete=complete,controls_pass=sum(c['ok'] for c in controls),controls_total=len(controls),risks=risks,cases=compact,failures=failures)),flush=True)
+          assert complete and controls_gate,'incident audit integrity failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti46.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti46-incident-audit-${{ github.sha }}
+          path: ti46-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase46 run 45631278121: 400/400 controls, 32/32 poses, 3 result-only risks.
+      # Phase47 keeps geometry and weights fixed; compares actual native Armature
+      # Preserve Volume off/on. 232 mode/shape/pose cases, 32 prior anchors.
+      - name: Phase47 isolate skinning method from topology and weight effects
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti47.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti46.py').read_text().split("\nprior=json.loads(Path('ti45-results/results.json')",1)[0])
+          prior=json.loads(Path('ti46-results/results.json').read_text())
+          req(prior['complete'] and prior['controls_gate'],'Phase46 integrity failed')
+          anchors={(r['case'],r['pose']):r for r in prior['rows']}
+          def summary(x):
+              return dict(nonincident=x['nonincident_pairs'],degenerate=x['degenerate'],incident=dict(x['incident_counts']))
+          def bad(x):
+              return bool(x['nonincident'] or x['degenerate'] or any(k!='shared_only' and n for k,n in x['incident'].items()))
+          def classify(a,b):
+              return ('both_flagged' if bad(b) else 'source_only') if bad(a) else ('result_only' if bad(b) else 'both_clear')
+          # Reuse all 32 Phase46 anchors, add remaining 5-degree twist samples.
+          motions=list(POSES)+[('twist'+str(a),(0,a,0),(0,-a,0),False) for a in range(5,121,5)]
+          req(len(motions)==29,'unexpected pose count')
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[];evidence=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g)
+                  req(m is not None,'no candidate')
+                  new,stats=replace_attributes(o,data,*m)
+                  expected={signature(o,p) for p in o.data.polygons if not p.select}
+                  outside=[p for p in o.data.polygons if not p.select]
+                  ids=sorted({v for p in outside for v in p.vertices})
+                  new_by_coord={tuple(v.co):v.index for v in new.data.vertices}
+                  ni=[new_by_coord[tuple(o.data.vertices[i].co)] for i in ids]
+                  sm=sampling(o,{p.index for p in o.data.polygons if p.select},data,S)
+                  tm=sampling(new,{p.index for p in new.data.polygons if signature(new,p) not in expected},data,S)
+                  s0=coords(o);t0=coords(new);sr=interpolate(s0,sm);tr=interpolate(t0,tm)
+                  rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                  mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                  for pose in motions:
+                      move=set_pose(rig,data,pose)
+                      for enabled in (False,True):
+                          for mod in mods:mod.use_deform_preserve_volume=enabled
+                          bpy.context.view_layer.update()
+                          sv=evaluated(o);tv=evaluated(new)
+                          sd=interpolate(sv,sm)-sr;td=interpolate(tv,tm)-tr
+                          err=np.linalg.norm(sd-td,axis=1)/data['scale']
+                          absolute=np.linalg.norm(interpolate(sv,sm)-interpolate(tv,tm),axis=1)/data['scale']
+                          a=audit(o,data);b=audit(new,data);sa=summary(a);sb=summary(b)
+                          state=classify(sa,sb)
+                          anchor=anchors.get((name,pose[0])) if not enabled else None
+                          anchor_same=(sa==summary(anchor['source']) and sb==summary(anchor['result'])) if anchor else None
+                          outside_error=float(np.max(np.linalg.norm(sv[ids]-tv[ni],axis=1))/data['scale'])
+                          control_error=None
+                          if pose[0] in ('rest','rigid_translation'):
+                              control_error=float(max(np.linalg.norm(sv-s0-move,axis=1).max(),np.linalg.norm(tv-t0-move,axis=1).max())/data['scale'])
+                          row=dict(case=name,pose=pose[0],preserve_volume=enabled,source=sa,result=sb,classification=state,anchor_same=anchor_same,p95_displacement=float(np.quantile(err,.95)),p95_absolute=float(np.quantile(absolute,.95)),max_displacement=float(err.max()),outside_error=outside_error,control_error=control_error,source_unchanged=all_snapshot(o)==before)
+                          rows.append(row)
+                          if state!='both_clear':evidence.append(dict(case=name,pose=pose[0],preserve_volume=enabled,source=a,result=b))
+                  for mod in mods:mod.use_deform_preserve_volume=False
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=name,reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti47-results');d.mkdir(exist_ok=True)
+          checked=[r for r in rows if r['anchor_same'] is not None]
+          complete=len(rows)==232 and not failures and len(checked)==32 and all(r['anchor_same'] for r in checked) and all(r['source_unchanged'] and r['outside_error']<1e-6 and (r['control_error'] is None or r['control_error']<1e-6) for r in rows)
+          modes={}
+          for mode in (False,True):
+              subset=[r for r in rows if r['preserve_volume']==mode]
+              normal=[r for r in subset if r['pose'] in {p[0] for p in POSES}]
+              modes['preserve' if mode else 'linear']=dict(counts=dict(Counter(r['classification'] for r in subset)),risk_cases=[dict(case=r['case'],pose=r['pose']) for r in subset if r['classification']=='result_only'],worst_normal_p95=max((r['p95_displacement'] for r in normal),default=None),worst_all_p95=max((r['p95_displacement'] for r in subset),default=None),normal_clear=all(r['classification']=='both_clear' for r in normal))
+          # Diagnostic comparison, not a change to the generator or a universal best method.
+          pairs=defaultdict(dict)
+          for r in rows:pairs[r['case'],r['pose']][r['preserve_volume']]=r
+          transitions=Counter()
+          changed=[]
+          for (name,pose),pair in pairs.items():
+              if len(pair)!=2:continue
+              a,b=pair[False],pair[True]
+              transitions[a['classification']+' -> '+b['classification']]+=1
+              if a['classification']!=b['classification']:
+                  changed.append(dict(case=name,pose=pose,linear=a['classification'],preserve=b['classification'],linear_p95=a['p95_displacement'],preserve_p95=b['p95_displacement']))
+          out=dict(approved=False,blender=bpy.app.version_string,complete=complete,anchors=len(checked),modes=modes,transitions=dict(transitions),changed=changed,rows=rows,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2));(d/'contact_evidence.json').write_text(json.dumps(evidence,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'comparison_rigs.blend').resolve()))
+          print('TI47_SUMMARY',json.dumps({k:v for k,v in out.items() if k!='rows'}),flush=True)
+          assert complete,'skinning comparison integrity failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti47.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti47-skinning-comparison-${{ github.sha }}
+          path: ti47-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase47 run 45632392439: all 232 comparisons executed; preserve volume
+      # eliminated 3 result-only contacts but worst displacement P95 rose to .890918.
+      # Phase48: local rest-triangle stretch/area and step discontinuity diagnostics.
+      - name: Phase48 measure strain and twist path discontinuities
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti48.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti47.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          ref47=json.loads(Path('ti47-results/results.json').read_text())
+          req(ref47['complete'],'Phase47 incomplete')
+          lookup={(r['case'],r['pose'],r['preserve_volume']):r for r in ref47['rows']}
+          # Rest-triangle tangent metric: singular values of deformation gradient.
+          # Independent of rigid rotation; does not predict all collisions.
+          def metrics(X,Y,F):
+              A=X[F];B=Y[F]
+              e=A[:,1]-A[:,0];g=A[:,2]-A[:,0]
+              L=np.linalg.norm(e,axis=1);u=e/L[:,None]
+              p=np.sum(u*g,axis=1);q=np.linalg.norm(g-u*p[:,None],axis=1)
+              req(np.min(L)>1e-10 and np.min(q)>1e-10,'degenerate rest triangle')
+              D=np.zeros((len(F),2,2));D[:,0,0]=L;D[:,0,1]=p;D[:,1,1]=q
+              M=np.stack((B[:,1]-B[:,0],B[:,2]-B[:,0]),axis=2)@np.linalg.inv(D)
+              s=np.linalg.svd(M,compute_uv=False)
+              return s[:,1],s[:,0],s[:,0]*s[:,1],L*q/2
+          def weighted_quantile(v,w,p):
+              i=np.argsort(v);a=np.cumsum(w[i])
+              return float(v[i[min(np.searchsorted(a,p*a[-1]),len(i)-1)]])
+          def stats(X,Y,F):
+              lo,hi,area,w=metrics(X,Y,F)
+              return dict(min_stretch=float(lo.min()),p05_stretch=weighted_quantile(lo,w,.05),p95_stretch=weighted_quantile(hi,w,.95),max_stretch=float(hi.max()),p05_area=weighted_quantile(area,w,.05),p95_area=weighted_quantile(area,w,.95),compressed_fraction=float(w[lo<.25].sum()/w.sum()),expanded_fraction=float(w[hi>2.].sum()/w.sum()))
+          A=np.array([[0.,0,0],[1,0,0],[0,1,0]]);F=np.array([[0,1,2]])
+          controls=[]
+          for label,M,want in [('identity',np.eye(3),(1,1)),('uniform',2*np.eye(3),(2,2)),('anisotropic',np.diag([.2,3.,1.]),(.2,3)),('collapse',np.diag([0.,1.,1.]),(0,1)),('shear',np.array([[1.,1.,0],[0,1,0],[0,0,1]]),((np.sqrt(5)-1)/2,(np.sqrt(5)+1)/2))]:
+              for angle0 in (0,37,113):
+                  R=rotation((1,2,3),angle0)
+                  lo,hi,_,_=metrics(A,(A@M.T)@R.T+np.array([2.,3.,4.]),F)
+                  controls.append(dict(case=label,rotation=angle0,ok=bool(np.allclose([lo[0],hi[0]],want,atol=1e-10))))
+          def rest_faces(o,ids):
+              o.data.calc_loop_triangles()
+              return np.array([tuple(t.vertices) for t in o.data.loop_triangles if t.polygon_index in ids],int)
+          # Pose path is chronological; record maximum consecutive-frame displacement
+          # divided by rest boundary radius, NOT a velocity or a collision proof.
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];failures=[]
+          for spec in specs:
+              name=spec[0];o=fixture(*spec);init_attributes(o);before=all_snapshot(o);g=None
+              try:
+                  data=extract(o);g=prepare(data);decision,m=route(data,g);req(m is not None,'no candidate')
+                  new,_=replace_attributes(o,data,*m)
+                  outside={signature(o,p) for p in o.data.polygons if not p.select}
+                  sf={p.index for p in o.data.polygons if p.select}
+                  tf={p.index for p in new.data.polygons if signature(new,p) not in outside}
+                  sf0=rest_faces(o,sf);tf0=rest_faces(new,tf)
+                  s0=coords(o);t0=coords(new);sm=sampling(o,sf,data,S);tm=sampling(new,tf,data,S)
+                  sr=interpolate(s0,sm);tr=interpolate(t0,tm)
+                  rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                  mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                  for enabled in (False,True):
+                      for mod in mods:mod.use_deform_preserve_volume=enabled
+                      prev=None
+                      # finer sampling around the 90-degree relative-rotation singularity
+                      angles=sorted(set(range(0,121,5))|set(range(80,101)))
+                      for a in angles:
+                          pose=('rest',(0,0,0),(0,0,0),False) if a==0 else ('twist'+str(a),(0,a,0),(0,-a,0),False)
+                          set_pose(rig,data,pose);sv=evaluated(o);tv=evaluated(new)
+                          ss=stats(s0,sv,sf0);ts=stats(t0,tv,tf0)
+                          ds=interpolate(sv,sm)-sr;dt=interpolate(tv,tm)-tr
+                          err=np.linalg.norm(ds-dt,axis=1)/data['scale'];p95=float(np.quantile(err,.95))
+                          anchor=lookup.get((name,pose[0],enabled))
+                          match=abs(p95-anchor['p95_displacement'])<1e-6 if anchor else None
+                          step=None
+                          if prev is not None:
+                              pa,ps,pt=prev
+                              step=dict(degrees=a-pa,source=float(np.quantile(np.linalg.norm(ds-ps,axis=1)/data['scale'],.95)),result=float(np.quantile(np.linalg.norm(dt-pt,axis=1)/data['scale'],.95)))
+                          prev=(a,ds,dt)
+                          # Exploratory predeclared strain screen; not tuned against known risks.
+                          flagged=ts['p05_stretch']<.25 or ts['p95_stretch']>2. or (step is not None and step['result']/step['degrees']>.10)
+                          rows.append(dict(case=name,preserve_volume=enabled,angle=a,source=ss,result=ts,p95_displacement=p95,step=step,flagged=flagged,anchor_same=match,prior_classification=anchor['classification'] if anchor else None,source_unchanged=all_snapshot(o)==before))
+                  for mod in mods:mod.use_deform_preserve_volume=False
+                  set_pose(rig,data,POSES[0])
+              except Exception as e:failures.append(dict(case=name,reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti48-results');d.mkdir(exist_ok=True)
+          anchors=[r for r in rows if r['anchor_same'] is not None]
+          complete=len(rows)==328 and len(anchors)==200 and not failures and all(r['anchor_same'] for r in anchors) and all(c['ok'] for c in controls) and all(r['source_unchanged'] for r in rows)
+          # Report detection and false alarms at known sampled contacts only. No claim
+          # about untested intermediate collision states or future predictive validity.
+          summaries=[]
+          for enabled in (False,True):
+              a=[r for r in rows if r['preserve_volume']==enabled]
+              known=[r for r in a if r['prior_classification'] is not None]
+              cm=Counter(('flag' if r['flagged'] else 'clear')+' / '+r['prior_classification'] for r in known)
+              worst=max(a,key=lambda r:r['p95_displacement'],default=None)
+              jumps=[r for r in a if r['step'] is not None]
+              jump=max(jumps,key=lambda r:r['step']['result']/r['step']['degrees'],default=None)
+              summaries.append(dict(preserve_volume=enabled,counts=dict(cm),worst=worst,max_step=jump))
+          out=dict(approved=False,blender=bpy.app.version_string,complete=complete,anchors=len(anchors),controls=controls,rows=rows,summaries=summaries,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          print('TI48_SUMMARY',json.dumps({k:v for k,v in out.items() if k!='rows'}),flush=True)
+          assert complete,'strain diagnostic integrity failed'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti48.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti48-strain-diagnostics-${{ github.sha }}
+          path: ti48-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase48 run 45634619135: 328/328, 15/15 controls, 200 prior anchors.
+      # Phase49 freezes diagnostic thresholds and adds new synthetic fixtures and
+      # weight fields. Counts rejected patches in coverage; no universal claim.
+      - name: Phase49 frozen strain screen on new shapes and weight fields
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti49.py" <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti48.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          # Frozen screen from Phase48. New fixtures defined before any native results.
+          # Same synthetic topology family; this is not an independent real-world dataset.
+          HOLDOUT=[
+           ('h_asymmetric',(.23,.12,.065,.018),.28,(2,1,3),38,(.3,.15,-.3),'sigmoid'),
+           ('h_saddle',(.16,.21,.055,-.11),.85,(1,3,2),109,(-.4,.2,.15),'oblique'),
+           ('h_steep',(.18,.16,.16,.055),.1,(3,1,1),73,(.1,-.35,.4),'steep'),
+           ('h_biased',(.25,.13,.08,-.025),.55,(1,1,3),151,(-.3,-.2,.1),'biased')]
+          ANGLES=sorted(set(range(0,121,5))|set(range(80,101)))
+          AUDIT=set(range(0,121,10))|{85,89,91,95}
+          req(len(ANGLES)==41 and len(AUDIT)==17 and AUDIT.issubset(ANGLES),'angle schedule')
+          def new_weights(o,data,kind):
+              V=(coords(o)-data['origin'])@data['Q']/data['scale']
+              x,y,z=V.T
+              if kind=='sigmoid':w=.5+.43*np.tanh(2.8*x+.6*y)
+              elif kind=='oblique':w=.5+.4*np.sin(1.7*x+1.2*y)
+              elif kind=='steep':w=.5+.47*np.tanh(8.*(x-.12*y))
+              elif kind=='biased':w=.72+.23*np.tanh(3.*y+1.2*x)
+              else:raise ValueError('unknown weight field')
+              for i,a in enumerate(w):
+                  o.vertex_groups['Group_A'].add([i],float(a),'REPLACE')
+                  o.vertex_groups['Group_B'].add([i],float(1.-a),'REPLACE')
+              return [float(w.min()),float(w.max())]
+          def state(a,b):
+              return ('both_flagged' if bad(b) else 'source_only') if bad(a) else ('result_only' if bad(b) else 'both_clear')
+          def report(rows):
+              cm=Counter()
+              for r in rows:
+                  if r['contact'] is None:continue
+                  actual=bad(r['contact']['result'])
+                  cm[('flag' if r['flagged'] else 'clear')+' / '+('target_flag' if actual else 'target_clear')]+=1
+              return dict(cm)
+          prior48=json.loads(Path('ti48-results/results.json').read_text())
+          req(prior48['complete'],'Phase48 integrity failed')
+          bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+          rows=[];coverage=[];failures=[]
+          for spec in HOLDOUT:
+              name=spec[0];o=fixture(*spec[:-1]);init_attributes(o);g=None;new=None
+              try:
+                  data=extract(o);wrange=new_weights(o,data,spec[-1]);before=all_snapshot(o);g=prepare(data)
+                  decision,m=route(data,g)
+                  if m is None:
+                      coverage.append(dict(case=name,status='no_candidate',weight=spec[-1],weight_range=wrange,route=decision,source_unchanged=all_snapshot(o)==before))
+                      continue
+                  new,transfer=replace_attributes(o,data,*m)
+                  outside={signature(o,p) for p in o.data.polygons if not p.select}
+                  sf={p.index for p in o.data.polygons if p.select}
+                  tf={p.index for p in new.data.polygons if signature(new,p) not in outside}
+                  sf0=rest_faces(o,sf);tf0=rest_faces(new,tf)
+                  s0=coords(o);t0=coords(new);sm=sampling(o,sf,data,S);tm=sampling(new,tf,data,S)
+                  sr=interpolate(s0,sm);tr=interpolate(t0,tm)
+                  rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                  mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                  for enabled in (False,True):
+                      for mod in mods:mod.use_deform_preserve_volume=enabled
+                      prev=None
+                      for a in ANGLES:
+                          pose=('twist'+str(a),(0,a,0),(0,-a,0),False)
+                          set_pose(rig,data,pose);sv=evaluated(o);tv=evaluated(new)
+                          ss=stats(s0,sv,sf0);ts=stats(t0,tv,tf0)
+                          ds=interpolate(sv,sm)-sr;dt=interpolate(tv,tm)-tr
+                          p95=float(np.quantile(np.linalg.norm(ds-dt,axis=1)/data['scale'],.95))
+                          rate=None
+                          if prev is not None:
+                              pa,pt=prev
+                              rate=float(np.quantile(np.linalg.norm(dt-pt,axis=1)/data['scale'],.95)/(a-pa))
+                          prev=(a,dt)
+                          flagged=ts['p05_stretch']<.25 or ts['p95_stretch']>2. or (rate is not None and rate>.10)
+                          contact=None
+                          if a in AUDIT:
+                              x=summary(audit(o,data));y=summary(audit(new,data))
+                              contact=dict(source=x,result=y,classification=state(x,y))
+                          rows.append(dict(case=name,weight=spec[-1],angle=a,preserve_volume=enabled,source=ss,result=ts,p95_displacement=p95,step_rate=rate,flagged=flagged,contact=contact,source_unchanged=all_snapshot(o)==before))
+                  for mod in mods:mod.use_deform_preserve_volume=False
+                  set_pose(rig,data,POSES[0])
+                  coverage.append(dict(case=name,status='accepted',weight=spec[-1],weight_range=wrange,selected=decision['selected'],source_unchanged=all_snapshot(o)==before))
+              except Exception as e:failures.append(dict(case=name,reason=str(e)))
+              finally:
+                  if g is not None:remove(g)
+          d=Path('ti49-results');d.mkdir(exist_ok=True)
+          accepted=sum(x['status']=='accepted' for x in coverage)
+          audit_rows=[r for r in rows if r['contact'] is not None]
+          complete=len(coverage)==4 and not failures and len(rows)==82*accepted and len(audit_rows)==34*accepted and all(r['source_unchanged'] for r in rows) and all(r['source_unchanged'] for r in coverage)
+          # Holdout is diagnostic only. Do not optimize thresholds using these results
+          # and then count the same cases as independent validation.
+          summaries=[]
+          for enabled in (False,True):
+              a=[r for r in rows if r['preserve_volume']==enabled]
+              known=[r for r in a if r['contact'] is not None]
+              missed=[dict(case=r['case'],angle=r['angle'],classification=r['contact']['classification']) for r in known if bad(r['contact']['result']) and not r['flagged']]
+              risks=[dict(case=r['case'],angle=r['angle']) for r in known if r['contact']['classification']=='result_only']
+              summaries.append(dict(preserve_volume=enabled,samples=len(a),audited=len(known),target_confusion=report(a),classifications=dict(Counter(r['contact']['classification'] for r in known)),missed=missed,result_only=risks,worst_p95=max((r['p95_displacement'] for r in a),default=None)))
+          out=dict(approved=False,blender=bpy.app.version_string,complete=complete,accepted=accepted,coverage=coverage,summaries=summaries,rows=rows,failures=failures)
+          (d/'results.json').write_text(json.dumps(out,indent=2))
+          bpy.ops.wm.save_as_mainfile(filepath=str((d/'holdout_rigs.blend').resolve()))
+          compact=[{k:v for k,v in x.items() if k!='route'} for x in coverage]
+          print('TI49_SUMMARY',json.dumps(dict(complete=complete,accepted=accepted,coverage=compact,rows=len(rows),audit_rows=len(audit_rows),summaries=summaries,failures=failures)),flush=True)
+          assert complete and accepted>0,'holdout execution incomplete'
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti49.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti49-frozen-holdout-${{ github.sha }}
+          path: ti49-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase49: 4/4 patches, 328 poses, 136 audits; strain missed 18/27
+      # flagged targets. Do not use strain to omit collision tests.
+      # Phase50 compares batched SAT with existing scalar nonincident detector.
+      # Incident audit remains unchanged; this is numerical equivalence only.
+      - name: Phase50 batch nonincident triangle SAT without strain-based pruning
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti50.py" <<'PY'
+          from pathlib import Path
+          import os,time
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti49.py').read_text().split('\nbpy.ops.object.select_all(action=',1)[0])
+          # Preserve the Phase44 nonincident SAT rule, including its tolerance and
+          # coplanar axes. Batch independent pair calculations, never skip on strain.
+          def batched_sat(A,B):
+              ea=np.roll(A,-1,axis=1)-A;eb=np.roll(B,-1,axis=1)-B
+              na=np.cross(ea[:,0],ea[:,1]);nb=np.cross(eb[:,0],eb[:,1])
+              axes=np.concatenate((na[:,None,:],nb[:,None,:],
+                  np.cross(ea[:,:,None,:],eb[:,None,:,:]).reshape(-1,9,3),
+                  np.cross(na[:,None,:],ea),np.cross(nb[:,None,:],eb)),axis=1)
+              norm=np.linalg.norm(axes,axis=2);valid=norm>=1e-12
+              axes=axes/np.where(valid,norm,1.)[:,:,None]
+              x=np.einsum('nai,nvi->nav',axes,A);y=np.einsum('nai,nvi->nav',axes,B)
+              gap=np.maximum(x.min(axis=2)-y.max(axis=2),y.min(axis=2)-x.max(axis=2))
+              return ~np.any(valid&(gap>EPS),axis=1)
+          def fast_contacts(V,F,face_ids):
+              F=np.asarray(F,int);V=np.asarray(V,float)
+              req(np.isfinite(V).all(),'nonfinite evaluated vertices')
+              T=V[F];lo=T.min(axis=1);hi=T.max(axis=1)
+              area=np.linalg.norm(np.cross(T[:,1]-T[:,0],T[:,2]-T[:,0]),axis=1)*.5
+              degenerate=np.where(area<1e-10)[0].tolist()
+              pairs=[];candidates=[];excluded=0
+              for i in range(len(F)):
+                  j=np.where(np.all(lo[i]<=hi[i+1:]+EPS,axis=1)&np.all(lo[i+1:]<=hi[i]+EPS,axis=1))[0]+i+1
+                  if len(j)==0:continue
+                  mask=(np.asarray(face_ids)[j]==face_ids[i])|np.any(F[i][None,:,None]==F[j][:,None,:],axis=(1,2))
+                  excluded+=int(mask.sum())
+                  candidates.extend((i,int(k)) for k in j[~mask])
+              for start in range(0,len(candidates),256):
+                  ij=np.asarray(candidates[start:start+256],int)
+                  mask=batched_sat(T[ij[:,0]],T[ij[:,1]])
+                  pairs.extend(map(tuple,ij[mask].tolist()))
+              face_pairs=sorted({tuple(sorted((int(face_ids[i]),int(face_ids[j])))) for i,j in pairs})
+              return dict(triangles=len(F),tested=len(candidates),excluded_incident=excluded,degenerate=degenerate,contact_pairs=pairs,face_pairs=face_pairs)
+          def compare(V,F,ids):
+              # Alternate execution order to reduce systematic timing bias.
+              t=time.perf_counter();a=contacts(V,F,ids);old=time.perf_counter()-t
+              t=time.perf_counter();b=fast_contacts(V,F,ids);new=time.perf_counter()-t
+              return a,b,old,new
+          # Isolate benchmark locals from inherited geometry helpers.
+          # First run 45639272625: 160/160 controls, 68/68 comparisons,
+          # but the global loop variable angle overwrote angle().
+          import traceback
+          def run_benchmark():
+              rng=np.random.default_rng(5001);controls=[]
+              A=np.array([[0.,0,0],[1,0,0],[0,1,0]])
+              base=[('cross',[[.2,.2,-.5],[.2,.2,.5],[.7,.2,0]],True),
+                    ('gap',[[0,0,.01],[1,0,.01],[0,1,.01]],False),
+                    ('coplanar',[[.1,.1,0],[.7,.1,0],[.1,.7,0]],True),
+                    ('disjoint',[[.8,.8,0],[1,.8,0],[.8,1,0]],False),
+                    ('point',[[1,0,0],[1.5,0,0],[1,.5,0]],True),
+                    ('edge',[[0,0,0],[1,0,0],[.5,-.5,0]],True)]
+              for name,B,want in base:
+                  for k in range(20):
+                      R,_=np.linalg.qr(rng.normal(size=(3,3)))
+                      V=np.vstack((A,B))@R.T+rng.uniform(-.5,.5,3)
+                      F=[tuple(rng.permutation((0,1,2))),tuple(rng.permutation((3,4,5)))]
+                      a,b,_,_=compare(V,F,[0,1])
+                      controls.append(dict(case=name,ok=a==b and bool(a['contact_pairs'])==want))
+              # Additional random triangle soups, including incident and degenerate geometry.
+              for k in range(40):
+                  V=rng.uniform(-1,1,(24,3));F=[tuple(rng.choice(24,3,replace=False)) for _ in range(16)]
+                  V[2]=(V[0]+V[1])/2;F.extend([(0,1,2),(0,1,3)])
+                  ids=list(range(len(F)));a,b,_,_=compare(V,F,ids)
+                  controls.append(dict(case='soup',ok=a==b))
+              def eval_geometry(o,data):
+                  dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+                  try:
+                      m.calc_loop_triangles()
+                      V=np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+                      V=(V-data['origin'])@data['Q']/data['scale']
+                      return V,[tuple(t.vertices) for t in m.loop_triangles],[t.polygon_index for t in m.loop_triangles]
+                  finally:ev.to_mesh_clear()
+              ref=json.loads(Path('ti49-results/results.json').read_text())
+              req(ref['complete'] and ref['accepted']==4,'Phase49 integrity')
+              anchors={(r['case'],r['angle'],r['preserve_volume']):r['contact'] for r in ref['rows'] if r['contact'] is not None}
+              bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+              rows=[];failures=[]
+              for spec in HOLDOUT:
+                  req(callable(globals()['angle']),'global angle helper shadowed')
+                  name=spec[0];o=fixture(*spec[:-1]);init_attributes(o);g=None
+                  try:
+                      data=extract(o);new_weights(o,data,spec[-1]);before=all_snapshot(o)
+                      g=prepare(data);decision,m=route(data,g);req(m is not None,'no candidate')
+                      new,_=replace_attributes(o,data,*m)
+                      rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                      mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                      for enabled in (False,True):
+                          for mod in mods:mod.use_deform_preserve_volume=enabled
+                          for pose_deg in sorted(AUDIT):
+                              set_pose(rig,data,('twist'+str(pose_deg),(0,pose_deg,0),(0,-pose_deg,0),False))
+                              anchor=anchors[name,pose_deg,enabled]
+                              for label,obj in [('source',o),('result',new)]:
+                                  V,F,ids=eval_geometry(obj,data)
+                                  a,b,old,newtime=compare(V,F,ids)
+                                  # Repeat with reverse timing order; use total times.
+                                  t=time.perf_counter();b2=fast_contacts(V,F,ids);newtime+=time.perf_counter()-t
+                                  t=time.perf_counter();a2=contacts(V,F,ids);old+=time.perf_counter()-t
+                                  expected=anchor[label]
+                                  rows.append(dict(case=name,angle=pose_deg,preserve_volume=enabled,mesh=label,match=a==b==a2==b2,anchor_match=len(a['contact_pairs'])==expected['nonincident'] and len(a['degenerate'])==expected['degenerate'],triangles=len(F),candidates=a['tested'],contacts=len(a['contact_pairs']),old_seconds=old,new_seconds=newtime,source_unchanged=all_snapshot(o)==before))
+                      for mod in mods:mod.use_deform_preserve_volume=False
+                      set_pose(rig,data,POSES[0])
+                  except Exception as e:failures.append(dict(case=name,reason=str(e),traceback=traceback.format_exc()))
+                  finally:
+                      if g is not None:remove(g)
+              d=Path('ti50-results');d.mkdir(exist_ok=True)
+              complete=len(rows)==272 and not failures and len(controls)==160 and all(c['ok'] for c in controls) and all(r['match'] and r['anchor_match'] and r['source_unchanged'] for r in rows)
+              timings={}
+              for label in ('source','result','all'):
+                  a=[r for r in rows if label=='all' or r['mesh']==label]
+                  old=sum(r['old_seconds'] for r in a);new=sum(r['new_seconds'] for r in a)
+                  timings[label]=dict(samples=len(a),old_seconds=old,new_seconds=new,speedup=old/new if new else None,contacts=sum(r['contacts'] for r in a),candidates=sum(r['candidates'] for r in a))
+              out=dict(approved=False,blender=bpy.app.version_string,complete=complete,controls_pass=sum(c['ok'] for c in controls),controls_total=len(controls),matches=sum(r['match'] for r in rows),anchors=sum(r['anchor_match'] for r in rows),timings=timings,failures=failures)
+              (d/'results.json').write_text(json.dumps(dict(**out,rows=rows,controls=controls),indent=2))
+              print('TI50_SUMMARY',json.dumps(out),flush=True)
+              assert complete,'batched SAT equivalence failed'
+          run_benchmark()
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti50.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti50-batched-sat-${{ github.sha }}
+          path: ti50-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase50 verified run 45641557233: 272/272, 160/160, 8.1059x nonincident.
+      # Phase51: batch incident SVD by rank, compare full mesh audit, retain uncertainty.
+      - name: Phase51 batch incident SVD and benchmark combined contact audit
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti51.py" <<'PY'
+          from pathlib import Path
+          import os,time,traceback
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti50.py').read_text().split('\n# Isolate benchmark locals',1)[0])
+          # Preserve Phase46 tolerances and classification; group independent SVDs by rank.
+          SUBSETS={r:np.array(list(combinations(range(6),r))) for r in range(1,6)}
+          def batch_incident(items,chunk=128):
+              result=[];rhs=np.array([0,0,0,1,1.])
+              for start in range(0,len(items),chunk):
+                  part=items[start:start+chunk];out=['uncertain']*len(part)
+                  active=[];points=[];masks=[]
+                  for k,(V,ia,ib) in enumerate(part):
+                      ia=list(ia);ib=list(ib);shared=set(ia)&set(ib)
+                      if len(shared)==3:out[k]='duplicate_face';continue
+                      if len(shared) not in (1,2):out[k]='unsupported';continue
+                      V=np.asarray(V,float);points.append(V[ia+ib]-V[min(shared)])
+                      masks.append([int(i not in shared) for i in ia+ib]);active.append(k)
+                  if active:
+                      P=np.asarray(points);mask=np.asarray(masks);active=np.asarray(active)
+                      scale=np.linalg.norm(P,axis=2).max(axis=1)
+                      valid=np.isfinite(scale)&(scale>0)
+                      for k in active[~valid]:out[k]='invalid'
+                      P=P[valid]/scale[valid,None,None];mask=mask[valid];active=active[valid]
+                      if len(active):
+                          n1=np.cross(P[:,1]-P[:,0],P[:,2]-P[:,0]);n2=np.cross(P[:,4]-P[:,3],P[:,5]-P[:,3])
+                          valid=np.minimum(np.linalg.norm(n1,axis=1),np.linalg.norm(n2,axis=1))>=1e-10
+                          for k in active[~valid]:out[k]='invalid'
+                          P=P[valid];mask=mask[valid];active=active[valid]
+                      if len(active):
+                          E=np.zeros((len(active),5,6));E[:,:3,:3]=P[:,:3].transpose(0,2,1);E[:,:3,3:]=-P[:,3:].transpose(0,2,1);E[:,3,:3]=1;E[:,4,3:]=1
+                          sv=np.linalg.svd(E,compute_uv=False);rank=np.sum(sv>1e-11,axis=1);stable=~np.any((sv>1e-13)&(sv<1e-9),axis=1)
+                          for r,sub in SUBSETS.items():
+                              take=(rank==r)&stable
+                              if not take.any():continue
+                              M=E[take].transpose(0,2,1)[:,sub,:].transpose(0,1,3,2)
+                              U,S,Vh=np.linalg.svd(M,full_matrices=False)
+                              good=S[:,:,-1]>1e-11
+                              x=np.einsum('abki,abk->abi',Vh,np.einsum('abik,i->abk',U,rhs)/np.where(good[:,:,None],S,1))
+                              residual=np.max(np.abs(np.einsum('abik,abk->abi',M,x)-rhs),axis=2)
+                              ok=good&(residual<1e-9)&(x.min(axis=2)>=-1e-9)
+                              objective=np.sum(x*mask[take][:,sub],axis=2)
+                              mx=np.max(np.where(ok,objective,-np.inf),axis=1)
+                              for k,maximum in zip(active[take],mx):
+                                  if np.isfinite(maximum):out[k]='beyond_shared' if maximum>1e-6 else 'uncertain' if maximum>1e-9 else 'shared_only'
+                  result.extend(out)
+              return result
+          def controls51():
+              rng=np.random.default_rng(5101);items=[];expected=[]
+              A=[[0.,0,0],[1,0,0],[0,1,0]]
+              def add(V,ia,ib,want=None):
+                  R,_=np.linalg.qr(rng.normal(size=(3,3)));s=10.**rng.uniform(-2,2)
+                  items.append((np.asarray(V)@R.T*s+rng.uniform(-5,5,3)*s,tuple(rng.permutation(ia)),tuple(rng.permutation(ib))))
+                  expected.append(want)
+              for _,V,ia,ib,want in cases:
+                  for k in range(40):add(V,ia,ib,want)
+              for k in range(1600):
+                  V=rng.uniform(-1,1,(5,3));edge=k%2==0
+                  if k%4<2:V[:,2]=0
+                  add(V,(0,1,2),(0,1,3) if edge else (0,3,4))
+              for k in range(400):
+                  V=np.asarray(A+[[.5,.5,10.**rng.uniform(-14,-5)],[.2,.7,-10.**rng.uniform(-14,-5)]])
+                  add(V,(0,1,2),(0,1,3) if k%2 else (0,3,4))
+              a=[incident_probe(*i) for i in items];b=batch_incident(items)
+              return dict(samples=len(a),matches=sum(x==y for x,y in zip(a,b)),controls_pass=sum(w==v for w,v in zip(expected,b) if w is not None),controls_total=sum(w is not None for w in expected),counts=dict(Counter(a)))
+          def mesh_audit51(V,F,ids,fast):
+              base=(fast_contacts if fast else contacts)(V,F,ids)
+              by_vertex=defaultdict(list)
+              for i,tri in enumerate(F):
+                  for v in tri:by_vertex[v].append(i)
+              pairs=sorted({tuple(sorted((a,b))) for group in by_vertex.values() for a,b in combinations(group,2)})
+              items=[(V,F[i],F[j]) for i,j in pairs]
+              states=batch_incident(items) if fast else [incident_probe(*item) for item in items]
+              return dict(nonincident=base,incident_counts=dict(Counter(states)),incident_tested=len(pairs),flags=[dict(triangles=[i,j],faces=[ids[i],ids[j]],state=s) for (i,j),s in zip(pairs,states) if s!='shared_only'])
+          def geometry51(o,data):
+              dep=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(dep);m=ev.to_mesh()
+              try:
+                  m.calc_loop_triangles()
+                  V=np.array([tuple(ev.matrix_world@v.co) for v in m.vertices],float)
+                  V=(V-data['origin'])@data['Q']/data['scale']
+                  return V,[tuple(t.vertices) for t in m.loop_triangles],[t.polygon_index for t in m.loop_triangles]
+              finally:ev.to_mesh_clear()
+          def run51():
+              prior=json.loads(Path('ti50-results/results.json').read_text())
+              req(prior['complete'],'Phase50 integrity')
+              ref=json.loads(Path('ti49-results/results.json').read_text())
+              anchors={(r['case'],r['angle'],r['preserve_volume']):r['contact'] for r in ref['rows'] if r['contact'] is not None}
+              ctrl=controls51();bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+              rows=[];failures=[]
+              for spec in HOLDOUT:
+                  name=spec[0];o=fixture(*spec[:-1]);init_attributes(o);g=None
+                  try:
+                      data=extract(o);new_weights(o,data,spec[-1]);before=all_snapshot(o)
+                      g=prepare(data);decision,m=route(data,g);req(m is not None,'no candidate')
+                      new,_=replace_attributes(o,data,*m)
+                      rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                      mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                      for enabled in (False,True):
+                          for mod in mods:mod.use_deform_preserve_volume=enabled
+                          for pose_deg in sorted(AUDIT):
+                              set_pose(rig,data,('twist'+str(pose_deg),(0,pose_deg,0),(0,-pose_deg,0),False))
+                              anchor=anchors[name,pose_deg,enabled]
+                              for label,obj in [('source',o),('result',new)]:
+                                  geom=geometry51(obj,data)
+                                  t=time.perf_counter();a=mesh_audit51(*geom,False);old=time.perf_counter()-t
+                                  t=time.perf_counter();b=mesh_audit51(*geom,True);fast=time.perf_counter()-t
+                                  t=time.perf_counter();b2=mesh_audit51(*geom,True);fast+=time.perf_counter()-t
+                                  t=time.perf_counter();a2=mesh_audit51(*geom,False);old+=time.perf_counter()-t
+                                  expected=anchor[label]
+                                  observed=dict(nonincident=len(a['nonincident']['contact_pairs']),degenerate=len(a['nonincident']['degenerate']),incident=a['incident_counts'])
+                                  rows.append(dict(case=name,angle=pose_deg,preserve_volume=enabled,mesh=label,match=a==b==a2==b2,anchor_match=observed==expected,incident_pairs=a['incident_tested'],old_seconds=old,new_seconds=fast,source_unchanged=all_snapshot(o)==before))
+                      for mod in mods:mod.use_deform_preserve_volume=False
+                      set_pose(rig,data,POSES[0])
+                  except Exception as e:failures.append(dict(case=name,reason=str(e),traceback=traceback.format_exc()))
+                  finally:
+                      if g is not None:remove(g)
+              d=Path('ti51-results');d.mkdir(exist_ok=True)
+              complete=len(rows)==272 and not failures and ctrl['samples']==2400 and ctrl['matches']==2400 and ctrl['controls_pass']==400 and all(r['match'] and r['anchor_match'] and r['source_unchanged'] for r in rows)
+              timings={}
+              for label in ('source','result','all'):
+                  a=[r for r in rows if label=='all' or r['mesh']==label]
+                  old=sum(r['old_seconds'] for r in a);new=sum(r['new_seconds'] for r in a)
+                  timings[label]=dict(samples=len(a),old_seconds=old,new_seconds=new,speedup=old/new if new else None,incident_pairs=sum(r['incident_pairs'] for r in a))
+              out=dict(approved=False,blender=bpy.app.version_string,complete=complete,controls=ctrl,matches=sum(r['match'] for r in rows),anchors=sum(r['anchor_match'] for r in rows),timings=timings,failures=failures)
+              (d/'results.json').write_text(json.dumps(dict(**out,rows=rows),indent=2))
+              print('TI51_SUMMARY',json.dumps(out),flush=True)
+              assert complete,'full contact audit equivalence failed'
+          run51()
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti51.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti51-combined-contact-audit-${{ github.sha }}
+          path: ti51-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase51 verified run 45643045367: 2400/2400, 272/272, 4.084x full audit.
+      # Phase52/53 local broadphase experiments: bounded sweep candidate batches.
+      # Phase54 compares full audit with only the nonincident broadphase changed.
+      # Output contact lists and incident-pair storage remain unbounded by this cap.
+      - name: Phase54 integrate streamed sweep into full contact audit
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti54.py" <<'PY'
+          from pathlib import Path
+          import os,time,traceback
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti51.py').read_text().split('\nrun51()',1)[0])
+          # Phase53: preserve all overlapping AABBs and bound temporary candidates.
+          def stream54(lo,hi,chunk=16384):
+              lo=np.asarray(lo,float);hi=np.asarray(hi,float)
+              if lo.ndim!=2 or lo.shape!=hi.shape or lo.shape[1]!=3 or not np.isfinite(lo).all() or not np.isfinite(hi).all() or np.any(lo>hi) or chunk<1:raise ValueError('invalid AABBs or chunk')
+              n=len(lo);best=None
+              for axis in range(3):
+                  order=np.argsort(lo[:,axis],kind='stable')
+                  end=np.searchsorted(lo[order,axis],hi[order,axis]+EPS,side='right')
+                  sizes=end-np.arange(n)-1;score=int(sizes.sum())
+                  if best is None or score<best[0]:best=(score,axis,order,sizes)
+              score,axis,order,sizes=best
+              offsets=np.r_[0,np.cumsum(sizes,dtype=np.int64)]
+              others=[a for a in range(3) if a!=axis];l=lo[:,others];h=hi[:,others]
+              for start in range(0,score,chunk):
+                  flat=np.arange(start,min(start+chunk,score),dtype=np.int64)
+                  k=np.searchsorted(offsets,flat,side='right')-1
+                  j=k+1+(flat-offsets[k]);i=order[k];j=order[j]
+                  keep=np.all(l[i]<=h[j]+EPS,axis=1)&np.all(l[j]<=h[i]+EPS,axis=1)
+                  a=i[keep];b=j[keep]
+                  yield np.column_stack((np.minimum(a,b),np.maximum(a,b)))
+          def stream_contacts54(V,F,face_ids):
+              F=np.asarray(F,int).reshape(-1,3);V=np.asarray(V,float);ids=np.asarray(face_ids)
+              req(np.isfinite(V).all(),'nonfinite evaluated vertices')
+              T=V[F];lo=T.min(axis=1);hi=T.max(axis=1)
+              area=np.linalg.norm(np.cross(T[:,1]-T[:,0],T[:,2]-T[:,0]),axis=1)*.5
+              degenerate=np.where(area<1e-10)[0].tolist()
+              pairs=[];tested=excluded=peak=0
+              for ij in stream54(lo,hi):
+                  peak=max(peak,len(ij))
+                  i,j=ij.T
+                  mask=(ids[i]==ids[j])|np.any(F[i][:,:,None]==F[j][:,None,:],axis=(1,2))
+                  excluded+=int(mask.sum());ij=ij[~mask];tested+=len(ij)
+                  for start in range(0,len(ij),256):
+                      q=ij[start:start+256];hit=batched_sat(T[q[:,0]],T[q[:,1]])
+                      pairs.extend(map(tuple,q[hit].tolist()))
+              pairs.sort()
+              face_pairs=sorted({tuple(sorted((int(ids[i]),int(ids[j])))) for i,j in pairs})
+              return dict(triangles=len(F),tested=tested,excluded_incident=excluded,degenerate=degenerate,contact_pairs=pairs,face_pairs=face_pairs),peak
+          def audit54(V,F,ids):
+              base,peak=stream_contacts54(V,F,ids)
+              by_vertex=defaultdict(list)
+              for i,tri in enumerate(F):
+                  for v in tri:by_vertex[v].append(i)
+              pairs=sorted({tuple(sorted((a,b))) for group in by_vertex.values() for a,b in combinations(group,2)})
+              states=batch_incident([(V,F[i],F[j]) for i,j in pairs])
+              return dict(nonincident=base,incident_counts=dict(Counter(states)),incident_tested=len(pairs),flags=[dict(triangles=[i,j],faces=[ids[i],ids[j]],state=s) for (i,j),s in zip(pairs,states) if s!='shared_only']),peak
+          def compare54(geom):
+              t=time.perf_counter();a=mesh_audit51(*geom,True);old=time.perf_counter()-t
+              t=time.perf_counter();b,peak=audit54(*geom);new=time.perf_counter()-t
+              t=time.perf_counter();b2,peak2=audit54(*geom);new+=time.perf_counter()-t
+              t=time.perf_counter();a2=mesh_audit51(*geom,True);old+=time.perf_counter()-t
+              return a,dict(match=a==b==a2==b2,triangles=len(geom[1]),tested=a['nonincident']['tested'],contacts=len(a['nonincident']['contact_pairs']),incident_pairs=a['incident_tested'],peak_candidate_batch=max(peak,peak2),old_seconds=old,new_seconds=new)
+          def grid54(n,kind):
+              u,v=np.meshgrid(np.linspace(-1,1,n+1),np.linspace(-1,1,n+1),indexing='ij');u=u.ravel();v=v.ravel()
+              if kind=='wavy':V=np.column_stack((u,v,.15*np.sin(4*u)*np.cos(3*v)))
+              elif kind=='folded':V=np.column_stack((np.abs(u),v,.02*u+.1*np.sin(3*v)))
+              else:
+                  V=np.column_stack((8*u,.15*v,.07*np.sin(5*u)*np.cos(3*v)))
+                  R,_=np.linalg.qr(np.array([[1.,2.,3.],[4.,2.,1.],[1.,3.,2.]]));V=V@R.T
+              i,j=np.meshgrid(np.arange(n),np.arange(n),indexing='ij');a=(i*(n+1)+j).ravel();b=a+n+1;c=b+1;d=a+1
+              F=np.vstack((np.column_stack((a,b,c)),np.column_stack((a,c,d))))
+              m=bpy.data.meshes.new('TI54_grid');m.from_pydata(V.tolist(),[],F.tolist());m.update();m.calc_loop_triangles()
+              try:return np.array([tuple(v.co) for v in m.vertices]),[tuple(t.vertices) for t in m.loop_triangles],[t.polygon_index for t in m.loop_triangles]
+              finally:bpy.data.meshes.remove(m)
+          def run54():
+              ref51=json.loads(Path('ti51-results/results.json').read_text());req(ref51['complete'],'Phase51 integrity')
+              ref49=json.loads(Path('ti49-results/results.json').read_text())
+              anchors={(r['case'],r['angle'],r['preserve_volume']):r['contact'] for r in ref49['rows'] if r['contact'] is not None}
+              rng=np.random.default_rng(5401);checks=[]
+              for k in range(100):
+                  n=int(rng.integers(0,70));lo=rng.uniform(-2,2,(n,3));hi=lo+rng.uniform(0,1,(n,3))
+                  if n>=4:
+                      lo[1]=lo[0];hi[1]=hi[0];lo[2]=hi[2]=hi[0]+[EPS,0,0];lo[3]=hi[3]=hi[0]+[2*EPS,0,0]
+                  want=[]
+                  for i in range(n):
+                      js=np.where(np.all(lo[i]<=hi[i+1:]+EPS,axis=1)&np.all(lo[i+1:]<=hi[i]+EPS,axis=1))[0]+i+1
+                      want.extend((i,int(j)) for j in js)
+                  for chunk in (1,17,16384):
+                      got=sorted(tuple(map(int,p)) for batch in stream54(lo,hi,chunk) for p in batch)
+                      checks.append(got==want)
+              n=2048;count=checksum=peak=0
+              for batch in stream54(np.zeros((n,3)),np.ones((n,3))):
+                  count+=len(batch);checksum+=int((batch[:,0]*n+batch[:,1]).sum());peak=max(peak,len(batch))
+              dense=dict(count=count,expected=n*(n-1)//2,peak=peak,checksum=checksum,expected_checksum=sum(i*n*(n-i-1)+(i+1+n-1)*(n-i-1)//2 for i in range(n)))
+              dense['match']=count==dense['expected'] and checksum==dense['expected_checksum'] and peak<=16384
+              gridrows=[];rows=[];failures=[]
+              for kind in ('wavy','folded','thin_rotated'):
+                  for n in (16,32,64):
+                      try:
+                          _,rec=compare54(grid54(n,kind));gridrows.append(dict(kind=kind,**rec))
+                          print('TI54_GRID',json.dumps(gridrows[-1]),flush=True)
+                      except Exception as e:failures.append(dict(case=kind,n=n,reason=str(e),traceback=traceback.format_exc()))
+              bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+              for spec in HOLDOUT:
+                  name=spec[0];o=fixture(*spec[:-1]);init_attributes(o);g=None
+                  try:
+                      data=extract(o);new_weights(o,data,spec[-1]);before=all_snapshot(o)
+                      g=prepare(data);decision,m=route(data,g);req(m is not None,'no candidate')
+                      new,_=replace_attributes(o,data,*m);rig=rig_for(data,name);attach(o,rig);attach(new,rig)
+                      mods=[o.modifiers['TI43_Armature'],new.modifiers['TI43_Armature']]
+                      for enabled in (False,True):
+                          for mod in mods:mod.use_deform_preserve_volume=enabled
+                          for pose_deg in (50,85,90):
+                              set_pose(rig,data,('twist'+str(pose_deg),(0,pose_deg,0),(0,-pose_deg,0),False))
+                              anchor=anchors[name,pose_deg,enabled]
+                              for label,obj in [('source',o),('result',new)]:
+                                  a,rec=compare54(geometry51(obj,data))
+                                  observed=dict(nonincident=len(a['nonincident']['contact_pairs']),degenerate=len(a['nonincident']['degenerate']),incident=a['incident_counts'])
+                                  rows.append(dict(case=name,angle=pose_deg,preserve_volume=enabled,mesh=label,anchor_match=observed==anchor[label],source_unchanged=all_snapshot(o)==before,**rec))
+                      for mod in mods:mod.use_deform_preserve_volume=False
+                      set_pose(rig,data,POSES[0])
+                  except Exception as e:failures.append(dict(case=name,reason=str(e),traceback=traceback.format_exc()))
+                  finally:
+                      if g is not None:remove(g)
+              complete=len(checks)==300 and all(checks) and dense['match'] and len(gridrows)==9 and len(rows)==48 and not failures and all(r['match'] and r['peak_candidate_batch']<=16384 for r in gridrows+rows) and all(r['anchor_match'] and r['source_unchanged'] for r in rows)
+              def timing(a):
+                  old=sum(r['old_seconds'] for r in a);new=sum(r['new_seconds'] for r in a)
+                  return dict(samples=len(a),old_seconds=old,new_seconds=new,speedup=old/new if new else None,matched=sum(r['match'] for r in a))
+              out=dict(approved=False,blender=bpy.app.version_string,complete=complete,controls_pass=sum(checks),controls_total=len(checks),dense=dense,gridrows=gridrows,grid_timing=timing(gridrows),pose_timing=timing(rows),anchors=sum(r['anchor_match'] for r in rows),failures=failures)
+              d=Path('ti54-results');d.mkdir(exist_ok=True)
+              (d/'results.json').write_text(json.dumps(dict(**out,rows=rows),indent=2))
+              print('TI54_SUMMARY',json.dumps(out),flush=True)
+              assert complete,'streamed full contact audit equivalence failed'
+          run54()
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti54.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti54-streamed-contact-audit-${{ github.sha }}
+          path: ti54-results/
+          if-no-files-found: warn
+          retention-days: 14
+      # Phase54 verified run 45646579779: 358/358, 1.967x large mesh audit.
+      # Phase57 local analytic comparison: 100 candidates, 86 eligible,
+      # 41 better / 15 same / 4 worse on held-out poses; native check below
+      # uses a shared axial rig and both triangulations, no production approval.
+      - name: Phase57 choose equal-budget ring placement using native axial rig
+        shell: bash
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: |
+          cat > "$RUNNER_TEMP/ti57.py" <<'PY'
+          from pathlib import Path
+          import os,traceback
+          root=Path(os.environ['RUNNER_TEMP'])
+          exec((root/'ti54.py').read_text().split('\nrun54()',1)[0])
+          # New synthetic cylinder family. A common 129-bone axial rig approximates
+          # First native run 45692210361 completed 12/15 groups; three rejected
+          # at unchanged .003 vertex tolerance. Analytic common-axis nlerp
+          # calibration on 35 poses per density: max errors 65=.003186681,
+          # 129=.000796490, 257=.000199377. Native preflight below is required.
+          # continuous prescribed rotations; not a two-bone or anatomical rig.
+          RIM57=24
+          BONE57=129
+          PROFILES57=('linear','smoothstep','localized','shifted','wave')
+          MIX57=(0.,.25,.5,.75,1.)
+          DESIGN57=(30,60,90,120)
+          EVAL57=(45,75,105)
+          def profile57(t,kind):
+              if kind=='linear':return t
+              if kind=='smoothstep':return t*t*(3-2*t)
+              if kind in ('localized','shifted'):
+                  center=.5 if kind=='localized' else .27
+                  return (np.tanh(8*(t-center))-np.tanh(-8*center))/(np.tanh(8*(1-center))-np.tanh(-8*center))
+              if kind=='wave':return t+.12*np.sin(2*np.pi*t)
+              raise ValueError(kind)
+          def adaptive57(n,kind):
+              t=np.linspace(0,1,4097);h=t[1]-t[0];f=profile57(t,kind)
+              curv=[np.abs(np.gradient(np.gradient(np.exp(1j*(2*f-1)*a),h,edge_order=2),h,edge_order=2)) for a in np.deg2rad(DESIGN57)]
+              d=np.sqrt(np.max(curv,axis=0));d=np.maximum(d,.25*d.mean())
+              c=np.r_[0,np.cumsum((d[1:]+d[:-1])*h/2)];c/=c[-1]
+              k=np.interp(np.linspace(0,1,n+1),c,t);k[0]=0;k[-1]=1
+              return k
+          def quality57(k):
+              n=len(k)-1;d=np.diff(k);chord=2*np.sin(np.pi/RIM57);ax=2*d
+              ratio=float(np.max(np.maximum(ax/chord,chord/ax)))
+              return dict(aspect=ratio,min_relative=float(n*d.min()),max_relative=float(n*d.max()),valid=bool(k[0]==0 and k[-1]==1 and np.all(d>0) and n*d.min()>=.35 and n*d.max()<=2.5 and ratio<=6))
+          def field57(u,t,a,kind):
+              th=2*np.pi*u+(2*profile57(t,kind)-1)*a
+              return np.stack((np.cos(th),np.sin(th),2*t),axis=-1)
+          def rig57():
+              arm=bpy.data.armatures.new('TI57_axis');obj=bpy.data.objects.new('TI57_axis',arm);bpy.context.collection.objects.link(obj)
+              bpy.context.view_layer.objects.active=obj;obj.select_set(True)
+              bpy.ops.object.mode_set(mode='EDIT')
+              for i,t in enumerate(np.linspace(0,1,BONE57)):
+                  b=arm.edit_bones.new('Axis_%03d'%i);b.head=(0,0,2*t);b.tail=(0,0,2*t+.025);b.use_deform=True
+              bpy.ops.object.mode_set(mode='OBJECT')
+              return obj
+          def cylinder57(k,rig,name):
+              u,t=np.meshgrid(np.arange(RIM57)/RIM57,k)
+              v=field57(u.ravel(),t.ravel(),0.,'linear');faces=[]
+              for j in range(len(k)-1):
+                  for i in range(RIM57):
+                      a=j*RIM57+i;b=j*RIM57+(i+1)%RIM57
+                      faces.append((a,b,b+RIM57,a+RIM57))
+              m=bpy.data.meshes.new(name);m.from_pydata(v.tolist(),[],faces);m.update()
+              o=bpy.data.objects.new(name,m);bpy.context.collection.objects.link(o)
+              groups=[o.vertex_groups.new(name='Axis_%03d'%i) for i in range(BONE57)]
+              for j,t0 in enumerate(k):
+                  x=t0*(BONE57-1);i=min(int(x),BONE57-2);w=x-i;ids=list(range(j*RIM57,(j+1)*RIM57))
+                  if 1-w>0:groups[i].add(ids,float(1-w),'REPLACE')
+                  if w>0:groups[i+1].add(ids,float(w),'REPLACE')
+              mod=o.modifiers.new('TI57_skin','ARMATURE');mod.object=rig;mod.use_deform_preserve_volume=True
+              return o
+          def pose57(rig,kind,deg):
+              for i,t in enumerate(np.linspace(0,1,BONE57)):
+                  b=rig.pose.bones['Axis_%03d'%i];b.rotation_mode='XYZ'
+                  b.rotation_euler=(0,float((2*profile57(t,kind)-1)*np.deg2rad(deg)),0)
+              bpy.context.view_layer.update()
+          def geometry57(o):
+              deps=bpy.context.evaluated_depsgraph_get();ev=o.evaluated_get(deps);m=ev.to_mesh()
+              try:
+                  m.calc_loop_triangles()
+                  return np.array([tuple(v.co) for v in m.vertices],float),[tuple(t.vertices) for t in m.loop_triangles],[t.polygon_index for t in m.loop_triangles]
+              finally:ev.to_mesh_clear()
+          def interpolate57(V,k,u,t,diag):
+              i=np.floor(u*RIM57).astype(int);j=np.clip(np.searchsorted(k,t,side='right')-1,0,len(k)-2)
+              x=u*RIM57-i;y=(t-k[j])/(k[j+1]-k[j]);a=j*RIM57+i;b=j*RIM57+(i+1)%RIM57
+              p,q,r,s=V[a],V[b],V[b+RIM57],V[a+RIM57]
+              x=x[:,None];y=y[:,None]
+              if diag==0:return np.where(x>=y,(1-x)*p+(x-y)*q+y*r,(1-y)*p+x*r+(y-x)*s)
+              return np.where(x+y<=1,(1-x-y)*p+x*q+y*s,(1-y)*q+(x+y-1)*r+(1-x)*s)
+          def samples57(nu,nt):
+              u,t=np.meshgrid((np.arange(nu)+.371)/nu,np.linspace(0,1,nt))
+              return u.ravel(),t.ravel()
+          def measure57(o,k,rig,kind,angles,u,t,contact):
+              pose57(rig,kind,0);rest=geometry57(o)[0];vu,vt=np.meshgrid(np.arange(RIM57)/RIM57,k)
+              ref0=field57(u,t,0,kind);rest_exact=field57(vu.ravel(),vt.ravel(),0,kind)
+              req(float(np.max(np.linalg.norm(rest-rest_exact,axis=1)))<1e-6,'native rest mismatch')
+              rows=[]
+              for deg in angles:
+                  pose57(rig,kind,deg);geom=geometry57(o);V=geom[0];a=np.deg2rad(deg)
+                  target=field57(u,t,a,kind)-ref0
+                  errs=[np.linalg.norm(interpolate57(V,k,u,t,d)-interpolate57(rest,k,u,t,d)-target,axis=1) for d in (0,1)]
+                  vertex_error=float(np.max(np.linalg.norm(V-field57(vu.ravel(),vt.ravel(),a,kind),axis=1)))
+                  req(vertex_error<.003,'native prescribed rotation mismatch: %s/%s/%s = %.9g'%(kind,len(k)-1,deg,vertex_error))
+                  row=dict(angle=deg,p95=max(float(np.quantile(e,.95)) for e in errs),maximum=max(float(e.max()) for e in errs),vertex_error=vertex_error)
+                  if contact:
+                      audit,_=audit54(*geom)
+                      row['contact']=dict(nonincident=len(audit['nonincident']['contact_pairs']),degenerate=len(audit['nonincident']['degenerate']),incident=dict(audit['incident_counts']))
+                      row['flagged']=bool(row['contact']['nonincident'] or row['contact']['degenerate'] or any(x!='shared_only' and n for x,n in row['contact']['incident'].items()))
+                  rows.append(row)
+              return rows
+          def calibrate57(rig):
+              # Dense uniform rings independent of candidate layouts; quarter intervals
+              # of the 129-bone grid, all design and evaluation angles.
+              k=np.linspace(0,1,513);o=cylinder57(k,rig,'TI57_calibration')
+              u,t=np.meshgrid(np.arange(RIM57)/RIM57,k);u=u.ravel();t=t.ravel();rows=[]
+              try:
+                  for kind in PROFILES57:
+                      for deg in sorted(set(DESIGN57+EVAL57)):
+                          pose57(rig,kind,deg);v=geometry57(o)[0]
+                          e=float(np.max(np.linalg.norm(v-field57(u,t,np.deg2rad(deg),kind),axis=1)))
+                          rows.append(dict(profile=kind,angle=deg,max_error=e,ok=e<.003))
+                  return rows
+              finally:
+                  mesh=o.data;bpy.data.objects.remove(o,do_unlink=True)
+                  if mesh.users==0:bpy.data.meshes.remove(mesh)
+          def run57():
+              prev=json.loads(Path('ti54-results/results.json').read_text());req(prev['complete'],'Phase54 integrity failed')
+              bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+              rig=rig57();calibration=calibrate57(rig)
+              cal_gate=len(calibration)==35 and all(x['ok'] for x in calibration)
+              d=Path('ti57-results');d.mkdir(exist_ok=True)
+              (d/'calibration.json').write_text(json.dumps(dict(bones=BONE57,gate=cal_gate,rows=calibration),indent=2))
+              print('TI57_CALIBRATION',json.dumps(dict(bones=BONE57,gate=cal_gate,passed=sum(x['ok'] for x in calibration),total=len(calibration),worst=max(calibration,key=lambda x:x['max_error']))),flush=True)
+              req(cal_gate,'native axial rig preflight failed')
+              du,dt=samples57(48,129);eu,et=samples57(144,513)
+              groups=[];rows=[];failures=[]
+              # Reduced first native pass: three budgets, five profiles, five mixes.
+              for kind in PROFILES57:
+                  for n in (4,8,16):
+                      objs=[]
+                      try:
+                          uniform=np.linspace(0,1,n+1);ad=adaptive57(n,kind);cs=[]
+                          for mix in MIX57:
+                              k=(1-mix)*uniform+mix*ad;k[0]=0;k[-1]=1;q=quality57(k)
+                              rec=dict(mix=mix,knots=k.tolist(),quality=q,design=[])
+                              if q['valid']:
+                                  o=cylinder57(k,rig,'TI57_%s_%d_%s'%(kind,n,mix));objs.append(o)
+                                  rec['design']=measure57(o,k,rig,kind,DESIGN57,du,dt,False);rec['object']=o
+                                  rec['score']=max(x['p95'] for x in rec['design'])
+                              cs.append(rec)
+                          valid=[c for c in cs if c['quality']['valid']]
+                          best=min(valid,key=lambda c:(c['score'],max(x['maximum'] for x in c['design']),c['mix']))
+                          base=cs[0];req(base['quality']['valid'] and best['score']<=base['score']+1e-12,'design gate')
+                          a=measure57(base['object'],np.array(base['knots']),rig,kind,EVAL57,eu,et,True)
+                          b=measure57(best['object'],np.array(best['knots']),rig,kind,EVAL57,eu,et,True)
+                          for x,y in zip(a,b):
+                              rows.append(dict(profile=kind,levels=n,quads=n*RIM57,angle=x['angle'],selected_mix=best['mix'],uniform=x,selected=y,gain=1-y['p95']/x['p95'],max_gain=1-y['maximum']/x['maximum']))
+                          groups.append(dict(profile=kind,levels=n,selected_mix=best['mix'],candidates=[{k:v for k,v in c.items() if k!='object'} for c in cs]))
+                      except Exception as e:failures.append(dict(profile=kind,levels=n,reason=str(e),traceback=traceback.format_exc()))
+                      finally:
+                          for o in objs:
+                              mesh=o.data;bpy.data.objects.remove(o,do_unlink=True)
+                              if mesh.users==0:bpy.data.meshes.remove(mesh)
+              complete=cal_gate and len(groups)==15 and len(rows)==45 and not failures
+              out=dict(approved=False,blender=bpy.app.version_string,complete=complete,calibration_gate=cal_gate,bones=BONE57,calibration_worst=max(x['max_error'] for x in calibration),groups=len(groups),candidates=sum(len(g['candidates']) for g in groups),eligible=sum(c['quality']['valid'] for g in groups for c in g['candidates']),selected_mix_counts=dict(Counter(str(g['selected_mix']) for g in groups)),eval_pairs=len(rows),better=sum(r['gain']>1e-6 for r in rows),same=sum(abs(r['gain'])<=1e-6 for r in rows),worse=sum(r['gain']< -1e-6 for r in rows),max_error_worse=sum(r['max_gain']< -1e-6 for r in rows),result_only=[dict(profile=r['profile'],levels=r['levels'],angle=r['angle']) for r in rows if r['selected']['flagged'] and not r['uniform']['flagged']],max_vertex_error=max((max(r['uniform']['vertex_error'],r['selected']['vertex_error']) for r in rows),default=None),failures=failures)
+              d=Path('ti57-results');d.mkdir(exist_ok=True)
+              (d/'results.json').write_text(json.dumps(dict(**out,records=groups,rows=rows),indent=2))
+              print('TI57_SUMMARY',json.dumps(out),flush=True)
+              assert complete,'native candidate routing integrity failed'
+          run57()
+          PY
+          "$RUNNER_TEMP/blender-4.4.3-linux-x64/blender" --background --factory-startup --disable-autoexec --python-exit-code 1 --python "$RUNNER_TEMP/ti57.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ti57-native-ring-routing-${{ github.sha }}
+          path: ti57-results/
+          if-no-files-found: warn
+          retention-days: 14

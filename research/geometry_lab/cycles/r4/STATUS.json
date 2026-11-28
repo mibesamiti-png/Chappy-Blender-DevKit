@@ -1,0 +1,22 @@
+{
+  "cycle": "R4",
+  "parent": "272769a326960c417a65777a3c7796b7b906889e",
+  "status": "experiment_complete_not_adopted",
+  "theme": "boundary_loop_generation",
+  "tests": 30,
+  "blender_measured": [
+    "4.3.2",
+    "4.4.3"
+  ],
+  "holdout_passes": {
+    "index": 0,
+    "phase": 2,
+    "dp": 3,
+    "blender_native": 4
+  },
+  "holdout_total": 6,
+  "model_revisions_after_holdout": 0,
+  "decision": "Keep experimental APIs; prefer native baseline pending validation; do not integrate CBDK",
+  "next": "shape-preserving constrained correspondence / intermediate contours",
+  "approved": false
+}

@@ -1,0 +1,364 @@
+{
+  "cycle": "R20",
+  "status": "scoped_joint_refinement_gate_passed",
+  "approved": false,
+  "synthetic_only": true,
+  "retrospective": true,
+  "detached_only": true,
+  "implementation_head": "80e94f9b82488f37e1745e41238b914cabdfaf19",
+  "run": 45521354483,
+  "job": 138894133623,
+  "baseline_job": 138894133574,
+  "gate": true,
+  "known_cases": 12,
+  "safe_outputs": 12,
+  "improved_at_least_5pct": 9,
+  "required_improved": 6,
+  "attempted": 180,
+  "uv_attempts": 133,
+  "rescued": 68,
+  "screened": 73,
+  "rejected": {
+    "normal": 42,
+    "uv": 65,
+    "geometry": 0,
+    "oracle": 0
+  },
+  "mean_p95_relative_gain": 0.23381227883164143,
+  "mean_improved_gain": 0.31174970510885525,
+  "baseline_fallbacks": 3,
+  "selected_reoptimized": 8,
+  "rescue_errors": 0,
+  "mean_seconds": 3.806176522500001,
+  "source_sha256": {
+    "cycles/r20/refine.py": "d15a3c47c098f7ba79087c213e12799e29d857c0d59b02bf16e366fce776e17c",
+    "cycles/r20/run.py": "c83327daafcce7be1ef2d3446e248b06a930b9d6869a2f182cd8ee09a3d31b1f"
+  },
+  "rows": [
+    {
+      "case": "r16_circle",
+      "passed": true,
+      "method": "smooth1.0_step1.0_fixed_uv",
+      "before": {
+        "edges": 45,
+        "mean_deg": 9.620945410198201,
+        "p95_deg": 19.450987832618686,
+        "max_deg": 19.587506656231614
+      },
+      "after": {
+        "edges": 45,
+        "mean_deg": 7.495054439771037,
+        "p95_deg": 15.230991222896252,
+        "max_deg": 15.808904640081128
+      },
+      "p95_gain": 0.21695538787215907,
+      "uv_attempts": 6,
+      "rescued": 0,
+      "rejected": {
+        "normal": 4,
+        "uv": 6,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 2.0331072879999965
+    },
+    {
+      "case": "r16_ellipse",
+      "passed": true,
+      "method": "smooth0.05_step1.0_reoptimized_uv",
+      "before": {
+        "edges": 46,
+        "mean_deg": 14.118450387286732,
+        "p95_deg": 36.081074492622925,
+        "max_deg": 46.185537080344865
+      },
+      "after": {
+        "edges": 46,
+        "mean_deg": 4.20097637591268,
+        "p95_deg": 13.88772544453743,
+        "max_deg": 30.238547516642324
+      },
+      "p95_gain": 0.615096677695203,
+      "uv_attempts": 15,
+      "rescued": 15,
+      "rejected": {
+        "normal": 0,
+        "uv": 0,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 5.292972752000004
+    },
+    {
+      "case": "r16_sparse",
+      "passed": true,
+      "method": "smooth0.05_step0.5_reoptimized_uv",
+      "before": {
+        "edges": 35,
+        "mean_deg": 14.393077706433047,
+        "p95_deg": 27.653872756971214,
+        "max_deg": 28.74074413449129
+      },
+      "after": {
+        "edges": 35,
+        "mean_deg": 9.225508528460248,
+        "p95_deg": 18.8376060933364,
+        "max_deg": 20.4794683702955
+      },
+      "p95_gain": 0.31880766723396226,
+      "uv_attempts": 12,
+      "rescued": 3,
+      "rejected": {
+        "normal": 3,
+        "uv": 9,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 3.244946984000002
+    },
+    {
+      "case": "r16_skew",
+      "passed": true,
+      "method": "smooth0.05_step0.5_reoptimized_uv",
+      "before": {
+        "edges": 51,
+        "mean_deg": 18.01605939245384,
+        "p95_deg": 35.63963226443734,
+        "max_deg": 45.535232401397785
+      },
+      "after": {
+        "edges": 51,
+        "mean_deg": 12.047765178196574,
+        "p95_deg": 25.103656835460605,
+        "max_deg": 37.41343652593472
+      },
+      "p95_gain": 0.29562525647858484,
+      "uv_attempts": 11,
+      "rescued": 1,
+      "rejected": {
+        "normal": 4,
+        "uv": 10,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 3.717971345999999
+    },
+    {
+      "case": "r17_round",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 50,
+        "mean_deg": 9.195770482878045,
+        "p95_deg": 18.227016186114298,
+        "max_deg": 18.775164164860076
+      },
+      "after": {
+        "edges": 50,
+        "mean_deg": 9.195770482878045,
+        "p95_deg": 18.227016186114298,
+        "max_deg": 18.775164164860076
+      },
+      "p95_gain": 0,
+      "uv_attempts": 12,
+      "rescued": 0,
+      "rejected": {
+        "normal": 3,
+        "uv": 12,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 3.779255175000003
+    },
+    {
+      "case": "r17_oval",
+      "passed": true,
+      "method": "smooth0.05_step0.25_reoptimized_uv",
+      "before": {
+        "edges": 49,
+        "mean_deg": 15.60775725006981,
+        "p95_deg": 31.55997519897567,
+        "max_deg": 43.348297015398195
+      },
+      "after": {
+        "edges": 49,
+        "mean_deg": 12.921663621183532,
+        "p95_deg": 26.686552774864932,
+        "max_deg": 39.510062165352515
+      },
+      "p95_gain": 0.15441781539387633,
+      "uv_attempts": 14,
+      "rescued": 7,
+      "rejected": {
+        "normal": 1,
+        "uv": 7,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 4.818505430000002
+    },
+    {
+      "case": "r17_lobed",
+      "passed": true,
+      "method": "smooth0.25_step0.5_reoptimized_uv",
+      "before": {
+        "edges": 57,
+        "mean_deg": 11.029624621305862,
+        "p95_deg": 16.629024367669782,
+        "max_deg": 16.864639797998144
+      },
+      "after": {
+        "edges": 57,
+        "mean_deg": 8.230063710165032,
+        "p95_deg": 12.265715010839989,
+        "max_deg": 12.764197790111721
+      },
+      "p95_gain": 0.26239118184906607,
+      "uv_attempts": 10,
+      "rescued": 10,
+      "rejected": {
+        "normal": 5,
+        "uv": 0,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 4.2413175490000015
+    },
+    {
+      "case": "r17_offset",
+      "passed": true,
+      "method": "smooth1.0_step0.75_reoptimized_uv",
+      "before": {
+        "edges": 46,
+        "mean_deg": 21.502705939809015,
+        "p95_deg": 39.58156266254448,
+        "max_deg": 40.543036795454896
+      },
+      "after": {
+        "edges": 46,
+        "mean_deg": 18.239548998137067,
+        "p95_deg": 34.90657428605634,
+        "max_deg": 35.08298035466969
+      },
+      "p95_gain": 0.11811025290600818,
+      "uv_attempts": 8,
+      "rescued": 8,
+      "rejected": {
+        "normal": 7,
+        "uv": 0,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 3.008041335999991
+    },
+    {
+      "case": "r17_taper",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 45,
+        "mean_deg": 24.800656094805525,
+        "p95_deg": 47.556880919706664,
+        "max_deg": 54.1107766277694
+      },
+      "after": {
+        "edges": 45,
+        "mean_deg": 24.800656094805525,
+        "p95_deg": 47.556880919706664,
+        "max_deg": 54.1107766277694
+      },
+      "p95_gain": 0,
+      "uv_attempts": 12,
+      "rescued": 0,
+      "rejected": {
+        "normal": 3,
+        "uv": 12,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 3.548466880999996
+    },
+    {
+      "case": "r17_sparse",
+      "passed": true,
+      "method": "smooth0.25_step0.75_reoptimized_uv",
+      "before": {
+        "edges": 38,
+        "mean_deg": 12.861264449858442,
+        "p95_deg": 25.642635128733296,
+        "max_deg": 26.01885667929532
+      },
+      "after": {
+        "edges": 38,
+        "mean_deg": 7.765839524993782,
+        "p95_deg": 15.8530069204598,
+        "max_deg": 16.94104785686448
+      },
+      "p95_gain": 0.3817715363154679,
+      "uv_attempts": 12,
+      "rescued": 12,
+      "rejected": {
+        "normal": 3,
+        "uv": 0,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 3.797854079000004
+    },
+    {
+      "case": "r17_wave",
+      "passed": true,
+      "method": "baseline",
+      "before": {
+        "edges": 62,
+        "mean_deg": 12.499680947045546,
+        "p95_deg": 20.0021101431776,
+        "max_deg": 21.770618202445625
+      },
+      "after": {
+        "edges": 62,
+        "mean_deg": 12.499680947045546,
+        "p95_deg": 20.0021101431776,
+        "max_deg": 21.770618202445625
+      },
+      "p95_gain": 0,
+      "uv_attempts": 9,
+      "rescued": 0,
+      "rejected": {
+        "normal": 6,
+        "uv": 9,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 3.36263876000001
+    },
+    {
+      "case": "r17_skew",
+      "passed": true,
+      "method": "smooth0.05_step0.75_reoptimized_uv",
+      "before": {
+        "edges": 54,
+        "mean_deg": 16.956040661595665,
+        "p95_deg": 35.13248856189808,
+        "max_deg": 52.15779453282301
+      },
+      "after": {
+        "edges": 54,
+        "mean_deg": 8.65405288645699,
+        "p95_deg": 19.583847932782678,
+        "max_deg": 42.730152915915404
+      },
+      "p95_gain": 0.44257157023536975,
+      "uv_attempts": 12,
+      "rescued": 12,
+      "rejected": {
+        "normal": 3,
+        "uv": 0,
+        "geometry": 0,
+        "oracle": 0
+      },
+      "seconds": 4.829040689999999
+    }
+  ],
+  "next": "R21 not started; frozen method unseen synthetic holdout and Blender roundtrip"
+}

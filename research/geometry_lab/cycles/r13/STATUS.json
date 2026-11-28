@@ -1,0 +1,91 @@
+{
+  "cycle": "R13",
+  "status": "complete_preregistered_synthetic_seam_count_length_gate_passed_not_approved",
+  "parent_head": "d4e7b49d6150339e8a644c50741b1910dc219cbf",
+  "candidate": "cbdk_geometry.seam_opt.optimize_uv_charts",
+  "approved": false,
+  "synthetic_only": true,
+  "blender": "4.4.3",
+  "blender_archive_sha256": "8d3be07d2bc412b502c6bfe3cfe3e22195a4164076867da987ce148d73c27946",
+  "cgal": "6.0.1.post202410241521",
+  "experiment": {
+    "seen_development": 4,
+    "new_holdout": 8,
+    "methods": 2,
+    "assembled_meshes_CGAL_checked": 24,
+    "standalone_strips_CGAL_checked": 24,
+    "predeclared_new_split_require_reduction_both_ge_10_percent": 4,
+    "new_split_actual_reduced_both_ge_10_percent": 5,
+    "no_seam_count_or_length_regressions": true,
+    "original_faces_UV_material_XYZ_preserved": true,
+    "candidate_and_baseline_3D_meshes_identical": true,
+    "new_boundary_max_UV_error": 5.960464477539063e-8,
+    "all_independent_CGAL_intersections": 0,
+    "oracle_unavailable": 0
+  },
+  "holdout": {
+    "continuous_3": {
+      "r12_seams": 0,
+      "r13_seams": 0
+    },
+    "split_5": {
+      "r12_seam_count": 506,
+      "r13_seam_count": 309,
+      "r12_seam_length": 148.0529253435922,
+      "r13_seam_length": 91.0190794378163,
+      "count_reduction_fraction": 0.3893280632411067,
+      "length_reduction_fraction": 0.38522606543177196
+    },
+    "per_case": [
+      [
+        "r13_alt_circle",
+        119,
+        56,
+        32.448210706106565,
+        15.901884226164963
+      ],
+      [
+        "r13_alt_ellipse",
+        86,
+        47,
+        29.032377875839153,
+        16.827664465517596
+      ],
+      [
+        "r13_alt_lobed",
+        131,
+        62,
+        37.803829083136684,
+        18.54748839912795
+      ],
+      [
+        "r13_block_lobed",
+        45,
+        34,
+        13.7188062283697,
+        9.500702524290405
+      ],
+      [
+        "r13_multi_circle",
+        125,
+        110,
+        35.049701450140084,
+        30.24133982271539
+      ]
+    ],
+    "candidate_new_pass": 8,
+    "old_R12_baseline_new_pass": 8
+  },
+  "preregistered_research_gate_met": true,
+  "source_sha256": {
+    "cbdk_geometry/seam_opt.py": "4d80dfd9b357f0d70bc55153f5618f665100edc0c0a493903c10f35383643404",
+    "cycles/r13/fixtures.py": "1e71cf40cf3f3354a658c21ad086af4a100fa1b158648041980a601cb80fc96e",
+    "cycles/r13/blender_run.py": "c5cd5496f30bd1e19f243df4c146aedfbd392c13a84c9fd3ec4cb11099eefc46",
+    "cycles/r13/evaluate.py": "6feb9a0e3897c5d3a473bd974d168e26e8bcd91846f550bf0a82191ce7e41037"
+  },
+  "first_full_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42928487532",
+  "dev_smoke_ci": "https://github.com/mibesamiti-png/Chappy-Blender-DevKit/actions/runs/42928283628",
+  "no_tuning_after_holdout": true,
+  "decision": "Research gate achieved for count and 3D seam length on synthetic UV collars; product/artist texture quality not demonstrated; approved=false.",
+  "next": "R14 not auto-started. Study independent real authorized asset visual UV and normal continuity, seam placement and distortion."
+}
