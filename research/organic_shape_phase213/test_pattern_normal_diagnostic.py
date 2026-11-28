@@ -1,7 +1,7 @@
 import json,unittest
 from pathlib import Path
 from pattern_garment import CASES,mesh,N,UP,DOWN
-from pattern_normal_diagnostic import locate,diagnose,face_band
+from pattern_normal_diagnostic import locate,diagnose,face_band,quad_folds
 from junction import audit
 
 class NormalDiagnosticTests(unittest.TestCase):
@@ -15,6 +15,9 @@ class NormalDiagnosticTests(unittest.TestCase):
         self.assertEqual(r[0]["edge"],[0,1])
         self.assertAlmostEqual(r[0]["angle"],90.)
         self.assertEqual(r[0]["midpoint"],[.5,0.,0.])
+    def test_fold_location_matches_audit(self):
+        p,q,l,*_=mesh(CASES[0],"trimmed_rim")
+        self.assertAlmostEqual(quad_folds(p,q)[0]["cosine"],audit(p,q,l,p)["min_quad_cos"])
     def test_panel_indexing(self):
         n=N*(UP+DOWN)
         self.assertEqual(face_band(n-1),("front",UP+DOWN-1))
@@ -28,6 +31,6 @@ def evidence():
         results.append(dict(name=case[0],methods=[diagnose(case,m) for m in ("original","round_rim","trimmed_rim")]))
     report=dict(complete=True,cases=results,geometry_changed=False,diagnostic_only=True)
     (dest/"report.json").write_text(json.dumps(report,indent=2,allow_nan=False))
-    summary=[dict(name=c["name"],methods=[dict(method=m["method"],max_normal_jump=m["max_normal_jump"],high_angle_edges=m["high_angle_edges"],worst=m["worst"][0],regions=m["regions"]) for m in c["methods"]]) for c in results]
+    summary=[dict(name=c["name"],methods=[dict(method=m["method"],max_normal_jump=m["max_normal_jump"],high_angle_edges=m["high_angle_edges"],worst=m["worst"][0],regions=m["regions"],min_quad_cos=m["min_quad_cos"],folded_quads=m["folded_quads"],fold_bands=m["fold_bands"],worst_quad=m["worst_quads"][0]) for m in c["methods"]]) for c in results]
     print("PHASE213NORMALLOC_SUMMARY",json.dumps(summary,allow_nan=False))
 if __name__=="__main__":evidence()
