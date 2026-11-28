@@ -86,9 +86,18 @@ jobs:
           blender --version
       - name: Native mesh and Solidify readback
         run: blender --background --factory-startup --python-exit-code 1 --python native_blender.py
+      - name: Native qualification of R12H outlines
+        run: blender --background --factory-startup --python-exit-code 1 --python native_pattern_coverage.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: phase213-r10e-native-${{ github.sha }}
           path: research/organic_shape_phase213/results/native_rim_local/
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase213-r12i-native-${{ github.sha }}
+          path: research/organic_shape_phase213/results/native_pattern_coverage/
           if-no-files-found: warn
