@@ -35,7 +35,7 @@ def assemble(parts,nv,nf):
     if any(v is None for v in p) or any(f is None for f in q):raise ValueError("incomplete assembly")
     return p,q
 
-def panel_audit(part):
+def panel_audit(part,expected_loops=1):
     p,q=part["vertices"],part["faces"]
     edges=Counter();directions=Counter();adj=defaultdict(set)
     for f in q:
@@ -47,14 +47,23 @@ def panel_audit(part):
         for j in adj[stack.pop()]-seen:seen.add(j);stack.append(j)
     border=[e for e,n in edges.items() if n==1]
     degrees=Counter(i for e in border for i in e)
+    border_adj=defaultdict(set)
+    for a,b in border:
+        border_adj[a].add(b);border_adj[b].add(a)
+    remaining=set(border_adj);loops=0
+    while remaining:
+        loops+=1;stack=[remaining.pop()]
+        while stack:
+            for j in border_adj[stack.pop()]&remaining:
+                remaining.remove(j);stack.append(j)
     euler=len(p)-len(edges)+len(q)
     orientation_errors=sum(n==2 and directions[e]!=0 for e,n in edges.items())
     manifold_errors=sum(n>2 for n in edges.values())
     connected=len(seen)==len(p)
-    return dict(vertices=len(p),quads=len(q),euler=euler,boundary_edges=len(border),
+    return dict(vertices=len(p),quads=len(q),euler=euler,boundary_edges=len(border),boundary_loops=loops,expected_boundary_loops=expected_loops,
         boundary_degrees_ok=all(n==2 for n in degrees.values()),connected=connected,
         orientation_errors=orientation_errors,nonmanifold_edges=manifold_errors,
-        passed=connected and euler==1 and all(n==2 for n in degrees.values()) and not orientation_errors and not manifold_errors)
+        passed=connected and euler==2-expected_loops and loops==expected_loops and all(n==2 for n in degrees.values()) and not orientation_errors and not manifold_errors)
 
 def seam_audit(parts):
     inc=defaultdict(list)
@@ -80,9 +89,9 @@ def trial(case):
         recovered=assemble(parts,len(p),len(q))
         exact=recovered==(p,q)
         seams=seam_audit(parts)
-        audits={k:panel_audit(v) for k,v in parts.items()}
+        audits={k:panel_audit(v,3 if mode=="integrated" else 1) for k,v in parts.items()}
         expected={"back|front":16,"back|crotch":32,"crotch|front":32} if mode=="separate" else {}
         passed=exact and seams["counts"]==expected and seams["orientation_errors"]==0
-        if mode=="separate":passed=passed and all(v["passed"] for v in audits.values())
+        passed=passed and all(v["passed"] for v in audits.values())
         modes[mode]=(dict(exact_reassembly=exact,parts=audits,seams=seams,passed=passed),parts)
     return p,q,modes
