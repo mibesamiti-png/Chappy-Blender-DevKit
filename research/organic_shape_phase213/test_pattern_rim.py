@@ -14,9 +14,9 @@ def side_angles(p,l,case):
         out.append(turns(p,loop)[idx])
     return out
 
-def compare(case):
+def compare(case,method="round_rim"):
     p,q,l,g,a,b=mesh(case)
-    v,f,r,h,c,d=mesh(case,"round_rim")
+    v,f,r,h,c,d=mesh(case,method)
     m=inspect(case,v,f,r,h,c,d)
     before=side_angles(p,l,case);after=side_angles(v,r,case)
     old_max=max(max(turns(p,loop)) for loop in l[1:])
