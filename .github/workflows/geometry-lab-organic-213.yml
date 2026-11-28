@@ -51,6 +51,7 @@ jobs:
           python test_pattern_garment.py
           python test_pattern_split.py
           python test_pattern_reimport.py
+          python test_pattern_rim.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
