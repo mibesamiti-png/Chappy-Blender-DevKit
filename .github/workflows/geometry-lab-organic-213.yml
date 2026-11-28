@@ -39,9 +39,10 @@ jobs:
           python test_intersection.py
           python test_variations.py
           python test_side_width.py
+          python test_coverage_profile.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: phase213-sidewidth-${{ github.sha }}
+          name: phase213-profile-${{ github.sha }}
           path: research/organic_shape_phase213/results/
           if-no-files-found: warn
