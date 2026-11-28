@@ -18,7 +18,7 @@ WAIST=.40;BOTTOM=-.70
 def smooth(t):return t*t*(3-2*t)
 
 def mesh(case,method="original"):
-    if method not in ("original","round_rim","trimmed_rim"):raise ValueError("fixed outline methods")
+    if method not in ("original","round_rim","trimmed_rim","ellipse_rim"):raise ValueError("fixed outline methods")
     if case not in CASES:raise ValueError("fixed pattern fixtures")
     _,hip,front,rear,side,width,length=case
     p=[];q=[];groups=[];shared={}
@@ -58,6 +58,15 @@ def mesh(case,method="original"):
                 x=w*math.sin(span*u)/math.sin(span)
                 y=sign*(ey+(cy-ey)*(math.cos(span*u)-math.cos(span))/(1-math.cos(span)))
                 zz=side_z-(side_z-BOTTOM)*t
+            if not upper and method=="ellipse_rim":
+                # Retain a common ellipse parameter instead of normalizing the
+                # changing angular span to an unrelated endpoint width.
+                span=math.pi/2-(math.pi/2-.35)*t
+                b=smooth(t)
+                radius=hip+(width/(2*math.sin(.35))-hip)*b
+                x=radius*((1-b)*math.sin(span*u)+b*u*math.sin(span))
+                y=sign*(d*math.cos(math.pi*t/2)*math.cos(span*u)+length/2*b)
+                zz=side_z-(side_z-BOTTOM)*t**1.5
             if not upper and method=="round_rim":
                 # Only the outer rim needs a horizontal tangent at the side join.
                 # Keep the middle of the panel on its original height profile.
