@@ -6,7 +6,7 @@ from pathlib import Path
 import bpy,bmesh
 from mathutils.bvhtree import BVHTree
 sys.path.insert(0,str(Path(__file__).resolve().parent))
-from intersection import triangle_hit
+from intersection import triangle_hit,audit as grid_audit
 
 SOURCE=Path("results/cap_fairing")
 DEST=Path("results/native_blender")
@@ -50,8 +50,26 @@ def native_contacts(mesh):
             excluded+=1;continue
         tested+=1
         if triangle_hit([p[i] for i in t[a]],[p[i] for i in t[b]]):hits+=1
+    grid=grid_audit(p,t)
     return dict(triangles=len(t),native_bvh_pairs=len(pairs),incident_pairs_excluded=excluded,
-                nonincident_pairs_tested=tested,contacts=hits,incident_overlap_verified=False)
+                nonincident_pairs_tested=tested,contacts=hits,grid=grid,
+                passed=hits==0 and grid["intersections"]==0,incident_overlap_verified=False)
+
+def controls():
+    a=[(0.,0.,0.),(1.,0.,0.),(0.,1.,0.)]
+    cases=(("crossing",[(.2,.2,-.5),(.2,.2,.5),(.6,.2,0.)],1),
+           ("separated",[(.2,.2,.1),(.4,.2,.1),(.2,.4,.1)],0),
+           ("coplanar_overlap",[(.1,.1,0.),(.3,.1,0.),(.1,.3,0.)],1))
+    out=[]
+    for name,b,expected in cases:
+        mesh=bpy.data.meshes.new("control_"+name)
+        mesh.from_pydata(a+b,[],[(0,1,2),(3,4,5)]);mesh.update()
+        try:r=native_contacts(mesh)
+        finally:bpy.data.meshes.remove(mesh)
+        out.append(dict(name=name,expected=expected,bvh_detected=r["contacts"],
+            grid_detected=r["grid"]["intersections"],grid_pass=r["grid"]["intersections"]==expected,
+            bvh_pass=r["contacts"]==expected))
+    return out
 
 def run_case(name):
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -68,7 +86,7 @@ def run_case(name):
     surface_gate=(not corrected and s["vertices"]==len(p) and s["faces"]==len(q)
         and s["quads"]==len(q) and s["euler"]==-1 and s["boundary_edges"]>0
         and s["nonmanifold_nonboundary"]==s["orientation_errors"]==0
-        and s["min_face_area"]>0 and readback<1e-6 and contacts["contacts"]==0)
+        and s["min_face_area"]>0 and readback<1e-6 and contacts["passed"])
     mod=obj.modifiers.new("Optional thickness","SOLIDIFY")
     mod.thickness=THICKNESS;mod.offset=-1.;mod.use_rim=True
     bpy.context.view_layer.update()
@@ -80,7 +98,7 @@ def run_case(name):
     shell_gate=(not shell_corrected and shell["vertices"]==2*s["vertices"]
         and shell["faces"]==2*s["faces"]+s["boundary_edges"] and shell["euler"]==-2
         and shell["boundary_edges"]==shell["nonmanifold_nonboundary"]==shell["orientation_errors"]==0
-        and shell["min_face_area"]>0 and shell_contacts["contacts"]==0)
+        and shell["min_face_area"]>0 and shell_contacts["passed"])
     # Preserve editable surface and optional, initially disabled modifier.
     bpy.data.meshes.remove(solid)
     mod.show_viewport=False;mod.show_render=False
@@ -102,10 +120,13 @@ def main():
     source=json.loads((SOURCE/"report.json").read_text())
     if not source["fixture_gate"] or {c["name"] for c in source["cases"] if c["passed"]}!=set(NAMES):
         raise ValueError("R9F input gate not satisfied")
+    control_results=controls()
     results=[run_case(name) for name in NAMES]
     report=dict(complete=True,blender_version=bpy.app.version_string,thickness=THICKNESS,
-        cases=results,surface_gate=all(c["surface_gate"] for c in results),
-        shell_gate=all(c["shell_gate"] for c in results),fixture_gate=all(c["passed"] for c in results),
+        cases=results,controls=control_results,
+        grid_control_gate=all(c["grid_pass"] for c in control_results),
+        bvh_control_gate=all(c["bvh_pass"] for c in control_results),surface_gate=all(c["surface_gate"] for c in results),
+        shell_gate=all(c["shell_gate"] for c in results),fixture_gate=all(c["passed"] for c in results) and all(c["grid_pass"] for c in control_results),
         global_intersection_verified=False,lower_body_fit_verified=False)
     (DEST/"report.json").write_text(json.dumps(report,indent=2,allow_nan=False))
     print("PHASE213NATIVE_SUMMARY",json.dumps(report,allow_nan=False))
